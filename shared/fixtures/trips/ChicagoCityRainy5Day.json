@@ -1,0 +1,45 @@
+{
+  "id": "ChicagoCityRainy5Day",
+  "destinationFixture": "Chicago",
+  "weatherFixture": "ChicagoRainyFall",
+  "days": 5,
+  "tripType": "cityBreak",
+  "activities": [
+    "sightseeing",
+    "walking"
+  ],
+  "bag": "carryOn",
+  "style": "balanced",
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "mustInclude": [
+    "clothing.rain_jacket",
+    "footwear.walking_shoes",
+    "essentials.wallet"
+  ],
+  "mustNotInclude": [
+    "clothing.winter_coat"
+  ],
+  "expectedQuantityRanges": {
+    "clothing.underwear": [
+      5,
+      6
+    ]
+  },
+  "note": "Five days in Chicago, walking the city and hitting a few museums.",
+  "mustInfer": [
+    "walking",
+    "museums"
+  ],
+  "mustNotInfer": [
+    "hiking",
+    "work",
+    "needFormalOutfit"
+  ],
+  "allowedSuggestions": [
+    "essentials.umbrella_compact",
+    "electronics.power_bank",
+    "activities.museum_tickets",
+    "clothing.light_jacket"
+  ]
+}

@@ -1,0 +1,385 @@
+{
+  "version": 1,
+  "category": "activities",
+  "items": [
+    {
+      "id": "activities.daypack",
+      "localizationKey": "packing.activities.daypack",
+      "display_name": "Daypack",
+      "category": "activities",
+      "importance": "important",
+      "symbol": "backpack",
+      "keywords": [
+        "daypack",
+        "day bag"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "hiking",
+        "sightseeing"
+      ],
+      "capabilities": [
+        "hiking",
+        "sightseeing"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.hiking_poles",
+      "localizationKey": "packing.activities.hiking_poles",
+      "display_name": "Hiking poles",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "figure.hiking",
+      "keywords": [
+        "poles"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "hiking"
+      ],
+      "capabilities": [
+        "hiking"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.rain_cover",
+      "localizationKey": "packing.activities.rain_cover",
+      "display_name": "Pack rain cover",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "cloud.rain",
+      "keywords": [
+        "rain cover"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "hiking",
+        "rain"
+      ],
+      "capabilities": [
+        "hiking",
+        "rain"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.snorkel",
+      "localizationKey": "packing.activities.snorkel",
+      "display_name": "Snorkel set",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "water.waves",
+      "keywords": [
+        "snorkel"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "snorkel"
+      ],
+      "capabilities": [
+        "snorkel"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.goggles",
+      "localizationKey": "packing.activities.goggles",
+      "display_name": "Swim goggles",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "eye",
+      "keywords": [
+        "goggles"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "swim"
+      ],
+      "capabilities": [
+        "swim"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.beach_towel",
+      "localizationKey": "packing.activities.beach_towel",
+      "display_name": "Beach towel",
+      "category": "activities",
+      "importance": "normal",
+      "symbol": "beach.umbrella",
+      "keywords": [
+        "beach towel"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "beach"
+      ],
+      "capabilities": [
+        "beach"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.dry_bag",
+      "localizationKey": "packing.activities.dry_bag",
+      "display_name": "Dry bag",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "bag",
+      "keywords": [
+        "dry bag"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "boat"
+      ],
+      "capabilities": [
+        "boat"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.yoga_mat_travel",
+      "localizationKey": "packing.activities.yoga_mat_travel",
+      "display_name": "Travel yoga mat",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "figure.yoga",
+      "keywords": [
+        "yoga mat"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "yoga"
+      ],
+      "capabilities": [
+        "yoga"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.running_belt",
+      "localizationKey": "packing.activities.running_belt",
+      "display_name": "Running belt",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "figure.run",
+      "keywords": [
+        "running belt"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "running"
+      ],
+      "capabilities": [
+        "running"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.binoculars",
+      "localizationKey": "packing.activities.binoculars",
+      "display_name": "Binoculars",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "binoculars",
+      "keywords": [
+        "binoculars"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "wildlife"
+      ],
+      "capabilities": [
+        "wildlife"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.guidebook",
+      "localizationKey": "packing.activities.guidebook",
+      "display_name": "Guidebook / maps",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "map",
+      "keywords": [
+        "guidebook"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "sightseeing"
+      ],
+      "capabilities": [
+        "sightseeing"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.museum_tickets",
+      "localizationKey": "packing.activities.museum_tickets",
+      "display_name": "Attraction tickets",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "ticket",
+      "keywords": [
+        "tickets"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.workout_band",
+      "localizationKey": "packing.activities.workout_band",
+      "display_name": "Resistance band",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "figure.strengthtraining.traditional",
+      "keywords": [
+        "resistance band"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "workout"
+      ],
+      "capabilities": [
+        "workout"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.tennis_shoes_note",
+      "localizationKey": "packing.activities.tennis_shoes_note",
+      "display_name": "Court shoes",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "figure.tennis",
+      "keywords": [
+        "tennis"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.ski_goggles",
+      "localizationKey": "packing.activities.ski_goggles",
+      "display_name": "Ski goggles",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "snowflake",
+      "keywords": [
+        "ski goggles"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "ski"
+      ],
+      "capabilities": [
+        "ski"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.ski_gloves",
+      "localizationKey": "packing.activities.ski_gloves",
+      "display_name": "Ski gloves",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "hand.raised",
+      "keywords": [
+        "ski gloves"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "ski"
+      ],
+      "capabilities": [
+        "ski"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.base_layers_ski",
+      "localizationKey": "packing.activities.base_layers_ski",
+      "display_name": "Ski base layers",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "snowflake",
+      "keywords": [
+        "ski layers"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "ski"
+      ],
+      "capabilities": [
+        "ski"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.festival_earplugs",
+      "localizationKey": "packing.activities.festival_earplugs",
+      "display_name": "High-fidelity earplugs",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "ear",
+      "keywords": [
+        "earplugs festival"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "festival"
+      ],
+      "capabilities": [
+        "festival"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "activities.portable_fan",
+      "localizationKey": "packing.activities.portable_fan",
+      "display_name": "Portable fan",
+      "category": "activities",
+      "importance": "optional",
+      "symbol": "fan",
+      "keywords": [
+        "portable fan"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "hot",
+        "festival"
+      ],
+      "capabilities": [
+        "hot",
+        "festival"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "version": 1,
+  "category": "essentials",
+  "items": [
+    {
+      "id": "essentials.wallet",
+      "localizationKey": "packing.essentials.wallet",
+      "display_name": "Wallet",
+      "category": "essentials",
+      "importance": "critical",
+      "symbol": "wallet.pass",
+      "keywords": [
+        "wallet",
+        "cards"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.phone",
+      "localizationKey": "packing.essentials.phone",
+      "display_name": "Phone",
+      "category": "essentials",
+      "importance": "critical",
+      "symbol": "iphone",
+      "keywords": [
+        "phone",
+        "iphone"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.keys",
+      "localizationKey": "packing.essentials.keys",
+      "display_name": "Keys",
+      "category": "essentials",
+      "importance": "critical",
+      "symbol": "key",
+      "keywords": [
+        "keys",
+        "house keys"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.home_keys",
+      "localizationKey": "packing.essentials.home_keys",
+      "display_name": "House keys",
+      "category": "essentials",
+      "importance": "important",
+      "symbol": "key.fill",
+      "keywords": [
+        "house keys"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.sunglasses",
+      "localizationKey": "packing.essentials.sunglasses",
+      "display_name": "Sunglasses",
+      "category": "essentials",
+      "importance": "normal",
+      "symbol": "sunglasses",
+      "keywords": [
+        "sunglasses",
+        "shades"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "sun"
+      ],
+      "capabilities": [
+        "sun"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.watch",
+      "localizationKey": "packing.essentials.watch",
+      "display_name": "Watch",
+      "category": "essentials",
+      "importance": "optional",
+      "symbol": "applewatch",
+      "keywords": [
+        "watch"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.cash",
+      "localizationKey": "packing.essentials.cash",
+      "display_name": "Local cash",
+      "category": "essentials",
+      "importance": "normal",
+      "symbol": "banknote",
+      "keywords": [
+        "cash",
+        "money"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "international"
+      ],
+      "capabilities": [
+        "international"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.reusable_bag",
+      "localizationKey": "packing.essentials.reusable_bag",
+      "display_name": "Reusable tote",
+      "category": "essentials",
+      "importance": "optional",
+      "symbol": "bag",
+      "keywords": [
+        "tote",
+        "shopping bag"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.pen",
+      "localizationKey": "packing.essentials.pen",
+      "display_name": "Pen",
+      "category": "essentials",
+      "importance": "optional",
+      "symbol": "pencil",
+      "keywords": [
+        "pen"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.notebook",
+      "localizationKey": "packing.essentials.notebook",
+      "display_name": "Small notebook",
+      "category": "essentials",
+      "importance": "optional",
+      "symbol": "book",
+      "keywords": [
+        "notebook",
+        "journal"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.lip_balm",
+      "localizationKey": "packing.essentials.lip_balm",
+      "display_name": "Lip balm",
+      "category": "essentials",
+      "importance": "optional",
+      "symbol": "mouth",
+      "keywords": [
+        "chapstick",
+        "lip balm"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.hand_sanitizer",
+      "localizationKey": "packing.essentials.hand_sanitizer",
+      "display_name": "Hand sanitizer",
+      "category": "essentials",
+      "importance": "normal",
+      "symbol": "drop",
+      "keywords": [
+        "sanitizer"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.snacks",
+      "localizationKey": "packing.essentials.snacks",
+      "display_name": "Travel snacks",
+      "category": "essentials",
+      "importance": "optional",
+      "symbol": "fork.knife",
+      "keywords": [
+        "snacks"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [
+        "snacks"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "hydration.water_bottle",
+      "localizationKey": "packing.hydration.water_bottle",
+      "display_name": "Water bottle",
+      "category": "essentials",
+      "importance": "normal",
+      "symbol": "waterbottle",
+      "keywords": [
+        "water bottle",
+        "hydroflask",
+        "hydration"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [
+        "hydration",
+        "everyday",
+        "hiking",
+        "outdoor"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "essentials.umbrella_compact",
+      "localizationKey": "packing.essentials.umbrella_compact",
+      "display_name": "Compact umbrella",
+      "category": "essentials",
+      "importance": "normal",
+      "symbol": "umbrella",
+      "keywords": [
+        "umbrella"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "rain"
+      ],
+      "capabilities": [
+        "rain"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

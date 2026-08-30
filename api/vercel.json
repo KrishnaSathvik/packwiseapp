@@ -1,0 +1,29 @@
+{
+  "buildCommand": "npm run vercel-build",
+  "rewrites": [
+    {
+      "source": "/v1/trip/interpret",
+      "destination": "/api/v1/trip/interpret"
+    },
+    {
+      "source": "/v1/packing/gaps",
+      "destination": "/api/v1/packing/gaps"
+    },
+    {
+      "source": "/v1/packing/optimize",
+      "destination": "/api/v1/packing/optimize"
+    },
+    {
+      "source": "/v1/integrity/challenge",
+      "destination": "/api/v1/integrity/challenge"
+    },
+    {
+      "source": "/v1/integrity/attest",
+      "destination": "/api/v1/integrity/attest"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/health"
+    }
+  ]
+}

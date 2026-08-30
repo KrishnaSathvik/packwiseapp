@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "inferredActivities",
+    "inferredChips",
+    "noteSummary"
+  ],
+  "properties": {
+    "inferredActivities": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "beachDays",
+          "boatTrip",
+          "hiking",
+          "museums",
+          "niceDinner",
+          "nightlife",
+          "photography",
+          "running",
+          "shopping",
+          "sightseeing",
+          "snorkeling",
+          "swimming",
+          "walking",
+          "wildlife",
+          "work",
+          "yoga"
+        ]
+      }
+    },
+    "inferredChips": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "bringingLaptop",
+          "dailyMedication",
+          "getColdEasily",
+          "laundryAvailable",
+          "needFormalOutfit",
+          "runWhileTraveling",
+          "travelingInternationally",
+          "usuallyWorkOut",
+          "wearContacts"
+        ]
+      }
+    },
+    "noteSummary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TripInterpretation"
+}

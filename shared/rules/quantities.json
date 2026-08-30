@@ -1,0 +1,103 @@
+{
+  "policies": {
+    "one": {
+      "kind": "fixed",
+      "value": 1
+    },
+    "daily_top": {
+      "kind": "style_factor",
+      "light": {
+        "factor": 0.65,
+        "min": 2,
+        "no_laundry_minus": 1
+      },
+      "balanced": {
+        "factor": 0.75,
+        "min": 3,
+        "no_laundry_use_days": true
+      },
+      "prepared": {
+        "factor": 1.0,
+        "min": 4,
+        "no_laundry_plus": 1,
+        "laundry_minus": 1
+      }
+    },
+    "daily_underwear": {
+      "kind": "style_days",
+      "light": {
+        "laundry_use": "days_capped_6",
+        "no_laundry_use": "days"
+      },
+      "balanced": {
+        "plus": 1,
+        "laundry_plus": 0
+      },
+      "prepared": {
+        "plus": 2
+      }
+    },
+    "daily_socks": {
+      "kind": "alias",
+      "alias": "daily_underwear"
+    },
+    "bottoms": {
+      "kind": "reuse_interval",
+      "light": 3.0,
+      "balanced": 2.5,
+      "prepared": 2.0,
+      "min": 1
+    },
+    "hot_bottoms": {
+      "kind": "reuse_interval",
+      "light": 3.0,
+      "balanced": 2.5,
+      "prepared": 2.0,
+      "min": 1
+    },
+    "layer": {
+      "kind": "style_fixed",
+      "light": 1,
+      "balanced": 1,
+      "prepared": 2
+    },
+    "sleepwear": {
+      "kind": "long_trip_backup",
+      "threshold_days": 6
+    },
+    "workout_top": {
+      "kind": "workout",
+      "light_divisor": 3,
+      "balanced_divisor": 2
+    },
+    "workout_bottom": {
+      "kind": "alias",
+      "alias": "workout_top"
+    },
+    "formal_top": {
+      "kind": "style_fixed",
+      "light": 1,
+      "balanced": 1,
+      "prepared": 2
+    },
+    "dresses": {
+      "kind": "reuse_interval",
+      "light": 4.0,
+      "balanced": 4.0,
+      "prepared": 3.0,
+      "min": 1
+    },
+    "toddler_backup": {
+      "kind": "style_days",
+      "light": {
+        "plus": 2
+      },
+      "balanced": {
+        "plus": 2
+      },
+      "prepared": {
+        "plus": 3
+      }
+    }
+  }
+}

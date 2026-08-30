@@ -1,0 +1,219 @@
+{
+  "version": 1,
+  "category": "footwear",
+  "items": [
+    {
+      "id": "footwear.walking_shoes",
+      "localizationKey": "packing.footwear.walking_shoes",
+      "display_name": "Walking shoes",
+      "category": "footwear",
+      "importance": "important",
+      "symbol": "shoeprints.fill",
+      "keywords": [
+        "walking shoes",
+        "sneakers",
+        "trainers"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base",
+        "walking"
+      ],
+      "capabilities": [
+        "walking",
+        "casual",
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "footwear.running_shoes",
+      "localizationKey": "packing.footwear.running_shoes",
+      "display_name": "Running shoes",
+      "category": "footwear",
+      "importance": "normal",
+      "symbol": "figure.run",
+      "keywords": [
+        "running shoes"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "running"
+      ],
+      "capabilities": [
+        "walking",
+        "running",
+        "casual"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "footwear.hiking_shoes",
+      "localizationKey": "packing.footwear.hiking_shoes",
+      "display_name": "Hiking shoes",
+      "category": "footwear",
+      "importance": "important",
+      "symbol": "figure.hiking",
+      "keywords": [
+        "hiking shoes",
+        "trail shoes",
+        "boots"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "hiking"
+      ],
+      "capabilities": [
+        "hiking",
+        "walking",
+        "outdoor"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "footwear.dress_shoes",
+      "localizationKey": "packing.footwear.dress_shoes",
+      "display_name": "Dress shoes",
+      "category": "footwear",
+      "importance": "normal",
+      "symbol": "shoe",
+      "keywords": [
+        "dress shoes",
+        "heels"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "formal"
+      ],
+      "capabilities": [
+        "formal"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "footwear.sandals",
+      "localizationKey": "packing.footwear.sandals",
+      "display_name": "Sandals",
+      "category": "footwear",
+      "importance": "normal",
+      "symbol": "shoe",
+      "keywords": [
+        "sandals",
+        "flip flops"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "beach",
+        "hot"
+      ],
+      "capabilities": [
+        "beach",
+        "hot"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "footwear.flip_flops",
+      "localizationKey": "packing.footwear.flip_flops",
+      "display_name": "Flip-flops",
+      "category": "footwear",
+      "importance": "optional",
+      "symbol": "shoe",
+      "keywords": [
+        "flip flops",
+        "slides"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "swim"
+      ],
+      "capabilities": [
+        "swim",
+        "wet"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "footwear.boots",
+      "localizationKey": "packing.footwear.boots",
+      "display_name": "Boots",
+      "category": "footwear",
+      "importance": "normal",
+      "symbol": "shoe",
+      "keywords": [
+        "boots"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "cold",
+        "outdoor"
+      ],
+      "capabilities": [
+        "cold",
+        "outdoor"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "footwear.water_shoes",
+      "localizationKey": "packing.footwear.water_shoes",
+      "display_name": "Water shoes",
+      "category": "footwear",
+      "importance": "optional",
+      "symbol": "drop",
+      "keywords": [
+        "water shoes"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "boat",
+        "snorkel"
+      ],
+      "capabilities": [
+        "boat",
+        "snorkel"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "footwear.house_slippers",
+      "localizationKey": "packing.footwear.house_slippers",
+      "display_name": "Travel slippers",
+      "category": "footwear",
+      "importance": "optional",
+      "symbol": "shoe",
+      "keywords": [
+        "slippers"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "footwear.shoe_bags",
+      "localizationKey": "packing.footwear.shoe_bags",
+      "display_name": "Shoe bags",
+      "category": "footwear",
+      "importance": "optional",
+      "symbol": "bag",
+      "keywords": [
+        "shoe bags"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

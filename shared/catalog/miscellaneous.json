@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "category": "miscellaneous",
+  "items": [
+    {
+      "id": "miscellaneous.gift",
+      "localizationKey": "packing.miscellaneous.gift",
+      "display_name": "Host gift",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "gift",
+      "keywords": [
+        "gift"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "family"
+      ],
+      "capabilities": [
+        "family"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.reusable_utensils",
+      "localizationKey": "packing.miscellaneous.reusable_utensils",
+      "display_name": "Reusable utensils",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "fork.knife",
+      "keywords": [
+        "utensils"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.collapsible_bowl",
+      "localizationKey": "packing.miscellaneous.collapsible_bowl",
+      "display_name": "Collapsible bowl",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "bowl",
+      "keywords": [
+        "bowl"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.ziplocks",
+      "localizationKey": "packing.miscellaneous.ziplocks",
+      "display_name": "Ziplock bags",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "bag",
+      "keywords": [
+        "ziplock"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.tape",
+      "localizationKey": "packing.miscellaneous.tape",
+      "display_name": "Mini tape / repair kit",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "tape",
+      "keywords": [
+        "tape"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.multi_tool",
+      "localizationKey": "packing.miscellaneous.multi_tool",
+      "display_name": "Travel multi-tool",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "wrench",
+      "keywords": [
+        "multitool"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "outdoor"
+      ],
+      "capabilities": [
+        "outdoor"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": true
+    },
+    {
+      "id": "miscellaneous.flashlight",
+      "localizationKey": "packing.miscellaneous.flashlight",
+      "display_name": "Small flashlight",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "flashlight.on.fill",
+      "keywords": [
+        "flashlight"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "outdoor"
+      ],
+      "capabilities": [
+        "outdoor"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.car_charger",
+      "localizationKey": "packing.miscellaneous.car_charger",
+      "display_name": "Car charger",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "car",
+      "keywords": [
+        "car charger"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "road_trip"
+      ],
+      "capabilities": [
+        "road_trip"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.car_snacks",
+      "localizationKey": "packing.miscellaneous.car_snacks",
+      "display_name": "Road-trip snacks",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "fork.knife",
+      "keywords": [
+        "car snacks"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "road_trip"
+      ],
+      "capabilities": [
+        "snacks",
+        "road_trip"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.wedding_card",
+      "localizationKey": "packing.miscellaneous.wedding_card",
+      "display_name": "Card for event",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "envelope",
+      "keywords": [
+        "wedding card"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "wedding"
+      ],
+      "capabilities": [
+        "wedding"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.baby_wipes",
+      "localizationKey": "packing.miscellaneous.baby_wipes",
+      "display_name": "Extra wipes",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "doc",
+      "keywords": [
+        "wipes extra"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "miscellaneous.stain_cloth",
+      "localizationKey": "packing.miscellaneous.stain_cloth",
+      "display_name": "Microfiber cloth",
+      "category": "miscellaneous",
+      "importance": "optional",
+      "symbol": "square",
+      "keywords": [
+        "cloth"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

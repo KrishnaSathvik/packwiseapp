@@ -1,0 +1,31 @@
+{
+  "id": "PreserveManualQuantity",
+  "destinationFixture": "Chicago",
+  "days": 6,
+  "tripType": "cityBreak",
+  "activities": [
+    "sightseeing"
+  ],
+  "bag": "carryOn",
+  "style": "light",
+  "chips": [
+    "laundryAvailable"
+  ],
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "existing": [
+    {
+      "canonicalItemID": "clothing.tshirt",
+      "displayName": "T-shirts",
+      "category": "clothing",
+      "quantity": 3,
+      "isUserModified": true
+    }
+  ],
+  "mustInclude": [
+    "clothing.tshirt"
+  ],
+  "expectedExactQuantities": {
+    "clothing.tshirt": 3
+  }
+}

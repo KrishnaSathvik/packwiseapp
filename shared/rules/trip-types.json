@@ -1,0 +1,113 @@
+{
+  "trip_types": {
+    "vacation": {
+      "add": [
+        "electronics.headphones",
+        "travel_comfort.book"
+      ],
+      "prefer_activities": [
+        "sightseeing"
+      ]
+    },
+    "cityBreak": {
+      "add": [
+        "essentials.sunglasses",
+        "activities.daypack"
+      ],
+      "prefer_activities": [
+        "sightseeing",
+        "walking"
+      ]
+    },
+    "beach": {
+      "add": [
+        "clothing.swimsuit",
+        "clothing.coverup",
+        "footwear.sandals",
+        "toiletries.sunscreen",
+        "activities.beach_towel",
+        "clothing.hat_sun",
+        "clothing.shorts"
+      ],
+      "prefer_activities": [
+        "swimming",
+        "beachDays"
+      ]
+    },
+    "business": {
+      "add": [
+        "clothing.dress_shirt",
+        "clothing.blazer",
+        "footwear.dress_shoes",
+        "electronics.laptop",
+        "electronics.laptop_charger"
+      ],
+      "prefer_activities": [
+        "work"
+      ]
+    },
+    "outdoor": {
+      "add": [
+        "activities.daypack",
+        "hydration.water_bottle",
+        "toiletries.insect_repellent",
+        "health.blister_pads",
+        "health.first_aid"
+      ],
+      "prefer_activities": [
+        "hiking"
+      ]
+    },
+    "roadTrip": {
+      "add": [
+        "miscellaneous.car_charger",
+        "miscellaneous.car_snacks",
+        "essentials.snacks"
+      ],
+      "prefer_activities": [
+        "sightseeing"
+      ]
+    },
+    "weddingEvent": {
+      "add": [
+        "clothing.formal_outfit",
+        "footwear.dress_shoes",
+        "miscellaneous.wedding_card"
+      ],
+      "prefer_activities": [
+        "niceDinner"
+      ]
+    },
+    "skiSnow": {
+      "add": [
+        "clothing.winter_coat",
+        "clothing.gloves",
+        "clothing.beanie",
+        "clothing.thermal_top",
+        "footwear.boots",
+        "activities.ski_goggles",
+        "activities.ski_gloves"
+      ],
+      "prefer_activities": []
+    },
+    "festival": {
+      "add": [
+        "activities.festival_earplugs",
+        "electronics.power_bank",
+        "toiletries.sunscreen",
+        "essentials.hand_sanitizer"
+      ],
+      "prefer_activities": []
+    },
+    "visitingFamily": {
+      "add": [
+        "miscellaneous.gift"
+      ],
+      "prefer_activities": []
+    },
+    "other": {
+      "add": [],
+      "prefer_activities": []
+    }
+  }
+}

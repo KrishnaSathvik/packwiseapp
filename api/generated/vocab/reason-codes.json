@@ -1,0 +1,193 @@
+{
+  "all": [
+    "activity.generic",
+    "activity.hiking",
+    "activity.running",
+    "activity.sightseeing",
+    "base.essential",
+    "context.gap_activity",
+    "context.gap_destination",
+    "context.gap_duration",
+    "context.gap_generic",
+    "context.gap_preference",
+    "context.gap_trip_type",
+    "context.gap_weather",
+    "context.optimize_duplicate",
+    "context.optimize_generic",
+    "context.optimize_quantity",
+    "context.optimize_style",
+    "destination.international",
+    "documents.visa_check",
+    "flight.empty_bottle",
+    "impact.cool_evenings",
+    "impact.high_uv",
+    "impact.hot",
+    "impact.rain.days",
+    "impact.rain.weekday",
+    "impact.seasonal",
+    "impact.seasonal.layer",
+    "impact.seasonal.sun",
+    "impact.snow",
+    "impact.temperature_swing",
+    "impact.wind",
+    "party.age_group",
+    "party.shared",
+    "party.shared_umbrella",
+    "preference.generic",
+    "quantity.age_extra",
+    "quantity.daily_top",
+    "substitution.hiking_covers_walking",
+    "substitution.running_covers_walking",
+    "trip_type.generic",
+    "weather.cold",
+    "weather.cool_evenings",
+    "weather.hot",
+    "weather.rain_days",
+    "weather.rain_weekday",
+    "weather.seasonal_layer",
+    "weather.seasonal_sun",
+    "weather.snow",
+    "weather.temperature_swing",
+    "weather.uv",
+    "weather.wind",
+    "weather_change.cold_evenings.ended",
+    "weather_change.cold_evenings.now",
+    "weather_change.generic",
+    "weather_change.hot.now",
+    "weather_change.rain.ended",
+    "weather_change.rain.now",
+    "weather_change.rain.now_generic",
+    "weather_change.snow.ended",
+    "weather_change.snow.now",
+    "weather_change.swing.now",
+    "weather_change.uv.now",
+    "weather_change.wind.now"
+  ],
+  "gaps": [
+    "context.gap_activity",
+    "context.gap_destination",
+    "context.gap_duration",
+    "context.gap_generic",
+    "context.gap_preference",
+    "context.gap_trip_type",
+    "context.gap_weather"
+  ],
+  "optimize": [
+    "context.optimize_duplicate",
+    "context.optimize_generic",
+    "context.optimize_quantity",
+    "context.optimize_style"
+  ],
+  "arguments": {
+    "activity.generic": [],
+    "activity.hiking": [],
+    "activity.running": [],
+    "activity.sightseeing": [
+      "destination"
+    ],
+    "base.essential": [],
+    "context.gap_activity": [
+      "activity"
+    ],
+    "context.gap_destination": [
+      "destination"
+    ],
+    "context.gap_duration": [
+      "tripDays"
+    ],
+    "context.gap_generic": [],
+    "context.gap_preference": [],
+    "context.gap_trip_type": [
+      "tripType"
+    ],
+    "context.gap_weather": [],
+    "context.optimize_duplicate": [
+      "otherItem"
+    ],
+    "context.optimize_generic": [],
+    "context.optimize_quantity": [
+      "quantity",
+      "tripDays"
+    ],
+    "context.optimize_style": [
+      "packingStyle"
+    ],
+    "destination.international": [],
+    "documents.visa_check": [],
+    "flight.empty_bottle": [],
+    "impact.cool_evenings": [],
+    "impact.high_uv": [],
+    "impact.hot": [],
+    "impact.rain.days": [
+      "rainDays"
+    ],
+    "impact.rain.weekday": [
+      "weekday"
+    ],
+    "impact.seasonal": [],
+    "impact.seasonal.layer": [],
+    "impact.seasonal.sun": [],
+    "impact.snow": [],
+    "impact.temperature_swing": [],
+    "impact.wind": [],
+    "party.age_group": [
+      "ageGroup",
+      "name"
+    ],
+    "party.shared": [],
+    "party.shared_umbrella": [
+      "quantity",
+      "rainDays"
+    ],
+    "preference.generic": [],
+    "quantity.age_extra": [
+      "ageGroup",
+      "days",
+      "item",
+      "name",
+      "quantity"
+    ],
+    "quantity.daily_top": [
+      "days",
+      "laundryClause",
+      "styleClause"
+    ],
+    "substitution.hiking_covers_walking": [],
+    "substitution.running_covers_walking": [],
+    "trip_type.generic": [
+      "tripType"
+    ],
+    "weather.cold": [],
+    "weather.cool_evenings": [],
+    "weather.hot": [],
+    "weather.rain_days": [
+      "rainDays",
+      "tripDays"
+    ],
+    "weather.rain_weekday": [
+      "weekday"
+    ],
+    "weather.seasonal_layer": [],
+    "weather.seasonal_sun": [],
+    "weather.snow": [],
+    "weather.temperature_swing": [
+      "swing"
+    ],
+    "weather.uv": [],
+    "weather.wind": [],
+    "weather_change.cold_evenings.ended": [],
+    "weather_change.cold_evenings.now": [],
+    "weather_change.generic": [],
+    "weather_change.hot.now": [],
+    "weather_change.rain.ended": [],
+    "weather_change.rain.now": [
+      "weekday"
+    ],
+    "weather_change.rain.now_generic": [],
+    "weather_change.snow.ended": [],
+    "weather_change.snow.now": [],
+    "weather_change.swing.now": [],
+    "weather_change.uv.now": [],
+    "weather_change.wind.now": []
+  }
+}

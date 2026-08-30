@@ -1,0 +1,552 @@
+{
+  "version": 1,
+  "category": "toiletries",
+  "items": [
+    {
+      "id": "toiletries.toothbrush",
+      "localizationKey": "packing.toiletries.toothbrush",
+      "display_name": "Toothbrush",
+      "category": "toiletries",
+      "importance": "important",
+      "symbol": "mouth",
+      "keywords": [
+        "toothbrush"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.toothpaste",
+      "localizationKey": "packing.toiletries.toothpaste",
+      "display_name": "Toothpaste",
+      "category": "toiletries",
+      "importance": "important",
+      "symbol": "mouth",
+      "keywords": [
+        "toothpaste"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.floss",
+      "localizationKey": "packing.toiletries.floss",
+      "display_name": "Floss",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "mouth",
+      "keywords": [
+        "floss"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.deodorant",
+      "localizationKey": "packing.toiletries.deodorant",
+      "display_name": "Deodorant",
+      "category": "toiletries",
+      "importance": "important",
+      "symbol": "sparkles",
+      "keywords": [
+        "deodorant"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.shampoo",
+      "localizationKey": "packing.toiletries.shampoo",
+      "display_name": "Shampoo",
+      "category": "toiletries",
+      "importance": "normal",
+      "symbol": "drop",
+      "keywords": [
+        "shampoo"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.conditioner",
+      "localizationKey": "packing.toiletries.conditioner",
+      "display_name": "Conditioner",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "drop",
+      "keywords": [
+        "conditioner"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.body_wash",
+      "localizationKey": "packing.toiletries.body_wash",
+      "display_name": "Body wash",
+      "category": "toiletries",
+      "importance": "normal",
+      "symbol": "drop",
+      "keywords": [
+        "body wash",
+        "soap"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.face_wash",
+      "localizationKey": "packing.toiletries.face_wash",
+      "display_name": "Face wash",
+      "category": "toiletries",
+      "importance": "normal",
+      "symbol": "drop",
+      "keywords": [
+        "face wash"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.moisturizer",
+      "localizationKey": "packing.toiletries.moisturizer",
+      "display_name": "Moisturizer",
+      "category": "toiletries",
+      "importance": "normal",
+      "symbol": "drop",
+      "keywords": [
+        "moisturizer"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.sunscreen",
+      "localizationKey": "packing.toiletries.sunscreen",
+      "display_name": "Sunscreen",
+      "category": "toiletries",
+      "importance": "important",
+      "symbol": "sun.max",
+      "keywords": [
+        "sunscreen",
+        "spf"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "sun",
+        "hot"
+      ],
+      "capabilities": [
+        "sun",
+        "hot"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.aftershave",
+      "localizationKey": "packing.toiletries.aftershave",
+      "display_name": "Aftershave / serum",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "drop",
+      "keywords": [
+        "aftershave"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.razor",
+      "localizationKey": "packing.toiletries.razor",
+      "display_name": "Razor",
+      "category": "toiletries",
+      "importance": "normal",
+      "symbol": "scissors",
+      "keywords": [
+        "razor",
+        "shave"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.shaving_cream",
+      "localizationKey": "packing.toiletries.shaving_cream",
+      "display_name": "Shaving cream",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "drop",
+      "keywords": [
+        "shaving cream"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.hairbrush",
+      "localizationKey": "packing.toiletries.hairbrush",
+      "display_name": "Hairbrush",
+      "category": "toiletries",
+      "importance": "normal",
+      "symbol": "comb",
+      "keywords": [
+        "brush",
+        "comb"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.hair_ties",
+      "localizationKey": "packing.toiletries.hair_ties",
+      "display_name": "Hair ties",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "circle",
+      "keywords": [
+        "hair ties"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.makeup",
+      "localizationKey": "packing.toiletries.makeup",
+      "display_name": "Makeup",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "paintpalette",
+      "keywords": [
+        "makeup"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.makeup_remover",
+      "localizationKey": "packing.toiletries.makeup_remover",
+      "display_name": "Makeup remover",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "drop",
+      "keywords": [
+        "makeup remover"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.nail_clippers",
+      "localizationKey": "packing.toiletries.nail_clippers",
+      "display_name": "Nail clippers",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "scissors",
+      "keywords": [
+        "nail clippers"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.tweezers",
+      "localizationKey": "packing.toiletries.tweezers",
+      "display_name": "Tweezers",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "scissors",
+      "keywords": [
+        "tweezers"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.cotton_swabs",
+      "localizationKey": "packing.toiletries.cotton_swabs",
+      "display_name": "Cotton swabs",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "circle",
+      "keywords": [
+        "q-tips"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.contacts_solution",
+      "localizationKey": "packing.toiletries.contacts_solution",
+      "display_name": "Contact solution",
+      "category": "toiletries",
+      "importance": "important",
+      "symbol": "eye",
+      "keywords": [
+        "contact solution"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "contacts"
+      ],
+      "capabilities": [
+        "contacts"
+      ],
+      "companions": [
+        "toiletries.contact_case"
+      ],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.contact_case",
+      "localizationKey": "packing.toiletries.contact_case",
+      "display_name": "Contact case",
+      "category": "toiletries",
+      "importance": "important",
+      "symbol": "eye",
+      "keywords": [
+        "contact case"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "contacts"
+      ],
+      "capabilities": [
+        "contacts"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.glasses_case",
+      "localizationKey": "packing.toiletries.glasses_case",
+      "display_name": "Glasses case",
+      "category": "toiletries",
+      "importance": "normal",
+      "symbol": "eyeglasses",
+      "keywords": [
+        "glasses case"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.retainer_case",
+      "localizationKey": "packing.toiletries.retainer_case",
+      "display_name": "Retainer case",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "mouth",
+      "keywords": [
+        "retainer"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.perfume",
+      "localizationKey": "packing.toiletries.perfume",
+      "display_name": "Fragrance",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "sparkles",
+      "keywords": [
+        "perfume",
+        "cologne"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.insect_repellent",
+      "localizationKey": "packing.toiletries.insect_repellent",
+      "display_name": "Insect repellent",
+      "category": "toiletries",
+      "importance": "normal",
+      "symbol": "ant",
+      "keywords": [
+        "bug spray",
+        "repellent"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "outdoor"
+      ],
+      "capabilities": [
+        "outdoor"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.aloe",
+      "localizationKey": "packing.toiletries.aloe",
+      "display_name": "Aloe / after-sun",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "leaf",
+      "keywords": [
+        "aloe"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "sun"
+      ],
+      "capabilities": [
+        "sun"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.laundry_sheets",
+      "localizationKey": "packing.toiletries.laundry_sheets",
+      "display_name": "Laundry sheets",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "washer",
+      "keywords": [
+        "laundry"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "laundry"
+      ],
+      "capabilities": [
+        "laundry"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.stain_remover",
+      "localizationKey": "packing.toiletries.stain_remover",
+      "display_name": "Stain remover pen",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "drop",
+      "keywords": [
+        "stain"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.tissues",
+      "localizationKey": "packing.toiletries.tissues",
+      "display_name": "Travel tissues",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "doc",
+      "keywords": [
+        "tissues"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "toiletries.wipes",
+      "localizationKey": "packing.toiletries.wipes",
+      "display_name": "Face / body wipes",
+      "category": "toiletries",
+      "importance": "optional",
+      "symbol": "doc",
+      "keywords": [
+        "wipes"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

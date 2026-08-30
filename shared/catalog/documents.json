@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "category": "documents",
+  "items": [
+    {
+      "id": "documents.passport",
+      "localizationKey": "packing.documents.passport",
+      "display_name": "Passport",
+      "category": "documents",
+      "importance": "critical",
+      "symbol": "globe",
+      "keywords": [
+        "passport"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "international"
+      ],
+      "capabilities": [
+        "international"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "documents.id",
+      "localizationKey": "packing.documents.id",
+      "display_name": "Photo ID",
+      "category": "documents",
+      "importance": "critical",
+      "symbol": "person.text.rectangle",
+      "keywords": [
+        "id",
+        "license",
+        "drivers license"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "documents.boarding_pass",
+      "localizationKey": "packing.documents.boarding_pass",
+      "display_name": "Boarding pass",
+      "category": "documents",
+      "importance": "important",
+      "symbol": "airplane",
+      "keywords": [
+        "boarding pass",
+        "ticket"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "documents.travel_insurance",
+      "localizationKey": "packing.documents.travel_insurance",
+      "display_name": "Travel insurance info",
+      "category": "documents",
+      "importance": "important",
+      "symbol": "doc.text",
+      "keywords": [
+        "insurance"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "international"
+      ],
+      "capabilities": [
+        "international"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "documents.hotel_confirmation",
+      "localizationKey": "packing.documents.hotel_confirmation",
+      "display_name": "Hotel confirmation",
+      "category": "documents",
+      "importance": "normal",
+      "symbol": "building.2",
+      "keywords": [
+        "hotel",
+        "reservation"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "documents.visa",
+      "localizationKey": "packing.documents.visa",
+      "display_name": "Visa / entry docs",
+      "category": "documents",
+      "importance": "critical",
+      "symbol": "doc.badge.arrow.up",
+      "keywords": [
+        "visa",
+        "esta"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "international"
+      ],
+      "capabilities": [
+        "international"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "documents.health_card",
+      "localizationKey": "packing.documents.health_card",
+      "display_name": "Health insurance card",
+      "category": "documents",
+      "importance": "important",
+      "symbol": "cross.case",
+      "keywords": [
+        "health card"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "documents.copies",
+      "localizationKey": "packing.documents.copies",
+      "display_name": "Document copies",
+      "category": "documents",
+      "importance": "optional",
+      "symbol": "doc.on.doc",
+      "keywords": [
+        "copies",
+        "photocopies"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "international"
+      ],
+      "capabilities": [
+        "international"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "documents.itinerary",
+      "localizationKey": "packing.documents.itinerary",
+      "display_name": "Printed itinerary",
+      "category": "documents",
+      "importance": "optional",
+      "symbol": "list.bullet.clipboard",
+      "keywords": [
+        "itinerary"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "documents.emergency_contacts",
+      "localizationKey": "packing.documents.emergency_contacts",
+      "display_name": "Emergency contacts",
+      "category": "documents",
+      "importance": "important",
+      "symbol": "person.crop.circle",
+      "keywords": [
+        "emergency"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+.DS_Store
+xcuserdata/
+DerivedData/
+*.xcuserstate
+.vscode/
+.idea/
+
+# Node / Vercel
+api/node_modules/
+api/.vercel/
+api/.env
+api/.env.local
+
+# Xcode
+ios/build/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Secrets — never commit. .env.local holds the OpenAI key, the HMAC secret,
+# and the Upstash credentials.
+.env
+.env.local
+.env.*.local
+*.pem
+!api/test/**/*.pem
+
+# Verification scratch
+/tmp/

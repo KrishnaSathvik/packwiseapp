@@ -1,0 +1,18 @@
+{
+  "id": "OneDayNoWeather",
+  "destinationFixture": "Chicago",
+  "days": 1,
+  "tripType": "cityBreak",
+  "activities": [],
+  "bag": "notSure",
+  "style": "balanced",
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "mustInclude": [
+    "essentials.wallet",
+    "essentials.phone"
+  ],
+  "mustNotInclude": [
+    "clothing.winter_coat"
+  ]
+}

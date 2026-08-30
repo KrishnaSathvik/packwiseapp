@@ -1,0 +1,371 @@
+{
+  "version": 1,
+  "fixtures": {
+    "ChicagoRainyFall": {
+      "id": "ChicagoRainyFall",
+      "summary": "Mild days, rain Saturday, cool evenings.",
+      "days": [
+        {
+          "offset": 0,
+          "symbol": "sun.max",
+          "highF": 78,
+          "lowF": 61,
+          "rainProbability": 0.1,
+          "uvIndex": 5,
+          "windMph": 8,
+          "snowExpected": false,
+          "summary": "Mostly sunny"
+        },
+        {
+          "offset": 1,
+          "symbol": "cloud.rain",
+          "highF": 71,
+          "lowF": 59,
+          "rainProbability": 0.7,
+          "uvIndex": 3,
+          "windMph": 12,
+          "snowExpected": false,
+          "summary": "Rain"
+        },
+        {
+          "offset": 2,
+          "symbol": "cloud.sun",
+          "highF": 69,
+          "lowF": 58,
+          "rainProbability": 0.2,
+          "uvIndex": 4,
+          "windMph": 10,
+          "snowExpected": false,
+          "summary": "Partly cloudy"
+        },
+        {
+          "offset": 3,
+          "symbol": "sun.max",
+          "highF": 74,
+          "lowF": 60,
+          "rainProbability": 0.05,
+          "uvIndex": 5,
+          "windMph": 7,
+          "snowExpected": false,
+          "summary": "Sunny"
+        },
+        {
+          "offset": 4,
+          "symbol": "sun.max",
+          "highF": 76,
+          "lowF": 62,
+          "rainProbability": 0.05,
+          "uvIndex": 5,
+          "windMph": 8,
+          "snowExpected": false,
+          "summary": "Sunny"
+        }
+      ]
+    },
+    "MiamiHotBeach": {
+      "id": "MiamiHotBeach",
+      "summary": "Hot and humid with strong sun. Afternoon showers possible.",
+      "days": [
+        {
+          "offset": 0,
+          "symbol": "sun.max",
+          "highF": 91,
+          "lowF": 78,
+          "rainProbability": 0.2,
+          "uvIndex": 10,
+          "windMph": 9,
+          "snowExpected": false,
+          "summary": "Hot and sunny"
+        },
+        {
+          "offset": 1,
+          "symbol": "cloud.sun.rain",
+          "highF": 89,
+          "lowF": 77,
+          "rainProbability": 0.45,
+          "uvIndex": 9,
+          "windMph": 11,
+          "snowExpected": false,
+          "summary": "Sun and showers"
+        },
+        {
+          "offset": 2,
+          "symbol": "sun.max",
+          "highF": 90,
+          "lowF": 78,
+          "rainProbability": 0.15,
+          "uvIndex": 10,
+          "windMph": 8,
+          "snowExpected": false,
+          "summary": "Hot"
+        },
+        {
+          "offset": 3,
+          "symbol": "sun.max",
+          "highF": 92,
+          "lowF": 79,
+          "rainProbability": 0.1,
+          "uvIndex": 11,
+          "windMph": 10,
+          "snowExpected": false,
+          "summary": "Very hot"
+        },
+        {
+          "offset": 4,
+          "symbol": "cloud.sun",
+          "highF": 88,
+          "lowF": 77,
+          "rainProbability": 0.25,
+          "uvIndex": 9,
+          "windMph": 12,
+          "snowExpected": false,
+          "summary": "Warm"
+        }
+      ]
+    },
+    "DenverColdOutdoor": {
+      "id": "DenverColdOutdoor",
+      "summary": "Cold mornings, possible snow, windy afternoons.",
+      "days": [
+        {
+          "offset": 0,
+          "symbol": "cloud.snow",
+          "highF": 36,
+          "lowF": 18,
+          "rainProbability": 0.2,
+          "uvIndex": 2,
+          "windMph": 18,
+          "snowExpected": true,
+          "summary": "Snow showers"
+        },
+        {
+          "offset": 1,
+          "symbol": "snowflake",
+          "highF": 28,
+          "lowF": 12,
+          "rainProbability": 0.15,
+          "uvIndex": 2,
+          "windMph": 20,
+          "snowExpected": true,
+          "summary": "Cold and snowy"
+        },
+        {
+          "offset": 2,
+          "symbol": "cloud",
+          "highF": 34,
+          "lowF": 16,
+          "rainProbability": 0.1,
+          "uvIndex": 2,
+          "windMph": 16,
+          "snowExpected": false,
+          "summary": "Cloudy and cold"
+        },
+        {
+          "offset": 3,
+          "symbol": "sun.max",
+          "highF": 41,
+          "lowF": 19,
+          "rainProbability": 0.05,
+          "uvIndex": 3,
+          "windMph": 14,
+          "snowExpected": false,
+          "summary": "Cold sun"
+        },
+        {
+          "offset": 4,
+          "symbol": "cloud.sun",
+          "highF": 39,
+          "lowF": 17,
+          "rainProbability": 0.1,
+          "uvIndex": 3,
+          "windMph": 15,
+          "snowExpected": false,
+          "summary": "Cold"
+        }
+      ]
+    },
+    "SeattleWetCity": {
+      "id": "SeattleWetCity",
+      "summary": "On-and-off rain with cool temperatures.",
+      "days": [
+        {
+          "offset": 0,
+          "symbol": "cloud.rain",
+          "highF": 58,
+          "lowF": 48,
+          "rainProbability": 0.65,
+          "uvIndex": 2,
+          "windMph": 10,
+          "snowExpected": false,
+          "summary": "Rain"
+        },
+        {
+          "offset": 1,
+          "symbol": "cloud.drizzle",
+          "highF": 56,
+          "lowF": 47,
+          "rainProbability": 0.55,
+          "uvIndex": 2,
+          "windMph": 12,
+          "snowExpected": false,
+          "summary": "Drizzle"
+        },
+        {
+          "offset": 2,
+          "symbol": "cloud",
+          "highF": 59,
+          "lowF": 49,
+          "rainProbability": 0.3,
+          "uvIndex": 2,
+          "windMph": 9,
+          "snowExpected": false,
+          "summary": "Cloudy"
+        },
+        {
+          "offset": 3,
+          "symbol": "cloud.rain",
+          "highF": 57,
+          "lowF": 46,
+          "rainProbability": 0.7,
+          "uvIndex": 1,
+          "windMph": 14,
+          "snowExpected": false,
+          "summary": "Rain"
+        },
+        {
+          "offset": 4,
+          "symbol": "cloud.sun",
+          "highF": 61,
+          "lowF": 50,
+          "rainProbability": 0.25,
+          "uvIndex": 3,
+          "windMph": 8,
+          "snowExpected": false,
+          "summary": "Breaks of sun"
+        }
+      ]
+    },
+    "TokyoMildSpring": {
+      "id": "TokyoMildSpring",
+      "summary": "Mild spring days. Light rain possible midweek.",
+      "days": [
+        {
+          "offset": 0,
+          "symbol": "cloud.sun",
+          "highF": 68,
+          "lowF": 54,
+          "rainProbability": 0.15,
+          "uvIndex": 5,
+          "windMph": 7,
+          "snowExpected": false,
+          "summary": "Mild"
+        },
+        {
+          "offset": 1,
+          "symbol": "sun.max",
+          "highF": 72,
+          "lowF": 55,
+          "rainProbability": 0.05,
+          "uvIndex": 6,
+          "windMph": 6,
+          "snowExpected": false,
+          "summary": "Pleasant"
+        },
+        {
+          "offset": 2,
+          "symbol": "cloud.rain",
+          "highF": 64,
+          "lowF": 52,
+          "rainProbability": 0.5,
+          "uvIndex": 3,
+          "windMph": 9,
+          "snowExpected": false,
+          "summary": "Light rain"
+        },
+        {
+          "offset": 3,
+          "symbol": "cloud.sun",
+          "highF": 70,
+          "lowF": 53,
+          "rainProbability": 0.1,
+          "uvIndex": 5,
+          "windMph": 7,
+          "snowExpected": false,
+          "summary": "Mild"
+        },
+        {
+          "offset": 4,
+          "symbol": "sun.max",
+          "highF": 73,
+          "lowF": 56,
+          "rainProbability": 0.05,
+          "uvIndex": 6,
+          "windMph": 6,
+          "snowExpected": false,
+          "summary": "Sunny"
+        }
+      ]
+    },
+    "ReykjavikColdWindy": {
+      "id": "ReykjavikColdWindy",
+      "summary": "Cold, windy, and changeable. Dress in layers.",
+      "days": [
+        {
+          "offset": 0,
+          "symbol": "wind",
+          "highF": 42,
+          "lowF": 32,
+          "rainProbability": 0.3,
+          "uvIndex": 2,
+          "windMph": 28,
+          "snowExpected": false,
+          "summary": "Windy"
+        },
+        {
+          "offset": 1,
+          "symbol": "cloud.rain",
+          "highF": 40,
+          "lowF": 30,
+          "rainProbability": 0.45,
+          "uvIndex": 1,
+          "windMph": 30,
+          "snowExpected": false,
+          "summary": "Rain and wind"
+        },
+        {
+          "offset": 2,
+          "symbol": "cloud",
+          "highF": 39,
+          "lowF": 28,
+          "rainProbability": 0.2,
+          "uvIndex": 1,
+          "windMph": 26,
+          "snowExpected": false,
+          "summary": "Cold"
+        },
+        {
+          "offset": 3,
+          "symbol": "wind",
+          "highF": 41,
+          "lowF": 31,
+          "rainProbability": 0.25,
+          "uvIndex": 2,
+          "windMph": 32,
+          "snowExpected": false,
+          "summary": "Very windy"
+        },
+        {
+          "offset": 4,
+          "symbol": "cloud.sun",
+          "highF": 44,
+          "lowF": 33,
+          "rainProbability": 0.15,
+          "uvIndex": 2,
+          "windMph": 22,
+          "snowExpected": false,
+          "summary": "Brighter but cold"
+        }
+      ]
+    }
+  }
+}

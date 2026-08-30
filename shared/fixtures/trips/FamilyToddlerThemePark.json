@@ -1,0 +1,65 @@
+{
+  "id": "FamilyToddlerThemePark",
+  "destinationFixture": "Los Angeles",
+  "days": 4,
+  "tripType": "vacation",
+  "activities": [
+    "sightseeing",
+    "walking"
+  ],
+  "bag": "checked",
+  "style": "prepared",
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "party": {
+    "travelMode": "family",
+    "travelers": [
+      {
+        "role": "self",
+        "ageGroup": "adult"
+      },
+      {
+        "role": "partner",
+        "ageGroup": "adult"
+      },
+      {
+        "role": "child",
+        "ageGroup": "toddler",
+        "needs": [
+          "diapers",
+          "stroller",
+          "comfortItem",
+          "medication"
+        ]
+      }
+    ]
+  },
+  "note": "Theme parks with our two-year-old. Long days on our feet, she still naps in the stroller, and she has an ear infection we're still treating.",
+  "mustInfer": [
+    "walking"
+  ],
+  "mustNotInfer": [
+    "hiking",
+    "niceDinner",
+    "nightlife",
+    "work"
+  ],
+  "allowedSuggestions": [
+    "kids.snacks",
+    "kids.sunscreen",
+    "kids.extra_outfits",
+    "electronics.power_bank",
+    "miscellaneous.ziplocks",
+    "health.pain_reliever"
+  ],
+  "mustInclude": [
+    "kids.diapers",
+    "kids.wipes",
+    "kids.stroller",
+    "kids.comfort_item"
+  ],
+  "mustNotInclude": [
+    "clothing.winter_coat",
+    "clothing.formal_outfit"
+  ]
+}

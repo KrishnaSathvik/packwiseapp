@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "category": "travel_comfort",
+  "items": [
+    {
+      "id": "travel_comfort.neck_pillow",
+      "localizationKey": "packing.travel_comfort.neck_pillow",
+      "display_name": "Travel pillow",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "bed.double",
+      "keywords": [
+        "travel pillow",
+        "neck pillow"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "flight"
+      ],
+      "capabilities": [
+        "flight"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.eye_mask",
+      "localizationKey": "packing.travel_comfort.eye_mask",
+      "display_name": "Sleep mask",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "eye.slash",
+      "keywords": [
+        "sleep mask",
+        "eye mask"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.earplugs",
+      "localizationKey": "packing.travel_comfort.earplugs",
+      "display_name": "Earplugs",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "ear",
+      "keywords": [
+        "earplugs"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.blanket",
+      "localizationKey": "packing.travel_comfort.blanket",
+      "display_name": "Travel blanket",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "bed.double",
+      "keywords": [
+        "blanket"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "flight"
+      ],
+      "capabilities": [
+        "flight"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.compression_packing",
+      "localizationKey": "packing.travel_comfort.compression_packing",
+      "display_name": "Packing cubes",
+      "category": "travel_comfort",
+      "importance": "normal",
+      "symbol": "square.stack.3d.up",
+      "keywords": [
+        "packing cubes"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.laundry_bag",
+      "localizationKey": "packing.travel_comfort.laundry_bag",
+      "display_name": "Laundry bag",
+      "category": "travel_comfort",
+      "importance": "normal",
+      "symbol": "bag",
+      "keywords": [
+        "laundry bag"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.toiletry_bag",
+      "localizationKey": "packing.travel_comfort.toiletry_bag",
+      "display_name": "Toiletry bag",
+      "category": "travel_comfort",
+      "importance": "important",
+      "symbol": "bag",
+      "keywords": [
+        "toiletry bag",
+        "dopp"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.reusable_bottle",
+      "localizationKey": "packing.travel_comfort.reusable_bottle",
+      "display_name": "Empty security bottle set",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "bottle",
+      "keywords": [
+        "3-1-1",
+        "liquids"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "carryon"
+      ],
+      "capabilities": [
+        "carryon"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.snacks_flight",
+      "localizationKey": "packing.travel_comfort.snacks_flight",
+      "display_name": "Flight snacks",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "fork.knife",
+      "keywords": [
+        "flight snacks"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "flight"
+      ],
+      "capabilities": [
+        "snacks",
+        "flight"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.book",
+      "localizationKey": "packing.travel_comfort.book",
+      "display_name": "Book or magazine",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "book",
+      "keywords": [
+        "book"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.cards",
+      "localizationKey": "packing.travel_comfort.cards",
+      "display_name": "Card game",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "suit.club",
+      "keywords": [
+        "cards"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.gum",
+      "localizationKey": "packing.travel_comfort.gum",
+      "display_name": "Gum",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "mouth",
+      "keywords": [
+        "gum"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.empty_security_bottle",
+      "localizationKey": "packing.travel_comfort.empty_security_bottle",
+      "display_name": "Empty security bottle",
+      "category": "travel_comfort",
+      "importance": "normal",
+      "symbol": "waterbottle",
+      "keywords": [
+        "empty bottle"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "flight"
+      ],
+      "capabilities": [
+        "hydration",
+        "flight"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.lock",
+      "localizationKey": "packing.travel_comfort.lock",
+      "display_name": "Bag lock",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "lock",
+      "keywords": [
+        "lock",
+        "tsa lock"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "travel_comfort.luggage_tag",
+      "localizationKey": "packing.travel_comfort.luggage_tag",
+      "display_name": "Luggage tag",
+      "category": "travel_comfort",
+      "importance": "optional",
+      "symbol": "tag",
+      "keywords": [
+        "luggage tag"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

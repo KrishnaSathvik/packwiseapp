@@ -1,0 +1,49 @@
+{
+  "id": "MiamiBeachCarryOn",
+  "destinationFixture": "Miami",
+  "weatherFixture": "MiamiHotBeach",
+  "days": 6,
+  "tripType": "beach",
+  "activities": [
+    "swimming",
+    "beachDays"
+  ],
+  "bag": "carryOn",
+  "style": "light",
+  "chips": [
+    "laundryAvailable"
+  ],
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "mustInclude": [
+    "clothing.swimsuit",
+    "toiletries.sunscreen"
+  ],
+  "mustNotInclude": [
+    "clothing.winter_coat"
+  ],
+  "expectedQuantityRanges": {
+    "clothing.tshirt": [
+      4,
+      4
+    ]
+  },
+  "note": "Beach week in Miami, mostly pool and ocean. There's a washer at the rental so I don't need much.",
+  "mustInfer": [
+    "swimming",
+    "beachDays",
+    "laundryAvailable"
+  ],
+  "mustNotInfer": [
+    "hiking",
+    "work",
+    "needFormalOutfit"
+  ],
+  "allowedSuggestions": [
+    "activities.beach_towel",
+    "footwear.flip_flops",
+    "clothing.coverup",
+    "toiletries.aloe",
+    "essentials.sunglasses"
+  ]
+}

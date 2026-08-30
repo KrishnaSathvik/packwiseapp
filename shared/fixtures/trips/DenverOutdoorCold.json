@@ -1,0 +1,40 @@
+{
+  "id": "DenverOutdoorCold",
+  "destinationFixture": "Denver",
+  "weatherFixture": "DenverColdOutdoor",
+  "days": 5,
+  "tripType": "outdoor",
+  "activities": [
+    "hiking"
+  ],
+  "bag": "notSure",
+  "style": "balanced",
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "mustInclude": [
+    "footwear.hiking_shoes",
+    "activities.daypack",
+    "hydration.water_bottle",
+    "clothing.winter_coat"
+  ],
+  "mustNotInclude": [
+    "clothing.swimsuit"
+  ],
+  "note": "Hiking around Denver for a few days. Trails most mornings, nothing fancy in the evenings.",
+  "mustInfer": [
+    "hiking"
+  ],
+  "mustNotInfer": [
+    "niceDinner",
+    "needFormalOutfit",
+    "swimming",
+    "nightlife"
+  ],
+  "allowedSuggestions": [
+    "health.blister_pads",
+    "activities.hiking_poles",
+    "health.electrolytes",
+    "clothing.thermal_top",
+    "essentials.snacks"
+  ]
+}

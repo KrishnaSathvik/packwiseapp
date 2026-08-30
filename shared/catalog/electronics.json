@@ -1,0 +1,372 @@
+{
+  "version": 1,
+  "category": "electronics",
+  "items": [
+    {
+      "id": "electronics.phone_charger",
+      "localizationKey": "packing.electronics.phone_charger",
+      "display_name": "Phone charger",
+      "category": "electronics",
+      "importance": "important",
+      "symbol": "cable.connector",
+      "keywords": [
+        "phone charger",
+        "lightning",
+        "usb-c"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.power_bank",
+      "localizationKey": "packing.electronics.power_bank",
+      "display_name": "Portable charger",
+      "category": "electronics",
+      "importance": "important",
+      "symbol": "battery.100percent",
+      "keywords": [
+        "power bank",
+        "battery pack",
+        "portable battery"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.laptop",
+      "localizationKey": "packing.electronics.laptop",
+      "display_name": "Laptop",
+      "category": "electronics",
+      "importance": "important",
+      "symbol": "laptopcomputer",
+      "keywords": [
+        "laptop",
+        "macbook"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "laptop",
+        "work"
+      ],
+      "capabilities": [
+        "laptop",
+        "work"
+      ],
+      "companions": [
+        "electronics.laptop_charger"
+      ],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.laptop_charger",
+      "localizationKey": "packing.electronics.laptop_charger",
+      "display_name": "Laptop charger",
+      "category": "electronics",
+      "importance": "important",
+      "symbol": "cable.connector",
+      "keywords": [
+        "laptop charger"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "laptop",
+        "work"
+      ],
+      "capabilities": [
+        "laptop",
+        "work"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.tablet",
+      "localizationKey": "packing.electronics.tablet",
+      "display_name": "Tablet",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "ipad",
+      "keywords": [
+        "ipad",
+        "tablet"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.headphones",
+      "localizationKey": "packing.electronics.headphones",
+      "display_name": "Headphones",
+      "category": "electronics",
+      "importance": "normal",
+      "symbol": "headphones",
+      "keywords": [
+        "headphones",
+        "airpods"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [
+        "audio"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.earbuds_case",
+      "localizationKey": "packing.electronics.earbuds_case",
+      "display_name": "Earbuds",
+      "category": "electronics",
+      "importance": "normal",
+      "symbol": "earpods",
+      "keywords": [
+        "earbuds",
+        "airpods"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [
+        "audio"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.travel_adapter",
+      "localizationKey": "packing.electronics.travel_adapter",
+      "display_name": "Travel adapter",
+      "category": "electronics",
+      "importance": "important",
+      "symbol": "powerplug",
+      "keywords": [
+        "adapter",
+        "plug adapter"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "international"
+      ],
+      "capabilities": [
+        "international"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.outlet_splitter",
+      "localizationKey": "packing.electronics.outlet_splitter",
+      "display_name": "USB hub / splitter",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "powerplug",
+      "keywords": [
+        "usb hub"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.camera",
+      "localizationKey": "packing.electronics.camera",
+      "display_name": "Camera",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "camera",
+      "keywords": [
+        "camera"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "photography"
+      ],
+      "capabilities": [
+        "photography"
+      ],
+      "companions": [
+        "electronics.camera_charger"
+      ],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.camera_charger",
+      "localizationKey": "packing.electronics.camera_charger",
+      "display_name": "Camera charger",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "cable.connector",
+      "keywords": [
+        "camera charger"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "photography"
+      ],
+      "capabilities": [
+        "photography"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.memory_card",
+      "localizationKey": "packing.electronics.memory_card",
+      "display_name": "Memory card",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "sdcard",
+      "keywords": [
+        "sd card"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "photography"
+      ],
+      "capabilities": [
+        "photography"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.kindle",
+      "localizationKey": "packing.electronics.kindle",
+      "display_name": "E-reader",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "book",
+      "keywords": [
+        "kindle",
+        "e-reader"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.watch_charger",
+      "localizationKey": "packing.electronics.watch_charger",
+      "display_name": "Watch charger",
+      "category": "electronics",
+      "importance": "normal",
+      "symbol": "applewatch",
+      "keywords": [
+        "watch charger"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.extension_cord",
+      "localizationKey": "packing.electronics.extension_cord",
+      "display_name": "Short extension cord",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "cable.connector",
+      "keywords": [
+        "extension"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.hdmi",
+      "localizationKey": "packing.electronics.hdmi",
+      "display_name": "HDMI cable",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "cable.connector",
+      "keywords": [
+        "hdmi"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "work"
+      ],
+      "capabilities": [
+        "work"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.mouse",
+      "localizationKey": "packing.electronics.mouse",
+      "display_name": "Travel mouse",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "computermouse",
+      "keywords": [
+        "mouse"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "work"
+      ],
+      "capabilities": [
+        "work"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.power_strip",
+      "localizationKey": "packing.electronics.power_strip",
+      "display_name": "Travel power strip",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "powerplug",
+      "keywords": [
+        "power strip"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "electronics.sim_ejector",
+      "localizationKey": "packing.electronics.sim_ejector",
+      "display_name": "SIM ejector",
+      "category": "electronics",
+      "importance": "optional",
+      "symbol": "pin",
+      "keywords": [
+        "sim"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "international"
+      ],
+      "capabilities": [
+        "international"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

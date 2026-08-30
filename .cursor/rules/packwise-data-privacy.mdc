@@ -1,0 +1,52 @@
+---
+description: Offline-first persistence, weather snapshots, privacy, analytics, and notifications.
+alwaysApply: true
+---
+
+# Data, Privacy, Platform
+
+## Offline
+
+Source of truth is the local SwiftData store. Open trip → render immediately → refresh weather/intelligence in the background. Never block first paint on network.
+
+Store `WeatherSnapshot` so offline still shows “Updated 5 hours ago.”
+
+## Weather data
+
+Any production UI that displays Apple weather must include WeatherKit attribution. Persist `providerFetchedAt` and `providerExpiresAt` from WeatherKit metadata rather than inventing a cache TTL. Persist coverage dates and source on the encoded `WeatherSnapshot`. `TripWeatherState` is internal.
+
+```text
+Destination → coordinates → WeatherKit → Weather Adapter → TripWeatherContext
+```
+
+Normalize min/max, dailyForecast, rainDays, snowDays, uvRange, windRange, weatherSummary, fetchedAt.
+
+Diff only meaningful changes (rain 0→2 days, min 64→49, snow none→expected). Then packing diff: ADD / REMOVE CANDIDATE / QUANTITY CHANGE. User decides.
+
+## Sync and backend
+
+iCloud / CloudKit is not MVP. No account required.
+
+Backend exists only for GPT-5.6 (attestation, rate limit, prompt version, context minimization, structured schema). iOS still owns app data. Broader backend (groups, Android, accounts) is later.
+
+## Privacy
+
+No live GPS. Use selected destination coordinates. Do not request location unless a later feature truly needs it.
+
+Keep medication / contacts / documents **local**. Never encourage storing passport numbers, passport photos, credit cards, visa numbers, or medical records. The reminder is “Passport”, not the passport.
+
+## Analytics
+
+Allowed events: `trip_created`, `packing_generated`, `packing_item_packed`, `packing_item_removed`, `packing_item_added`, `suggestion_accepted`, `suggestion_rejected`, `weather_change_reviewed`, `final_check_opened`, `trip_completed`, `post_trip_review_completed`, `pack_lighter_used`, `packing_gap_check_used`.
+
+Do not transmit custom item names casually.
+
+## Notifications
+
+`NotificationCoordinator` owns: `forecast_available`, `weather_change`, `three_days_before`, `day_before`, `departure_day`, `post_trip_review`. Date edits cancel and reschedule.
+
+Background refresh is opportunistic. Never promise minute-by-minute checks.
+
+Startup: SwiftData → load upcoming trips → render → background refresh. Instant.
+
+Full spec: `docs/data-privacy-and-platform.md`.

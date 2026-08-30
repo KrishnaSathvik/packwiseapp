@@ -1,0 +1,82 @@
+{
+  "base_essentials": [
+    "essentials.wallet",
+    "essentials.phone",
+    "essentials.keys",
+    "documents.id",
+    "electronics.phone_charger",
+    "clothing.tshirt",
+    "clothing.underwear",
+    "clothing.socks",
+    "clothing.sleepwear",
+    "clothing.pants",
+    "footwear.walking_shoes",
+    "toiletries.toothbrush",
+    "toiletries.toothpaste",
+    "toiletries.deodorant",
+    "toiletries.shampoo",
+    "toiletries.body_wash",
+    "travel_comfort.toiletry_bag",
+    "travel_comfort.compression_packing",
+    "travel_comfort.laundry_bag",
+    "health.pain_reliever"
+  ],
+  "international_adds": [
+    "documents.passport",
+    "electronics.travel_adapter",
+    "essentials.cash",
+    "documents.travel_insurance"
+  ],
+  "context_chips": {
+    "dailyMedication": [
+      "health.daily_medication",
+      "health.prescription_copy"
+    ],
+    "wearContacts": [
+      "toiletries.contacts_solution",
+      "toiletries.contact_case",
+      "health.eye_drops"
+    ],
+    "bringingLaptop": [
+      "electronics.laptop",
+      "electronics.laptop_charger"
+    ],
+    "usuallyWorkOut": [
+      "clothing.workout_top",
+      "clothing.workout_bottom",
+      "footwear.running_shoes"
+    ],
+    "runWhileTraveling": [
+      "footwear.running_shoes",
+      "clothing.workout_top",
+      "activities.running_belt"
+    ],
+    "needFormalOutfit": [
+      "clothing.formal_outfit",
+      "footwear.dress_shoes"
+    ],
+    "travelingInternationally": [
+      "documents.passport",
+      "electronics.travel_adapter",
+      "essentials.cash"
+    ],
+    "getColdEasily": [
+      "clothing.light_sweater",
+      "clothing.light_jacket"
+    ],
+    "laundryAvailable": [
+      "toiletries.laundry_sheets"
+    ]
+  },
+  "free_text_keywords": {
+    "hik": "hiking",
+    "photo": "photography",
+    "yoga": "yoga",
+    "snorkel": "snorkeling",
+    "run": "running",
+    "museum": "museums",
+    "work": "work",
+    "wildlife": "wildlife",
+    "boat": "boatTrip"
+  }
+}

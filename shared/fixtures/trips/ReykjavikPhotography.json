@@ -1,0 +1,40 @@
+{
+  "id": "ReykjavikPhotography",
+  "destinationFixture": "Reykjavik",
+  "weatherFixture": "ReykjavikColdWindy",
+  "days": 5,
+  "tripType": "outdoor",
+  "activities": [
+    "photography",
+    "sightseeing"
+  ],
+  "bag": "checked",
+  "style": "prepared",
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "mustInclude": [
+    "electronics.camera",
+    "electronics.camera_charger",
+    "clothing.windbreaker"
+  ],
+  "mustNotInclude": [],
+  "note": "Iceland for a week of landscape photography. Waterfalls, black sand beaches, hoping for northern lights. It will be cold and windy out there.",
+  "mustInfer": [
+    "photography"
+  ],
+  "mustNotInfer": [
+    "getColdEasily",
+    "swimming",
+    "niceDinner",
+    "work"
+  ],
+  "allowedSuggestions": [
+    "electronics.memory_card",
+    "electronics.power_bank",
+    "clothing.thermal_top",
+    "clothing.thermal_bottom",
+    "clothing.gloves",
+    "clothing.beanie",
+    "health.hand_warmers"
+  ]
+}

@@ -1,0 +1,299 @@
+{
+  "version": 1,
+  "category": "health",
+  "items": [
+    {
+      "id": "health.daily_medication",
+      "localizationKey": "packing.health.daily_medication",
+      "display_name": "Daily medication",
+      "category": "health",
+      "importance": "critical",
+      "symbol": "pills",
+      "keywords": [
+        "medication",
+        "meds",
+        "prescription"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "medication"
+      ],
+      "capabilities": [
+        "medication"
+      ],
+      "companions": [
+        "health.prescription_copy"
+      ],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.prescription_copy",
+      "localizationKey": "packing.health.prescription_copy",
+      "display_name": "Prescription copy",
+      "category": "health",
+      "importance": "important",
+      "symbol": "doc.text",
+      "keywords": [
+        "prescription"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "medication"
+      ],
+      "capabilities": [
+        "medication"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.pain_reliever",
+      "localizationKey": "packing.health.pain_reliever",
+      "display_name": "Pain reliever",
+      "category": "health",
+      "importance": "normal",
+      "symbol": "pills",
+      "keywords": [
+        "ibuprofen",
+        "tylenol",
+        "advil"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.allergy",
+      "localizationKey": "packing.health.allergy",
+      "display_name": "Allergy medicine",
+      "category": "health",
+      "importance": "normal",
+      "symbol": "pills",
+      "keywords": [
+        "allergy",
+        "antihistamine"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.bandages",
+      "localizationKey": "packing.health.bandages",
+      "display_name": "Bandages",
+      "category": "health",
+      "importance": "normal",
+      "symbol": "cross.case",
+      "keywords": [
+        "bandages",
+        "bandaid"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.first_aid",
+      "localizationKey": "packing.health.first_aid",
+      "display_name": "Mini first-aid kit",
+      "category": "health",
+      "importance": "optional",
+      "symbol": "cross.case",
+      "keywords": [
+        "first aid"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "outdoor"
+      ],
+      "capabilities": [
+        "outdoor"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.motion_sickness",
+      "localizationKey": "packing.health.motion_sickness",
+      "display_name": "Motion sickness tablets",
+      "category": "health",
+      "importance": "optional",
+      "symbol": "pills",
+      "keywords": [
+        "motion sickness",
+        "dramamine"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "boat"
+      ],
+      "capabilities": [
+        "boat"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.electrolytes",
+      "localizationKey": "packing.health.electrolytes",
+      "display_name": "Electrolytes",
+      "category": "health",
+      "importance": "optional",
+      "symbol": "drop",
+      "keywords": [
+        "electrolytes"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "hot",
+        "workout"
+      ],
+      "capabilities": [
+        "hot",
+        "workout"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.vitamins",
+      "localizationKey": "packing.health.vitamins",
+      "display_name": "Vitamins",
+      "category": "health",
+      "importance": "optional",
+      "symbol": "pills",
+      "keywords": [
+        "vitamins"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.thermometer",
+      "localizationKey": "packing.health.thermometer",
+      "display_name": "Travel thermometer",
+      "category": "health",
+      "importance": "optional",
+      "symbol": "thermometer",
+      "keywords": [
+        "thermometer"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.blister_pads",
+      "localizationKey": "packing.health.blister_pads",
+      "display_name": "Blister pads",
+      "category": "health",
+      "importance": "normal",
+      "symbol": "bandage",
+      "keywords": [
+        "blister"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "walking",
+        "hiking"
+      ],
+      "capabilities": [
+        "walking",
+        "hiking"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.eye_drops",
+      "localizationKey": "packing.health.eye_drops",
+      "display_name": "Eye drops",
+      "category": "health",
+      "importance": "optional",
+      "symbol": "eye",
+      "keywords": [
+        "eye drops"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "contacts"
+      ],
+      "capabilities": [
+        "contacts"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.inhaler",
+      "localizationKey": "packing.health.inhaler",
+      "display_name": "Inhaler",
+      "category": "health",
+      "importance": "critical",
+      "symbol": "lungs",
+      "keywords": [
+        "inhaler"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.insect_bite",
+      "localizationKey": "packing.health.insect_bite",
+      "display_name": "Bite cream",
+      "category": "health",
+      "importance": "optional",
+      "symbol": "cross.case",
+      "keywords": [
+        "hydrocortisone"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "outdoor"
+      ],
+      "capabilities": [
+        "outdoor"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "health.hand_warmers",
+      "localizationKey": "packing.health.hand_warmers",
+      "display_name": "Hand warmers",
+      "category": "health",
+      "importance": "optional",
+      "symbol": "flame",
+      "keywords": [
+        "hand warmers"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "cold"
+      ],
+      "capabilities": [
+        "cold"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

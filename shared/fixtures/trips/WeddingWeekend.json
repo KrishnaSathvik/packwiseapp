@@ -1,0 +1,37 @@
+{
+  "id": "WeddingWeekend",
+  "destinationFixture": "Chicago",
+  "days": 3,
+  "tripType": "weddingEvent",
+  "activities": [
+    "niceDinner"
+  ],
+  "bag": "carryOn",
+  "style": "balanced",
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "mustInclude": [
+    "clothing.formal_outfit",
+    "footwear.dress_shoes"
+  ],
+  "mustNotInclude": [
+    "clothing.winter_coat"
+  ],
+  "note": "Friend's wedding weekend. Rehearsal dinner Friday, ceremony Saturday. I need to look sharp.",
+  "mustInfer": [
+    "niceDinner",
+    "needFormalOutfit"
+  ],
+  "mustNotInfer": [
+    "hiking",
+    "swimming",
+    "work"
+  ],
+  "allowedSuggestions": [
+    "miscellaneous.wedding_card",
+    "miscellaneous.gift",
+    "toiletries.stain_remover",
+    "clothing.tie",
+    "clothing.belt"
+  ]
+}

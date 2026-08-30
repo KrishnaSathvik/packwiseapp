@@ -1,0 +1,43 @@
+{
+  "id": "TokyoInternationalWalking",
+  "destinationFixture": "Tokyo",
+  "weatherFixture": "TokyoMildSpring",
+  "days": 6,
+  "tripType": "cityBreak",
+  "activities": [
+    "sightseeing",
+    "walking"
+  ],
+  "bag": "carryOn",
+  "style": "balanced",
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "mustInclude": [
+    "documents.passport",
+    "electronics.travel_adapter",
+    "footwear.walking_shoes"
+  ],
+  "mustNotInclude": [
+    "clothing.winter_coat"
+  ],
+  "note": "Going to Tokyo, lots of walking, one fancy dinner, I'll probably work out twice and I get cold easily.",
+  "mustInfer": [
+    "walking",
+    "niceDinner",
+    "usuallyWorkOut",
+    "getColdEasily"
+  ],
+  "mustNotInfer": [
+    "hiking",
+    "swimming",
+    "laundryAvailable",
+    "bringingLaptop"
+  ],
+  "allowedSuggestions": [
+    "electronics.power_bank",
+    "clothing.nice_outfit",
+    "footwear.dress_shoes",
+    "clothing.light_sweater",
+    "essentials.umbrella_compact"
+  ]
+}

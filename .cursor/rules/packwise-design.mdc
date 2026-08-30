@@ -1,0 +1,43 @@
+---
+description: Visual system, components, motion, dark mode, and accessibility for PackWise UI.
+globs: "**/*.{swift,swiftui}"
+alwaysApply: false
+---
+
+# Design
+
+Direction: **Apple-native travel utility with quiet intelligence.** Match `design/ui-flow-overview.png`. Do not invent a second visual language.
+
+## Tokens
+
+- SF Pro + Dynamic Type. No custom display fonts for body UI
+- SF Symbols, outline style
+- Primary blue for CTAs, selected chips, progress, key icons
+- Semantic system colors only — never hardcode `#FFFFFF` / `#000000`
+- Soft card shadows, generous whitespace, subtle materials
+- Tokenize colors in `DesignSystem/` when implementation starts
+
+## Components
+
+- Native navigation, sheets, context menus, date pickers, Swift Charts
+- Setup: Back / Next header, not custom wizard chrome
+- Tab bar: Trips + Me
+- Packing: Reminders-style rows, not per-item cards
+- Cards: upcoming trip, weather, weather-changed, Final Check, suggestions
+- Item detail and Add Item: bottom sheets
+- Trip Detail: floating **+**
+- 44pt minimum targets
+
+## Photography
+
+Allowed: onboarding welcome, trip hero, past-trip card, completed-trip moment. Not on the packing list.
+
+## Motion
+
+Check item → light haptic. Category complete → stronger. 100% → small suitcase moment. Weather change → quiet transition. No confetti. Honor Reduce Motion.
+
+## Dark Mode and a11y
+
+Dark Mode from day one. Ship Dynamic Type, VoiceOver, Reduce Motion, high contrast, color-independent packed/important/weather state, F/C and Imperial/Metric.
+
+Full spec: `docs/design-system.md`, `design/README.md`.

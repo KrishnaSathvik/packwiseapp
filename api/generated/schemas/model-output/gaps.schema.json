@@ -1,0 +1,92 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "suggestions"
+  ],
+  "properties": {
+    "suggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "canonicalItemID",
+          "reasonCode",
+          "reasonArguments",
+          "reason",
+          "confidence",
+          "signals"
+        ],
+        "properties": {
+          "canonicalItemID": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "enum": [
+              "context.gap_activity",
+              "context.gap_destination",
+              "context.gap_duration",
+              "context.gap_generic",
+              "context.gap_preference",
+              "context.gap_trip_type",
+              "context.gap_weather"
+            ]
+          },
+          "reasonArguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "value"
+              ],
+              "properties": {
+                "name": {
+                  "enum": [
+                    "activity",
+                    "destination",
+                    "tripDays",
+                    "tripType"
+                  ]
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "signals": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "weather",
+                "duration",
+                "activity",
+                "tripType",
+                "destination",
+                "baseEssential",
+                "userPreference",
+                "history",
+                "gptReasoning",
+                "party"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PackingGaps"
+}

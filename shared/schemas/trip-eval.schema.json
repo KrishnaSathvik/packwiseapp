@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Trip evaluation fixture",
+  "description": "A fixed scenario asserted against both the deterministic engine and the context-intelligence layer. mustInclude/mustNotInclude are final packing expectations. mustInfer/mustNotInfer are trip-note interpretation expectations. allowedSuggestions bounds which contextual gap suggestions are legitimate. Vocabulary membership is enforced by scripts/validate_shared.py.",
+  "type": "object",
+  "required": [
+    "id",
+    "destinationFixture",
+    "mustInclude",
+    "mustNotInclude"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "destinationFixture": {
+      "type": "string"
+    },
+    "weatherFixture": {
+      "type": "string"
+    },
+    "days": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tripType": {
+      "type": "string"
+    },
+    "activities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bag": {
+      "type": "string"
+    },
+    "style": {
+      "type": "string"
+    },
+    "chips": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "homeCountryCode": {
+      "type": "string"
+    },
+    "homeCountrySource": {
+      "enum": [
+        "deviceSuggested",
+        "userConfirmed"
+      ]
+    },
+    "travelerCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "canonicalItemID",
+          "action"
+        ],
+        "properties": {
+          "canonicalItemID": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "existing": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "mustInclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mustNotInclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expectedQuantityRanges": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "expectedExactQuantities": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "note": {
+      "type": "string",
+      "description": "Free-form trip note. The input to /v1/trip/interpret for this scenario. Absent when the scenario does not exercise note interpretation."
+    },
+    "mustInfer": {
+      "type": "array",
+      "description": "Context chips and activities interpretation must produce from note. Requires note.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mustNotInfer": {
+      "type": "array",
+      "description": "Context chips and activities interpretation must not produce. Guards against over-reading the note.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowedSuggestions": {
+      "type": "array",
+      "description": "Canonical item IDs that are legitimate contextual gap suggestions for this scenario. A suggestion outside this set is a failure, not a preference.",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

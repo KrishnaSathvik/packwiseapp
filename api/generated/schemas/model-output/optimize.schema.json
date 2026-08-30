@@ -1,0 +1,78 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "optimizations"
+  ],
+  "properties": {
+    "optimizations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "canonicalItemID",
+          "reasonCode",
+          "reasonArguments",
+          "reason",
+          "suggestedQuantity",
+          "confidence"
+        ],
+        "properties": {
+          "canonicalItemID": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "enum": [
+              "context.optimize_duplicate",
+              "context.optimize_generic",
+              "context.optimize_quantity",
+              "context.optimize_style"
+            ]
+          },
+          "reasonArguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "value"
+              ],
+              "properties": {
+                "name": {
+                  "enum": [
+                    "otherItem",
+                    "packingStyle",
+                    "quantity",
+                    "tripDays"
+                  ]
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "suggestedQuantity": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PackingOptimizations"
+}

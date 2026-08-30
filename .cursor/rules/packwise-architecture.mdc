@@ -1,0 +1,58 @@
+---
+description: Local-first architecture, stack, layers, models, catalog IDs, and the GPT write boundary.
+alwaysApply: true
+---
+
+# Architecture
+
+**Local-first + intelligence-enhanced.** Local app owns trips, lists, packed state, overrides, preferences, and packing memory. Externals provide destination lookup, weather, reasoning, optional sync. If externals disappear, the list still works.
+
+## Stack
+
+- iOS: Swift, SwiftUI, SwiftData, Swift Concurrency, Observation
+- Apple: MapKit, WeatherKit, UserNotifications, Swift Charts
+- Later: WidgetKit, App Intents, CloudKit, StoreKit 2
+- Intelligence: GPT-5.6 via OpenAI Responses API + Structured Outputs, **only through the PackWise backend**
+
+Never call OpenAI from the iPhone. API secrets stay server-side.
+
+Monorepo: `ios/`, `api/`, `shared/` (schemas/fixtures/contracts only). iOS 18. Bundle `com.packwise.app`.
+
+`WeatherService` → forecast + attribution + availability. `WeatherKitWeatherService` in production (M2A); `MockWeatherService` for tests/previews/fixtures. Domain never consumes WeatherKit types. Attribution is mandatory wherever Apple weather is shown. Persist `fetchedAt`, coverage dates, `providerFetchedAt` / `providerExpiresAt` on `WeatherSnapshot` (payload JSON is the snapshot source of truth). `ContextIntelligenceService` → `MockContextIntelligenceService` unless `PACKWISE_API_BASE_URL` is configured, then `RemoteContextIntelligenceService`. Generation never fails because weather or GPT failed.
+
+Production destinations: MapKit only. `test-destinations.json` is fixtures, not a city database.
+
+## Layers
+
+SwiftUI → Feature/State → Domain (Packing Engine, Quantity Engine, Recommendation Resolver, Personalization, Weather Logic) → Data (Repositories, SwiftData) → External (MapKit, WeatherKit, Intelligence API)
+
+Views do not scatter SwiftData queries. Domain never imports WeatherKit types. Use `TripRepository`, `PackingRepository`, `PreferenceRepository`, `MemoryRepository`.
+
+## Folders
+
+```text
+Features/{Trips,TripSetup,TripDetail,PackingList,Weather,FinalCheck,AskPackWise,PostTrip,PackingHabits,Settings}
+Domain/{Trips,Packing,Weather,Personalization,Recommendations}
+Data/{Persistence,Repositories,MapKit,WeatherKit,Intelligence}
+Services/{Notifications,Sharing,Analytics}
+DesignSystem/  Resources/{PackingCatalog,Rules}
+```
+
+## Models
+
+- `Trip` is persisted user data. Status: `draft | planning | packing | traveling | completed | archived`
+- `TripContext` is what intelligence evaluates (destination, days/nights, type, activities, bag, style, notes, weather, preferences, `TripParty`, relevant memory)
+- `TripParty` + `Traveler` are first-class. Solo is one traveler. Couple/family add personal vs shared items
+- `PackingItem` uses `canonicalItemID`, `ownershipType` personal|shared, `travelerID?`, `assignedTravelerID?`, `bagID?`, quantities, importance, `sourceSignals`, `reason`, `isUserAdded`, `isUserModified`
+- Persist from day one: Trip, TripParty/Traveler, PackingItem, Bag, Destination, WeatherSnapshot, TripActivity, PackingPreference, PackingMemory (per traveler when known), RecommendationOverride, PostTripFeedback, WeatherChangeProposal
+- Version the data model from day one
+
+## Catalog
+
+Do not scatter item strings. Use IDs like `clothing.tshirt`, `electronics.power_bank`, `documents.passport`. Configuration for stable mappings; Swift for complex behavior. No home-grown rules language.
+
+## GPT write boundary
+
+Never `GPT → SwiftData`. Path: structured recommendation → validate schema → validate canonical items → Recommendation Resolver → rules/overrides → user sees it → user accepts → SwiftData.
+
+Full spec: `docs/architecture.md`, `docs/packing-engine.md`.

@@ -1,0 +1,117 @@
+{
+  "sharedByDefault": [
+    "toiletries.sunscreen",
+    "health.first_aid",
+    "health.bandages",
+    "electronics.travel_adapter",
+    "essentials.umbrella_compact",
+    "essentials.snacks",
+    "electronics.camera",
+    "electronics.camera_charger",
+    "activities.beach_towel",
+    "toiletries.insect_repellent",
+    "kids.stroller",
+    "kids.carrier",
+    "kids.wipes"
+  ],
+  "skipForYoungChildren": [
+    "clothing.dress_shirt",
+    "clothing.blazer",
+    "clothing.formal_outfit",
+    "clothing.tie",
+    "footwear.dress_shoes",
+    "electronics.laptop",
+    "electronics.laptop_charger",
+    "electronics.mouse",
+    "health.daily_medication"
+  ],
+  "ageGroups": {
+    "infant": {
+      "add": [
+        "kids.extra_outfits",
+        "kids.burp_cloths",
+        "kids.sleep_sack"
+      ],
+      "candidates": {
+        "diapers": ["kids.diapers", "kids.wipes", "kids.changing_pad"],
+        "formula": ["kids.bottles", "kids.formula"],
+        "pacifier": ["kids.pacifiers"],
+        "stroller": ["kids.stroller"],
+        "carrier": ["kids.carrier"],
+        "carSeat": ["kids.car_seat"],
+        "medication": ["kids.baby_medication"]
+      },
+      "skipAdultClothing": true,
+      "quantityMultipliers": {
+        "daily_top": 1.8,
+        "daily_underwear": 1.5,
+        "toddler_backup": 1.0
+      }
+    },
+    "toddler": {
+      "add": [
+        "kids.extra_outfits",
+        "clothing.sleepwear",
+        "kids.snacks",
+        "kids.sippy",
+        "kids.activities"
+      ],
+      "candidates": {
+        "diapers": ["kids.diapers", "kids.wipes"],
+        "stroller": ["kids.stroller"],
+        "carSeat": ["kids.car_seat"],
+        "medication": ["kids.baby_medication"],
+        "comfortItem": ["kids.comfort_item"]
+      },
+      "skipAdultClothing": false,
+      "quantityMultipliers": {
+        "daily_top": 1.75,
+        "daily_underwear": 1.4,
+        "daily_socks": 1.4,
+        "toddler_backup": 1.0
+      }
+    },
+    "child": {
+      "add": [
+        "kids.snacks",
+        "kids.activities",
+        "electronics.earbuds_case"
+      ],
+      "candidates": {
+        "comfortItem": ["kids.comfort_item"],
+        "medication": ["kids.baby_medication"],
+        "carSeat": ["kids.car_seat"]
+      },
+      "skipAdultClothing": false,
+      "quantityMultipliers": {
+        "daily_top": 1.15,
+        "daily_underwear": 1.1
+      }
+    },
+    "teen": {
+      "add": ["electronics.earbuds_case", "electronics.phone_charger"],
+      "candidates": {},
+      "skipAdultClothing": false,
+      "quantityMultipliers": {}
+    },
+    "adult": {
+      "add": [],
+      "candidates": {},
+      "skipAdultClothing": false,
+      "quantityMultipliers": {}
+    }
+  },
+  "activityAdds": {
+    "swimming": ["kids.swim_diapers"],
+    "beachDays": ["kids.swim_diapers", "kids.sunscreen"]
+  },
+  "sharingPolicies": {
+    "toiletries.sunscreen": { "policy": "scaleByParty", "per": 3, "min": 1 },
+    "health.first_aid": { "policy": "singlePerParty" },
+    "electronics.travel_adapter": { "policy": "scaleByDevices", "per": 2, "min": 1 },
+    "essentials.umbrella_compact": { "policy": "scaleByParty", "per": 2, "min": 1 },
+    "essentials.snacks": { "policy": "scaleByDurationAndParty", "per": 4, "min": 1 },
+    "kids.stroller": { "policy": "singlePerParty" },
+    "kids.carrier": { "policy": "singlePerParty" }
+  }
+}

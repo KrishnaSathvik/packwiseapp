@@ -1,0 +1,24 @@
+{
+  "id": "OverrideKeepsRainJacketDeleted",
+  "destinationFixture": "Chicago",
+  "weatherFixture": "ChicagoRainyFall",
+  "days": 5,
+  "tripType": "cityBreak",
+  "activities": [
+    "sightseeing"
+  ],
+  "bag": "carryOn",
+  "style": "balanced",
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "overrides": [
+    {
+      "canonicalItemID": "clothing.rain_jacket",
+      "action": "removed"
+    }
+  ],
+  "mustInclude": [],
+  "mustNotInclude": [
+    "clothing.rain_jacket"
+  ]
+}

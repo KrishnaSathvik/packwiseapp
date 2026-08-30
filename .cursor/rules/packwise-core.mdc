@@ -1,0 +1,47 @@
+---
+description: PackWise product identity, brand language, and where to find the full spec. Apply for every task.
+alwaysApply: true
+---
+
+# PackWise Core
+
+PackWise is a personal packing intelligence app for iPhone. The user describes a trip. PackWise builds a list that is relevant, explainable, adjustable, and increasingly personal.
+
+Promise: **Pack what you need. Leave what you don't.** Differentiation: **Packed for this trip. Not every trip.**
+
+Do not build a checklist + weather widget + chatbot. Everything is one system around the trip.
+
+## Hard brand rule
+
+GPT-5.6 may power PackWise internally. **Never market or label it as an AI packing app.**
+
+Forbidden in UI, onboarding, notifications, App Store copy, and marketing: `AI-generated`, `AI packing`, `AI assistant`, `AI recommendation`, `AI-powered`, `GPT`, `LLM`, `machine learning`, `algorithm`.
+
+Use: `PackWise suggests`, `Ask PackWise`, `Packing impact`, `Based on the forecast`, `You usually bring this`, `You may not need this`.
+
+Internal source `GPT reasoning` renders as Forecast / Activities / Your destination / Your packing habits — never as AI.
+
+## Product loop
+
+Create trip → context → smart list → pack → weather updates → Final Check → travel → review → Packing Memory → better next trip.
+
+## Docs map
+
+Before implementing, open the matching file:
+
+- Brand / promise → `docs/product-and-brand.md`
+- Tabs / onboarding / home → `docs/navigation-and-onboarding.md`
+- Trip setup → `docs/trip-creation.md`
+- List / items / quantities → `docs/packing-experience.md`
+- Weather / impact → `docs/weather-and-packing-impact.md`
+- Ask / gaps / pack lighter → `docs/intelligence-features.md`
+- Timeline / memory / Me → `docs/lifecycle-memory-and-me.md`
+- Stack / models → `docs/architecture.md`
+- Engine / GPT / API → `docs/packing-engine.md`
+- Persistence / privacy → `docs/data-privacy-and-platform.md`
+- Visual / a11y → `docs/design-system.md`
+- Scope → `docs/roadmap.md`
+- Later features → `docs/future-features.md`
+- Mock → `design/ui-flow-overview.png`
+
+Index: `AGENTS.md` and `docs/README.md`. Keep rules and docs aligned when a decision changes.

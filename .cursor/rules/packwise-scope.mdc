@@ -1,0 +1,42 @@
+---
+description: MVP vs later scope. Prevents building V2/V3 features during foundation work.
+alwaysApply: true
+---
+
+# Scope
+
+Build the current milestone unless the user expands scope. Frozen decisions: `docs/implementation-decisions.md`.
+
+**Now: M3A external verification** — implementation is complete; the live Redis, OpenAI, Vercel, device, and TestFlight passes are outstanding. M3B and M3C do not start until the six-item exit gate in `docs/m3a2-verification-runbook.md` is green. The outstanding M2 WeatherKit device pass shares that session but is M2-owned and does not gate M3A. GPT-5.6 enriches PackWise's existing engine; it does not replace it.
+
+Slices: **M3A** API foundation (no big UX) → **M3B** trip-note enrichment into `TripContext` → **M3C** resolver-filtered packing gaps. `/v1/packing/optimize` is backend-only. Ask PackWise / Pack lighter UI are V1+.
+
+**M3A-1 is frozen:** contracts, generated schemas, canonical validation, rate limits, integrity boundary, Swift client, `FakeModelAdapter`, nine eval fixtures. **M3A-2** added the live `OpenAIResponsesModelAdapter`, production App Attest with durable challenge/key/counter state, Redis-backed rate limiting, `api/generated/` as the deployment artifact, and Vercel packaging. It changes what runs, not what PackWise does. Never record a deployment or a live model call as verified until it has actually run.
+
+M1 is closed. M2 is code-complete (M2A WeatherKit, M2B Packing Impact, M2C weather-change diffs). Do not reopen M1, M2, or M3A-1 architecture unless a device or live-integration pass exposes a genuine defect. Two device-dependent verifications outstanding: WeatherKit (M2) and App Attest (M3A). M4 notifications, share, Final Check.
+
+## MVP
+
+Onboarding, Trips home, progressive trip setup (destination, dates, who's traveling, type, activities, bag, style, optional context), MapKit, WeatherKit, packing catalog, deterministic engine, GPT-5.6 contextual layer, smart quantities, explanations, checklist, custom items, progress, Packing Impact, weather detail, weather-change reconciliation, share list, basic notifications, local SwiftData.
+
+On-device traveler composition is in MVP: Solo, Couple, Family (simple Group adult count). Personal vs shared items, age-group rules, family-aware quantities. One device manages the list. Solo stays the simple path.
+
+## Not MVP
+
+Outfit planner, bag weight, realtime group collaboration, invites, multi-account sync, widgets, Watch, Siri, Android, public profiles, community lists, booking, climate database, social, subscription tiers, natural-language trip creation, post-trip review UI, visible Packing Memory, What am I forgetting?, Pack lighter, iCloud sync, signup, location permission, paywall.
+
+## After launch (V1)
+
+Post-trip review, Packing Memory, gap check, pack lighter, past-trip personalization, NL trip creation, iCloud, Final Check improvements.
+
+## V2 / V3
+
+V2: outfits, bag assignment, weight estimates, widgets, App Intents, companion packing.
+
+V3 only if demand: cross-device family profiles, realtime shared packing, airline rules (remote data, never hardcoded in Swift), accounts, Android, web.
+
+## Design now, ship later
+
+Even in MVP, persist `PackingMemory`, `RecommendationOverride`, `PostTripFeedback`, and canonical item IDs so personalization does not require a rewrite.
+
+Details: `docs/roadmap.md`, `docs/future-features.md`.

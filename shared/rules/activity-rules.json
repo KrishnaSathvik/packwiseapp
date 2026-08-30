@@ -1,0 +1,76 @@
+{
+  "activities": {
+    "beachDays": [
+      "clothing.swimsuit",
+      "activities.beach_towel",
+      "toiletries.sunscreen",
+      "footwear.sandals"
+    ],
+    "boatTrip": [
+      "activities.dry_bag",
+      "health.motion_sickness",
+      "toiletries.sunscreen"
+    ],
+    "hiking": [
+      "footwear.hiking_shoes",
+      "activities.daypack",
+      "hydration.water_bottle",
+      "health.blister_pads"
+    ],
+    "museums": [
+      "clothing.light_sweater"
+    ],
+    "niceDinner": [
+      "clothing.nice_outfit"
+    ],
+    "nightlife": [
+      "clothing.nice_outfit"
+    ],
+    "photography": [
+      "electronics.camera",
+      "electronics.camera_charger",
+      "electronics.memory_card"
+    ],
+    "running": [
+      "footwear.running_shoes",
+      "clothing.workout_top",
+      "clothing.workout_bottom"
+    ],
+    "shopping": [
+      "essentials.reusable_bag"
+    ],
+    "sightseeing": [
+      "activities.daypack",
+      "electronics.power_bank",
+      "health.blister_pads"
+    ],
+    "snorkeling": [
+      "activities.snorkel",
+      "footwear.water_shoes",
+      "toiletries.sunscreen"
+    ],
+    "swimming": [
+      "clothing.swimsuit",
+      "footwear.flip_flops",
+      "activities.goggles"
+    ],
+    "walking": [
+      "footwear.walking_shoes",
+      "health.blister_pads"
+    ],
+    "wildlife": [
+      "activities.binoculars",
+      "electronics.camera"
+    ],
+    "work": [
+      "electronics.laptop",
+      "electronics.laptop_charger",
+      "electronics.headphones"
+    ],
+    "yoga": [
+      "activities.yoga_mat_travel",
+      "clothing.workout_top",
+      "clothing.workout_bottom"
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "2026-08-29",
+  "buildHash": "1234eef772da96e4",
+  "capabilities": {
+    "interpret": {
+      "schema": "schemas/model-output/interpret.schema.json",
+      "definition": "TripInterpretation"
+    },
+    "gaps": {
+      "schema": "schemas/model-output/gaps.schema.json",
+      "definition": "PackingGaps"
+    },
+    "optimize": {
+      "schema": "schemas/model-output/optimize.schema.json",
+      "definition": "PackingOptimizations"
+    }
+  }
+}

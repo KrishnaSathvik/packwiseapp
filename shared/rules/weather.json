@@ -1,0 +1,53 @@
+{
+  "thresholds": {
+    "rain_probability_add": 0.35,
+    "cool_evening_max_f": 62,
+    "cold_max_f": 48,
+    "hot_min_f": 82,
+    "uv_add": 6,
+    "wind_mph_add": 22,
+    "temperature_swing_add": 20,
+    "heavy_rain_probability": 0.6
+  },
+  "signalAdds": {
+    "meaningfulRain": [
+      "clothing.rain_jacket",
+      "essentials.umbrella_compact"
+    ],
+    "persistentRain": [
+      "clothing.rain_jacket",
+      "essentials.umbrella_compact"
+    ],
+    "coldRain": [
+      "clothing.rain_jacket",
+      "essentials.umbrella_compact",
+      "clothing.light_sweater"
+    ],
+    "snowExposure": [
+      "clothing.winter_coat",
+      "clothing.gloves",
+      "clothing.beanie",
+      "footwear.boots"
+    ],
+    "coldEvenings": [
+      "clothing.light_sweater"
+    ],
+    "hotOutdoorExposure": [
+      "clothing.shorts",
+      "toiletries.sunscreen",
+      "clothing.hat_sun",
+      "essentials.sunglasses"
+    ],
+    "highUVExposure": [
+      "toiletries.sunscreen",
+      "essentials.sunglasses"
+    ],
+    "highWindExposure": [
+      "clothing.windbreaker"
+    ],
+    "largeTemperatureSwing": [
+      "clothing.light_sweater",
+      "clothing.light_jacket"
+    ]
+  }
+}

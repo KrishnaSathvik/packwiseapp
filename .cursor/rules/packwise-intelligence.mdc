@@ -1,0 +1,65 @@
+---
+description: Packing intelligence pipeline, dual engine, resolver, scoring, overrides, and API shape.
+alwaysApply: true
+---
+
+# Intelligence
+
+Deterministic engine + GPT-5.6. Neither replaces the other.
+
+**Rules handle:** duration, base essentials, activity mappings, weather thresholds, quantity math, deduplication, reconciliation, overrides.
+
+**GPT handles:** free-text, unusual activities, destination nuance, cross-signal reasoning, gaps, pack-lighter, explanations, natural questions, post-trip interpretation.
+
+If GPT is down, the deterministic list still works.
+
+## Pipeline
+
+Trip → Trip Context Builder → Weather / Preferences / History → Signal Builder → (Packing Rules + GPT-5.6) → Recommendation Resolver → Deduplication → Quantity Engine → Preference Resolver → User Overrides → Final list
+
+## Resolver
+
+Inputs: rule suggestions, GPT suggestions, history, existing list, overrides.
+
+**Explicit user decision always wins.** If the user deletes Travel Pillow, store `TripRecommendationOverride` (`tripID`, `canonicalItemID`, `action = removed`). Weather/GPT/rules reruns must not bring it back.
+
+Repeated removals feed `PackingMemory`. Eventually stop recommending unless context is unusually strong.
+
+## Scoring
+
+```text
+base + trip type + activity + weather + destination + preference + history + contextual
+- bag constraint - repeated rejection
+```
+
+Map to Required / Recommended / Helpful / Optional / Do not show. **Never show numeric scores.**
+
+Packing style changes quantities, redundancy, optional score, footwear count, backup clothing, weather-risk tolerance.
+
+## API
+
+Tiny backend. No giant `/chat`.
+
+```text
+/v1/trip/interpret      NL → Trip Context
+/v1/trip/context        context → signals
+/v1/packing/gaps        list → missing
+/v1/packing/optimize    list → reductions
+/v1/trip/ask            contextual question
+```
+
+Also referred to as `/interpret-trip`, `/recommend-context`, `/check-gaps`, `/pack-lighter`, `/ask`.
+
+Minimize context. Gap check sends destination, dates, type, activities, weather summary, style, bag, current item IDs, relevant preferences, a small memory slice — not the user's whole history.
+
+GPT responses must be structured (`canonicalItemID`, `action`, `reasonCode`, `reasonArguments`, numeric `confidence` 0...1, `signals`, optional fallback `reason` prose). camelCase throughout. `reasonCode` + `reasonArguments` is the durable identifier PackWise renders from a localized template; `reason` is never a stable key. Confidence is internal — ranking and suppression only, never rendered. Validate before resolve.
+
+## Product surfaces
+
+Ask PackWise, What am I forgetting?, Pack lighter, Good to Know, and visible Packing Memory are specified in `docs/intelligence-features.md`. Dedicated gap/optimize UI is **V1 after launch**. The GPT recommendation layer itself is **in MVP**.
+
+Ask PackWise stays inside the current trip. Suggested prompts only. Not a ChatGPT clone.
+
+Edit trip → recommendation **diff**, never “Regenerating your list…”.
+
+Full spec: `docs/packing-engine.md`, `docs/intelligence-features.md`.

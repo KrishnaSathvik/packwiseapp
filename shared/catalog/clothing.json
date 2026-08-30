@@ -1,0 +1,729 @@
+{
+  "version": 1,
+  "category": "clothing",
+  "items": [
+    {
+      "id": "clothing.tshirt",
+      "localizationKey": "packing.clothing.tshirt",
+      "display_name": "T-shirts",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "tshirt",
+      "keywords": [
+        "tshirt",
+        "tee",
+        "tees"
+      ],
+      "quantity_kind": "daily_top",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.casual_shirt",
+      "localizationKey": "packing.clothing.casual_shirt",
+      "display_name": "Casual shirts",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "tshirt",
+      "keywords": [
+        "button shirt",
+        "casual shirt"
+      ],
+      "quantity_kind": "daily_top",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.dress_shirt",
+      "localizationKey": "packing.clothing.dress_shirt",
+      "display_name": "Dress shirts",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "tshirt",
+      "keywords": [
+        "dress shirt",
+        "button-down"
+      ],
+      "quantity_kind": "formal_top",
+      "tags": [
+        "formal"
+      ],
+      "capabilities": [
+        "formal"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.blouse",
+      "localizationKey": "packing.clothing.blouse",
+      "display_name": "Blouses",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "tshirt",
+      "keywords": [
+        "blouse"
+      ],
+      "quantity_kind": "daily_top",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.underwear",
+      "localizationKey": "packing.clothing.underwear",
+      "display_name": "Underwear",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "circle.grid.3x3",
+      "keywords": [
+        "underwear",
+        "briefs"
+      ],
+      "quantity_kind": "daily_underwear",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.socks",
+      "localizationKey": "packing.clothing.socks",
+      "display_name": "Socks",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "circle.grid.3x3",
+      "keywords": [
+        "socks"
+      ],
+      "quantity_kind": "daily_socks",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.sleepwear",
+      "localizationKey": "packing.clothing.sleepwear",
+      "display_name": "Sleepwear",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "moon",
+      "keywords": [
+        "pajamas",
+        "sleepwear",
+        "pjs"
+      ],
+      "quantity_kind": "sleepwear",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.pants",
+      "localizationKey": "packing.clothing.pants",
+      "display_name": "Pants",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "figure.walk",
+      "keywords": [
+        "pants",
+        "trousers"
+      ],
+      "quantity_kind": "bottoms",
+      "tags": [
+        "base"
+      ],
+      "capabilities": [
+        "base"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.jeans",
+      "localizationKey": "packing.clothing.jeans",
+      "display_name": "Jeans",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "figure.walk",
+      "keywords": [
+        "jeans"
+      ],
+      "quantity_kind": "bottoms",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.shorts",
+      "localizationKey": "packing.clothing.shorts",
+      "display_name": "Shorts",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "figure.walk",
+      "keywords": [
+        "shorts"
+      ],
+      "quantity_kind": "hot_bottoms",
+      "tags": [
+        "hot"
+      ],
+      "capabilities": [
+        "hot"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.skirt",
+      "localizationKey": "packing.clothing.skirt",
+      "display_name": "Skirt",
+      "category": "clothing",
+      "importance": "optional",
+      "symbol": "figure.walk",
+      "keywords": [
+        "skirt"
+      ],
+      "quantity_kind": "bottoms",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.dress",
+      "localizationKey": "packing.clothing.dress",
+      "display_name": "Dresses",
+      "category": "clothing",
+      "importance": "optional",
+      "symbol": "figure.dress",
+      "keywords": [
+        "dress"
+      ],
+      "quantity_kind": "dresses",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.formal_outfit",
+      "localizationKey": "packing.clothing.formal_outfit",
+      "display_name": "Formal outfit",
+      "category": "clothing",
+      "importance": "important",
+      "symbol": "suit",
+      "keywords": [
+        "suit",
+        "formal",
+        "blazer"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "formal"
+      ],
+      "capabilities": [
+        "formal"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.blazer",
+      "localizationKey": "packing.clothing.blazer",
+      "display_name": "Blazer",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "jacket",
+      "keywords": [
+        "blazer",
+        "sport coat"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "formal",
+        "business"
+      ],
+      "capabilities": [
+        "formal",
+        "business"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.tie",
+      "localizationKey": "packing.clothing.tie",
+      "display_name": "Tie",
+      "category": "clothing",
+      "importance": "optional",
+      "symbol": "necktie",
+      "keywords": [
+        "tie"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "formal"
+      ],
+      "capabilities": [
+        "formal"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.light_sweater",
+      "localizationKey": "packing.clothing.light_sweater",
+      "display_name": "Light sweater",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "jacket",
+      "keywords": [
+        "sweater",
+        "jumper"
+      ],
+      "quantity_kind": "layer",
+      "tags": [
+        "cool"
+      ],
+      "capabilities": [
+        "cool"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.hoodie",
+      "localizationKey": "packing.clothing.hoodie",
+      "display_name": "Hoodie",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "jacket",
+      "keywords": [
+        "hoodie",
+        "sweatshirt"
+      ],
+      "quantity_kind": "layer",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.light_jacket",
+      "localizationKey": "packing.clothing.light_jacket",
+      "display_name": "Light jacket",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "jacket",
+      "keywords": [
+        "light jacket",
+        "layer"
+      ],
+      "quantity_kind": "layer",
+      "tags": [
+        "cool"
+      ],
+      "capabilities": [
+        "cool"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.rain_jacket",
+      "localizationKey": "packing.clothing.rain_jacket",
+      "display_name": "Rain jacket",
+      "category": "clothing",
+      "importance": "important",
+      "symbol": "cloud.rain",
+      "keywords": [
+        "rain jacket",
+        "raincoat"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "rain"
+      ],
+      "capabilities": [
+        "rain",
+        "shell"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.windbreaker",
+      "localizationKey": "packing.clothing.windbreaker",
+      "display_name": "Windbreaker",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "wind",
+      "keywords": [
+        "windbreaker"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "wind"
+      ],
+      "capabilities": [
+        "wind",
+        "shell"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.winter_coat",
+      "localizationKey": "packing.clothing.winter_coat",
+      "display_name": "Winter coat",
+      "category": "clothing",
+      "importance": "important",
+      "symbol": "snowflake",
+      "keywords": [
+        "winter coat",
+        "parka"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "cold",
+        "snow"
+      ],
+      "capabilities": [
+        "cold",
+        "snow"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.thermal_top",
+      "localizationKey": "packing.clothing.thermal_top",
+      "display_name": "Thermal top",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "tshirt",
+      "keywords": [
+        "thermal",
+        "base layer"
+      ],
+      "quantity_kind": "layer",
+      "tags": [
+        "cold"
+      ],
+      "capabilities": [
+        "cold"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.thermal_bottom",
+      "localizationKey": "packing.clothing.thermal_bottom",
+      "display_name": "Thermal bottoms",
+      "category": "clothing",
+      "importance": "optional",
+      "symbol": "figure.walk",
+      "keywords": [
+        "long underwear"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "cold"
+      ],
+      "capabilities": [
+        "cold"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.gloves",
+      "localizationKey": "packing.clothing.gloves",
+      "display_name": "Gloves",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "hand.raised",
+      "keywords": [
+        "gloves"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "cold"
+      ],
+      "capabilities": [
+        "cold"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.beanie",
+      "localizationKey": "packing.clothing.beanie",
+      "display_name": "Beanie / warm hat",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "hat.wide.brim",
+      "keywords": [
+        "beanie",
+        "winter hat"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "cold"
+      ],
+      "capabilities": [
+        "cold"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.scarf",
+      "localizationKey": "packing.clothing.scarf",
+      "display_name": "Scarf",
+      "category": "clothing",
+      "importance": "optional",
+      "symbol": "scarf",
+      "keywords": [
+        "scarf"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "cold"
+      ],
+      "capabilities": [
+        "cold"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.swimsuit",
+      "localizationKey": "packing.clothing.swimsuit",
+      "display_name": "Swimsuit",
+      "category": "clothing",
+      "importance": "important",
+      "symbol": "figure.pool.swim",
+      "keywords": [
+        "swimsuit",
+        "swim",
+        "trunks",
+        "bikini"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "swim"
+      ],
+      "capabilities": [
+        "swim"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.coverup",
+      "localizationKey": "packing.clothing.coverup",
+      "display_name": "Swim cover-up",
+      "category": "clothing",
+      "importance": "optional",
+      "symbol": "figure.dress",
+      "keywords": [
+        "cover-up",
+        "sarong"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "swim"
+      ],
+      "capabilities": [
+        "swim"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.workout_top",
+      "localizationKey": "packing.clothing.workout_top",
+      "display_name": "Workout tops",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "figure.run",
+      "keywords": [
+        "gym shirt",
+        "workout top"
+      ],
+      "quantity_kind": "workout_top",
+      "tags": [
+        "workout"
+      ],
+      "capabilities": [
+        "workout"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.workout_bottom",
+      "localizationKey": "packing.clothing.workout_bottom",
+      "display_name": "Workout bottoms",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "figure.run",
+      "keywords": [
+        "leggings",
+        "gym shorts"
+      ],
+      "quantity_kind": "workout_bottom",
+      "tags": [
+        "workout"
+      ],
+      "capabilities": [
+        "workout"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.sports_bra",
+      "localizationKey": "packing.clothing.sports_bra",
+      "display_name": "Sports bras",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "figure.run",
+      "keywords": [
+        "sports bra"
+      ],
+      "quantity_kind": "workout_top",
+      "tags": [
+        "workout"
+      ],
+      "capabilities": [
+        "workout"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.nice_outfit",
+      "localizationKey": "packing.clothing.nice_outfit",
+      "display_name": "Nice dinner outfit",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "fork.knife",
+      "keywords": [
+        "nice outfit",
+        "smart casual"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "dinner"
+      ],
+      "capabilities": [
+        "dinner",
+        "smart_casual"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.belt",
+      "localizationKey": "packing.clothing.belt",
+      "display_name": "Belt",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "circle",
+      "keywords": [
+        "belt"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.pajamas_backup",
+      "localizationKey": "packing.clothing.pajamas_backup",
+      "display_name": "Backup sleep shirt",
+      "category": "clothing",
+      "importance": "optional",
+      "symbol": "moon",
+      "keywords": [
+        "sleep shirt"
+      ],
+      "quantity_kind": "one",
+      "tags": [],
+      "capabilities": [],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.compression_socks",
+      "localizationKey": "packing.clothing.compression_socks",
+      "display_name": "Compression socks",
+      "category": "clothing",
+      "importance": "optional",
+      "symbol": "circle.grid.3x3",
+      "keywords": [
+        "compression socks"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "flight"
+      ],
+      "capabilities": [
+        "flight"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    },
+    {
+      "id": "clothing.hat_sun",
+      "localizationKey": "packing.clothing.hat_sun",
+      "display_name": "Sun hat",
+      "category": "clothing",
+      "importance": "normal",
+      "symbol": "sun.max",
+      "keywords": [
+        "sun hat",
+        "cap"
+      ],
+      "quantity_kind": "one",
+      "tags": [
+        "hot",
+        "sun"
+      ],
+      "capabilities": [
+        "hot",
+        "sun"
+      ],
+      "companions": [],
+      "travelRestrictionReviewRequired": false
+    }
+  ]
+}

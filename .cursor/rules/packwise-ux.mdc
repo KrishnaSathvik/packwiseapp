@@ -1,0 +1,80 @@
+---
+description: Navigation, onboarding, trip setup, packing list UX, weather, notifications, and copy tone.
+alwaysApply: true
+---
+
+# UX Principles
+
+## Navigation
+
+Two tabs only: **Trips** and **Me**. Do not add Weather, Assistant, Explore, Discover, Tools, Packing, or Profile tabs. Weather, Ask PackWise, Final Check, and destination notes live inside a trip.
+
+## First launch
+
+Value in seconds. No signup, no notification permission, no location permission, no subscription wall.
+
+1. Welcome — “Pack what this trip actually needs.” CTA **Get Started**
+2. Built around your trip — Chicago example with reasons
+3. It gets more personal — CTA **Create My First Trip**
+
+## Trips home
+
+Extremely clean. Upcoming card: destination, dates, trip-scoped weather, `31 of 42 packed`, items left. Later trips: quiet “Packing list ready”. Past: Completed. Main CTA **+ New Trip**.
+
+## Trip setup
+
+Progressive steps, not one form. V1: one primary destination.
+
+1. Destination — MapKit search, store displayName/city/region/country/coords/timeZone
+2. Dates — native range; persist **days and nights**
+3. Type — Vacation, City Break, Beach, Business, Outdoor, Road Trip, Wedding/Event, Ski/Snow, Festival, Visiting Family, Other. Type is one signal, not the whole list
+4. Activities — type-based chips + **+ Add something** free text
+5. Bag — Personal item / Carry-on / Checked / Backpack / Road-trip / Not sure. Explain impact
+6. Style — Light / **Balanced (default)** / Prepared
+7. Optional — chips + free note (medication, laptop, laundry, etc.)
+
+Review → **Build My Packing List**. Short real wait copy only. Never “AI is generating”.
+
+Natural-language “Tell PackWise about your trip” is V1.1, not MVP.
+
+## Packing list
+
+Trip Detail is the core screen. Packing dominates. Categories: Essentials, Documents, Clothing, Footwear, Toiletries, Electronics, Health, Activities, Travel Comfort, Miscellaneous.
+
+Rows like Apple Reminders. Cards only for Packing Impact, Weather Changed, Final Check, packing suggestions.
+
+```text
+○ T-shirts ×4
+○ Rain jacket
+    Rain expected Saturday
+```
+
+Swipe left: Delete / Not Needed. Swipe right: Pack. Long press: Edit, move, quantity, Why this item?, Don't suggest on trips like this.
+
+Item sheet: why + Recommended by (Forecast, Activities — never AI/GPT/Algorithm).
+
+Always show quantities. Explain on tap. Deduplicate overlapping footwear/layers internally.
+
+Filters: All / Left to pack / Packed / Important. Optional hide packed. No 12-filter system.
+
+Progress: `31 of 42 packed` + items left. Near departure: `4 essentials still unpacked`.
+
+## Weather
+
+Trip dates only. Not a general weather app. Faraway trips: honest “forecast isn’t available yet” + seasonal list. When a packing signal changes after generation: **Weather changed** card, then the same review sheet as edit-trip. Additions default on; removals default off. **User always controls the list.** No M4 weather notifications in this slice.
+
+Packing Impact is the brand differentiator (rain → jacket, cool evenings → layer, hiking → trail shoes).
+
+## Lifecycle
+
+Phases are automatic: list ready → forecast ready → 3 days → day before → **Final Check** on departure. During trip: get out of the way, not itinerary mode. Post-trip: max 5 questions.
+
+Notifications must be useful. Never “PackWise misses you” or “It’s packing time! 🎉”.
+
+Share MVP: native share sheet of the formatted list.
+
+## Me
+
+Show human habits (“You usually bring”, “You tend to skip”), not raw stats. Preferences: default style/bag, units, workout, laptop, contacts, medication. Do not collect passport numbers or medical records.
+
+Visual mock: `design/ui-flow-overview.png`. Full UX: `docs/navigation-and-onboarding.md`, `docs/trip-creation.md`, `docs/packing-experience.md`, `docs/weather-and-packing-impact.md`, `docs/lifecycle-memory-and-me.md`.

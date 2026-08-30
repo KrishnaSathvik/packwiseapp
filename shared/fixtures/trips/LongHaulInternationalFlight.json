@@ -1,0 +1,46 @@
+{
+  "id": "LongHaulInternationalFlight",
+  "destinationFixture": "Singapore",
+  "weatherFixture": "MiamiHotBeach",
+  "days": 10,
+  "tripType": "vacation",
+  "activities": [
+    "sightseeing",
+    "walking",
+    "niceDinner"
+  ],
+  "bag": "checked",
+  "style": "balanced",
+  "chips": [
+    "travelingInternationally"
+  ],
+  "homeCountryCode": "US",
+  "homeCountrySource": "userConfirmed",
+  "note": "Flying to Singapore, roughly twenty hours in the air each way. Ten days, first time in Asia.",
+  "mustInfer": [
+    "travelingInternationally"
+  ],
+  "mustNotInfer": [
+    "hiking",
+    "laundryAvailable",
+    "usuallyWorkOut"
+  ],
+  "allowedSuggestions": [
+    "travel_comfort.neck_pillow",
+    "travel_comfort.eye_mask",
+    "travel_comfort.earplugs",
+    "travel_comfort.compression_packing",
+    "travel_comfort.snacks_flight",
+    "travel_comfort.empty_security_bottle",
+    "clothing.compression_socks",
+    "electronics.power_bank"
+  ],
+  "mustInclude": [
+    "documents.passport",
+    "electronics.travel_adapter",
+    "essentials.cash"
+  ],
+  "mustNotInclude": [
+    "clothing.winter_coat"
+  ]
+}

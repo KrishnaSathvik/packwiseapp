@@ -1,0 +1,36 @@
+{
+  "needs": {
+    "walking": [
+      "footwear.walking_shoes",
+      "footwear.running_shoes",
+      "footwear.hiking_shoes"
+    ],
+    "running": [
+      "footwear.running_shoes"
+    ],
+    "hiking": [
+      "footwear.hiking_shoes"
+    ],
+    "audio": [
+      "electronics.headphones",
+      "electronics.earbuds_case"
+    ],
+    "hydration": [
+      "hydration.water_bottle"
+    ]
+  },
+  "preferSingleWhen": {
+    "walking": {
+      "ifActivity": "running",
+      "keep": "footwear.running_shoes",
+      "reasonCode": "substitution.running_covers_walking"
+    },
+    "walkingHiking": {
+      "ifActivity": "hiking",
+      "unlessActivity": "running",
+      "keep": "footwear.hiking_shoes",
+      "drop": "footwear.walking_shoes",
+      "reasonCode": "substitution.hiking_covers_walking"
+    }
+  }
+}

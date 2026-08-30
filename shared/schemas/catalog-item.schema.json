@@ -1,0 +1,66 @@
+{
+  "type": "object",
+  "required": [
+    "id",
+    "localizationKey",
+    "display_name",
+    "category",
+    "importance",
+    "quantity_kind"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "localizationKey": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "importance": {
+      "enum": [
+        "critical",
+        "important",
+        "normal",
+        "optional"
+      ]
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "quantity_kind": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "companions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "travelRestrictionReviewRequired": {
+      "type": "boolean"
+    }
+  }
+}

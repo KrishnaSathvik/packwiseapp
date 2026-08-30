@@ -1,0 +1,398 @@
+openapi: 3.1.0
+info:
+  title: PackWise Intelligence API
+  version: 0.1.0
+  description: >
+    Explicit product capabilities. No /chat endpoint.
+    GPT-5.6 via Structured Outputs. Model IDs come from server env
+    PACKWISE_MODEL_CONTEXT / GAPS / OPTIMIZE.
+servers:
+  - url: http://localhost:3000
+  - url: https://api.packwise.app
+security:
+  - AppAttest: []
+x-deferred:
+  description: >
+    Designed but not part of M3. The active M3 surface is interpret, gaps,
+    and optimize only. Schemas stay in components so the design is not lost;
+    they are intentionally unreferenced by paths.
+  capabilities:
+    - path: /v1/trip/context
+      operationId: recommendContext
+      milestone: V1+
+      request: TripContextRequest
+      response: ContextualSignalsResponse
+    - path: /v1/trip/ask
+      operationId: askPackWise
+      milestone: V1+
+      request: AskRequest
+      response: AskResponse
+      note: Ask PackWise is a V1 surface. There is never a generic /chat endpoint.
+paths:
+  /v1/challenge:
+    post:
+      summary: App Attest one-time challenge
+      operationId: createAttestChallenge
+      responses:
+        "200":
+          description: Challenge
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChallengeResponse"
+  /v1/attest:
+    post:
+      summary: Register an App Attest attestation
+      operationId: registerAttestation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttestationRequest"
+      responses:
+        "204":
+          description: Accepted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /v1/trip/interpret:
+    post:
+      summary: Natural language to structured trip context
+      operationId: interpretTrip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InterpretTripRequest"
+      responses:
+        "200":
+          description: Structured enrichment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterpretTripResponse"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+  /v1/packing/gaps:
+    post:
+      summary: Find likely missing items
+      operationId: findPackingGaps
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackingGapsRequest"
+      responses:
+        "200":
+          description: Gap suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackingGapResponse"
+  /v1/packing/optimize:
+    post:
+      summary: Suggest reductions and overlaps
+      operationId: optimizePacking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PackingOptimizeRequest"
+      responses:
+        "200":
+          description: Optimizations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackingOptimizationResponse"
+components:
+  securitySchemes:
+    AppAttest:
+      type: apiKey
+      in: header
+      name: X-PackWise-Assertion
+  responses:
+    Unauthorized:
+      description: Attestation or assertion failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
+    RateLimited:
+      description: Per-capability quota exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
+    Unavailable:
+      description: Intelligence temporarily unavailable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIError"
+  schemas:
+    APIError:
+      type: object
+      required: [error, requestID]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        requestID:
+          type: string
+    IntelligenceMeta:
+      type: object
+      required: [requestID, generatedAt, promptVersion, schemaVersion]
+      properties:
+        requestID:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        model:
+          type: string
+        promptVersion:
+          type: string
+        schemaVersion:
+          type: string
+        cached:
+          type: boolean
+    ChallengeResponse:
+      type: object
+      required: [challenge, expiresAt]
+      properties:
+        challenge:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    AttestationRequest:
+      type: object
+      required: [keyId, attestation]
+      properties:
+        keyId:
+          type: string
+        attestation:
+          type: string
+    TripContextDTO:
+      type: object
+      required: [destination, startDate, endDate, tripType, activities, bagType, packingStyle]
+      properties:
+        destination:
+          $ref: "#/components/schemas/DestinationDTO"
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        tripType:
+          type: string
+        activities:
+          type: array
+          items:
+            type: string
+        bagType:
+          type: string
+        packingStyle:
+          type: string
+        transportation:
+          type: string
+        laundryAccess:
+          type: string
+        travelerCount:
+          type: integer
+          minimum: 1
+        userNotes:
+          type: string
+        weatherSummary:
+          type: string
+        currentItemIDs:
+          type: array
+          items:
+            type: string
+    DestinationDTO:
+      type: object
+      required: [displayName, countryCode]
+      properties:
+        displayName:
+          type: string
+        countryCode:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+    PackingItemDTO:
+      type: object
+      required: [displayName]
+      properties:
+        canonicalItemID:
+          type: string
+        displayName:
+          type: string
+        quantity:
+          type: integer
+        category:
+          type: string
+    PackingSuggestionDTO:
+      type: object
+      description: >
+        reasonCode plus reasonArguments is the durable identifier PackWise
+        renders from a localized template. reason is fallback/debug prose and
+        never becomes a stable identifier.
+      required: [canonicalItemID, action, reasonCode]
+      properties:
+        canonicalItemID:
+          type: string
+          description: Must already exist in shared/catalog. Never invented by the model.
+        action:
+          enum: [recommend, remove_candidate, quantity_change]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Internal only. Used for ranking and suppression, never rendered.
+        signals:
+          type: array
+          items:
+            type: string
+        reason:
+          type: string
+        reasonCode:
+          type: string
+        reasonArguments:
+          type: object
+          additionalProperties:
+            type: string
+    InterpretTripRequest:
+      type: object
+      required: [note, context, safetyIdentifier]
+      properties:
+        note:
+          type: string
+        context:
+          $ref: "#/components/schemas/TripContextDTO"
+        safetyIdentifier:
+          type: string
+    InterpretTripResponse:
+      type: object
+      required: [meta, inferredActivities, inferredChips]
+      properties:
+        meta:
+          $ref: "#/components/schemas/IntelligenceMeta"
+        inferredActivities:
+          type: array
+          items:
+            type: string
+        inferredChips:
+          type: array
+          items:
+            type: string
+        noteSummary:
+          type: string
+    TripContextRequest:
+      type: object
+      required: [context, safetyIdentifier]
+      properties:
+        context:
+          $ref: "#/components/schemas/TripContextDTO"
+        safetyIdentifier:
+          type: string
+    ContextualSignalsResponse:
+      type: object
+      required: [meta, suggestions]
+      properties:
+        meta:
+          $ref: "#/components/schemas/IntelligenceMeta"
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackingSuggestionDTO"
+    PackingGapsRequest:
+      type: object
+      required: [context, items, safetyIdentifier]
+      properties:
+        context:
+          $ref: "#/components/schemas/TripContextDTO"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackingItemDTO"
+        relevantPreferences:
+          type: object
+          additionalProperties: true
+        safetyIdentifier:
+          type: string
+    PackingGapResponse:
+      type: object
+      required: [meta, suggestions]
+      properties:
+        meta:
+          $ref: "#/components/schemas/IntelligenceMeta"
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackingSuggestionDTO"
+    PackingOptimizeRequest:
+      type: object
+      required: [context, items, safetyIdentifier]
+      properties:
+        context:
+          $ref: "#/components/schemas/TripContextDTO"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackingItemDTO"
+        safetyIdentifier:
+          type: string
+    PackingOptimizationResponse:
+      type: object
+      required: [meta, optimizations]
+      properties:
+        meta:
+          $ref: "#/components/schemas/IntelligenceMeta"
+        optimizations:
+          type: array
+          items:
+            type: object
+            required: [canonicalItemID, reason]
+            properties:
+              canonicalItemID:
+                type: string
+              reason:
+                type: string
+              suggestedQuantity:
+                type: integer
+    AskRequest:
+      type: object
+      required: [question, context, items, safetyIdentifier]
+      properties:
+        question:
+          type: string
+        context:
+          $ref: "#/components/schemas/TripContextDTO"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackingItemDTO"
+        safetyIdentifier:
+          type: string
+    AskResponse:
+      type: object
+      required: [meta, answer]
+      properties:
+        meta:
+          $ref: "#/components/schemas/IntelligenceMeta"
+        answer:
+          type: string
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PackingSuggestionDTO"
