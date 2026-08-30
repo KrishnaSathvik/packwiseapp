@@ -178,6 +178,24 @@ Two defects found, both invisible to the fake:
 
 ## 3. Vercel deployment
 
+Root Directory is `api`. The build command is `npm run vercel-build`, which
+checks `api/generated/` against its own manifest and typechecks — self-contained,
+because the repo outside the project root may not be present at build time.
+Drift between `shared/` and the artifact is caught by `npm run preflight`
+locally and in CI, which does have the whole repo.
+
+Production runs `PACKWISE_INTEGRITY_MODE=appattest` from the first deploy. A
+production endpoint that rejects every unattested request is safer than one
+temporarily accepting development trust, so do **not** relax it while waiting on
+the device pass.
+
+Run the deployed OpenAI smoke against a **Preview** deployment with development
+integrity, keeping Production failing closed:
+
+```bash
+node scripts/live-smoke.ts --base-url=https://<preview>.vercel.app
+```
+
 ```text
 [ ] api/generated/ is packaged with the functions
 [ ] nothing resolves ../shared at runtime
@@ -189,6 +207,9 @@ Two defects found, both invisible to the fake:
 [ ] appattest mode fails closed on an unattested request
 [ ] all three intelligence routes answer
 [ ] both integrity routes answer
+[ ] buildHash in /health matches the locally verified artifact
+[ ] an unauthenticated intelligence request is rejected, not served
+[ ] state written by one invocation is read by another
 ```
 
 ## 4. Physical iPhone App Attest
