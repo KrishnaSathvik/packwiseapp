@@ -558,7 +558,7 @@ struct TripSetupView: View {
                         symbol: bag.symbol,
                         tint: bag.tint,
                         title: bag.title,
-                        subtitle: bag.implication,
+                        subtitle: bag.setupSubtitle,
                         isSelected: draft.bagType == bag
                     ) {
                         draft.bagType = bag
@@ -925,6 +925,26 @@ struct FlexibleChipWrap: View {
                     toggle(option)
                 }
             }
+        }
+    }
+}
+
+/// Terse subtitles for the bag step.
+///
+/// `BagType.implication` is domain copy — it explains to the engine's user
+/// what choosing a bag does to the list, and it is kept intact for that. At
+/// six options on one screen those full sentences make the rows twice the
+/// height the board draws, so the setup step gets its own short labels. This
+/// lives here rather than in `Domain/` because it is presentation only.
+private extension BagType {
+    var setupSubtitle: String {
+        switch self {
+        case .personalItem: "Smallest and most compact"
+        case .carryOn: "Best for most trips"
+        case .checked: "More flexibility"
+        case .backpack: "Great for flexible travel"
+        case .roadTripLuggage: "Traveling by car"
+        case .notSure: "Choose later"
         }
     }
 }
