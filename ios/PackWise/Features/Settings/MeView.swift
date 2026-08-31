@@ -67,6 +67,15 @@ private struct MeForm: View {
                 Text("Trips and lists stay on this iPhone. PackWise does not need live location.")
                     .foregroundStyle(.secondary)
             }
+            #if DEBUG
+            // Compiled out of Release, TestFlight, and App Store builds along
+            // with everything it links to.
+            Section {
+                NavigationLink("Developer Tools") {
+                    DeveloperToolsView()
+                }
+            }
+            #endif
         }
         .navigationTitle("Me")
     }

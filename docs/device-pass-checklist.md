@@ -58,8 +58,8 @@ DCAppAttestService.isSupported
 [ ] registration visible in Upstash
 [ ] assertion #1 accepted
 [ ] assertion #2 accepted, counter advances
-[ ] replayed assertion rejected        (needs debug harness)
-[ ] tampered body rejected             (needs debug harness)
+[ ] replayed assertion rejected        (Developer Tools)
+[ ] tampered body rejected             (Developer Tools)
 [ ] a real interpret request reaches GPT-5.6 and returns 200
 ```
 
@@ -211,7 +211,7 @@ Then a far-future trip:
 ## 7. Weather change
 
 ```text
-[ ] "Weather changed" appears        (needs debug harness)
+[ ] "Weather changed" appears        (Developer Tools)
 [ ] review changes
 [ ] additions on, removals off
 [ ] Keep List dismisses the proposal
@@ -338,20 +338,42 @@ In every case:
 
 ---
 
-## Known gap: no debug harness
+## Debug harness
 
-Three items above cannot be run today. The app has no `#if DEBUG` affordances
-and no developer menu, so there is no way on device to:
+Three checks cannot be performed by hand, so **Me → Developer Tools** provides
+them. The screen and everything it links to are inside `#if DEBUG`, verified
+absent from a Release build:
 
-- replay an assertion or tamper with a request body (section 1)
-- inject a weather change rather than waiting for the forecast to move
-  (section 7)
+```text
+DeveloperToolsView      0 occurrences in the Release binary
+DebugAttestProbe        0
+DebugWeatherInjection   0
+"Developer Tools"       0
+```
 
-Waiting for real weather to change is not a test. These need a Debug-only
-surface before the pass can be completed — build it before starting, or accept
-the pass as incomplete on exactly those points and say so.
+```text
+App Attest
+  Run happy path          registers and makes one accepted assertion
+  Replay last assertion   sends the same assertion twice; the second must fail
+                          with counter_replay
+  Send tampered payload   signs body A, sends body B; must fail with
+                          assertion_signature_invalid
 
----
+Weather
+  Inject weather change   stores a fixture snapshot and reconciles it through
+                          the same path a real refresh uses, so the result is a
+                          real WeatherChangeProposal
+```
+
+The replay and tamper probes send deliberately invalid requests to the **normal**
+verifier — the server is never relaxed to make them pass. The weather injection
+goes through `MockWeatherService` normalization, `repository.storeWeather`, and
+`WeatherChangeReconciler`, so nothing about the resulting proposal is fabricated
+UI state.
+
+Pick a forecast scenario materially different from the trip's current one; the
+tool reports honestly when the signals did not differ enough to propose
+anything.
 
 ## Gate
 
