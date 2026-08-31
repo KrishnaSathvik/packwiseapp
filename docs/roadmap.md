@@ -148,7 +148,10 @@ M3
         M3A-1 ✅ contract + plumbing, FakeModelAdapter (frozen)
         M3A-2 ✅ implementation — Responses API, production App Attest,
                durable state, Vercel packaging
-    M3A external verification ← CURRENT — Redis, OpenAI, Vercel, device, TestFlight
+    M3A external verification ← CURRENT
+        ✅ OpenAI, live eval 18/18, real Redis, Vercel Production
+        ⏳ physical-device App Attest (development) + full device UI/UX pass
+        ⏸ TestFlight production App Attest — deferred to distribution
     M3B 🔒 do not start
     M3C 🔒 do not start
     M3B Trip-context enrichment
@@ -163,7 +166,7 @@ M4  Share, notifications, Final Check
 - **M3 (now):** Context Intelligence. GPT-5.6 enriches PackWise's existing engine; it does not replace it.
   - **M3A:** Intelligence API foundation — `RemoteContextIntelligenceService`, Structured Outputs, schema/canonical validation, prompt versioning, `store: false`, `safety_identifier`, rate limits, App integrity boundary. Typed endpoints: `/v1/trip/interpret`, `/v1/packing/gaps`, `/v1/packing/optimize`. No big new UX.
     - **M3A-1 (closed):** every contract real before any model behaviour is real. Generated request/response and model-output schemas, canonical + reason-code validation, request IDs, prompt/schema versioning, per-capability rate limits, `AppIntegrityProvider` with the development provider, Swift HTTP client and `RemoteContextIntelligenceService`, `FakeModelAdapter`, and the nine evaluation fixtures with `note` / `mustInfer` / `mustNotInfer` / `allowedSuggestions`. No OpenAI key required.
-    - **M3A-2 (implementation complete, verification pending):** live infrastructure, not product behavior. `OpenAIResponsesModelAdapter` using the generated strict schema, real prompt templates, `store: false`, HMAC'd install-scoped `safety_identifier`, conservative timeout/retry, production App Attest with durable challenge/key/counter state, Redis-backed rate limiting, `shared/` vocabulary as a build artifact rather than a runtime path, Vercel deployment, live evaluation smoke suite. The normal generation flow still behaves exactly as it did — wiring happens in M3B and M3C. Acceptance criteria are tracked in three states (proven offline / implemented, verification pending / hard external verification) in [implementation-decisions.md](implementation-decisions.md). The external pass and its exit gate are in [m3a2-verification-runbook.md](m3a2-verification-runbook.md); capture evidence per step, not just a checkbox. M3A closes on its own six items — the outstanding M2 WeatherKit device pass shares the session but belongs to M2.
+    - **M3A-2 (implementation complete, verification pending):** live infrastructure, not product behavior. `OpenAIResponsesModelAdapter` using the generated strict schema, real prompt templates, `store: false`, HMAC'd install-scoped `safety_identifier`, conservative timeout/retry, production App Attest with durable challenge/key/counter state, Redis-backed rate limiting, `shared/` vocabulary as a build artifact rather than a runtime path, Vercel deployment, live evaluation smoke suite. The normal generation flow still behaves exactly as it did — wiring happens in M3B and M3C. Acceptance criteria are tracked in three states (proven offline / implemented, verification pending / hard external verification) in [implementation-decisions.md](implementation-decisions.md). The external pass and its exit gate are in [m3a2-verification-runbook.md](m3a2-verification-runbook.md); capture evidence per step, not just a checkbox. M3A closes on its own six items — the outstanding M2 WeatherKit device pass shares the session but belongs to M2. TestFlight production App Attest is deferred to actual App Store distribution and does not gate M3B; a locally signed build cannot exercise Apple's production environment.
   - **M3B:** Trip-note interpretation merges into `TripContext`. GPT does not insert packing items.
   - **M3C:** Packing-gap candidates through the Recommendation Resolver as optional suggestions. No dedicated “What am I forgetting?” UI.
   - Optimize is backend-only in M3. Ask PackWise UI and Pack lighter UI are V1+.

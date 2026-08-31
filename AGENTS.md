@@ -38,6 +38,7 @@ PackWise is a personal packing intelligence app for iPhone. The user describes a
 | MVP / V1 / V2 / V3 | `docs/roadmap.md` |
 | Later features | `docs/future-features.md` |
 | M3A-2 external verification steps | `docs/m3a2-verification-runbook.md` |
+| Physical-device App Attest + UI/UX pass | `docs/device-pass-checklist.md` |
 | Screen mock | `design/ui-flow-overview.png` |
 
 Cursor rules in `.cursor/rules/` repeat the hard constraints. Keep rules and docs aligned when a decision changes.
@@ -46,7 +47,7 @@ Cursor rules in `.cursor/rules/` repeat the hard constraints. Keep rules and doc
 
 See `docs/implementation-decisions.md`. **M3A-2 implementation is complete; external verification is pending** OpenAI, Redis, Vercel, and signed-device credentials. M1, M2, M3A-1, and M3A-2 code are closed — do not reopen their architecture unless a device or live-integration pass exposes a genuine defect.
 
-Be precise about what is verified: fixture-backed cryptographic verification is not Apple-service verification, and a green test suite is not a deployment. Acceptance criteria are tracked in three states, and each external step retains evidence rather than a checkbox. Do not start M3B or M3C before the six-item M3A exit gate in `docs/m3a2-verification-runbook.md` is green. The outstanding M2 WeatherKit device pass runs in the same session but is M2-owned and does not gate M3A.
+Be precise about what is verified: fixture-backed cryptographic verification is not Apple-service verification, and a green test suite is not a deployment. Acceptance criteria are tracked in three states, and each external step retains evidence rather than a checkbox. Do not start M3B or M3C before the M3A exit gate in `docs/m3a2-verification-runbook.md` is green — its last two items are a physical-device App Attest pass in Apple's development environment and a full device UI/UX pass. TestFlight production App Attest is deferred to distribution and does not gate M3B. The outstanding M2 WeatherKit device pass runs in the same session but is M2-owned and does not gate M3A.
 
 The next code should be either a fix the external pass discovers, or — once the gate is green — the first deliberate M3B context-enrichment change. Not more infrastructure.
 

@@ -7,7 +7,7 @@ alwaysApply: true
 
 Build the current milestone unless the user expands scope. Frozen decisions: `docs/implementation-decisions.md`.
 
-**Now: M3A external verification** — implementation is complete; the live Redis, OpenAI, Vercel, device, and TestFlight passes are outstanding. M3B and M3C do not start until the six-item exit gate in `docs/m3a2-verification-runbook.md` is green. The outstanding M2 WeatherKit device pass shares that session but is M2-owned and does not gate M3A. GPT-5.6 enriches PackWise's existing engine; it does not replace it.
+**Now: M3A external verification** — implementation is complete; the live Redis, OpenAI, Vercel, device, and TestFlight passes are outstanding. M3B and M3C do not start until the exit gate in `docs/m3a2-verification-runbook.md` is green: physical-device App Attest (Apple development environment) and a full device UI/UX pass, per `docs/device-pass-checklist.md`. TestFlight production App Attest is deferred to distribution and does not gate M3B. The outstanding M2 WeatherKit device pass shares that session but is M2-owned and does not gate M3A. GPT-5.6 enriches PackWise's existing engine; it does not replace it.
 
 Slices: **M3A** API foundation (no big UX) → **M3B** trip-note enrichment into `TripContext` → **M3C** resolver-filtered packing gaps. `/v1/packing/optimize` is backend-only. Ask PackWise / Pack lighter UI are V1+.
 

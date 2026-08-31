@@ -384,16 +384,28 @@ logs already follow.
 
 ## M3A exit gate
 
-M3A closes only when all six of its own items are verified:
+M3A closes when its six items are verified. The sixth was TestFlight; it is now
+a full physical-device product pass, because that is what a locally signed build
+can actually prove.
 
 ```text
 [x] Live OpenAI Structured Outputs verified   2026-08-30
 [x] Live eval smoke reviewed                 2026-08-30, 18/18 green
 [x] Real Redis verified                      2026-08-30
 [x] Production Vercel deployment verified    2026-08-30
-[ ] Physical-device App Attest verified
-[ ] TestFlight production App Attest verified
+[ ] Physical-device App Attest — development environment
+[ ] Full physical-device UI/UX pass
 ```
+
+Both remaining items run as one session on a real iPhone against
+`packwiseapp-dev.vercel.app`. The checklist is
+[device-pass-checklist.md](device-pass-checklist.md).
+
+**TestFlight production App Attest is deferred**, not failed. A locally signed
+build can only exercise Apple's development environment; TestFlight and the App
+Store always use production regardless of the entitlement. That path is real and
+unverified, but it is *distribution* verification, so it is tracked as future
+work rather than a gate — it does not block M3B.
 
 The M2 WeatherKit device pass is **not** on that list. It belongs to M2, and
 conflating the two would misattribute ownership. Run it in the same device
