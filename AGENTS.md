@@ -14,7 +14,7 @@ PackWise is a personal packing intelligence app for iPhone. The user describes a
 4. Never call OpenAI from the iPhone. Secrets stay on the PackWise Intelligence API.
 5. Explicit user decisions always win. Removed items do not silently return.
 6. Two tabs only: **Trips** and **Me**. The trip is the container for weather, packing, and Ask PackWise.
-7. Packing rows are Reminders-style. Cards are for emphasis only.
+7. The product spec decides behavior, structure, and intent; the 10-screen sheet at `design/ui-flow-overview.png` decides visual treatment where the spec is silent. Screens compose from the design system in `ios/PackWise/DesignSystem/` — tokens (`PackWiseColor`, `PackWiseFont`, `PackWiseSpacing`) and primitives — never from raw colors, fonts, or paddings. The full Packing List uses plain Reminders-style grouped rows, not cards; cards are for emphasis surfaces — Trip Detail sections, trip cards, setup summaries. Where both are silent, derive: white screen, 28pt bold headline + gray subtitle, white cards with hairline border, blue for selection, green for progress. Importance renders as a trailing `exclamationmark.circle.fill` (warning hue for critical, accent for important) and never occupies the checkbox slot — no stars.
 8. Weather is trip-dated, not a general weather app. Never silently rewrite a list when the forecast changes.
 9. Stay in MVP unless the user expands scope. See `docs/roadmap.md`.
 10. No signup, no location permission, no notification permission, no paywall on first launch.
@@ -74,4 +74,5 @@ M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `Tri
 - Canonical item IDs from `shared/`, not stringly-typed item names
 - Repositories between views and SwiftData
 - Feature folders as specified in `docs/architecture.md`
-- Native iOS controls. SF Pro. SF Symbols. Semantic colors. Dark Mode from day one
+- Native iOS controls. SF Pro. SF Symbols. The fixed sheet palette in `DesignSystem/PackWiseTheme.swift`
+- Dark mode is **intentionally disabled** as of 2026-08-31 (`.preferredColorScheme(.light)` at the root). This turned off a previously working light/dark system, not an unbuilt feature — the reference sheet is light-only and dark had nothing to be checked against. Re-enable only alongside a dark reference sheet and dark counterparts for every `PackWiseColor` token

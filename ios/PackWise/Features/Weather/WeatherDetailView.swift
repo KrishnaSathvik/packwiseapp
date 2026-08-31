@@ -30,9 +30,11 @@ struct WeatherDetailView: View {
             }
             .padding(PackWiseSpacing.comfortable)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(PackWiseColor.screen)
         .navigationTitle("Weather")
         .navigationBarTitleDisplayMode(.inline)
+        // Pushed inside the Trips stack; the root tabs stay with the root.
+        .toolbar(.hidden, for: .tabBar)
     }
 
     // MARK: - Summary
@@ -43,13 +45,13 @@ struct WeatherDetailView: View {
                 HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
                     Image(systemName: weather.headlineSymbol(rainThreshold: rainThreshold))
                         .font(.largeTitle)
-                        .symbolRenderingMode(.multicolor)
+                        .weatherGlyphStyle(weather.headlineSymbol(rainThreshold: rainThreshold))
                     VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
                         Text(destinationName)
                             .font(.title3.weight(.semibold))
                         Text(dateLine)
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(PackWiseColor.textSecondary)
                         if weather.isPreciseForecast {
                             Text(weather.highLowLabel(usesFahrenheit: usesFahrenheit))
                                 .font(.title2.weight(.semibold))
@@ -59,17 +61,22 @@ struct WeatherDetailView: View {
                     Spacer(minLength: 0)
                 }
                 if let coverage = coverageBadge {
-                    Divider()
+                    PackWiseRowDivider(inset: 0)
                     PackWiseStatusBadge(
                         title: coverage.title,
                         symbol: coverage.symbol,
                         tint: coverage.tint
                     )
                 }
-                if !weather.coverageCopy.isEmpty {
+                // The stored provider summary is a snapshot-time sentence and
+                // can contradict the forecast below it once days shift. With
+                // a complete forecast on screen, the days speak for
+                // themselves; the prose earns its place only when it explains
+                // missing coverage.
+                if weather.state() != .forecastComplete, !weather.coverageCopy.isEmpty {
                     Text(weather.coverageCopy)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(PackWiseColor.textSecondary)
                 }
             }
         }
@@ -119,7 +126,7 @@ struct WeatherDetailView: View {
             PackWiseCard {
                 VStack(spacing: 0) {
                     ForEach(Array(relevantDetails.enumerated()), id: \.element.text) { index, detail in
-                        if index > 0 { Divider() }
+                        if index > 0 { PackWiseRowDivider() }
                         HStack(spacing: PackWiseSpacing.regular) {
                             PackWiseIconBadge(symbol: detail.symbol, tint: detail.tint)
                             Text(detail.text)
@@ -148,7 +155,7 @@ struct WeatherDetailView: View {
                                     .font(.subheadline.weight(.semibold))
                                 Text(item.summary)
                                     .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(PackWiseColor.textSecondary)
                             }
                         }
                     }
@@ -167,7 +174,11 @@ struct WeatherDetailView: View {
 
     private var relevantDetails: [Detail] {
         var lines: [Detail] = []
-        let rainDays = weather.dailyForecast.filter { $0.rainProbability >= rainThreshold }
+        // Chronological, whatever order the provider returned the days in —
+        // "Wed, Mon, Sat" reads as noise.
+        let rainDays = weather.dailyForecast
+            .filter { $0.rainProbability >= rainThreshold }
+            .sorted { $0.date < $1.date }
         if !rainDays.isEmpty {
             let names = rainDays.map { $0.date.formatted(.dateTime.weekday(.abbreviated)) }.joined(separator: ", ")
             lines.append(Detail(symbol: "umbrella", tint: .blue, text: "Rain likely \(names)"))

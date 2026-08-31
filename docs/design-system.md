@@ -1,6 +1,8 @@
 # Design System
 
-Visual source of truth: [design/ui-flow-overview.png](../design/ui-flow-overview.png) and [design/README.md](../design/README.md).
+Visual source of truth: the 10-screen sheet at [design/ui-flow-overview.png](../design/ui-flow-overview.png). It is the only sheet; where it is silent, derive from its rules rather than inventing.
+
+> **Ruling (2026-08-31):** the app matches the sheet exactly. The palette is the fixed hex set in `ios/PackWise/DesignSystem/PackWiseTheme.swift` and the app renders light-only (`.preferredColorScheme(.light)`). Dark Mode is a later project with its own reference sheet — do not approximate one. The "semantic colors / Dark Mode from day one" guidance below this line is superseded where it conflicts.
 
 ## Direction
 

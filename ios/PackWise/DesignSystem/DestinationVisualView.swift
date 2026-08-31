@@ -1,10 +1,8 @@
 import SwiftUI
 
-/// Renders a destination image for a surface, resolving Look Around → map →
-/// graphical without ever showing a spinner or a broken-image state.
-///
-/// The graphical tier is what a first launch offline looks like, so it has to
-/// read as a designed surface rather than a placeholder.
+/// Renders a destination image for a surface, resolving bundled photo →
+/// Look Around → branded panel without ever showing a spinner or a
+/// broken-image state.
 struct DestinationVisualView: View {
     var destination: Destination
     var purpose: DestinationVisualPurpose
@@ -17,13 +15,13 @@ struct DestinationVisualView: View {
     var body: some View {
         ZStack {
             switch visual {
-            case .lookAround(let image), .map(let image):
+            case .bundled(let image), .lookAround(let image):
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
                     .transition(.opacity)
             case .graphical, nil:
-                GraphicalDestinationTile(seed: destination.id, compact: purpose == .tripThumbnail)
+                BrandedDestinationPanel(compact: purpose == .tripThumbnail)
             }
 
             if overlaysText {
@@ -43,34 +41,33 @@ struct DestinationVisualView: View {
     }
 }
 
-/// The third tier: a soft tinted field with a travel glyph.
-///
-/// The hue is derived from the destination so two trips on the same screen do
-/// not look like the same missing image.
-struct GraphicalDestinationTile: View {
-    var seed: String
+/// The last tier: a branded panel in the blue family with a large low-opacity
+/// location glyph. It looks deliberate — never a muddy gradient or a loading
+/// failure.
+struct BrandedDestinationPanel: View {
     var compact: Bool = false
 
-    private var hue: Double {
-        let hash = seed.unicodeScalars.reduce(into: UInt32(7)) { total, scalar in
-            total = total &* 31 &+ scalar.value
-        }
-        return Double(hash % 360) / 360
-    }
-
     var body: some View {
-        LinearGradient(
-            colors: [
-                Color(hue: hue, saturation: 0.32, brightness: 0.78),
-                Color(hue: hue, saturation: 0.46, brightness: 0.52)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .overlay {
-            Image(systemName: "mappin.and.ellipse")
-                .font(.system(size: compact ? 22 : 38, weight: .light))
-                .foregroundStyle(.white.opacity(0.85))
+        ZStack {
+            LinearGradient(
+                colors: [PackWiseColor.brandPanelTop, PackWiseColor.brandPanelBottom],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            GeometryReader { proxy in
+                Image(systemName: "location.fill")
+                    .font(.system(size: min(proxy.size.width, proxy.size.height) * (compact ? 0.5 : 0.42), weight: .regular))
+                    .foregroundStyle(.white.opacity(0.16))
+                    .rotationEffect(.degrees(-8))
+                    .position(x: proxy.size.width * 0.7, y: proxy.size.height * 0.42)
+            }
+
+            if compact {
+                Image(systemName: "mappin.and.ellipse")
+                    .font(.system(size: 20, weight: .light))
+                    .foregroundStyle(.white.opacity(0.92))
+            }
         }
     }
 }

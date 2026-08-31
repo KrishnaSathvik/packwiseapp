@@ -2,6 +2,11 @@
 
 **Date:** 2026-08-31
 **Status:** slices 1–10 implemented; slice 0 and slice 11 need a physical device
+**Superseded (2026-08-31, second pass):** the rulings "the colour system is kept as-is" and
+"Reminders-style rows, cards for emphasis only" no longer hold. The 10-screen sheet at
+`design/ui-flow-overview.png` is the exact visual contract: fixed hex palette in
+`DesignSystem/PackWiseTheme.swift`, light-only rendering, card composition per the sheet.
+See AGENTS.md non-negotiable 7 and `docs/design-system.md` for the current ruling.
 **Scope:** every SwiftUI surface in `ios/PackWise/Features/` and `ios/PackWise/DesignSystem/`
 **Explicitly not in scope:** `Domain/`, `Data/`, `api/`, `shared/`
 

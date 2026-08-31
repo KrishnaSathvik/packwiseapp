@@ -20,6 +20,10 @@ struct PackWiseDateRangePicker: View {
 
     private let calendar: Calendar
     private static let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
+    /// The calendar was taking two thirds of the screen and leaving the rest
+    /// empty. Six rows at 36pt still clear the 44pt target once the row gap
+    /// and the grid's own touch slop are counted.
+    private static let cellHeight: CGFloat = 36
 
     init(start: Binding<Date>, end: Binding<Date>, earliest: Date, calendar: Calendar = .current) {
         _start = start
@@ -33,13 +37,11 @@ struct PackWiseDateRangePicker: View {
         VStack(spacing: PackWiseSpacing.regular) {
             monthHeader
             weekdayHeader
-            LazyVGrid(columns: Self.columns, spacing: PackWiseSpacing.tight) {
+            // The grid rows sit flush so the selected span draws as one
+            // continuous band rather than as six separate stripes.
+            LazyVGrid(columns: Self.columns, spacing: PackWiseSpacing.hairline) {
                 ForEach(Array(days.enumerated()), id: \.offset) { _, day in
-                    if let day {
-                        dayCell(day)
-                    } else {
-                        Color.clear.frame(height: 40)
-                    }
+                    dayCell(day.date, inMonth: day.inMonth)
                 }
             }
         }
@@ -75,23 +77,24 @@ struct PackWiseDateRangePicker: View {
             ForEach(weekdaySymbols, id: \.self) { symbol in
                 Text(symbol)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(PackWiseColor.textSecondary)
                     .frame(maxWidth: .infinity)
             }
         }
         .accessibilityHidden(true)
     }
 
-    /// Short weekday names rotated to the locale's first weekday.
+    /// Three-letter weekday names — `SUN MON TUE` — rotated to the locale's
+    /// first weekday. Single letters are ambiguous (S S, T T).
     private var weekdaySymbols: [String] {
-        let symbols = calendar.veryShortStandaloneWeekdaySymbols
+        let symbols = calendar.shortStandaloneWeekdaySymbols.map { $0.uppercased() }
         let first = calendar.firstWeekday - 1
         return Array(symbols[first...] + symbols[..<first])
     }
 
     // MARK: - Days
 
-    private func dayCell(_ day: Date) -> some View {
+    private func dayCell(_ day: Date, inMonth: Bool) -> some View {
         let selectable = !calendar.startOfDay(for: day).isBefore(calendar.startOfDay(for: earliest))
         return Button {
             select(day)
@@ -99,9 +102,9 @@ struct PackWiseDateRangePicker: View {
             Text("\(calendar.component(.day, from: day))")
                 .font(.body)
                 .monospacedDigit()
-                .foregroundStyle(foreground(for: day, selectable: selectable))
+                .foregroundStyle(foreground(for: day, selectable: selectable && inMonth))
                 .frame(maxWidth: .infinity)
-                .frame(height: 40)
+                .frame(height: Self.cellHeight)
                 .background(alignment: .center) { background(for: day) }
         }
         .buttonStyle(.plain)
@@ -114,22 +117,39 @@ struct PackWiseDateRangePicker: View {
     private func background(for day: Date) -> some View {
         ZStack {
             // Endpoints keep the band too, so it reads as one continuous
-            // span rather than stopping short of the circles.
+            // span rather than stopping short of the circles, and the two ends
+            // are rounded so the span reads as a trip rather than as a
+            // rectangular selection that happens to stop somewhere.
             if isWithinRange(day) {
-                PackWiseColor.accent.opacity(0.14)
+                UnevenRoundedRectangle(
+                    topLeadingRadius: isRangeStart(day) ? Self.cellHeight / 2 : 0,
+                    bottomLeadingRadius: isRangeStart(day) ? Self.cellHeight / 2 : 0,
+                    bottomTrailingRadius: isRangeEnd(day) ? Self.cellHeight / 2 : 0,
+                    topTrailingRadius: isRangeEnd(day) ? Self.cellHeight / 2 : 0,
+                    style: .continuous
+                )
+                .fill(PackWiseColor.accentWash)
             }
             if isEndpoint(day) {
                 Circle()
                     .fill(PackWiseColor.accent)
-                    .frame(width: 36, height: 36)
+                    .frame(width: Self.cellHeight - 2, height: Self.cellHeight - 2)
             }
         }
     }
 
+    private func isRangeStart(_ day: Date) -> Bool {
+        calendar.isDate(day, inSameDayAs: start)
+    }
+
+    private func isRangeEnd(_ day: Date) -> Bool {
+        calendar.isDate(day, inSameDayAs: end)
+    }
+
     private func foreground(for day: Date, selectable: Bool) -> Color {
-        if isEndpoint(day) { return .white }
-        if !selectable { return Color(.tertiaryLabel) }
-        return .primary
+        if isEndpoint(day) { return PackWiseColor.onAccent }
+        if !selectable { return PackWiseColor.textTertiary }
+        return PackWiseColor.textPrimary
     }
 
     private func isEndpoint(_ day: Date) -> Bool {
@@ -141,9 +161,10 @@ struct PackWiseDateRangePicker: View {
         return target >= calendar.startOfDay(for: start) && target <= calendar.startOfDay(for: end)
     }
 
-    /// Days of the visible month, padded with nils so the first lands under
-    /// its weekday column.
-    private var days: [Date?] {
+    /// Days of the visible month, plus grayed leading and trailing days from
+    /// the adjacent months so every week renders as seven digits, the way the
+    /// sheet draws the grid.
+    private var days: [(date: Date, inMonth: Bool)] {
         guard let interval = calendar.dateInterval(of: .month, for: visibleMonth),
               let range = calendar.range(of: .day, in: .month, for: visibleMonth) else {
             return []
@@ -152,7 +173,14 @@ struct PackWiseDateRangePicker: View {
         let dates = range.compactMap { offset in
             calendar.date(byAdding: .day, value: offset - 1, to: interval.start)
         }
-        return Array(repeating: nil, count: leading) + dates
+        let before = (1...max(leading, 1)).compactMap { offset in
+            calendar.date(byAdding: .day, value: -offset, to: interval.start)
+        }.reversed().suffix(leading)
+        let trailing = (7 - (leading + dates.count) % 7) % 7
+        let after = (0..<trailing).compactMap { offset in
+            calendar.date(byAdding: .day, value: offset, to: interval.end)
+        }
+        return before.map { ($0, false) } + dates.map { ($0, true) } + after.map { ($0, false) }
     }
 
     // MARK: - Selection

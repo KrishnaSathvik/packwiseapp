@@ -35,27 +35,36 @@ struct PackingListView: View {
     @State private var newItemQuantity = 1
     @State private var newItemCategory: PackingCategory = .miscellaneous
     @State private var newItemOwner: PartyListFilter = .all
+    @State private var newItemImportant = false
 
     var body: some View {
         VStack(spacing: 0) {
             filters
-            Divider()
+            PackWiseRowDivider(inset: 0)
             list
         }
         .navigationTitle("Packing List")
         .navigationBarTitleDisplayMode(.inline)
+        // Pushed from Trips → trip → list. The root tabs belong to the root,
+        // and here they only cost vertical space and compete with the add
+        // button floating in the same corner.
+        .toolbar(.hidden, for: .tabBar)
         .searchable(
             text: $search,
             placement: .navigationBarDrawer(displayMode: .always),
             prompt: "Search items"
         )
         .overlay(alignment: .bottomTrailing) { addButton }
-        .sheet(item: $selectedItem) { item in
-            ItemDetailSheet(
+        // A push, not a sheet — the detail is a full screen in the trip's
+        // navigation, per spec.
+        .navigationDestination(item: $selectedItem) { item in
+            ItemDetailView(
                 item: item,
                 travelers: trip.party.travelers,
                 showsAssignment: !trip.party.usesSimpleList && item.ownershipType == .shared,
-                onNotNeeded: item.canonicalItemID == nil ? nil : { notNeeded(item) }
+                onNotNeeded: !item.isUserAdded && item.canonicalItemID != nil
+                    ? { notNeeded(item) } : nil,
+                onDelete: item.isUserAdded ? { delete(item) } : nil
             )
         }
         .sheet(isPresented: $adding) { addSheet }
@@ -74,17 +83,31 @@ struct PackingListView: View {
                                 row(item)
                             }
                         } header: {
-                            PackWiseSectionHeader(
-                                title: category.title,
-                                trailing: "\(items.filter(\.isPacked).count) / \(items.count)"
-                            )
+                            HStack(spacing: PackWiseSpacing.snug) {
+                                if items.allSatisfy(\.isPacked) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.subheadline)
+                                        .foregroundStyle(PackWiseColor.success)
+                                        .accessibilityLabel("All packed")
+                                }
+                                PackWiseSectionHeader(
+                                    title: category.title,
+                                    style: .micro,
+                                    trailing: "\(items.filter(\.isPacked).count) / \(items.count)"
+                                )
+                            }
+                            .padding(.horizontal, PackWiseSpacing.comfortable)
                             .padding(.top, PackWiseSpacing.snug)
-                            .listRowInsets(EdgeInsets(
-                                top: 0,
-                                leading: PackWiseSpacing.comfortable,
-                                bottom: PackWiseSpacing.tight,
-                                trailing: PackWiseSpacing.comfortable
-                            ))
+                            .padding(.bottom, PackWiseSpacing.tight)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            // A plain list pins its section headers. The header
+                            // was drawn without a fill, so rows scrolled
+                            // straight through it and the two rendered on top
+                            // of each other — "TOILETRIES" and the row above it
+                            // sharing the same pixels. The insets move to the
+                            // padding above so the fill spans the full width.
+                            .background(PackWiseColor.screen)
+                            .listRowInsets(EdgeInsets())
                         }
                         .id(category)
                     }
@@ -98,7 +121,7 @@ struct PackingListView: View {
             .listStyle(.plain)
             // So the last rows can scroll clear of the floating add button
             // rather than sitting underneath it.
-            .contentMargins(.bottom, 88, for: .scrollContent)
+            .contentMargins(.bottom, 76, for: .scrollContent)
             .onAppear {
                 guard let focusedCategory else { return }
                 proxy.scrollTo(focusedCategory, anchor: .top)
@@ -118,20 +141,27 @@ struct PackingListView: View {
             Button("Pack") { pack(item) }
                 .tint(PackWiseColor.accent)
         }
+        // Not Needed and Delete are different operations: declining a
+        // recommendation records an override the engine must respect;
+        // deleting a custom item records nothing. Each row offers only the
+        // one that matches its origin — a "Delete" on a recommendation would
+        // silently lose the override signal.
         .swipeActions(edge: .trailing) {
-            if item.canonicalItemID != nil {
+            if item.isUserAdded {
+                Button("Delete", role: .destructive) { delete(item) }
+            } else if item.canonicalItemID != nil {
                 Button("Not Needed") { notNeeded(item) }
-                    .tint(.orange)
+                    .tint(PackWiseColor.important)
             }
-            Button("Delete", role: .destructive) { delete(item) }
         }
         .contextMenu {
             Button("Why this item?") { selectedItem = item }
             Button("Change quantity") { selectedItem = item }
-            if item.canonicalItemID != nil {
+            if item.isUserAdded {
+                Button("Delete", role: .destructive) { delete(item) }
+            } else if item.canonicalItemID != nil {
                 Button("Mark not needed") { notNeeded(item) }
             }
-            Button("Delete", role: .destructive) { delete(item) }
         }
     }
 
@@ -183,6 +213,8 @@ struct PackingListView: View {
             }
         }
         .padding(.vertical, PackWiseSpacing.snug)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PackWiseColor.screen)
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
     }
 
@@ -199,25 +231,25 @@ struct PackingListView: View {
             Image(systemName: "plus")
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(.white)
-                .frame(width: 56, height: 56)
+                .frame(width: 52, height: 52)
                 .background(PackWiseColor.accent, in: Circle())
-                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
         }
         .padding(PackWiseSpacing.loose)
         .accessibilityLabel("Add Item")
     }
 
+    /// A full sheet with a proper primary action — not a grayed nav-bar
+    /// "Add".
     private var addSheet: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
                     PackWiseCard {
                         VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                            TextField("Item", text: $newItemName)
+                            TextField("Item name", text: $newItemName)
                                 .font(.title3)
-                            Divider()
-                            Stepper("Quantity  \(newItemQuantity)", value: $newItemQuantity, in: 1...20)
-                            Divider()
+                            PackWiseRowDivider(inset: 0)
                             HStack {
                                 Text("Category")
                                 Spacer()
@@ -229,8 +261,23 @@ struct PackingListView: View {
                                 .labelsHidden()
                                 .pickerStyle(.menu)
                             }
+                            PackWiseRowDivider(inset: 0)
+                            Stepper("Quantity  \(newItemQuantity)", value: $newItemQuantity, in: 1...20)
+                            PackWiseRowDivider(inset: 0)
+                            VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                                Toggle(isOn: $newItemImportant) {
+                                    HStack(spacing: PackWiseSpacing.snug) {
+                                        Image(systemName: "exclamationmark.circle.fill")
+                                            .foregroundStyle(PackWiseColor.accent)
+                                        Text("Important")
+                                    }
+                                }
+                                Text("Important items are flagged and stay visible in the Important filter.")
+                                    .font(.footnote)
+                                    .foregroundStyle(PackWiseColor.textSecondary)
+                            }
                             if !trip.party.usesSimpleList {
-                                Divider()
+                                PackWiseRowDivider(inset: 0)
                                 HStack {
                                     Text("For")
                                     Spacer()
@@ -246,21 +293,21 @@ struct PackingListView: View {
                             }
                         }
                     }
+
+                    Button("Save item") { addCustomItem() }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(newItemName.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
                 .padding(PackWiseSpacing.comfortable)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(PackWiseColor.screen)
             .navigationTitle("Add Item")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { adding = false } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") { addCustomItem() }
-                        .disabled(newItemName.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
     }
 
     // MARK: - Data
@@ -370,7 +417,7 @@ struct PackingListView: View {
             displayName: match?.displayName ?? name,
             category: match?.category ?? newItemCategory,
             quantity: newItemQuantity,
-            importance: match?.importance ?? .normal,
+            importance: newItemImportant ? .important : (match?.importance ?? .normal),
             sourceSignals: [.userPreference],
             reason: "Added by you",
             isUserAdded: true,
@@ -381,6 +428,7 @@ struct PackingListView: View {
         try? modelContext.save()
         newItemName = ""
         newItemQuantity = 1
+        newItemImportant = false
         adding = false
     }
 }
@@ -408,24 +456,46 @@ struct PackingRow: View {
                 HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.snug) {
                     Text(item.displayName)
                         .strikethrough(item.isPacked)
-                        .foregroundStyle(item.isPacked ? .secondary : .primary)
+                        .foregroundStyle(item.isPacked ? PackWiseColor.textSecondary : PackWiseColor.textPrimary)
                     Spacer(minLength: PackWiseSpacing.tight)
                     if showsOwner, let travelerName {
                         Text(travelerName)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(PackWiseColor.textSecondary)
                     }
                     if item.quantity > 1 {
+                        // A styled badge, not plain gray text.
                         Text("×\(item.quantity)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(PackWiseColor.textSecondary)
                             .monospacedDigit()
+                            .padding(.horizontal, PackWiseSpacing.snug)
+                            .padding(.vertical, PackWiseSpacing.tight)
+                            .background(PackWiseColor.surfaceAlt, in: Capsule())
+                            .overlay {
+                                Capsule().strokeBorder(PackWiseColor.border, lineWidth: 1)
+                            }
+                    }
+                    if let importanceTint {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(importanceTint)
+                            .accessibilityLabel(
+                                item.importance == .critical ? "Critical" : "Important"
+                            )
                     }
                 }
                 if showsReason {
-                    Text(item.reason)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    // The chevron makes the tap-through to detail
+                    // discoverable on rows that have more to say.
+                    HStack(spacing: PackWiseSpacing.tight) {
+                        Text(item.reason)
+                            .font(.footnote)
+                            .foregroundStyle(PackWiseColor.textSecondary)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(PackWiseColor.textTertiary)
+                    }
                 }
             }
         }
@@ -453,16 +523,25 @@ struct PackingRow: View {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
-    /// Shape carries state as well as colour, so packed and critical remain
-    /// distinguishable without relying on hue.
+    /// The leading control is always the checkbox — every row can be packed.
+    /// Importance never occupies this slot; it renders as a trailing glyph.
     private var symbol: String {
-        if item.isPacked { return "checkmark.circle.fill" }
-        return item.importance == .critical ? "exclamationmark.circle" : "circle"
+        item.isPacked ? "checkmark.circle.fill" : "circle"
     }
 
     private var tint: Color {
-        if item.isPacked { return PackWiseColor.accent }
-        return item.importance == .critical ? .orange : .secondary
+        item.isPacked ? PackWiseColor.success : PackWiseColor.textTertiary
+    }
+
+    /// Critical gets the warning hue, important the accent, everything else
+    /// nothing — per spec, an `exclamationmark.circle.fill` at the trailing
+    /// edge, never a star and never in the checkbox slot.
+    private var importanceTint: Color? {
+        switch item.importance {
+        case .critical: PackWiseColor.important
+        case .important: PackWiseColor.accent
+        default: nil
+        }
     }
 
     /// A reason earns a line only when it says something about *this* trip.
@@ -476,38 +555,32 @@ struct PackingRow: View {
     }
 }
 
-struct ItemDetailSheet: View {
+struct ItemDetailView: View {
     @Bindable var item: PackingItemRecord
     var travelers: [Traveler] = []
     var showsAssignment: Bool = false
     /// Absent for user-added items, which are deleted rather than declined.
     var onNotNeeded: (() -> Void)?
+    /// Present only for user-added items; deleting records no override.
+    var onDelete: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
-                    header
-                    reasons
-                    if showsAssignment {
-                        assignment
-                    }
-                    actions
+        ScrollView {
+            VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
+                header
+                reasons
+                if showsAssignment {
+                    assignment
                 }
-                .padding(PackWiseSpacing.comfortable)
+                actions
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
+            .padding(PackWiseSpacing.comfortable)
         }
-        .presentationDetents([.medium, .large])
+        .background(PackWiseColor.screen)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var header: some View {
@@ -518,21 +591,28 @@ struct ItemDetailSheet: View {
                         symbol: item.category.style.symbol,
                         tint: item.category.style.tint
                     )
-                    VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                    VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
                         Text(item.displayName)
                             .font(.title3.weight(.semibold))
-                        Text(item.category.title)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: PackWiseSpacing.snug) {
+                            Text(item.category.title)
+                                .font(.subheadline)
+                                .foregroundStyle(PackWiseColor.textSecondary)
+                            if !item.isUserAdded {
+                                // PackWise put it here; the sheet below says
+                                // why.
+                                PackWiseStatusBadge(title: "Recommended")
+                            }
+                        }
                     }
                 }
-                Divider()
+                PackWiseRowDivider(inset: 0)
                 Stepper("Quantity  \(item.quantity)", value: $item.quantity, in: 1...30)
                     .onChange(of: item.quantity) {
                         item.isUserModified = true
                         item.updatedAt = .now
                     }
-                Divider()
+                PackWiseRowDivider(inset: 0)
                 // Outside a Form a Picker renders its selection only, so the
                 // label is supplied explicitly.
                 HStack {
@@ -557,23 +637,23 @@ struct ItemDetailSheet: View {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
                     Text(item.reason.isEmpty ? "Added for this trip." : item.reason)
                     if !item.quantityReason.isEmpty {
-                        Divider()
+                        PackWiseRowDivider(inset: 0)
                         VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
                             Text("Why this quantity")
                                 .font(.subheadline.weight(.semibold))
                             Text(item.quantityReason)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(PackWiseColor.textSecondary)
                         }
                     }
                     if !item.sourceSignals.isEmpty {
-                        Divider()
+                        PackWiseRowDivider(inset: 0)
                         PackWiseFlowLayout {
                             ForEach(item.sourceSignals, id: \.self) { signal in
                                 Text(signal.customerLabel)
                                     .font(.caption.weight(.medium))
                                     .padding(.horizontal, PackWiseSpacing.snug)
                                     .padding(.vertical, PackWiseSpacing.tight)
-                                    .background(Color(.tertiarySystemFill), in: Capsule())
+                                    .background(PackWiseColor.surfaceAlt, in: Capsule())
                             }
                         }
                     }
@@ -591,7 +671,7 @@ struct ItemDetailSheet: View {
                         item.assignedTravelerID = nil
                     }
                     ForEach(travelers) { traveler in
-                        Divider()
+                        PackWiseRowDivider(inset: 0)
                         assignmentRow(
                             title: traveler.displayName,
                             selected: item.assignedTravelerID == traveler.id
@@ -634,6 +714,14 @@ struct ItemDetailSheet: View {
             if let onNotNeeded {
                 Button("Not needed on this trip") {
                     onNotNeeded()
+                    dismiss()
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
+
+            if let onDelete {
+                Button("Remove item", role: .destructive) {
+                    onDelete()
                     dismiss()
                 }
                 .buttonStyle(SecondaryButtonStyle())

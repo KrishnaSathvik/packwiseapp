@@ -20,7 +20,7 @@ struct WeatherAttributionFooter: View {
             } else {
                 Text(attribution.serviceName)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(PackWiseColor.textSecondary)
             }
             if let legal = attribution.legalPageURL {
                 Link("Other data sources", destination: legal)

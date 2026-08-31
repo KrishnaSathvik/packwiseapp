@@ -546,6 +546,64 @@ struct PackingEngineTests {
         #expect(existing.contains { $0.canonicalItemID == "clothing.tshirt" && $0.isPacked })
     }
 
+    /// The reported failure: a 15-day balanced carry-on trip rendering
+    /// T-shirts ×15 and socks ×16 — the naive duration formula. Laundry,
+    /// style, and bag must each move the numbers.
+    @Test func longBalancedTripRespondsToLaundryAndStyle() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+
+        func quantities(style: PackingStyle, laundry: Bool) throws -> (tops: Int, underwear: Int, socks: Int) {
+            let items = engine.generate(
+                context: context(
+                    destination: dest,
+                    days: 15,
+                    bag: .carryOn,
+                    style: style,
+                    chips: laundry ? [.laundryAvailable] : [],
+                    laundry: laundry ? .planned : .none
+                )
+            )
+            func quantity(_ id: String) throws -> Int {
+                try #require(items.first { $0.canonicalItemID == id }).quantity
+            }
+            return (
+                try quantity("clothing.tshirt"),
+                try quantity("clothing.underwear"),
+                try quantity("clothing.socks")
+            )
+        }
+
+        let balancedNoLaundry = try quantities(style: .balanced, laundry: false)
+        let balancedLaundry = try quantities(style: .balanced, laundry: true)
+        let lightLaundry = try quantities(style: .light, laundry: true)
+
+        // Laundry pulls every daily count below the no-laundry figure.
+        #expect(balancedLaundry.tops < balancedNoLaundry.tops)
+        #expect(balancedLaundry.underwear < balancedNoLaundry.underwear)
+        #expect(balancedLaundry.socks < balancedNoLaundry.socks)
+        // Style modulates on top of laundry.
+        #expect(lightLaundry.tops < balancedLaundry.tops)
+        // The specific rendered numbers from the policies file.
+        #expect(balancedLaundry.tops == 12)
+        #expect(balancedNoLaundry.tops == 15)
+        #expect(balancedLaundry.underwear == 15)
+        #expect(balancedNoLaundry.underwear == 16)
+    }
+
+    /// Toggling laundry on an existing trip must surface quantity changes in
+    /// the diff — otherwise the setup edit appears to do nothing.
+    @Test func addingLaundryProducesQuantityChangeSuggestions() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+        let before = context(destination: dest, days: 15, bag: .carryOn, style: .balanced, chips: [], laundry: .none)
+        let existing = engine.generate(context: before)
+        let after = context(destination: dest, days: 15, bag: .carryOn, style: .balanced, chips: [.laundryAvailable], laundry: .planned)
+        let diff = engine.recommendationDiff(context: after, existing: existing, overrides: [])
+        let tshirt = diff.quantityChanges.first { $0.item.canonicalItemID == "clothing.tshirt" }
+        #expect(tshirt?.suggestedQuantity == 12)
+    }
+
     @Test func recommendationDiffHonorsNotNeededOverride() throws {
         let engine = try makeEngine()
         let ctx = context(destination: try destination("Chicago"), bag: .checked, style: .prepared, chips: [], laundry: .none)

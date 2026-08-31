@@ -17,6 +17,9 @@ struct PackWiseApp: App {
             RootView()
                 .environment(dependencies)
                 .tint(PackWiseColor.accent)
+                // The reference sheet is drawn light-only; the app matches it
+                // exactly. Dark mode is a later project with its own sheet.
+                .preferredColorScheme(.light)
         }
         .modelContainer(dependencies.modelContainer)
     }

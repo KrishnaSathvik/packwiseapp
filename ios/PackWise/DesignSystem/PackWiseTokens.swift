@@ -19,21 +19,26 @@ enum PackWiseSpacing {
 enum PackWiseRadius {
     static let badge: CGFloat = 8
     static let control: CGFloat = 12
+    static let button: CGFloat = 14
     static let card: CGFloat = 16
 }
 
 enum PackWiseSize {
     /// Small colourful icon badge used in category and selection rows.
-    static let badge: CGFloat = 30
+    static let badge: CGFloat = 34
+    /// Full-width primary buttons.
+    static let buttonHeight: CGFloat = 52
     /// Apple's minimum comfortable target. Never shrink below this.
     static let tapTarget: CGFloat = 44
     /// Compact destination thumbnail on a trip card.
-    static let tripThumbnail: CGFloat = 76
+    static let tripThumbnail: CGFloat = 56
+    /// Photo band at the top of the hero trip card on Trips Home.
+    static let tripCardPhotoHeight: CGFloat = 140
     /// Full-bleed destination hero on Trip Detail.
     static let heroHeight: CGFloat = 240
     /// Destination confirmation image in trip setup.
     static let previewHeight: CGFloat = 150
-    static let progressBarHeight: CGFloat = 8
+    static let progressBarHeight: CGFloat = 6
 }
 
 /// How a packing category presents itself.
@@ -156,6 +161,102 @@ extension TravelMode {
         case .couple: .pink
         case .family: .orange
         case .group: .purple
+        }
+    }
+}
+
+
+/// Presentation for the preference chips on the extras step.
+///
+/// Nine identical grey pills say nothing about which preference is which. The
+/// glyph and the hue are what make the field scannable, and both are
+/// presentation — `ContextChip` stays a plain value in `Domain/`.
+extension ContextChip {
+    var symbol: String {
+        switch self {
+        case .dailyMedication: "pills"
+        case .wearContacts: "eyeglasses"
+        case .bringingLaptop: "laptopcomputer"
+        case .usuallyWorkOut: "dumbbell"
+        case .runWhileTraveling: "figure.run"
+        case .needFormalOutfit: "sparkles"
+        case .travelingInternationally: "airplane"
+        case .getColdEasily: "thermometer.snowflake"
+        case .laundryAvailable: "washer"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .dailyMedication: .red
+        case .wearContacts: .indigo
+        case .bringingLaptop: .orange
+        case .usuallyWorkOut: .green
+        case .runWhileTraveling: .mint
+        case .needFormalOutfit: .pink
+        case .travelingInternationally: .blue
+        case .getColdEasily: .teal
+        case .laundryAvailable: .purple
+        }
+    }
+
+    /// The short label the chips use. `title` is written as a first-person
+    /// sentence, which is right for a toggle list and far too long for a chip.
+    var chipTitle: String {
+        switch self {
+        case .dailyMedication: "Daily medication"
+        case .wearContacts: "Contacts"
+        case .bringingLaptop: "Laptop"
+        case .usuallyWorkOut: "Work out"
+        case .runWhileTraveling: "Running"
+        case .needFormalOutfit: "Formal outfit"
+        case .travelingInternationally: "International"
+        case .getColdEasily: "Get cold easily"
+        case .laundryAvailable: "Laundry"
+        }
+    }
+}
+
+/// Presentation for the activity ids the engine uses.
+///
+/// The ids themselves are engine vocabulary; the glyph is not.
+enum PackWiseActivityStyle {
+    static func symbol(for id: String) -> String {
+        switch id {
+        case "swimming": "figure.pool.swim"
+        case "beachDays": "beach.umbrella"
+        case "snorkeling": "water.waves"
+        case "niceDinner": "fork.knife"
+        case "running": "figure.run"
+        case "sightseeing": "camera"
+        case "boatTrip": "sailboat"
+        case "walking": "figure.walk"
+        case "nightlife": "moon.stars"
+        case "shopping": "bag"
+        case "museums": "building.columns"
+        case "work": "laptopcomputer"
+        case "hiking": "figure.hiking"
+        case "yoga": "figure.yoga"
+        case "photography": "camera.aperture"
+        case "wildlife": "binoculars"
+        default: "sparkles"
+        }
+    }
+
+    static func tint(for id: String) -> Color {
+        switch id {
+        case "swimming", "snorkeling", "boatTrip": .cyan
+        case "beachDays": .orange
+        case "niceDinner": .pink
+        case "running", "hiking", "yoga": .green
+        case "sightseeing", "photography": .blue
+        case "nightlife": .indigo
+        case "shopping": .purple
+        case "museums": .brown
+        case "work": .gray
+        case "walking": .mint
+        case "wildlife": .teal
+        default: PackWiseColor.accent
         }
     }
 }

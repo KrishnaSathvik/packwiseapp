@@ -3,14 +3,21 @@ import SwiftUI
 
 /// What PackWise would change, and what the user actually wants.
 ///
+/// A pushed screen, not a bottom sheet — reviewing a proposal is a full job.
 /// Additions and quantity changes arrive selected; removals do not — PackWise
-/// never takes something off a list on its own. Each kind of change carries a
-/// glyph as well as a tint, so the three are told apart without relying on
-/// colour.
-struct RecommendationDiffSheet: View {
+/// never takes something off a list on its own, so the user must deliberately
+/// approve each one. Each kind of change carries a glyph as well as a tint,
+/// so the three are told apart without relying on colour.
+///
+/// "Keep list" dismisses *this proposal only* and preserves the new forecast.
+/// It is not a per-item "Not Needed".
+struct RecommendationDiffScreen: View {
     let diff: RecommendationDiff
     var trip: TripRecord
-    var title: String
+    /// The line under the headline saying what triggered the proposal.
+    var trigger: String
+    /// The forecast movement behind the proposal: old signal → new signal.
+    var signalChanges: [WeatherSignalChange]
     var onKeep: (() -> Void)?
     var onUpdate: (() -> Void)?
     var onFinished: () -> Void
@@ -22,10 +29,19 @@ struct RecommendationDiffSheet: View {
     @State private var removeIDs: Set<UUID> = []
     @State private var quantityIDs: Set<UUID>
 
-    init(diff: RecommendationDiff, trip: TripRecord, title: String = "Your list changed", onKeep: (() -> Void)? = nil, onUpdate: (() -> Void)? = nil, onFinished: @escaping () -> Void) {
+    init(
+        diff: RecommendationDiff,
+        trip: TripRecord,
+        trigger: String = "You updated your trip details.",
+        signalChanges: [WeatherSignalChange] = [],
+        onKeep: (() -> Void)? = nil,
+        onUpdate: (() -> Void)? = nil,
+        onFinished: @escaping () -> Void
+    ) {
         self.diff = diff
         self.trip = trip
-        self.title = title
+        self.trigger = trigger
+        self.signalChanges = signalChanges
         self.onKeep = onKeep
         self.onUpdate = onUpdate
         self.onFinished = onFinished
@@ -34,32 +50,87 @@ struct RecommendationDiffSheet: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
-                    if !diff.add.isEmpty { additions }
-                    if !diff.quantityChanges.isEmpty { quantities }
-                    if !diff.removeCandidates.isEmpty { removals }
-                }
-                .padding(PackWiseSpacing.comfortable)
+        ScrollView {
+            VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
+                heading
+                forecastChange
+                if !diff.add.isEmpty { additions }
+                if !diff.quantityChanges.isEmpty { quantities }
+                if !diff.removeCandidates.isEmpty { removals }
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .safeAreaInset(edge: .bottom) { actions }
+            .padding(PackWiseSpacing.comfortable)
         }
-        .presentationDetents([.medium, .large])
+        .background(PackWiseColor.screen)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") {
+                    dismiss()
+                    onFinished()
+                }
+            }
+        }
+        .safeAreaInset(edge: .bottom) { actions }
+    }
+
+    private var heading: some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+            Text("Review changes")
+                .font(PackWiseFont.screenTitle)
+                .foregroundStyle(PackWiseColor.textPrimary)
+            Text(trigger)
+                .font(PackWiseFont.screenSubtitle)
+                .foregroundStyle(PackWiseColor.textSecondary)
+        }
+    }
+
+    /// The forecast movement, old signal → new signal, so the proposal is
+    /// grounded in what actually changed.
+    @ViewBuilder
+    private var forecastChange: some View {
+        let meaningful = signalChanges.filter(\.isMeaningful)
+        if !meaningful.isEmpty {
+            PackWiseCard {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                    ForEach(meaningful) { change in
+                        HStack(spacing: PackWiseSpacing.snug) {
+                            Text(signalLabel(change.signal, active: change.wasActive))
+                                .foregroundStyle(PackWiseColor.textSecondary)
+                            Image(systemName: "arrow.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(PackWiseColor.textTertiary)
+                            Text(signalLabel(change.signal, active: change.isActive))
+                                .foregroundStyle(PackWiseColor.textPrimary)
+                        }
+                        .font(.subheadline)
+                    }
+                }
+            }
+        }
+    }
+
+    private func signalLabel(_ signal: WeatherSignal, active: Bool) -> String {
+        switch signal {
+        case .meaningfulRain, .persistentRain: active ? "Rain expected" : "No rain"
+        case .coldRain: active ? "Cold rain" : "No cold rain"
+        case .highUVExposure: active ? "High sun exposure" : "Moderate sun"
+        case .hotOutdoorExposure: active ? "Hot days" : "Milder days"
+        case .coldEvenings: active ? "Cool evenings" : "Mild evenings"
+        case .highWindExposure: active ? "Windy" : "Calm winds"
+        case .snowExposure: active ? "Snow expected" : "No snow"
+        case .largeTemperatureSwing: active ? "Big day-night swings" : "Steady temperatures"
+        }
     }
 
     // MARK: - Sections
 
     private var additions: some View {
-        section(title: "Suggested", count: addIDs.count) {
+        section(title: "Add", count: addIDs.count) {
             ForEach(Array(diff.add.enumerated()), id: \.element.id) { index, item in
-                if index > 0 { Divider() }
+                if index > 0 { PackWiseRowDivider() }
                 changeRow(
                     symbol: "plus",
-                    tint: .green,
+                    tint: PackWiseColor.success,
                     title: item.displayName,
                     subtitle: item.reason.isEmpty ? nil : item.reason,
                     isOn: binding(item.id, in: $addIDs)
@@ -69,35 +140,41 @@ struct RecommendationDiffSheet: View {
     }
 
     private var quantities: some View {
-        section(title: "Quantity", count: quantityIDs.count) {
+        section(title: "Quantity changes", count: quantityIDs.count) {
             ForEach(Array(diff.quantityChanges.enumerated()), id: \.element.item.id) { index, change in
-                if index > 0 { Divider() }
+                if index > 0 { PackWiseRowDivider() }
                 changeRow(
                     symbol: "arrow.up.arrow.down",
-                    tint: .orange,
+                    tint: PackWiseColor.important,
                     title: change.item.displayName,
-                    subtitle: "×\(change.item.quantity) → ×\(change.suggestedQuantity)",
+                    subtitle: quantitySubtitle(change),
                     isOn: binding(change.item.id, in: $quantityIDs)
                 )
             }
         }
     }
 
+    private func quantitySubtitle(_ change: QuantityChangeSuggestion) -> String {
+        let movement = "\(change.item.quantity) → \(change.suggestedQuantity)"
+        let reason = change.item.quantityReason
+        return reason.isEmpty ? movement : "\(movement) · \(reason)"
+    }
+
     private var removals: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            PackWiseSectionHeader(title: "You may not need")
-            Text("Keep these unless you mark them not needed. PackWise will not remove them on its own.")
+            PackWiseSectionHeader(title: "Remove", trailing: "\(removeIDs.count) selected")
+            Text("Off by default. PackWise will not remove items on its own.")
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PackWiseColor.textSecondary)
             PackWiseCard {
                 VStack(spacing: 0) {
                     ForEach(Array(diff.removeCandidates.enumerated()), id: \.element.id) { index, item in
-                        if index > 0 { Divider() }
+                        if index > 0 { PackWiseRowDivider() }
                         changeRow(
                             symbol: "minus",
-                            tint: .red,
+                            tint: PackWiseColor.danger,
                             title: item.displayName,
-                            subtitle: "Remove from this trip",
+                            subtitle: item.reason.isEmpty ? "No longer suggested for this trip" : item.reason,
                             isOn: binding(item.id, in: $removeIDs)
                         )
                     }
@@ -139,13 +216,13 @@ struct RecommendationDiffSheet: View {
                     if let subtitle {
                         Text(subtitle)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(PackWiseColor.textSecondary)
                     }
                 }
                 Spacer(minLength: PackWiseSpacing.snug)
                 Image(systemName: isOn.wrappedValue ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isOn.wrappedValue ? PackWiseColor.accent : Color(.tertiaryLabel))
+                    .foregroundStyle(isOn.wrappedValue ? PackWiseColor.accent : PackWiseColor.textTertiary)
             }
             .padding(.vertical, PackWiseSpacing.regular)
             .contentShape(Rectangle())
@@ -155,18 +232,22 @@ struct RecommendationDiffSheet: View {
     }
 
     private var actions: some View {
-        VStack(spacing: PackWiseSpacing.snug) {
-            Button("Update List") { apply() }
+        VStack(spacing: PackWiseSpacing.regular) {
+            Button("Apply changes") { apply() }
                 .buttonStyle(PrimaryButtonStyle())
-            Button("Keep List") {
+            // A text link, not a second big button: keeping the list is
+            // declining this proposal, and the copy must not read as a
+            // per-item action.
+            Button("Keep list") {
                 onKeep?()
                 dismiss()
                 onFinished()
             }
-            .buttonStyle(SecondaryButtonStyle())
+            .font(PackWiseFont.button)
+            .foregroundStyle(PackWiseColor.accent)
         }
         .padding(PackWiseSpacing.comfortable)
-        .background(.bar)
+        .background(PackWiseColor.screen)
     }
 
     private func binding(_ id: UUID, in set: Binding<Set<UUID>>) -> Binding<Bool> {

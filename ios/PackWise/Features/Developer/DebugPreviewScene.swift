@@ -63,9 +63,7 @@ struct DebugPreviewScene: View {
 
     /// The later steps need a populated draft, so they open on the seeded trip.
     private func setup(_ step: SetupStep) -> some View {
-        NavigationStack {
-            TripSetupView(existingTrip: seed.trip, initialStep: step)
-        }
+        TripSetupView(existingTrip: seed.trip, initialStep: step)
     }
 
     @ViewBuilder
@@ -79,15 +77,13 @@ struct DebugPreviewScene: View {
             case .tripsHome, .tripsHomeEmpty:
                 TripsHomeView()
             case .setupDestination:
-                NavigationStack { TripSetupView() }
+                TripSetupView()
             case .setupDates:
                 setup(.dates)
             case .setupParty:
                 setup(.party)
             case .setupPartyFamily:
-                NavigationStack {
-                    TripSetupView(existingTrip: seed.familyTrip, initialStep: .party)
-                }
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .party)
             case .setupType:
                 setup(.type)
             case .setupActivities:
@@ -99,12 +95,13 @@ struct DebugPreviewScene: View {
             case .setupReview:
                 setup(.review)
             case .reviewChanges:
-                RecommendationDiffSheet(
-                    diff: DebugTripSeed.sampleDiff,
-                    trip: seed.trip,
-                    title: "Review changes",
-                    onFinished: {}
-                )
+                NavigationStack {
+                    RecommendationDiffScreen(
+                        diff: DebugTripSeed.sampleDiff,
+                        trip: seed.trip,
+                        onFinished: {}
+                    )
+                }
             case .me:
                 MeView()
             case .onboarding:
@@ -137,18 +134,20 @@ struct DebugPreviewScene: View {
                         }
                         .padding(PackWiseSpacing.comfortable)
                     }
-                    .background(Color(.systemGroupedBackground))
+                    .background(PackWiseColor.screen)
                     .navigationTitle("Chicago")
                     .navigationBarTitleDisplayMode(.inline)
                 }
             case .itemDetail:
                 if let item = seed.trip.items.first(where: { $0.displayName == "Rain jacket" }) {
-                    ItemDetailSheet(
-                        item: item,
-                        travelers: seed.trip.party.travelers,
-                        showsAssignment: false,
-                        onNotNeeded: {}
-                    )
+                    NavigationStack {
+                        ItemDetailView(
+                            item: item,
+                            travelers: seed.trip.party.travelers,
+                            showsAssignment: false,
+                            onNotNeeded: {}
+                        )
+                    }
                 }
             }
         }

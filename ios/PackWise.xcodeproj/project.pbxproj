@@ -203,7 +203,7 @@
 		EFD0BB23A68999DD0F3C253E /* Repositories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repositories.swift; sourceTree = "<group>"; };
 		F1F1EDE4041CAA75744DF6CB /* clothing.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = clothing.json; sourceTree = "<group>"; };
 		F32BD5490CC7B5F98EF68740 /* test-destinations.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "test-destinations.json"; sourceTree = "<group>"; };
-		F5ACA868CD47E424EF0E448E /* PackWise.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PackWise.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F5ACA868CD47E424EF0E448E /* PackWise.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PackWise.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6B2F545D9FCAB6C032282B7 /* footwear.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = footwear.json; sourceTree = "<group>"; };
 		F6DE734553C7450B80DB4DDA /* OneDayNoWeather.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = OneDayNoWeather.json; sourceTree = "<group>"; };
 		F919525BF9A1ECC452F25537 /* M1LoopTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = M1LoopTests.swift; sourceTree = "<group>"; };
@@ -471,9 +471,6 @@
 		A44927F6E1DEC42A28D75C64 /* shared */ = {
 			isa = PBXGroup;
 			children = (
-				D80A45F7227E8BD768FA6816 /* catalog */,
-				D4972F2D68A38C0095BF0D9F /* fixtures */,
-				CC748491CEAC66B95FADDF01 /* rules */,
 			);
 			path = shared;
 			sourceTree = "<group>";
@@ -845,6 +842,7 @@
 				CODE_SIGN_ENTITLEMENTS = PackWise/PackWise.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 766WG2GGCA;
 				INFOPLIST_FILE = PackWise/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -952,6 +950,7 @@
 				CODE_SIGN_ENTITLEMENTS = PackWise/PackWise.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 766WG2GGCA;
 				INFOPLIST_FILE = PackWise/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

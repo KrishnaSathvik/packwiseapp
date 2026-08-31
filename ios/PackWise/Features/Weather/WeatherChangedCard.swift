@@ -18,21 +18,21 @@ struct WeatherChangedCard: View {
                         .font(.headline)
                     Text(proposal.headline)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(PackWiseColor.textSecondary)
                 }
             }
 
             if !proposal.previewNames.isEmpty {
-                Divider()
+                PackWiseRowDivider(inset: 0)
                 VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
                     ForEach(Array(proposal.previewNames.enumerated()), id: \.offset) { _, name in
                         HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.snug) {
                             Image(systemName: "circle.fill")
                                 .font(.system(size: 5))
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(PackWiseColor.textTertiary)
                             Text(name)
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(PackWiseColor.textSecondary)
                         }
                     }
                 }

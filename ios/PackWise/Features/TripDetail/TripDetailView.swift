@@ -11,6 +11,7 @@ struct TripDetailView: View {
     @Bindable var trip: TripRecord
     @Environment(AppDependencies.self) private var dependencies
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @Query private var preferenceRecords: [PackingPreferenceRecord]
 
@@ -22,7 +23,7 @@ struct TripDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
+            VStack(alignment: .leading, spacing: 0) {
                 hero
                 VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
                     progress
@@ -32,13 +33,30 @@ struct TripDetailView: View {
                     categories
                 }
                 .padding(.horizontal, PackWiseSpacing.comfortable)
+                // The progress card overlaps the hero's bottom edge, which is
+                // what stitches the photo and the content into one screen.
+                .padding(.top, -PackWiseSpacing.loose)
             }
             .padding(.bottom, PackWiseSpacing.section)
         }
         .ignoresSafeArea(edges: .top)
-        .background(Color(.systemGroupedBackground))
+        .background(PackWiseColor.screen)
         .navigationBarTitleDisplayMode(.inline)
+        // A pushed screen with a full-bleed hero. The root tabs floating over
+        // it belong to the root experience, not to one trip.
+        .toolbar(.hidden, for: .tabBar)
+        // Circular translucent chrome over the photo, in place of the
+        // default bar buttons.
+        .navigationBarBackButtonHidden(true)
         .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button {
+                    dismiss()
+                } label: {
+                    heroChromeCircle("chevron.left")
+                }
+                .accessibilityLabel("Back")
+            }
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button("Edit Trip") { editing = true }
@@ -46,22 +64,23 @@ struct TripDetailView: View {
                         Button("Complete Trip") { completeTrip() }
                     }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    heroChromeCircle("ellipsis")
                 }
                 .accessibilityLabel("Trip options")
             }
         }
-        .sheet(isPresented: $editing) {
-            NavigationStack {
-                TripSetupView(existingTrip: trip)
-            }
+        .fullScreenCover(isPresented: $editing) {
+            TripSetupView(existingTrip: trip)
         }
-        .sheet(isPresented: $reviewingWeatherChange) {
+        // A pushed screen, not a bottom sheet — reviewing a proposal is a
+        // full job with three sections and a decision at the end.
+        .navigationDestination(isPresented: $reviewingWeatherChange) {
             if let proposal = pendingWeatherChange {
-                RecommendationDiffSheet(
+                RecommendationDiffScreen(
                     diff: proposal.diff,
                     trip: trip,
-                    title: "Review changes",
+                    trigger: proposal.headline,
+                    signalChanges: proposal.signalChanges,
                     onKeep: { setWeatherChangeStatus(proposal, .dismissed) },
                     onUpdate: { setWeatherChangeStatus(proposal, .applied) },
                     onFinished: { reviewingWeatherChange = false }
@@ -80,6 +99,14 @@ struct TripDetailView: View {
 
     // MARK: - Hero
 
+    private func heroChromeCircle(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 32, height: 32)
+            .background(.black.opacity(0.3), in: Circle())
+    }
+
     private var hero: some View {
         DestinationVisualView(
             destination: trip.destination,
@@ -93,7 +120,7 @@ struct TripDetailView: View {
                     PackWiseStatusBadge(
                         title: "Completed",
                         symbol: "checkmark.circle.fill",
-                        tint: .green
+                        tint: PackWiseColor.success
                     )
                 }
                 Text(trip.destinationDisplayName)
@@ -111,8 +138,9 @@ struct TripDetailView: View {
             .padding(PackWiseSpacing.comfortable)
             // Look Around snapshots carry Apple's Maps attribution in the
             // bottom-left corner. It is a licensing requirement and must not
-            // be covered, so the trip text clears it.
-            .padding(.bottom, PackWiseSpacing.loose)
+            // be covered, so the trip text clears it — and clears the
+            // progress card overlapping the hero's bottom edge.
+            .padding(.bottom, PackWiseSpacing.section + PackWiseSpacing.snug)
         }
         .overlay(alignment: .top) {
             // Keeps the back button legible over a bright image.
@@ -145,13 +173,13 @@ struct TripDetailView: View {
         if isFinished {
             PackWiseCard {
                 HStack(spacing: PackWiseSpacing.regular) {
-                    PackWiseIconBadge(symbol: "checkmark.seal", tint: .green)
+                    PackWiseIconBadge(symbol: "checkmark.seal", tint: PackWiseColor.success)
                     VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
                         Text("Trip complete")
                             .font(.headline)
                         Text("\(trip.packedCount) of \(trip.items.count) packed")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(PackWiseColor.textSecondary)
                     }
                     Spacer(minLength: 0)
                 }
@@ -165,57 +193,115 @@ struct TripDetailView: View {
 
     // MARK: - Weather
 
-    @ViewBuilder
+    /// Weather is half of what PackWise promises, so this surface is always
+    /// drawn.
+    ///
+    /// It used to render only when a precise forecast existed, which meant a
+    /// trip far enough out — or one whose forecast had not landed yet — showed
+    /// no weather at all and Trip Detail read as a checklist screen with a
+    /// photo on top. Having no forecast yet is a state worth designing, not a
+    /// reason to remove the section.
     private var weather: some View {
-        if let snapshot = weatherSnapshot, snapshot.state() != .unavailable {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+            PackWiseSectionHeader(title: "Weather", style: .micro)
             PackWiseCard {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                    HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
-                        Image(systemName: snapshot.headlineSymbol(rainThreshold: weatherThresholds.rainProbabilityAdd))
-                            .font(.title)
-                            .symbolRenderingMode(.multicolor)
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                            if snapshot.isPreciseForecast {
-                                Text(snapshot.highLowLabel(usesFahrenheit: usesFahrenheit))
-                                    .font(.title3.weight(.semibold))
-                            }
-                            if let detail = snapshot.detailLine(rainThreshold: weatherThresholds.rainProbabilityAdd) {
-                                Text(detail)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-
-                    if !snapshot.dailyForecast.isEmpty {
-                        Divider()
-                        WeatherStripView(
-                            forecast: snapshot.dailyForecast,
-                            usesFahrenheit: usesFahrenheit,
-                            rainThreshold: weatherThresholds.rainProbabilityAdd
-                        )
-                    }
-
-                    Divider()
-                    HStack {
-                        if affectedItemCount > 0 {
-                            PackWiseStatusBadge(
-                                title: affectedItemCount == 1
-                                    ? "1 item affected"
-                                    : "\(affectedItemCount) items affected",
-                                symbol: "exclamationmark.circle"
-                            )
-                        }
-                        Spacer()
-                        viewWeatherLink
-                    }
-
-                    if snapshot.showsAppleWeatherAttribution, let attribution = snapshot.attribution {
-                        WeatherAttributionFooter(attribution: attribution)
-                    }
+                if let snapshot = weatherSnapshot, snapshot.isPreciseForecast {
+                    forecastWeather(snapshot)
+                } else {
+                    pendingWeather(weatherSnapshot)
                 }
             }
         }
+    }
+
+    private func forecastWeather(_ snapshot: TripWeatherContext) -> some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+            HStack(alignment: .center, spacing: PackWiseSpacing.regular) {
+                Image(systemName: snapshot.headlineSymbol(rainThreshold: weatherThresholds.rainProbabilityAdd))
+                    .font(.system(size: 34))
+                    .weatherGlyphStyle(snapshot.headlineSymbol(rainThreshold: weatherThresholds.rainProbabilityAdd))
+                    .frame(width: 42)
+                VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                    Text(snapshot.highLowLabel(usesFahrenheit: usesFahrenheit))
+                        .font(.title.weight(.semibold))
+                        .monospacedDigit()
+                    if let detail = snapshot.detailLine(rainThreshold: weatherThresholds.rainProbabilityAdd) {
+                        Text(detail)
+                            .font(.subheadline)
+                            .foregroundStyle(PackWiseColor.textSecondary)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+
+            if !snapshot.dailyForecast.isEmpty {
+                PackWiseRowDivider(inset: 0)
+                WeatherStripView(
+                    forecast: snapshot.dailyForecast,
+                    usesFahrenheit: usesFahrenheit,
+                    rainThreshold: weatherThresholds.rainProbabilityAdd
+                )
+            }
+
+            PackWiseRowDivider(inset: 0)
+            HStack {
+                if affectedItemCount > 0 {
+                    PackWiseStatusBadge(
+                        title: affectedItemCount == 1
+                            ? "1 item affected"
+                            : "\(affectedItemCount) items affected",
+                        symbol: "exclamationmark.circle"
+                    )
+                }
+                Spacer()
+                viewWeatherLink
+            }
+
+            if snapshot.showsAppleWeatherAttribution, let attribution = snapshot.attribution {
+                WeatherAttributionFooter(attribution: attribution)
+            }
+        }
+    }
+
+    /// Seasonal, partial, or nothing yet — drawn in the shape of the forecast
+    /// it will become, so the section never blinks out of the screen.
+    private func pendingWeather(_ snapshot: TripWeatherContext?) -> some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+            HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
+                PackWiseIconBadge(symbol: "calendar", tint: PackWiseColor.accent, size: 42)
+                VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                    Text("Forecast closer to departure")
+                        .font(.headline)
+                    Text(pendingWeatherDetail(snapshot))
+                        .font(.subheadline)
+                        .foregroundStyle(PackWiseColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+
+            // A partial forecast still has days worth showing.
+            if let snapshot, !snapshot.dailyForecast.isEmpty {
+                PackWiseRowDivider(inset: 0)
+                WeatherStripView(
+                    forecast: snapshot.dailyForecast,
+                    usesFahrenheit: usesFahrenheit,
+                    rainThreshold: weatherThresholds.rainProbabilityAdd
+                )
+                PackWiseRowDivider(inset: 0)
+                HStack {
+                    Spacer()
+                    viewWeatherLink
+                }
+            }
+        }
+    }
+
+    private func pendingWeatherDetail(_ snapshot: TripWeatherContext?) -> String {
+        guard let snapshot else {
+            return "Your list currently uses seasonal conditions for \(trip.destinationDisplayName)."
+        }
+        return snapshot.coverageCopy
     }
 
     @ViewBuilder
@@ -260,7 +346,7 @@ struct TripDetailView: View {
         // is wrong on a trip that has already happened.
         if !isFinished, !packingImpacts.isEmpty {
             VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                PackWiseSectionHeader(title: "Packing Impact")
+                PackWiseSectionHeader(title: "Packing Impact", style: .micro)
                 PackWiseCard {
                     PackingImpactCard(impacts: packingImpacts, expandedID: $expandedImpactID)
                 }
@@ -272,14 +358,16 @@ struct TripDetailView: View {
 
     private var categories: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            PackWiseSectionHeader(title: "Packing", trailing: "See All") {
+            PackWiseSectionHeader(title: "Packing", style: .micro, trailing: "See All") {
                 openList = PackingListDestination(category: nil)
             }
             PackWiseCard {
                 VStack(spacing: 0) {
+                    // Every category with progress — the overview does not
+                    // truncate; "See All" is the full-checklist path.
                     ForEach(Array(categorySummaries.enumerated()), id: \.element.category) { index, summary in
                         if index > 0 {
-                            Divider().padding(.leading, PackWiseSize.badge + PackWiseSpacing.regular)
+                            PackWiseRowDivider()
                         }
                         Button {
                             openList = PackingListDestination(category: summary.category)
@@ -291,7 +379,7 @@ struct TripDetailView: View {
                     if categorySummaries.isEmpty {
                         Text("No items yet.")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(PackWiseColor.textSecondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
@@ -302,6 +390,9 @@ struct TripDetailView: View {
         }
     }
 
+    /// The board draws each category with its own short bar, not just a
+    /// fraction — the bar is what makes the block scannable at a glance,
+    /// which a column of "4 / 6" is not.
     private func categoryRow(_ summary: CategorySummary) -> some View {
         HStack(spacing: PackWiseSpacing.regular) {
             PackWiseIconBadge(
@@ -310,14 +401,21 @@ struct TripDetailView: View {
             )
             Text(summary.category.title)
                 .font(.body)
+                .lineLimit(1)
             Spacer(minLength: PackWiseSpacing.snug)
             Text("\(summary.packed) / \(summary.total)")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(PackWiseColor.textSecondary)
                 .monospacedDigit()
+            PackWiseProgressBar(
+                fraction: summary.total == 0 ? 0 : Double(summary.packed) / Double(summary.total),
+                tint: PackWiseColor.success,
+                height: 6
+            )
+            .frame(width: 52)
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(PackWiseColor.textTertiary)
         }
         .padding(.vertical, PackWiseSpacing.regular)
         .contentShape(Rectangle())
