@@ -36,6 +36,8 @@ enum DebugPreviewScreen: String {
     case weatherChanged
     case me
     case onboarding
+    case onboardingTrip
+    case onboardingPersonal
     case weatherDetail
     case tripDetailCompleted
 
@@ -107,6 +109,10 @@ struct DebugPreviewScene: View {
                 MeView()
             case .onboarding:
                 OnboardingView {}
+            case .onboardingTrip:
+                OnboardingView(onFinished: {}, initialPage: 1)
+            case .onboardingPersonal:
+                OnboardingView(onFinished: {}, initialPage: 2)
             case .weatherDetail:
                 NavigationStack {
                     WeatherDetailView(

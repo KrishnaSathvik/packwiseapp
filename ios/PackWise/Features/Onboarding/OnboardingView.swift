@@ -14,6 +14,10 @@ import SwiftUI
 /// user has actually set.
 struct OnboardingView: View {
     var onFinished: () -> Void
+    /// Where the flow opens. Always the first page in the app; the Debug
+    /// capture harness uses it to photograph a page without swiping to it.
+    var initialPage = 0
+
     @State private var page = 0
 
     private static let lastPage = 2
@@ -26,6 +30,9 @@ struct OnboardingView: View {
                 personal.tag(2)
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
+            // Without a backing pill the dots are near-invisible on the two
+            // light-background pages.
+            .indexViewStyle(.page(backgroundDisplayMode: .always))
             // The welcome image is full-bleed, so the pages extend under the
             // status bar; the two text pages pad themselves back down.
             .ignoresSafeArea(edges: .top)
@@ -42,6 +49,7 @@ struct OnboardingView: View {
             .padding(.bottom, PackWiseSpacing.section)
         }
         .background(Color(.systemBackground))
+        .onAppear { page = initialPage }
     }
 
     // MARK: - Welcome
@@ -80,6 +88,14 @@ struct OnboardingView: View {
         }
     }
 
+    /// Contextual imagery for the two explanatory screens. Deliberately a
+    /// band rather than a background — the cards are the content here.
+    private func banner(_ slot: String) -> some View {
+        OnboardingImage(slot: slot, scrim: false, alignment: .bottom)
+            .frame(height: 190)
+            .clipShape(RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous))
+    }
+
     private func benefit(_ symbol: String, _ title: String) -> some View {
         HStack(spacing: PackWiseSpacing.snug) {
             Image(systemName: symbol)
@@ -102,6 +118,8 @@ struct OnboardingView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                banner(PackWiseImageSlot.howItWorks)
+
                 PackWiseCard {
                     VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
                         HStack(alignment: .top) {
@@ -115,7 +133,8 @@ struct OnboardingView: View {
                             Spacer()
                             Image(systemName: "cloud.rain.fill")
                                 .font(.title2)
-                                .symbolRenderingMode(.multicolor)
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(.secondary, .blue)
                         }
                         Divider()
                         HStack(spacing: PackWiseSpacing.snug) {
@@ -150,6 +169,7 @@ struct OnboardingView: View {
             }
             .padding(PackWiseSpacing.loose)
             .safeAreaPadding(.top)
+            .padding(.bottom, PackWiseSpacing.section)
         }
     }
 
@@ -181,6 +201,8 @@ struct OnboardingView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                banner(PackWiseImageSlot.personal)
+
                 VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
                     PackWiseSectionHeader(title: "Your packing habits")
                     PackWiseCard {
@@ -203,6 +225,7 @@ struct OnboardingView: View {
             }
             .padding(PackWiseSpacing.loose)
             .safeAreaPadding(.top)
+            .padding(.bottom, PackWiseSpacing.section)
         }
     }
 
@@ -229,15 +252,23 @@ struct OnboardingView: View {
 /// image has been supplied — so `Image(slot)` would render nothing at all.
 private struct OnboardingImage: View {
     var slot: String
+    /// Only the welcome hero has text over it.
+    var scrim: Bool = true
+    /// Which part of the frame survives the crop.
+    var alignment: Alignment = .center
 
     private var bundled: UIImage? { UIImage(named: slot) }
 
     var body: some View {
         ZStack {
             if let bundled {
-                Image(uiImage: bundled)
-                    .resizable()
-                    .scaledToFill()
+                GeometryReader { proxy in
+                    Image(uiImage: bundled)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: proxy.size.width, height: proxy.size.height, alignment: alignment)
+                        .clipped()
+                }
             } else {
                 LinearGradient(
                     colors: [
@@ -248,12 +279,20 @@ private struct OnboardingImage: View {
                     endPoint: .bottomTrailing
                 )
             }
-            // Keeps the overlaid copy legible on any photograph.
-            LinearGradient(
-                colors: [.black.opacity(0.1), .black.opacity(0.65)],
-                startPoint: .center,
-                endPoint: .bottom
-            )
+            if scrim {
+                // Keeps the overlaid copy legible on any photograph. The
+                // ramp starts below the midpoint so the sky stays open while
+                // the text band gets enough weight to survive bright water.
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.25),
+                        .init(color: .black.opacity(0.45), location: 0.58),
+                        .init(color: .black.opacity(0.82), location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
         }
         .clipped()
         .accessibilityHidden(true)
