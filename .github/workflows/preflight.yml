@@ -1,0 +1,33 @@
+name: preflight
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install API dependencies
+        working-directory: api
+        run: npm ci
+
+      # `api/generated/` is committed and is what Vercel deploys, so CI has to
+      # prove it still matches `shared/`. The Vercel build only sees the api
+      # directory and cannot make that comparison.
+      - name: Preflight
+        working-directory: api
+        run: npm run preflight
