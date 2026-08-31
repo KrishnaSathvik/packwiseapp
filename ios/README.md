@@ -1,6 +1,6 @@
 # PackWise iOS
 
-iOS 18, SwiftUI, SwiftData. Bundle ID `com.packwise.app`.
+iOS 18, SwiftUI, SwiftData. Bundle ID `com.packwiseapp.app`.
 
 ```sh
 brew install xcodegen   # if needed

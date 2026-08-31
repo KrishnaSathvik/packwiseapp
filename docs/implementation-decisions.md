@@ -22,7 +22,7 @@ design/
 ## App identity
 
 - Display name: **PackWise**
-- Bundle ID: `com.packwise.app`
+- Bundle ID: `com.packwiseapp.app`
 - Minimum iOS: **18.0**
 
 ## Destinations

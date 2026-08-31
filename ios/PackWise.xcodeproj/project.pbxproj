@@ -107,6 +107,7 @@
 		026895DA8AD94D9E26C65186 /* travel-comfort.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "travel-comfort.json"; sourceTree = "<group>"; };
 		05B6824B7FF0747095620CD8 /* PackWiseTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackWiseTheme.swift; sourceTree = "<group>"; };
 		05D676F0AD83BC11FAB9D6B7 /* TripSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripSetupView.swift; sourceTree = "<group>"; };
+		07CA72D5EBF0A48DFB700477 /* PackWiseRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PackWiseRelease.entitlements; sourceTree = "<group>"; };
 		09EA2A16CECD08323014C5EA /* OverrideKeepsRainJacketDeleted.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = OverrideKeepsRainJacketDeleted.json; sourceTree = "<group>"; };
 		0C22AA74B02107D374C0087E /* MockContextIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockContextIntelligenceService.swift; sourceTree = "<group>"; };
 		1008F7B7F264ED80DD08EF0D /* WeatherKitWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherKitWeatherService.swift; sourceTree = "<group>"; };
@@ -150,6 +151,7 @@
 		821341F2C714FD4579CC562C /* WeddingWeekend.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WeddingWeekend.json; sourceTree = "<group>"; };
 		8F50866E7F4D96E58B7ED50F /* TripTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripTypes.swift; sourceTree = "<group>"; };
 		92141C7457061545EF4EAB22 /* AppDependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDependencies.swift; sourceTree = "<group>"; };
+		930BA0205F6DAA05207EDE3A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		94EE478A71B6717F17248D18 /* Party.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Party.swift; sourceTree = "<group>"; };
 		9F2B83007B4958B44D097006 /* WeatherDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDomain.swift; sourceTree = "<group>"; };
 		9F68807E4B4527A30EF2F665 /* DenverOutdoorCold.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = DenverOutdoorCold.json; sourceTree = "<group>"; };
@@ -568,8 +570,10 @@
 		F96D232E62DFDF422FDE73EC /* PackWise */ = {
 			isa = PBXGroup;
 			children = (
+				930BA0205F6DAA05207EDE3A /* Info.plist */,
 				C8F081E2EE749F5F3FEE3B81 /* PackWise.entitlements */,
 				63408A623EF270AD74F1373F /* PackWiseApp.swift */,
+				07CA72D5EBF0A48DFB700477 /* PackWiseRelease.entitlements */,
 				5D859ED2E8AD76BF8211D046 /* App */,
 				6CB0D1D521924D3C5E80CD5F /* Data */,
 				371F3CC8772CE63FA5DA43BA /* DesignSystem */,
@@ -789,16 +793,15 @@
 				CODE_SIGN_ENTITLEMENTS = PackWise/PackWise.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = PackWise;
-				INFOPLIST_KEY_NSWeatherKitUsageDescription = "PackWise uses the forecast for your trip dates to suggest what to pack.";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_FILE = PackWise/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.packwise.app;
+				PACKWISE_API_BASE_URL = "https://packwiseapp-dev.vercel.app";
+				PACKWISE_APPATTEST_ENV = development;
+				PACKWISE_REQUIRE_ATTESTATION = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.packwiseapp.app;
 				PRODUCT_NAME = PackWise;
 				SDKROOT = iphoneos;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -817,7 +820,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.packwise.app.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.packwiseapp.app.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PackWise.app/PackWise";
@@ -897,16 +900,15 @@
 				CODE_SIGN_ENTITLEMENTS = PackWise/PackWise.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = PackWise;
-				INFOPLIST_KEY_NSWeatherKitUsageDescription = "PackWise uses the forecast for your trip dates to suggest what to pack.";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_FILE = PackWise/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.packwise.app;
+				PACKWISE_API_BASE_URL = "https://packwiseapp-api.vercel.app";
+				PACKWISE_APPATTEST_ENV = production;
+				PACKWISE_REQUIRE_ATTESTATION = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.packwiseapp.app;
 				PRODUCT_NAME = PackWise;
 				SDKROOT = iphoneos;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -925,7 +927,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.packwise.app.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.packwiseapp.app.tests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PackWise.app/PackWise";

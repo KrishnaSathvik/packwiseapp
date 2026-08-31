@@ -113,7 +113,7 @@ Production destinations come from MapKit (`MKLocalSearch` / completer). `shared/
 
 Weather models include coverage, provider expiration, alerts, and attribution. Any UI that shows Apple weather must include WeatherKit attribution.
 
-iOS 18 minimum. Bundle ID `com.packwise.app`. Display name PackWise.
+iOS 18 minimum. Bundle ID `com.packwiseapp.app`. Display name PackWise.
 
 ## Weather service
 

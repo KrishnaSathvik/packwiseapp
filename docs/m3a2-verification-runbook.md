@@ -263,7 +263,7 @@ Those 401s are the passing result. Production will not spend the OpenAI key for
 anyone who merely knows the URL, and it has been `appattest` since its first
 deploy — never relaxed to development trust.
 
-`PACKWISE_APP_ID` is `766WG2GGCA.com.packwise.app`; the Team ID was read from
+`PACKWISE_APP_ID` is `766WG2GGCA.com.packwiseapp.app`; the Team ID was read from
 the provisioning profiles on the build machine, which all agree. The Apple App
 Attestation Root CA came from Apple's certificate authority host, self-signed,
 valid to 2045, SHA-256
@@ -271,21 +271,47 @@ valid to 2045, SHA-256
 
 ### Before the device pass
 
-`com.packwise.app` has no provisioning profile on this machine, so the App ID is
-probably not registered yet. Registering it with the App Attest capability is a
-prerequisite for step 4 — the device cannot attest against an App ID Apple does
-not know.
+The bundle identifier is `com.packwiseapp.app`, registered with automatic
+signing and the App Attest capability. A missing local provisioning profile
+proves nothing on its own — Xcode creates one on the first device run once the
+App ID and capability exist.
 
 A development-signed build attests in Apple's **development** environment, and a
-production verifier rejects those with `environment_mismatch`. So step 4 needs a
-separate deployment configured with:
+production verifier rejects those with `environment_mismatch`. That deployment
+now exists and is separate from Production:
 
 ```text
-PACKWISE_INTEGRITY_MODE=appattest
-PACKWISE_APP_ATTEST_ENVIRONMENT=development
+https://packwiseapp-dev.vercel.app    appattest, environment development
+https://packwiseapp-api.vercel.app    appattest, environment production
 ```
 
-Do not change Production's environment to accommodate a development build.
+The dev endpoint is a stable alias, so the iOS build does not need re-pointing
+every deploy. Do not change Production's environment to accommodate a
+development build.
+
+The iOS side is wired per configuration, so nothing is hardcoded in Swift:
+
+```text
+Debug     PACKWISE_API_BASE_URL=https://packwiseapp-dev.vercel.app
+          PACKWISE_APPATTEST_ENV=development
+Release   PACKWISE_API_BASE_URL=https://packwiseapp-api.vercel.app
+          PACKWISE_APPATTEST_ENV=production
+both      PACKWISE_REQUIRE_ATTESTATION=YES
+```
+
+The entitlements file is shared by both configurations — a single
+`CODE_SIGN_ENTITLEMENTS` covers Debug and Release — so App Attest is never
+enabled for only one of them. The environment inside it is a build-setting
+substitution, which is what differs.
+
+Two Xcode traps worth remembering:
+
+1. `GENERATE_INFOPLIST_FILE` silently drops custom `INFOPLIST_KEY_*` settings.
+   Only keys Xcode recognises are injected, so PackWise uses an explicit
+   `Info.plist` with `$(BUILD_SETTING)` substitution.
+2. Values reaching the Info.plist that way are **strings**, so `YES` arrives as
+   text. Reading `PACKWISE_REQUIRE_ATTESTATION` as `Bool?` alone would leave
+   every build silently unattested.
 
 ## 4. Physical iPhone App Attest
 

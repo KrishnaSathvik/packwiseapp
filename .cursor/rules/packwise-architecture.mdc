@@ -16,7 +16,7 @@ alwaysApply: true
 
 Never call OpenAI from the iPhone. API secrets stay server-side.
 
-Monorepo: `ios/`, `api/`, `shared/` (schemas/fixtures/contracts only). iOS 18. Bundle `com.packwise.app`.
+Monorepo: `ios/`, `api/`, `shared/` (schemas/fixtures/contracts only). iOS 18. Bundle `com.packwiseapp.app`.
 
 `WeatherService` → forecast + attribution + availability. `WeatherKitWeatherService` in production (M2A); `MockWeatherService` for tests/previews/fixtures. Domain never consumes WeatherKit types. Attribution is mandatory wherever Apple weather is shown. Persist `fetchedAt`, coverage dates, `providerFetchedAt` / `providerExpiresAt` on `WeatherSnapshot` (payload JSON is the snapshot source of truth). `ContextIntelligenceService` → `MockContextIntelligenceService` unless `PACKWISE_API_BASE_URL` is configured, then `RemoteContextIntelligenceService`. Generation never fails because weather or GPT failed.
 

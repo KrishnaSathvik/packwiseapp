@@ -261,6 +261,19 @@ struct IntelligenceServiceTests {
         }
     }
 
+    @Test func attestationFlagAcceptsTheStringsBuildSettingsProduce() {
+        // INFOPLIST_KEY_* values arrive as strings; reading only Bool? would
+        // quietly leave every build unattested.
+        #expect(IntelligenceConfiguration.flag("YES"))
+        #expect(IntelligenceConfiguration.flag("yes"))
+        #expect(IntelligenceConfiguration.flag("true"))
+        #expect(IntelligenceConfiguration.flag("1"))
+        #expect(IntelligenceConfiguration.flag(true))
+        #expect(!IntelligenceConfiguration.flag("NO"))
+        #expect(!IntelligenceConfiguration.flag(false))
+        #expect(!IntelligenceConfiguration.flag(nil))
+    }
+
     @Test func developmentIntegrityIsSelectedOnlyWhenAttestationIsNotRequired() {
         let configuration = IntelligenceConfiguration(baseURL: URL(string: "https://api.test")!)
         #expect(configuration.requiresAttestation == false)

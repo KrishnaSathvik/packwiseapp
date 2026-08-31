@@ -55,7 +55,7 @@ The next code should be either a fix the external pass discovers, or — once th
 M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `TripContext` is M3B; wiring gap candidates into suggestions is M3C.
 
 - Monorepo: `ios/`, `api/`, `shared/`, `docs/`
-- iOS 18, `com.packwise.app`, display name PackWise
+- iOS 18, `com.packwiseapp.app`, display name PackWise
 - Deterministic engine first; GPT protocol exists from day one
 - Real WeatherKit in M2A (closed); mock fixtures remain for tests/previews
 - Home country preference; international = destination ≠ home

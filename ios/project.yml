@@ -32,22 +32,48 @@ targets:
         includes:
           - "**/*.json"
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.packwise.app
-      PRODUCT_NAME: PackWise
-      GENERATE_INFOPLIST_FILE: YES
-      INFOPLIST_KEY_CFBundleDisplayName: PackWise
-      INFOPLIST_KEY_UILaunchScreen_Generation: YES
-      INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
-      INFOPLIST_KEY_NSWeatherKitUsageDescription: PackWise uses the forecast for your trip dates to suggest what to pack.
-      TARGETED_DEVICE_FAMILY: "1"
-      SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
-      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-      ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
-      CODE_SIGN_STYLE: Automatic
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.packwiseapp.app
+        PRODUCT_NAME: PackWise
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
+      configs:
+        # Debug builds are signed locally, so they attest in Apple's development
+        # environment and must talk to the deployment that expects it.
+        Debug:
+          PACKWISE_API_BASE_URL: https://packwiseapp-dev.vercel.app
+          PACKWISE_REQUIRE_ATTESTATION: "YES"
+          PACKWISE_APPATTEST_ENV: development
+        # Release covers TestFlight and the App Store, which always attest in
+        # Apple's production environment regardless of the entitlement value.
+        Release:
+          PACKWISE_API_BASE_URL: https://packwiseapp-api.vercel.app
+          PACKWISE_REQUIRE_ATTESTATION: "YES"
+          PACKWISE_APPATTEST_ENV: production
+    # An explicit Info.plist, because GENERATE_INFOPLIST_FILE only injects keys
+    # Xcode recognises — custom INFOPLIST_KEY_* settings are silently dropped.
+    # These values are build-setting substitutions resolved per configuration.
+    info:
+      path: PackWise/Info.plist
+      properties:
+        CFBundleDisplayName: PackWise
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSWeatherKitUsageDescription: PackWise uses the forecast for your trip dates to suggest what to pack.
+        PACKWISE_API_BASE_URL: $(PACKWISE_API_BASE_URL)
+        PACKWISE_REQUIRE_ATTESTATION: $(PACKWISE_REQUIRE_ATTESTATION)
     entitlements:
       path: PackWise/PackWise.entitlements
       properties:
         com.apple.developer.weatherkit: true
+        # Per configuration: Debug attests in Apple's development environment,
+        # Release in production. TestFlight and the App Store use production
+        # regardless of this value, which is why the server's expected
+        # environment is configured per deployment rather than inferred.
+        com.apple.developer.devicecheck.appattest-environment: $(PACKWISE_APPATTEST_ENV)
     dependencies:
       - sdk: WeatherKit.framework
       - sdk: CoreLocation.framework
@@ -60,7 +86,7 @@ targets:
     dependencies:
       - target: PackWise
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.packwise.app.tests
+      PRODUCT_BUNDLE_IDENTIFIER: com.packwiseapp.app.tests
       GENERATE_INFOPLIST_FILE: YES
       CODE_SIGN_STYLE: Automatic
 schemes:

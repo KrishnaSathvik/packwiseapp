@@ -17,9 +17,20 @@ struct IntelligenceConfiguration: Sendable {
         guard let raw, let url = URL(string: raw.trimmingCharacters(in: .whitespacesAndNewlines)) else {
             return nil
         }
-        let requires = (bundle.object(forInfoDictionaryKey: "PACKWISE_REQUIRE_ATTESTATION") as? Bool)
-            ?? (ProcessInfo.processInfo.environment["PACKWISE_REQUIRE_ATTESTATION"] == "1")
+        let requires = Self.flag(
+            bundle.object(forInfoDictionaryKey: "PACKWISE_REQUIRE_ATTESTATION")
+                ?? ProcessInfo.processInfo.environment["PACKWISE_REQUIRE_ATTESTATION"]
+        )
         return IntelligenceConfiguration(baseURL: url, requiresAttestation: requires)
+    }
+
+    /// Build settings reach the Info.plist as strings, so `YES` arrives as text
+    /// rather than a boolean. Reading it as `Bool?` alone would silently make
+    /// every build unattested.
+    static func flag(_ value: Any?) -> Bool {
+        if let boolean = value as? Bool { return boolean }
+        guard let text = value as? String else { return false }
+        return ["yes", "true", "1"].contains(text.lowercased())
     }
 
     /// Explicit selection, never a silent downgrade: if attestation is required

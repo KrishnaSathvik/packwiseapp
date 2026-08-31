@@ -34,7 +34,7 @@ xcodegen generate
 open PackWise.xcodeproj
 ```
 
-Set your Apple Developer Team in Xcode signing. Bundle ID is `com.packwise.app`.
+Set your Apple Developer Team in Xcode signing. Bundle ID is `com.packwiseapp.app`.
 
 ```sh
 cd ios
