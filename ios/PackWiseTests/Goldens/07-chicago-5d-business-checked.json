@@ -1,0 +1,428 @@
+{
+  "engineVersion" : "v1",
+  "fixture" : "07-chicago-5d-business-checked",
+  "items" : [
+    {
+      "canonicalItemID" : "clothing.blazer",
+      "category" : "clothing",
+      "displayName" : "Blazer",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a business trip.",
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.dress_shirt",
+      "category" : "clothing",
+      "displayName" : "Dress shirts",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 2,
+      "quantityReason" : "2 based on a 5-day trip.",
+      "reason" : "Suggested for a business trip.",
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.light_sweater",
+      "category" : "clothing",
+      "displayName" : "Light sweater",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 2,
+      "quantityReason" : "2 based on a 5-day trip.",
+      "reason" : "Rain is expected on 1 of your 5 travel days.",
+      "reasonCode" : "weather.rain_days",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.nice_outfit",
+      "category" : "clothing",
+      "displayName" : "Nice dinner outfit",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Based on what you'll be doing.",
+      "reasonCode" : "activity.generic",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 3,
+      "quantityReason" : "3 based on a 5-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.rain_jacket",
+      "category" : "clothing",
+      "displayName" : "Rain jacket",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Rain is expected Tuesday.",
+      "reasonCode" : "weather.rain_weekday",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 7,
+      "quantityReason" : "7 based on a 5-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 6,
+      "quantityReason" : "Why 6 t-shirts? You're traveling for 5 days.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 7,
+      "quantityReason" : "7 based on a 5-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.id",
+      "category" : "documents",
+      "displayName" : "Photo ID",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.headphones",
+      "category" : "electronics",
+      "displayName" : "Headphones",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Based on what you'll be doing.",
+      "reasonCode" : "activity.generic",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.laptop",
+      "category" : "electronics",
+      "displayName" : "Laptop",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a business trip.",
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.laptop_charger",
+      "category" : "electronics",
+      "displayName" : "Laptop charger",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a business trip.",
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.keys",
+      "category" : "essentials",
+      "displayName" : "Keys",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.phone",
+      "category" : "essentials",
+      "displayName" : "Phone",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.umbrella_compact",
+      "category" : "essentials",
+      "displayName" : "Compact umbrella",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Rain is expected Tuesday.",
+      "reasonCode" : "weather.rain_weekday",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.wallet",
+      "category" : "essentials",
+      "displayName" : "Wallet",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.dress_shoes",
+      "category" : "footwear",
+      "displayName" : "Dress shoes",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a business trip.",
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.walking_shoes",
+      "category" : "footwear",
+      "displayName" : "Walking shoes",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.deodorant",
+      "category" : "toiletries",
+      "displayName" : "Deodorant",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.compression_packing",
+      "category" : "travel_comfort",
+      "displayName" : "Packing cubes",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "category" : "travel_comfort",
+      "displayName" : "Toiletry bag",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    }
+  ]
+}
