@@ -212,6 +212,38 @@ node scripts/live-smoke.ts --base-url=https://<preview>.vercel.app
 [ ] state written by one invocation is read by another
 ```
 
+**Preview result, 2026-08-30 — PASS.**
+
+```text
+Project: packwiseapp-api (root: api)
+Deployment: preview
+buildHash: 1234eef772da96e4   matches the locally verified artifact
+
+Build (verify-artifact + typecheck)   PASS
+/health                               PASS   200, missing []
+Redis reachable from serverless       PASS   upstash-rest
+Deployed interpret / gaps / optimize  PASS   200, gpt-5.6, interpret|gaps|optimize/1
+Cross-invocation shared state         PASS   deployed writes read back from
+                                             another process via Redis
+```
+
+Deployment Protection was disabled on this project so the API is reachable
+without Vercel SSO — a mobile client cannot complete an SSO flow, and PackWise's
+protection is App Attest, not URL secrecy. The consequence for Preview is that
+it runs development integrity with only the anonymous rate limit in front of the
+OpenAI key; Production must therefore be `appattest` from its first deploy.
+
+Two deployment issues, both fixed:
+
+1. `vercel link` run from the wrong directory placed `.vercel` in `api/api/`,
+   making the functions folder the project root. Re-linked with `--cwd`.
+2. Setting a `buildCommand` makes Vercel expect static output. A functions-only
+   project has none, so it gets an empty `public/` and the build stays purely a
+   verification gate.
+
+Production remains unverified: `vercel --prod` needs `PACKWISE_APP_ID` and the
+Apple App Attest Root CA.
+
 ## 4. Physical iPhone App Attest
 
 A signed build on a real device against the deployed API.
