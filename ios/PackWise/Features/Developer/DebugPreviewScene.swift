@@ -32,6 +32,8 @@ enum DebugPreviewScreen: String {
     case setupBagStyle
     case setupExtras
     case setupReview
+    case reviewChanges
+    case weatherChanged
 
     /// The screen named by `-PackWiseScreen`, if the app was launched with one.
     static var requested: DebugPreviewScreen? {
@@ -90,6 +92,25 @@ struct DebugPreviewScene: View {
                 setup(.extras)
             case .setupReview:
                 setup(.review)
+            case .reviewChanges:
+                RecommendationDiffSheet(
+                    diff: DebugTripSeed.sampleDiff,
+                    trip: seed.trip,
+                    title: "Review changes",
+                    onFinished: {}
+                )
+            case .weatherChanged:
+                NavigationStack {
+                    ScrollView {
+                        PackWiseCard {
+                            WeatherChangedCard(proposal: DebugTripSeed.sampleProposal(tripID: seed.trip.id)) {}
+                        }
+                        .padding(PackWiseSpacing.comfortable)
+                    }
+                    .background(Color(.systemGroupedBackground))
+                    .navigationTitle("Chicago")
+                    .navigationBarTitleDisplayMode(.inline)
+                }
             case .itemDetail:
                 if let item = seed.trip.items.first(where: { $0.displayName == "Rain jacket" }) {
                     ItemDetailSheet(
@@ -255,6 +276,38 @@ final class DebugTripSeed {
         )
 
         try? context.save()
+    }
+
+    /// A change set covering all three kinds, so the diff sheet can be checked.
+    static let sampleDiff = RecommendationDiff(
+        add: [
+            item("clothing.umbrella", "Compact umbrella", .clothing, reason: "Rain expected Sunday", signals: [.weather]).draft,
+            item("footwear.waterproof", "Waterproof shoes", .footwear, reason: "Two rainy days", signals: [.weather]).draft
+        ],
+        removeCandidates: [
+            item("essentials.sunglasses", "Sunglasses", .essentials, reason: "Little sun expected", signals: [.weather]).draft
+        ],
+        quantityChanges: [
+            QuantityChangeSuggestion(
+                item: item("clothing.tshirts", "T-shirts", .clothing, quantity: 4).draft,
+                suggestedQuantity: 5
+            )
+        ]
+    )
+
+    static func sampleProposal(tripID: UUID) -> WeatherChangeProposal {
+        WeatherChangeProposal(
+            id: UUID(),
+            tripID: tripID,
+            oldSnapshotID: UUID(),
+            newSnapshotID: UUID(),
+            createdAt: .now,
+            status: .pending,
+            signalChanges: [],
+            headline: "Rain is now expected on Sunday and Monday.",
+            diff: sampleDiff,
+            tripContextSignature: ""
+        )
     }
 
     private struct Seeded {

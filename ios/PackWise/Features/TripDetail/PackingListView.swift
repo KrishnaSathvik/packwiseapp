@@ -209,28 +209,54 @@ struct PackingListView: View {
 
     private var addSheet: some View {
         NavigationStack {
-            Form {
-                TextField("Item", text: $newItemName)
-                Stepper("Quantity  \(newItemQuantity)", value: $newItemQuantity, in: 1...20)
-                Picker("Category", selection: $newItemCategory) {
-                    ForEach(PackingCategory.allCases) { category in
-                        Text(category.title).tag(category)
-                    }
-                }
-                if !trip.party.usesSimpleList {
-                    Picker("For", selection: $newItemOwner) {
-                        Text("Shared").tag(PartyListFilter.shared)
-                        ForEach(trip.party.travelers) { traveler in
-                            Text(traveler.displayName).tag(PartyListFilter.traveler(traveler.id))
+            ScrollView {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
+                    PackWiseCard {
+                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                            TextField("Item", text: $newItemName)
+                                .font(.title3)
+                            Divider()
+                            Stepper("Quantity  \(newItemQuantity)", value: $newItemQuantity, in: 1...20)
+                            Divider()
+                            HStack {
+                                Text("Category")
+                                Spacer()
+                                Picker("Category", selection: $newItemCategory) {
+                                    ForEach(PackingCategory.allCases) { category in
+                                        Text(category.title).tag(category)
+                                    }
+                                }
+                                .labelsHidden()
+                                .pickerStyle(.menu)
+                            }
+                            if !trip.party.usesSimpleList {
+                                Divider()
+                                HStack {
+                                    Text("For")
+                                    Spacer()
+                                    Picker("For", selection: $newItemOwner) {
+                                        Text("Shared").tag(PartyListFilter.shared)
+                                        ForEach(trip.party.travelers) { traveler in
+                                            Text(traveler.displayName).tag(PartyListFilter.traveler(traveler.id))
+                                        }
+                                    }
+                                    .labelsHidden()
+                                    .pickerStyle(.menu)
+                                }
+                            }
                         }
                     }
                 }
+                .padding(PackWiseSpacing.comfortable)
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Add Item")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { adding = false } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") { addCustomItem() }.disabled(newItemName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    Button("Add") { addCustomItem() }
+                        .disabled(newItemName.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
         }

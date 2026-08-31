@@ -1,6 +1,12 @@
 import SwiftData
 import SwiftUI
 
+/// What PackWise would change, and what the user actually wants.
+///
+/// Additions and quantity changes arrive selected; removals do not — PackWise
+/// never takes something off a list on its own. Each kind of change carries a
+/// glyph as well as a tint, so the three are told apart without relying on
+/// colour.
 struct RecommendationDiffSheet: View {
     let diff: RecommendationDiff
     var trip: TripRecord
@@ -29,68 +35,138 @@ struct RecommendationDiffSheet: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if !diff.add.isEmpty {
-                    Section("Suggested") {
-                        ForEach(diff.add) { item in
-                            Toggle(isOn: binding(item.id, in: $addIDs)) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("+ \(item.displayName)")
-                                    if !item.reason.isEmpty {
-                                        Text(item.reason)
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                        }
-                    }
+            ScrollView {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
+                    if !diff.add.isEmpty { additions }
+                    if !diff.quantityChanges.isEmpty { quantities }
+                    if !diff.removeCandidates.isEmpty { removals }
                 }
-                if !diff.quantityChanges.isEmpty {
-                    Section("Quantity") {
-                        ForEach(diff.quantityChanges, id: \.item.id) { change in
-                            Toggle(isOn: binding(change.item.id, in: $quantityIDs)) {
-                                Text("\(change.item.displayName)  ×\(change.item.quantity) → ×\(change.suggestedQuantity)")
-                            }
-                        }
-                    }
-                }
-                if !diff.removeCandidates.isEmpty {
-                    Section("You may not need") {
-                        Text("Keep these unless you mark them not needed. PackWise will not remove them on its own.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        ForEach(diff.removeCandidates) { item in
-                            Toggle(isOn: binding(item.id, in: $removeIDs)) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(item.displayName)
-                                    Text("Not needed")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                }
+                .padding(PackWiseSpacing.comfortable)
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Keep List") {
-                        onKeep?()
-                        dismiss()
-                        onFinished()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Update List") {
-                        apply()
+            .safeAreaInset(edge: .bottom) { actions }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    // MARK: - Sections
+
+    private var additions: some View {
+        section(title: "Suggested", count: addIDs.count) {
+            ForEach(Array(diff.add.enumerated()), id: \.element.id) { index, item in
+                if index > 0 { Divider() }
+                changeRow(
+                    symbol: "plus",
+                    tint: .green,
+                    title: item.displayName,
+                    subtitle: item.reason.isEmpty ? nil : item.reason,
+                    isOn: binding(item.id, in: $addIDs)
+                )
+            }
+        }
+    }
+
+    private var quantities: some View {
+        section(title: "Quantity", count: quantityIDs.count) {
+            ForEach(Array(diff.quantityChanges.enumerated()), id: \.element.item.id) { index, change in
+                if index > 0 { Divider() }
+                changeRow(
+                    symbol: "arrow.up.arrow.down",
+                    tint: .orange,
+                    title: change.item.displayName,
+                    subtitle: "×\(change.item.quantity) → ×\(change.suggestedQuantity)",
+                    isOn: binding(change.item.id, in: $quantityIDs)
+                )
+            }
+        }
+    }
+
+    private var removals: some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+            PackWiseSectionHeader(title: "You may not need")
+            Text("Keep these unless you mark them not needed. PackWise will not remove them on its own.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            PackWiseCard {
+                VStack(spacing: 0) {
+                    ForEach(Array(diff.removeCandidates.enumerated()), id: \.element.id) { index, item in
+                        if index > 0 { Divider() }
+                        changeRow(
+                            symbol: "minus",
+                            tint: .red,
+                            title: item.displayName,
+                            subtitle: "Remove from this trip",
+                            isOn: binding(item.id, in: $removeIDs)
+                        )
                     }
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+    }
+
+    private func section<Content: View>(
+        title: String,
+        count: Int,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+            PackWiseSectionHeader(title: title, trailing: "\(count) selected")
+            PackWiseCard {
+                VStack(spacing: 0) {
+                    content()
+                }
+            }
+        }
+    }
+
+    private func changeRow(
+        symbol: String,
+        tint: Color,
+        title: String,
+        subtitle: String?,
+        isOn: Binding<Bool>
+    ) -> some View {
+        Button {
+            isOn.wrappedValue.toggle()
+        } label: {
+            HStack(spacing: PackWiseSpacing.regular) {
+                PackWiseIconBadge(symbol: symbol, tint: tint)
+                VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                    Text(title)
+                        .foregroundStyle(.primary)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: PackWiseSpacing.snug)
+                Image(systemName: isOn.wrappedValue ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isOn.wrappedValue ? PackWiseColor.accent : Color(.tertiaryLabel))
+            }
+            .padding(.vertical, PackWiseSpacing.regular)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isOn.wrappedValue ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private var actions: some View {
+        VStack(spacing: PackWiseSpacing.snug) {
+            Button("Update List") { apply() }
+                .buttonStyle(PrimaryButtonStyle())
+            Button("Keep List") {
+                onKeep?()
+                dismiss()
+                onFinished()
+            }
+            .buttonStyle(SecondaryButtonStyle())
+        }
+        .padding(PackWiseSpacing.comfortable)
+        .background(.bar)
     }
 
     private func binding(_ id: UUID, in set: Binding<Set<UUID>>) -> Binding<Bool> {
