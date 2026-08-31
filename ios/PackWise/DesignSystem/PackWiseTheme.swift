@@ -42,9 +42,14 @@ struct PackWiseCard<Content: View>: View {
         content
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.background)
+            // `.background` resolves to near-black in Dark Mode, which is the
+            // same value as the grouped background these cards sit on — every
+            // edge disappears and the screen flattens. This is the semantic
+            // pair for content raised above a grouped background, so it stays
+            // white in light and elevates in dark.
+            .background(Color(.secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .shadow(color: .black.opacity(0.06), radius: 10, y: 4)
+            .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
     }
 }
 
@@ -65,29 +70,5 @@ struct SelectableChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
-    }
-}
-
-struct ProgressSummary: View {
-    var packed: Int
-    var total: Int
-
-    var remaining: Int { max(0, total - packed) }
-    var fraction: Double { total == 0 ? 0 : Double(packed) / Double(total) }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ProgressView(value: fraction)
-                .tint(PackWiseColor.accent)
-            HStack {
-                Text("\(packed) of \(total) packed")
-                Spacer()
-                Text(remaining == 0 ? "Packed" : "\(remaining) items left")
-            }
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(packed) of \(total) packed, \(remaining) left")
     }
 }

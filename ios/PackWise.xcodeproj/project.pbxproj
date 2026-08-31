@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1770FAD3A62DF2909109A9EE /* DebugPreviewScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4E26D58A31AC0A6A5F5DEF /* DebugPreviewScene.swift */; };
+		4AFF8A728E6029AB9AD8B970 /* PackingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14CC3278952C1F78BDA23D9 /* PackingListView.swift */; };
+		92873E61D6E4AACA7D2D2C29 /* WeatherStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3840A0F2F7597EF494402A /* WeatherStripView.swift */; };
+		E6A4DE85ED837E0EC1CE146D /* DestinationVisualView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A17906111F28FBAA003144D /* DestinationVisualView.swift */; };
+		99420FDD2B98F35ECFB280E0 /* DestinationVisualService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1591AA088F1A04300FDA10 /* DestinationVisualService.swift */; };
+		9FEA5FFC5FB3AD59595660DB /* PackWisePrimitives.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57026C1410846D911EABCE8E /* PackWisePrimitives.swift */; };
+		C748BAE7CEC050429C656E98 /* PackWiseTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E38F4347429FF71171E769 /* PackWiseTokens.swift */; };
 		0C635C13752D4BF0B3BB22CD /* IntelligenceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD775C1F26E1E2EF54B4438D /* IntelligenceServiceTests.swift */; };
 		0DCB753D3F80211760E78F2D /* RecommendationDiffSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E21852207D4E351FC95A60A /* RecommendationDiffSheet.swift */; };
 		0DE3A765C66D87C6FFC1E05A /* WeatherNormalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE539FC3C1958BCC9C7D4E35 /* WeatherNormalization.swift */; };
@@ -105,6 +112,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0D4E26D58A31AC0A6A5F5DEF /* DebugPreviewScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPreviewScene.swift; sourceTree = "<group>"; };
+		B14CC3278952C1F78BDA23D9 /* PackingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingListView.swift; sourceTree = "<group>"; };
+		EA3840A0F2F7597EF494402A /* WeatherStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherStripView.swift; sourceTree = "<group>"; };
+		0A17906111F28FBAA003144D /* DestinationVisualView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationVisualView.swift; sourceTree = "<group>"; };
+		0E1591AA088F1A04300FDA10 /* DestinationVisualService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationVisualService.swift; sourceTree = "<group>"; };
+		57026C1410846D911EABCE8E /* PackWisePrimitives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackWisePrimitives.swift; sourceTree = "<group>"; };
+		43E38F4347429FF71171E769 /* PackWiseTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackWiseTokens.swift; sourceTree = "<group>"; };
 		009E59948241C192C837B2C7 /* base.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = base.json; sourceTree = "<group>"; };
 		015867D7AAFB66AFAC31E37D /* RemoteContextIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteContextIntelligenceService.swift; sourceTree = "<group>"; };
 		026895DA8AD94D9E26C65186 /* travel-comfort.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "travel-comfort.json"; sourceTree = "<group>"; };
@@ -234,6 +248,7 @@
 		29EBA7843E51DD3BC21CD145 /* TripDetail */ = {
 			isa = PBXGroup;
 			children = (
+				B14CC3278952C1F78BDA23D9 /* PackingListView.swift */,
 				1E21852207D4E351FC95A60A /* RecommendationDiffSheet.swift */,
 				5F7EBEEDD753F11A4987873D /* TripDetailView.swift */,
 			);
@@ -270,6 +285,10 @@
 		371F3CC8772CE63FA5DA43BA /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				0A17906111F28FBAA003144D /* DestinationVisualView.swift */,
+				0E1591AA088F1A04300FDA10 /* DestinationVisualService.swift */,
+				57026C1410846D911EABCE8E /* PackWisePrimitives.swift */,
+				43E38F4347429FF71171E769 /* PackWiseTokens.swift */,
 				05B6824B7FF0747095620CD8 /* PackWiseTheme.swift */,
 			);
 			path = DesignSystem;
@@ -557,6 +576,7 @@
 		F362453F5548F4931327DC63 /* Weather */ = {
 			isa = PBXGroup;
 			children = (
+				EA3840A0F2F7597EF494402A /* WeatherStripView.swift */,
 				584866B9CD3F1D17C91D8C2C /* PackingImpactCard.swift */,
 				3E401F684F94716F65AC8AF2 /* WeatherAttributionView.swift */,
 				E841A106CF842902CF6F2192 /* WeatherChangedCard.swift */,
@@ -577,6 +597,7 @@
 		F64930DFE2C0DAD033155B07 /* Developer */ = {
 			isa = PBXGroup;
 			children = (
+				0D4E26D58A31AC0A6A5F5DEF /* DebugPreviewScene.swift */,
 				E86E1F072718D3C623D2C52D /* DebugAttestProbe.swift */,
 				E8CAB594284AE808EF3B31D1 /* DebugWeatherInjection.swift */,
 				9A19B99B12F977EDAD67667D /* DeveloperToolsView.swift */,
@@ -736,6 +757,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1770FAD3A62DF2909109A9EE /* DebugPreviewScene.swift in Sources */,
+				4AFF8A728E6029AB9AD8B970 /* PackingListView.swift in Sources */,
+				92873E61D6E4AACA7D2D2C29 /* WeatherStripView.swift in Sources */,
+				E6A4DE85ED837E0EC1CE146D /* DestinationVisualView.swift in Sources */,
+				99420FDD2B98F35ECFB280E0 /* DestinationVisualService.swift in Sources */,
+				9FEA5FFC5FB3AD59595660DB /* PackWisePrimitives.swift in Sources */,
+				C748BAE7CEC050429C656E98 /* PackWiseTokens.swift in Sources */,
 				9A99E0FD6BB9530E6A13B2A9 /* AppDependencies.swift in Sources */,
 				EC3F86D0EAF75C79A2AD2C54 /* AppIntegrityProvider.swift in Sources */,
 				81879A3CB0B4F423B9CC70FB /* Catalog.swift in Sources */,

@@ -7,16 +7,31 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if preferenceRecords.first?.hasCompletedOnboarding == true {
-                MainTabView()
+            #if DEBUG
+            if let screen = DebugPreviewScreen.requested {
+                // Launched with -PackWiseScreen for a UI capture. Compiled out
+                // of Release.
+                DebugPreviewScene(screen: screen)
             } else {
-                OnboardingView {
-                    completeOnboarding()
-                }
+                main
             }
+            #else
+            main
+            #endif
         }
         .task {
             ensurePreferences()
+        }
+    }
+
+    @ViewBuilder
+    private var main: some View {
+        if preferenceRecords.first?.hasCompletedOnboarding == true {
+            MainTabView()
+        } else {
+            OnboardingView {
+                completeOnboarding()
+            }
         }
     }
 
