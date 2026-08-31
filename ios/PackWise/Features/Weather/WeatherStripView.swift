@@ -56,3 +56,33 @@ struct WeatherStripView: View {
         return label
     }
 }
+
+/// Trip-level weather presentation, shared by Trips Home and Trip Detail so
+/// the two never disagree about what the forecast is saying.
+///
+/// `Domain/` is out of scope for the conformance pass, so these live here
+/// rather than as new accessors on `TripWeatherContext`.
+extension TripWeatherContext {
+    /// The glyph for the trip as a whole, not for whichever day happens to be
+    /// first — a rainy Sunday matters more than a clear Saturday.
+    func headlineSymbol(rainThreshold: Double) -> String {
+        let notable = dailyForecast.first { day in
+            day.snowExpected || day.rainProbability >= rainThreshold
+        }
+        return notable?.symbol ?? dailyForecast.first?.symbol ?? "cloud.sun"
+    }
+
+    /// The line under the temperature range.
+    ///
+    /// `compactHeadline` leads with the range, which the temperature already
+    /// shows, so this is just the part that adds something.
+    func detailLine(rainThreshold: Double) -> String? {
+        guard isPreciseForecast, !forecastAvailableForPartialTrip else {
+            return coverageCopy
+        }
+        guard let rainDay = dailyForecast.first(where: { $0.rainProbability >= rainThreshold }) else {
+            return nil
+        }
+        return "Rain \(rainDay.date.formatted(.dateTime.weekday(.wide)))"
+    }
+}

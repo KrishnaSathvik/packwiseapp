@@ -141,7 +141,7 @@ struct TripDetailView: View {
             PackWiseCard {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
                     HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
-                        Image(systemName: headlineSymbol(snapshot))
+                        Image(systemName: snapshot.headlineSymbol(rainThreshold: weatherThresholds.rainProbabilityAdd))
                             .font(.title)
                             .symbolRenderingMode(.multicolor)
                         VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
@@ -149,7 +149,7 @@ struct TripDetailView: View {
                                 Text(snapshot.highLowLabel(usesFahrenheit: usesFahrenheit))
                                     .font(.title3.weight(.semibold))
                             }
-                            if let detail = weatherDetail(snapshot) {
+                            if let detail = snapshot.detailLine(rainThreshold: weatherThresholds.rainProbabilityAdd) {
                                 Text(detail)
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
@@ -186,33 +186,6 @@ struct TripDetailView: View {
                 }
             }
         }
-    }
-
-    /// The glyph for the trip as a whole, not for whichever day happens to be
-    /// first — a rainy Sunday matters more than a clear Saturday.
-    private func headlineSymbol(_ snapshot: TripWeatherContext) -> String {
-        let notable = snapshot.dailyForecast.first { day in
-            day.snowExpected || day.rainProbability >= weatherThresholds.rainProbabilityAdd
-        }
-        return notable?.symbol ?? snapshot.dailyForecast.first?.symbol ?? "cloud.sun"
-    }
-
-    /// The line under the temperature range.
-    ///
-    /// `compactHeadline` leads with the range, which the title above already
-    /// shows, so this derives just the detail. `Domain/` is out of scope for
-    /// the conformance pass, hence the small amount of restated logic here
-    /// rather than a new accessor on `TripWeatherContext`.
-    private func weatherDetail(_ snapshot: TripWeatherContext) -> String? {
-        guard snapshot.isPreciseForecast, !snapshot.forecastAvailableForPartialTrip else {
-            return snapshot.coverageCopy
-        }
-        guard let rainDay = snapshot.dailyForecast.first(where: {
-            $0.rainProbability >= weatherThresholds.rainProbabilityAdd
-        }) else {
-            return nil
-        }
-        return "Rain \(rainDay.date.formatted(.dateTime.weekday(.wide)))"
     }
 
     @ViewBuilder

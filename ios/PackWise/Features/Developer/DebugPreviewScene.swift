@@ -21,6 +21,8 @@ enum DebugPreviewScreen: String {
     case packingList
     /// Sheets are rendered as plain screens — a capture cannot tap one open.
     case itemDetail
+    case tripsHome
+    case tripsHomeEmpty
 
     /// The screen named by `-PackWiseScreen`, if the app was launched with one.
     static var requested: DebugPreviewScreen? {
@@ -38,12 +40,20 @@ struct DebugPreviewScene: View {
     @State private var seed = DebugTripSeed()
 
     var body: some View {
-        NavigationStack {
+        content
+            .modelContainer(screen == .tripsHomeEmpty ? DebugTripSeed.emptyContainer : seed.container)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        Group {
             switch screen {
             case .tripDetail:
-                TripDetailView(trip: seed.trip)
+                NavigationStack { TripDetailView(trip: seed.trip) }
             case .packingList:
-                PackingListView(trip: seed.trip)
+                NavigationStack { PackingListView(trip: seed.trip) }
+            case .tripsHome, .tripsHomeEmpty:
+                TripsHomeView()
             case .itemDetail:
                 if let item = seed.trip.items.first(where: { $0.displayName == "Rain jacket" }) {
                     ItemDetailSheet(
@@ -55,7 +65,6 @@ struct DebugPreviewScene: View {
                 }
             }
         }
-        .modelContainer(seed.container)
     }
 }
 
@@ -65,6 +74,16 @@ struct DebugPreviewScene: View {
 final class DebugTripSeed {
     let container: ModelContainer
     let trip: TripRecord
+
+    /// For the empty Trips Home. Trips Home reads its own @Query, so an empty
+    /// state needs a store with nothing in it.
+    static let emptyContainer: ModelContainer = {
+        let container = try! PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        context.insert(PackingPreferenceRecord(from: .deviceDefaults()))
+        try? context.save()
+        return container
+    }()
 
     init() {
         container = try! PackWisePersistence.container(inMemory: true)
@@ -104,13 +123,73 @@ final class DebugTripSeed {
         context.insert(trip)
 
         let repository = TripRepository(context: context)
-        for item in Self.items {
+        let seeded = Self.items()
+        for item in seeded {
             repository.addItem(item.draft, to: trip, syncWeatherChange: false)
         }
-        for (record, packed) in zip(trip.items, Self.items.map(\.packed)) where packed {
+        // SwiftData does not promise relationship order, so packed state is
+        // matched by name rather than by position.
+        let packedNames = Set(seeded.filter(\.packed).map(\.draft.displayName))
+        for record in trip.items where packedNames.contains(record.displayName) {
             record.packedQuantity = record.quantity
         }
         repository.storeWeather(Self.forecast(start: start, calendar: calendar), on: trip)
+
+        // A generated list nobody has started, and a finished trip, so Trips
+        // Home shows all three of its states at once.
+        let tokyo = TripRecord(
+            destination: Destination(
+                displayName: "Tokyo",
+                city: "Tokyo",
+                region: "Tokyo",
+                country: "Japan",
+                countryCode: "JP",
+                latitude: 35.6762,
+                longitude: 139.6503,
+                timeZone: "Asia/Tokyo",
+                mapKitIdentifier: nil,
+                fixtureID: nil
+            ),
+            startDate: calendar.date(byAdding: .day, value: 53, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: 61, to: start)!,
+            durationDays: 8,
+            durationNights: 7,
+            tripType: .vacation,
+            activities: ["sightseeing", "walking"],
+            bagType: .carryOn,
+            packingStyle: .light,
+            status: .planning
+        )
+        context.insert(tokyo)
+        for item in Self.items().prefix(12) {
+            repository.addItem(item.draft, to: tokyo, syncWeatherChange: false)
+        }
+
+        let maui = TripRecord(
+            destination: Destination(
+                displayName: "Maui",
+                city: "Maui",
+                region: "Hawaii",
+                country: "United States",
+                countryCode: "US",
+                latitude: 20.7984,
+                longitude: -156.3319,
+                timeZone: "Pacific/Honolulu",
+                mapKitIdentifier: nil,
+                fixtureID: nil
+            ),
+            startDate: calendar.date(byAdding: .day, value: -29, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: -23, to: start)!,
+            durationDays: 7,
+            durationNights: 6,
+            tripType: .beach,
+            activities: ["beachDays"],
+            bagType: .checked,
+            packingStyle: .balanced,
+            status: .completed
+        )
+        context.insert(maui)
+
         try? context.save()
     }
 
@@ -146,7 +225,11 @@ final class DebugTripSeed {
         )
     }
 
-    private static let items: [Seeded] = [
+    /// Rebuilt per call. `PackingItemRecord.id` is unique and copied from the
+    /// draft, so reusing one draft across two trips makes SwiftData upsert and
+    /// silently migrate the item from one trip to the other.
+    private static func items() -> [Seeded] {
+        [
         item("essentials.passport", "Passport", .essentials, importance: .critical, packed: true),
         item("essentials.wallet", "Wallet", .essentials, importance: .critical, packed: true),
         item("essentials.phone", "Phone", .essentials, importance: .critical, packed: true),
@@ -175,7 +258,8 @@ final class DebugTripSeed {
         item("electronics.charger", "Phone charger", .electronics, importance: .important, packed: true),
         item("electronics.power_bank", "Portable charger", .electronics),
         item("electronics.adapter", "Travel adapter", .electronics)
-    ]
+        ]
+    }
 
     private static func forecast(start: Date, calendar: Calendar) -> TripWeatherContext {
         let daily: [DailyForecast] = (0..<5).map { index in
