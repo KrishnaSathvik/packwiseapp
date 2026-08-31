@@ -35,6 +35,8 @@ enum DebugPreviewScreen: String {
     case reviewChanges
     case weatherChanged
     case me
+    case onboarding
+    case weatherDetail
     case tripDetailCompleted
 
     /// The screen named by `-PackWiseScreen`, if the app was launched with one.
@@ -103,6 +105,22 @@ struct DebugPreviewScene: View {
                 )
             case .me:
                 MeView()
+            case .onboarding:
+                OnboardingView {}
+            case .weatherDetail:
+                NavigationStack {
+                    WeatherDetailView(
+                        destinationName: "Chicago",
+                        dateLine: "Sep 12 – Sep 16",
+                        weather: seed.trip.weatherSnapshots.first?.weatherContext
+                            ?? DebugTripSeed.sampleForecast,
+                        impacts: [],
+                        usesFahrenheit: true,
+                        rainThreshold: 0.35,
+                        uvThreshold: 6,
+                        windThreshold: 15
+                    )
+                }
             case .tripDetailCompleted:
                 NavigationStack { TripDetailView(trip: seed.completedTrip) }
             case .weatherChanged:
@@ -316,6 +334,12 @@ final class DebugTripSeed {
 
         try? context.save()
     }
+
+    static let sampleForecast: TripWeatherContext = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/Chicago") ?? .gmt
+        return forecast(start: calendar.startOfDay(for: .now), calendar: calendar)
+    }()
 
     /// A change set covering all three kinds, so the diff sheet can be checked.
     static let sampleDiff = RecommendationDiff(
