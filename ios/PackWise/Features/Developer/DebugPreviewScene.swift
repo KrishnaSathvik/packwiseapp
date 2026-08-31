@@ -34,6 +34,8 @@ enum DebugPreviewScreen: String {
     case setupReview
     case reviewChanges
     case weatherChanged
+    case me
+    case tripDetailCompleted
 
     /// The screen named by `-PackWiseScreen`, if the app was launched with one.
     static var requested: DebugPreviewScreen? {
@@ -99,6 +101,10 @@ struct DebugPreviewScene: View {
                     title: "Review changes",
                     onFinished: {}
                 )
+            case .me:
+                MeView()
+            case .tripDetailCompleted:
+                NavigationStack { TripDetailView(trip: seed.completedTrip) }
             case .weatherChanged:
                 NavigationStack {
                     ScrollView {
@@ -134,6 +140,8 @@ final class DebugTripSeed {
     /// Two adults and a toddler, so the family branch of the party step has
     /// something to draw.
     let familyTrip: TripRecord
+    /// Finished and fully packed, for the past-trip treatment.
+    let completedTrip: TripRecord
 
     /// For the empty Trips Home. Trips Home reads its own @Query, so an empty
     /// state needs a store with nothing in it.
@@ -274,6 +282,37 @@ final class DebugTripSeed {
             bagType: .checked,
             on: familyTrip
         )
+
+        completedTrip = TripRecord(
+            destination: Destination(
+                displayName: "Maui",
+                city: "Maui",
+                region: "Hawaii",
+                country: "United States",
+                countryCode: "US",
+                latitude: 20.7984,
+                longitude: -156.3319,
+                timeZone: "Pacific/Honolulu",
+                mapKitIdentifier: nil,
+                fixtureID: nil
+            ),
+            startDate: calendar.date(byAdding: .day, value: -29, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: -23, to: start)!,
+            durationDays: 7,
+            durationNights: 6,
+            tripType: .beach,
+            activities: ["beachDays"],
+            bagType: .checked,
+            packingStyle: .balanced,
+            status: .completed
+        )
+        context.insert(completedTrip)
+        for item in Self.items().prefix(10) {
+            repository.addItem(item.draft, to: completedTrip, syncWeatherChange: false)
+        }
+        for record in completedTrip.items {
+            record.packedQuantity = record.quantity
+        }
 
         try? context.save()
     }

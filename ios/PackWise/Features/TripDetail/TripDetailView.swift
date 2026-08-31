@@ -69,12 +69,12 @@ struct TripDetailView: View {
             }
         }
         .task {
+            guard !isFinished else { return }
             await refreshWeather()
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                Task { await refreshWeather() }
-            }
+            guard !isFinished, phase == .active else { return }
+            Task { await refreshWeather() }
         }
     }
 
@@ -89,6 +89,13 @@ struct TripDetailView: View {
         .frame(height: PackWiseSize.heroHeight)
         .overlay(alignment: .bottomLeading) {
             VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                if isFinished {
+                    PackWiseStatusBadge(
+                        title: "Completed",
+                        symbol: "checkmark.circle.fill",
+                        tint: .green
+                    )
+                }
                 Text(trip.destinationDisplayName)
                     .font(.largeTitle.bold())
                 Text(dateLine)
@@ -119,6 +126,12 @@ struct TripDetailView: View {
         }
     }
 
+    /// A finished trip is a record, not a task: no weather proposal, and the
+    /// progress block reads as a result rather than something to act on.
+    private var isFinished: Bool {
+        trip.status == .completed || trip.status == .archived
+    }
+
     private var dateLine: String {
         let start = trip.startDate.formatted(.dateTime.month(.abbreviated).day())
         let end = trip.endDate.formatted(.dateTime.month(.abbreviated).day())
@@ -127,9 +140,26 @@ struct TripDetailView: View {
 
     // MARK: - Progress
 
+    @ViewBuilder
     private var progress: some View {
-        PackWiseCard {
-            ProgressSummary(packed: trip.packedCount, total: trip.items.count)
+        if isFinished {
+            PackWiseCard {
+                HStack(spacing: PackWiseSpacing.regular) {
+                    PackWiseIconBadge(symbol: "checkmark.seal", tint: .green)
+                    VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                        Text("Trip complete")
+                            .font(.headline)
+                        Text("\(trip.packedCount) of \(trip.items.count) packed")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+        } else {
+            PackWiseCard {
+                ProgressSummary(packed: trip.packedCount, total: trip.items.count)
+            }
         }
     }
 
@@ -215,7 +245,7 @@ struct TripDetailView: View {
 
     @ViewBuilder
     private var weatherChanged: some View {
-        if let proposal = pendingWeatherChange {
+        if !isFinished, let proposal = pendingWeatherChange {
             PackWiseCard {
                 WeatherChangedCard(proposal: proposal) {
                     reviewingWeatherChange = true
@@ -226,7 +256,9 @@ struct TripDetailView: View {
 
     @ViewBuilder
     private var impact: some View {
-        if !packingImpacts.isEmpty {
+        // Packing Impact reads in the present tense — "rain expected" — which
+        // is wrong on a trip that has already happened.
+        if !isFinished, !packingImpacts.isEmpty {
             VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
                 PackWiseSectionHeader(title: "Packing Impact")
                 PackWiseCard {
