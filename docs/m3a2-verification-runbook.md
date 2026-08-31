@@ -241,8 +241,51 @@ Two deployment issues, both fixed:
    project has none, so it gets an empty `public/` and the build stays purely a
    verification gate.
 
-Production remains unverified: `vercel --prod` needs `PACKWISE_APP_ID` and the
-Apple App Attest Root CA.
+**Production result, 2026-08-30 — PASS.**
+
+```text
+https://packwiseapp-api.vercel.app
+buildHash: 1234eef772da96e4
+
+/health                          200, missing []
+integrity                        appattest, environment production
+store                            redis / upstash-rest, reachable
+PACKWISE_APP_ID present          yes
+App Attest root present          yes
+
+POST /v1/trip/interpret          401 assertion_missing
+POST /v1/packing/gaps            401 assertion_missing
+POST /v1/packing/optimize        401 assertion_missing
+POST /v1/integrity/challenge     200, challenge issued
+```
+
+Those 401s are the passing result. Production will not spend the OpenAI key for
+anyone who merely knows the URL, and it has been `appattest` since its first
+deploy — never relaxed to development trust.
+
+`PACKWISE_APP_ID` is `766WG2GGCA.com.packwise.app`; the Team ID was read from
+the provisioning profiles on the build machine, which all agree. The Apple App
+Attestation Root CA came from Apple's certificate authority host, self-signed,
+valid to 2045, SHA-256
+`1C:B9:82:3B:A2:8B:A6:AD:2D:33:A0:06:94:1D:E2:AE:4F:51:3E:F1:D4:E8:31:B9:F7:E0:FA:7B:62:42:C9:32`.
+
+### Before the device pass
+
+`com.packwise.app` has no provisioning profile on this machine, so the App ID is
+probably not registered yet. Registering it with the App Attest capability is a
+prerequisite for step 4 — the device cannot attest against an App ID Apple does
+not know.
+
+A development-signed build attests in Apple's **development** environment, and a
+production verifier rejects those with `environment_mismatch`. So step 4 needs a
+separate deployment configured with:
+
+```text
+PACKWISE_INTEGRITY_MODE=appattest
+PACKWISE_APP_ATTEST_ENVIRONMENT=development
+```
+
+Do not change Production's environment to accommodate a development build.
 
 ## 4. Physical iPhone App Attest
 
@@ -321,7 +364,7 @@ M3A closes only when all six of its own items are verified:
 [x] Live OpenAI Structured Outputs verified   2026-08-30
 [x] Live eval smoke reviewed                 2026-08-30, 18/18 green
 [x] Real Redis verified                      2026-08-30
-[ ] Production Vercel deployment verified
+[x] Production Vercel deployment verified    2026-08-30
 [ ] Physical-device App Attest verified
 [ ] TestFlight production App Attest verified
 ```
