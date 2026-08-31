@@ -23,7 +23,7 @@ The overview mock is a single horizontal flow. Left to right:
 7. **Trip type** — “What kind of trip is it?” icon list. Vacation selected.
 8. **Activities** — “What will you be doing?” selectable chips plus **Your activities**.
 9. **Bag and style** — “How are you traveling?” Carry-on selected. “How do you prefer to pack?” Light / Balanced / Prepared.
-10. **Trip detail** — Chicago header, progress, weather card with “3 items affected”, category rows (Essentials 4/6, Clothing 9/13, Footwear 2/3), floating **+**.
+10. **Trip detail** — Chicago hero, progress, weather card with the daily strip and “3 items affected”, category rows (Essentials 4/6, Clothing 9/13, Footwear 2/3) and **See All**. Trip Detail is an overview; the checklist and its floating **+** live on the pushed Packing List.
 
 ## Visual constants from the mock
 
@@ -34,6 +34,16 @@ The overview mock is a single horizontal flow. Left to right:
 - 2-tab bar only
 - Photography on welcome and trip cards, not on the packing list itself
 - Progressive setup with Back / Next, not one long form
+
+## Boards not yet in the repo
+
+The ten-panel overview is the only mock committed. Boards for Review,
+Building your list, the Packing List, Item Detail, Add Item, Edit Trip,
+Review Changes, Weather Changed, Completed Trip, Me, packing habits, and the
+couple/family setup screens exist outside the repo and were not available
+during the UI conformance pass. Those screens were derived from
+[`../docs/design-system.md`](../docs/design-system.md) instead. Commit the
+boards here and the derived screens can be matched to them.
 
 ## Adding new mocks
 

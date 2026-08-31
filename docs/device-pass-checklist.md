@@ -126,7 +126,13 @@ When something fails, the server's `message` names the exact reason —
 
 Use it the way a traveller would, not the way its author would.
 
+Trip Detail is an overview: the checklist is reached through a category row
+or **See All**.
+
 ```text
+[ ] Trip Detail hero, progress, weather strip, category summary
+[ ] a category row opens the list at that category
+[ ] See All opens the whole list
 [ ] check / uncheck
 [ ] quantity editing
 [ ] search

@@ -38,7 +38,27 @@ Activities                     3 / 5
 Travel Comfort                 3 / 4
 ```
 
-A floating **+** control adds items. Weather is a compact trip-scoped headline, not a general weather app. Packing Impact sits between weather and the checklist when the engine already used weather signals. Hide it entirely when weather caused no packing change. If a later snapshot changes packing signals, a **Weather changed** card appears above the list — review applies `recommendationDiff()`, never a silent rewrite. The daily forecast strip lives on **View Weather**, not Trip Detail.
+Trip Detail is an **overview**, not the checklist. It answers where, when,
+how far along, and what the weather will do, then hands off to a pushed
+**Packing List** screen via a category summary and **See All**. Understanding
+the trip and doing the packing are different jobs, and one long scroll served
+neither.
+
+Weather is a compact trip-scoped headline, not a general weather app. Trip
+Detail carries the temperature range, the notable condition, and a **daily
+forecast strip** for the trip's days; **View Weather** still owns the deep
+surface — expanded daily detail, precipitation, UV, wind, snow, coverage
+state, attribution. Packing Impact sits between the compact weather overview
+and the packing-category summary when the engine already used weather
+signals. Hide it entirely when weather caused no packing change, and on a
+completed trip — it reads in the present tense.
+
+If a later snapshot changes packing signals, a **Weather changed** card
+appears above the weather card — review applies `recommendationDiff()`, never
+a silent rewrite.
+
+The floating **+** control adds items, and lives on the Packing List with the
+items it adds to.
 
 ## Packing categories
 

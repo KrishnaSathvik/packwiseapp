@@ -60,6 +60,43 @@ Onboarding welcome
 
 The packing list prioritizes utility.
 
+### Where destination imagery comes from
+
+MapKit, never a stock-photo service. A vendor for three prettier screens
+would add a network dependency and a licensing pipeline to a local-first app.
+
+```text
+destination coordinate
+  ├── MKLookAroundSceneRequest → MKLookAroundSnapshotter
+  ├── MKMapSnapshotter
+  └── gradient + SF Symbol
+```
+
+Policy differs per surface:
+
+```text
+trip thumbnail        Look Around → map → graphical
+destination preview   map → graphical
+trip hero             Look Around → map → graphical
+```
+
+Destination search prefers the map deliberately. That screen answers "did I
+select the right Chicago?", and a map answers it better than a street-level
+view of an arbitrary intersection.
+
+Look Around returns real street-level imagery, not guaranteed postcard
+photography, and coverage is absent outside many metros. All three tiers must
+look **intentional** — the graphical tier is a designed state, never a broken
+image placeholder.
+
+Both snapshotters need the network, so cache on trip creation while the
+coordinate is already known. The cache is disposable derived UI data in the
+Caches directory, never core trip data. Offline with a cold cache renders the
+graphical tier immediately rather than holding a spinner.
+
+Look Around snapshots carry Apple's Maps attribution in the bottom-left
+corner. It is a licensing requirement and must not be covered.
+
 ## Motion
 
 Subtle.

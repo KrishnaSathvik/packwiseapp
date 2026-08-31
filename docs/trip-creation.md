@@ -144,7 +144,10 @@ PackWise interprets free-text activities internally. Do not require every activi
 
 Selected activities appear in a **Your activities** list.
 
-## Step 6 — Bag
+## Step 6 — Bag and packing style
+
+One screen, two questions, as the reference board draws it. The draft still
+records bag and style separately; only the presentation is merged.
 
 Headline: **How are you traveling?**
 
@@ -163,9 +166,9 @@ Visually explain the implication. Example for **Carry-on**:
 
 > PackWise will favor versatile items and fewer backups.
 
-## Step 7 — Packing style
+### How do you prefer to pack?
 
-This is a signature PackWise setting.
+The second half of the same screen. This is a signature PackWise setting.
 
 ### Light
 
