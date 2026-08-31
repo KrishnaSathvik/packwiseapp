@@ -65,7 +65,10 @@ struct SelectableChip: View {
                 .padding(.horizontal, 14)
                 .frame(minHeight: 44)
                 .foregroundStyle(selected ? .white : .primary)
-                .background(selected ? PackWiseColor.accent : Color(.secondarySystemBackground))
+                // secondarySystemBackground is the same value as the grouped
+                // background these chips sit on, so unselected ones vanished
+                // into the page. A system fill reads on any background.
+                .background(selected ? PackWiseColor.accent : Color(.tertiarySystemFill))
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)

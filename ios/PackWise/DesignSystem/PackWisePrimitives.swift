@@ -203,3 +203,44 @@ struct ProgressSummary: View {
         )
     }
 }
+
+/// One option in a setup step: glyph, name, what it means, and its state.
+///
+/// Replaces the `.insetGrouped` `List` rows the setup flow used, which drew
+/// each step as a single tall grey block.
+struct PackWiseSelectionRow: View {
+    var symbol: String
+    var tint: Color
+    var title: String
+    var subtitle: String?
+    var isSelected: Bool
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: PackWiseSpacing.regular) {
+                PackWiseIconBadge(symbol: symbol, tint: tint)
+                VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                    Text(title)
+                        .font(.body)
+                        .foregroundStyle(.primary)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: PackWiseSpacing.snug)
+                // A checkmark, not just a tint, so selection never depends on
+                // colour alone.
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isSelected ? PackWiseColor.accent : Color(.tertiaryLabel))
+            }
+            .padding(.vertical, PackWiseSpacing.regular)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}

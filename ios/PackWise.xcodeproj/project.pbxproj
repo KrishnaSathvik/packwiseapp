@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FF78FACBB66A057A3C1B02A5 /* PackWiseDateRangePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B56D39F7CC8BB356776AD7B /* PackWiseDateRangePicker.swift */; };
 		1770FAD3A62DF2909109A9EE /* DebugPreviewScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4E26D58A31AC0A6A5F5DEF /* DebugPreviewScene.swift */; };
 		4AFF8A728E6029AB9AD8B970 /* PackingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14CC3278952C1F78BDA23D9 /* PackingListView.swift */; };
 		92873E61D6E4AACA7D2D2C29 /* WeatherStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3840A0F2F7597EF494402A /* WeatherStripView.swift */; };
@@ -112,6 +113,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6B56D39F7CC8BB356776AD7B /* PackWiseDateRangePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackWiseDateRangePicker.swift; sourceTree = "<group>"; };
 		0D4E26D58A31AC0A6A5F5DEF /* DebugPreviewScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugPreviewScene.swift; sourceTree = "<group>"; };
 		B14CC3278952C1F78BDA23D9 /* PackingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingListView.swift; sourceTree = "<group>"; };
 		EA3840A0F2F7597EF494402A /* WeatherStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherStripView.swift; sourceTree = "<group>"; };
@@ -285,6 +287,7 @@
 		371F3CC8772CE63FA5DA43BA /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				6B56D39F7CC8BB356776AD7B /* PackWiseDateRangePicker.swift */,
 				0A17906111F28FBAA003144D /* DestinationVisualView.swift */,
 				0E1591AA088F1A04300FDA10 /* DestinationVisualService.swift */,
 				57026C1410846D911EABCE8E /* PackWisePrimitives.swift */,
@@ -757,6 +760,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FF78FACBB66A057A3C1B02A5 /* PackWiseDateRangePicker.swift in Sources */,
 				1770FAD3A62DF2909109A9EE /* DebugPreviewScene.swift in Sources */,
 				4AFF8A728E6029AB9AD8B970 /* PackingListView.swift in Sources */,
 				92873E61D6E4AACA7D2D2C29 /* WeatherStripView.swift in Sources */,

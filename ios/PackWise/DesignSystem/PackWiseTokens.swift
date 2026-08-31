@@ -64,3 +64,98 @@ extension PackingCategory {
         }
     }
 }
+
+/// Presentation for the trip-setup enums.
+///
+/// The board leans on a small colourful glyph per option so a list of eleven
+/// trip types stays scannable. `TripType` already carries an SF Symbol in
+/// `Domain/`; the tints and the remaining glyphs belong here, where they
+/// cannot leak into packing logic.
+extension TripType {
+    var tint: Color {
+        switch self {
+        case .vacation: .orange
+        case .cityBreak: .blue
+        case .beach: .cyan
+        case .business: .indigo
+        case .outdoor: .green
+        case .roadTrip: .red
+        case .weddingEvent: .pink
+        case .skiSnow: .teal
+        case .festival: .purple
+        case .visitingFamily: .brown
+        case .other: .gray
+        }
+    }
+}
+
+extension BagType {
+    var symbol: String {
+        switch self {
+        case .personalItem: "bag"
+        case .carryOn: "suitcase"
+        case .checked: "suitcase.rolling"
+        case .backpack: "backpack"
+        case .roadTripLuggage: "car"
+        case .notSure: "questionmark.circle"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .personalItem: .teal
+        case .carryOn: .blue
+        case .checked: .indigo
+        case .backpack: .green
+        case .roadTripLuggage: .orange
+        case .notSure: .gray
+        }
+    }
+}
+
+extension PackingStyle {
+    var symbol: String {
+        switch self {
+        case .light: "leaf"
+        case .balanced: "circle.lefthalf.filled"
+        case .prepared: "shield"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .light: .green
+        case .balanced: .blue
+        case .prepared: .purple
+        }
+    }
+}
+
+extension TravelMode {
+    var symbol: String {
+        switch self {
+        case .solo: "person"
+        case .couple: "person.2"
+        case .family: "figure.2.and.child.holdinghands"
+        case .group: "person.3"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .solo: "Solo trip"
+        case .couple: "Traveling as a couple"
+        case .family: "With kids"
+        case .group: "Friends or colleagues"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .solo: .blue
+        case .couple: .pink
+        case .family: .orange
+        case .group: .purple
+        }
+    }
+}

@@ -23,6 +23,14 @@ enum DebugPreviewScreen: String {
     case itemDetail
     case tripsHome
     case tripsHomeEmpty
+    case setupDestination
+    case setupDates
+    case setupParty
+    case setupType
+    case setupActivities
+    case setupBagStyle
+    case setupExtras
+    case setupReview
 
     /// The screen named by `-PackWiseScreen`, if the app was launched with one.
     static var requested: DebugPreviewScreen? {
@@ -44,6 +52,13 @@ struct DebugPreviewScene: View {
             .modelContainer(screen == .tripsHomeEmpty ? DebugTripSeed.emptyContainer : seed.container)
     }
 
+    /// The later steps need a populated draft, so they open on the seeded trip.
+    private func setup(_ step: SetupStep) -> some View {
+        NavigationStack {
+            TripSetupView(existingTrip: seed.trip, initialStep: step)
+        }
+    }
+
     @ViewBuilder
     private var content: some View {
         Group {
@@ -54,6 +69,22 @@ struct DebugPreviewScene: View {
                 NavigationStack { PackingListView(trip: seed.trip) }
             case .tripsHome, .tripsHomeEmpty:
                 TripsHomeView()
+            case .setupDestination:
+                NavigationStack { TripSetupView() }
+            case .setupDates:
+                setup(.dates)
+            case .setupParty:
+                setup(.party)
+            case .setupType:
+                setup(.type)
+            case .setupActivities:
+                setup(.activities)
+            case .setupBagStyle:
+                setup(.bagAndStyle)
+            case .setupExtras:
+                setup(.extras)
+            case .setupReview:
+                setup(.review)
             case .itemDetail:
                 if let item = seed.trip.items.first(where: { $0.displayName == "Rain jacket" }) {
                     ItemDetailSheet(
