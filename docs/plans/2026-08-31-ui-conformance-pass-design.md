@@ -1,7 +1,7 @@
 # UI Conformance Pass — Design
 
 **Date:** 2026-08-31
-**Status:** approved, not yet planned
+**Status:** slices 1–10 implemented; slice 0 and slice 11 need a physical device
 **Scope:** every SwiftUI surface in `ios/PackWise/Features/` and `ios/PackWise/DesignSystem/`
 **Explicitly not in scope:** `Domain/`, `Data/`, `api/`, `shared/`
 
@@ -168,6 +168,18 @@ No slice waits on another slice's review.
 | 9 | Weather detail and state screens | Full detail, partial forecast, seasonal-only, stale, unavailable. Reuses slice 1's weather primitives. |
 | 10 | Onboarding | Three screens against art-directed bundled assets. |
 | 11 | Full device UI/UX QA | Sections 2, 4, 12 of the device checklist, against the finished UI. |
+
+Slices 1–10 are implemented and committed. Each was checked in light mode,
+dark mode, and at an accessibility text size by photographing the running
+app — `scripts/capture_ios_screens.sh`, driven by the Debug-only
+`-PackWiseScreen` seed. `ImageRenderer` cannot do this: it returns SwiftUI's
+unavailable glyph for `List`, `ScrollView`, and `NavigationStack`.
+
+Slices 0 and 11 are the two device items and cannot be done from here. Slice
+0 needs a signed build on real hardware to exercise App Attest against
+Apple's development environment; slice 11 needs a real finger on a real
+screen. Both remain open in
+[device-pass-checklist.md](../device-pass-checklist.md).
 
 **Why Trip Detail first.** It exercises destination imagery, progress, weather, Packing Impact,
 category hierarchy, status, and long-scroll behaviour simultaneously. If the primitives are wrong,
