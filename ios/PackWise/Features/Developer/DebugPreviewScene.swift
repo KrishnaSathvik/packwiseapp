@@ -19,6 +19,8 @@ import SwiftUI
 enum DebugPreviewScreen: String {
     case tripDetail
     case packingList
+    /// Sheets are rendered as plain screens — a capture cannot tap one open.
+    case itemDetail
 
     /// The screen named by `-PackWiseScreen`, if the app was launched with one.
     static var requested: DebugPreviewScreen? {
@@ -42,6 +44,15 @@ struct DebugPreviewScene: View {
                 TripDetailView(trip: seed.trip)
             case .packingList:
                 PackingListView(trip: seed.trip)
+            case .itemDetail:
+                if let item = seed.trip.items.first(where: { $0.displayName == "Rain jacket" }) {
+                    ItemDetailSheet(
+                        item: item,
+                        travelers: seed.trip.party.travelers,
+                        showsAssignment: false,
+                        onNotNeeded: {}
+                    )
+                }
             }
         }
         .modelContainer(seed.container)

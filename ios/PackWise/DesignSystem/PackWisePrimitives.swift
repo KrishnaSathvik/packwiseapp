@@ -108,6 +108,66 @@ struct PackWiseStatusBadge: View {
     }
 }
 
+/// Chips that wrap onto as many lines as they need.
+///
+/// The existing `FlexibleChipWrap` is a `VStack` despite the name, so every
+/// chip gets its own row — which is why the activities step reads as a column
+/// of text rather than the compact field the board draws.
+struct PackWiseFlowLayout: Layout {
+    var spacing: CGFloat = PackWiseSpacing.snug
+    var lineSpacing: CGFloat = PackWiseSpacing.snug
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.replacingUnspecifiedDimensions().width
+        let rows = layout(subviews: subviews, width: width)
+        let height = rows.reduce(0) { $0 + $1.height } +
+            lineSpacing * CGFloat(max(0, rows.count - 1))
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in layout(subviews: subviews, width: bounds.width) {
+            var x = bounds.minX
+            for index in row.indices {
+                let size = subviews[index].sizeThatFits(.unspecified)
+                subviews[index].place(
+                    at: CGPoint(x: x, y: y),
+                    anchor: .topLeading,
+                    proposal: ProposedViewSize(size)
+                )
+                x += size.width + spacing
+            }
+            y += row.height + lineSpacing
+        }
+    }
+
+    private struct Row {
+        var indices: [Int] = []
+        var height: CGFloat = 0
+    }
+
+    private func layout(subviews: Subviews, width: CGFloat) -> [Row] {
+        var rows: [Row] = []
+        var row = Row()
+        var x: CGFloat = 0
+
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            if !row.indices.isEmpty, x + size.width > width {
+                rows.append(row)
+                row = Row()
+                x = 0
+            }
+            row.indices.append(index)
+            row.height = max(row.height, size.height)
+            x += size.width + spacing
+        }
+        if !row.indices.isEmpty { rows.append(row) }
+        return rows
+    }
+}
+
 /// Trip progress block: count, percentage, bar, and what is left.
 ///
 /// Shared by Trips Home and Trip Detail so the two never drift.
