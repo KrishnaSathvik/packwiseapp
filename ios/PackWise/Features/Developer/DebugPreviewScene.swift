@@ -26,6 +26,7 @@ enum DebugPreviewScreen: String {
     case setupDestination
     case setupDates
     case setupParty
+    case setupPartyFamily
     case setupType
     case setupActivities
     case setupBagStyle
@@ -75,6 +76,10 @@ struct DebugPreviewScene: View {
                 setup(.dates)
             case .setupParty:
                 setup(.party)
+            case .setupPartyFamily:
+                NavigationStack {
+                    TripSetupView(existingTrip: seed.familyTrip, initialStep: .party)
+                }
             case .setupType:
                 setup(.type)
             case .setupActivities:
@@ -105,6 +110,9 @@ struct DebugPreviewScene: View {
 final class DebugTripSeed {
     let container: ModelContainer
     let trip: TripRecord
+    /// Two adults and a toddler, so the family branch of the party step has
+    /// something to draw.
+    let familyTrip: TripRecord
 
     /// For the empty Trips Home. Trips Home reads its own @Query, so an empty
     /// state needs a store with nothing in it.
@@ -220,6 +228,31 @@ final class DebugTripSeed {
             status: .completed
         )
         context.insert(maui)
+
+        familyTrip = TripRecord(
+            destination: destination,
+            startDate: calendar.date(byAdding: .day, value: 90, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: 96, to: start)!,
+            durationDays: 7,
+            durationNights: 6,
+            tripType: .vacation,
+            activities: ["sightseeing"],
+            bagType: .checked,
+            packingStyle: .prepared,
+            status: .planning
+        )
+        context.insert(familyTrip)
+        repository.attach(
+            party: TripPartyBuilder.make(
+                mode: .family,
+                adultCount: 2,
+                childProfiles: [
+                    ChildDraft(name: "Ada", ageGroup: .toddler, needs: Set(ChildNeed.suggested(for: .toddler).prefix(2)))
+                ]
+            ),
+            bagType: .checked,
+            on: familyTrip
+        )
 
         try? context.save()
     }
