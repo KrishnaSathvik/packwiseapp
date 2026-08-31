@@ -1,0 +1,243 @@
+{
+  "comment": "Golden-harness fixtures for the packing engine (Engine V2 plan, Step 1). Dates are frozen absolute values so output never depends on the run date; weather is always the named fixture from weather/named-fixtures.json, injected directly — never fetched. A null weatherFixture deliberately exercises the seasonal-only path (month + latitude). Fixture 02b is constructible at the TripContext level but no shipped control emits laundry 'possible' vs 'planned' yet; the three-way control lands with Step 2's LaundryPlan migration.",
+  "engineVersion": "v1",
+  "fixtures": [
+    {
+      "id": "01-chicago-5d-city-balanced",
+      "proves": "Baseline sanity",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 5,
+      "tripType": "cityBreak",
+      "activities": ["sightseeing", "walking"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "02-tokyo-15d-light-laundry-possible",
+      "proves": "The current duration-formula bug",
+      "destination": "Tokyo",
+      "weatherFixture": "TokyoMildSpring",
+      "startDate": "2026-04-06",
+      "days": 15,
+      "tripType": "vacation",
+      "activities": ["walking", "running"],
+      "bag": "carryOn",
+      "style": "light",
+      "laundry": "possible",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "02b-tokyo-15d-light-laundry-planned",
+      "proves": "Planned vs possible laundry (identical to 02 under V1; must diverge in Step 2)",
+      "destination": "Tokyo",
+      "weatherFixture": "TokyoMildSpring",
+      "startDate": "2026-04-06",
+      "days": 15,
+      "tripType": "vacation",
+      "activities": ["walking", "running"],
+      "bag": "carryOn",
+      "style": "light",
+      "laundry": "planned",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "03-tokyo-15d-light-laundry-none",
+      "proves": "Laundry matters",
+      "destination": "Tokyo",
+      "weatherFixture": "TokyoMildSpring",
+      "startDate": "2026-04-06",
+      "days": 15,
+      "tripType": "vacation",
+      "activities": ["walking", "running"],
+      "bag": "carryOn",
+      "style": "light",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "04-tokyo-15d-prepared-checked",
+      "proves": "Style and bag matter",
+      "destination": "Tokyo",
+      "weatherFixture": "TokyoMildSpring",
+      "startDate": "2026-04-06",
+      "days": 15,
+      "tripType": "vacation",
+      "activities": ["walking", "running"],
+      "bag": "checked",
+      "style": "prepared",
+      "laundry": "possible",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "05-tokyo-30d-light-laundry-planned",
+      "proves": "Plateau — within ±1 of 02b above the wash cycle",
+      "destination": "Tokyo",
+      "weatherFixture": "TokyoMildSpring",
+      "startDate": "2026-04-06",
+      "days": 30,
+      "tripType": "vacation",
+      "activities": ["walking", "running"],
+      "bag": "carryOn",
+      "style": "light",
+      "laundry": "planned",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "06-miami-5d-beach-personal-item",
+      "proves": "GATE A — must be unmistakably a beach trip",
+      "destination": "Miami",
+      "weatherFixture": "MiamiHotBeach",
+      "startDate": "2026-07-06",
+      "days": 5,
+      "tripType": "beach",
+      "activities": ["swimming", "beachDays"],
+      "bag": "personalItem",
+      "style": "light",
+      "laundry": "possible",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "07-chicago-5d-business-checked",
+      "proves": "GATE B — must be unmistakably a business trip",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 5,
+      "tripType": "business",
+      "activities": ["work", "niceDinner"],
+      "bag": "checked",
+      "style": "prepared",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "08-running-sightseeing-footwear",
+      "proves": "Footwear substitution — one pair of shoes, not two",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 5,
+      "tripType": "cityBreak",
+      "activities": ["running", "sightseeing"],
+      "bag": "carryOn",
+      "style": "light",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "09-seattle-rain-layering",
+      "proves": "Weather layering without duplicate outerwear",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripType": "cityBreak",
+      "activities": ["sightseeing", "walking"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "10-one-day-trip",
+      "proves": "No duration overpacking",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 1,
+      "tripType": "cityBreak",
+      "activities": ["sightseeing"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "11-couple-5d-rain",
+      "proves": "Personal rain layers, shared umbrella ×1",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripType": "cityBreak",
+      "activities": ["sightseeing", "walking"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "party": {
+        "travelMode": "couple",
+        "travelers": [
+          { "role": "self", "ageGroup": "adult" },
+          { "role": "partner", "ageGroup": "adult" }
+        ]
+      }
+    },
+    {
+      "id": "12-family-toddler-7d-seasonal",
+      "proves": "Age-aware without an inferred formula; far-future date exercises the seasonal-only weather path",
+      "destination": "Miami",
+      "weatherFixture": null,
+      "startDate": "2027-07-12",
+      "days": 7,
+      "tripType": "vacation",
+      "activities": ["sightseeing", "walking"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "party": {
+        "travelMode": "family",
+        "travelers": [
+          { "role": "self", "ageGroup": "adult" },
+          { "role": "partner", "ageGroup": "adult" },
+          { "role": "child", "ageGroup": "toddler", "needs": ["diapers", "stroller", "comfortItem"] }
+        ]
+      }
+    },
+    {
+      "id": "13-override-survives-regeneration",
+      "proves": "Not Needed overrides survive regeneration",
+      "destination": "Tokyo",
+      "weatherFixture": "TokyoMildSpring",
+      "startDate": "2026-04-06",
+      "days": 15,
+      "tripType": "vacation",
+      "activities": ["walking", "running"],
+      "bag": "carryOn",
+      "style": "light",
+      "laundry": "possible",
+      "homeCountryCode": "US",
+      "overrides": [
+        { "canonicalItemID": "clothing.rain_jacket", "action": "removed" }
+      ]
+    },
+    {
+      "id": "14-manual-quantity-survives-refresh",
+      "proves": "Manual quantity edits survive regeneration and weather refresh",
+      "destination": "Tokyo",
+      "weatherFixture": "TokyoMildSpring",
+      "startDate": "2026-04-06",
+      "days": 15,
+      "tripType": "vacation",
+      "activities": ["walking", "running"],
+      "bag": "carryOn",
+      "style": "light",
+      "laundry": "possible",
+      "homeCountryCode": "US",
+      "existing": [
+        {
+          "canonicalItemID": "clothing.tshirt",
+          "displayName": "T-shirts",
+          "category": "clothing",
+          "quantity": 3,
+          "isUserModified": true
+        }
+      ]
+    }
+  ]
+}
