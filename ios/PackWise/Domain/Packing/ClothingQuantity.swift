@@ -49,6 +49,10 @@ struct ClothingNeedPolicy: Sendable {
     var constrainedBagMaximum: Int
     /// Binding cap for a personal item only.
     var personalItemMaximum: Int
+    /// Formal tops satisfy some of this need's uses: a five-day business
+    /// trip with two dress shirts needs daily tops for the remaining days,
+    /// not seven t-shirts beside them. True only for the daily-top need.
+    var offsetByFormalTops: Bool = false
 
     var laundrySensitivity: NeedSensitivity
     var styleSensitivity: NeedSensitivity
@@ -66,6 +70,7 @@ struct ClothingNeedPolicy: Sendable {
             styleMaximum: [.light: 8, .balanced: 12, .prepared: 15],
             constrainedBagMaximum: 8,
             personalItemMaximum: 5,
+            offsetByFormalTops: true,
             laundrySensitivity: .high,
             styleSensitivity: .high,
             bagSensitivity: .low
@@ -173,12 +178,13 @@ struct ClothingQuantityEngine: Sendable {
         context: TripContext,
         itemName: String,
         traveler: Traveler? = nil,
-        multipliers: [String: Double] = [:]
+        multipliers: [String: Double] = [:],
+        formalTopUnits: Int = 0
     ) -> (value: Int, reason: String) {
         guard let policy = ClothingNeedPolicy.byKind[kind] else {
             return (1, "")
         }
-        var value = Self.compute(policy, context: context)
+        var value = Self.compute(policy, context: context, formalTopUnits: formalTopUnits)
         if let traveler, let multiplier = multipliers[kind], multiplier > 1 {
             value = max(1, Int((Double(value) * multiplier).rounded(.up)))
             let reason = ReasonRenderer.render(
@@ -208,13 +214,14 @@ struct ClothingQuantityEngine: Sendable {
         return (value, kind == "daily_top" ? "Why \(value) \(itemName.lowercased())? \(reason)" : reason)
     }
 
-    static func compute(_ policy: ClothingNeedPolicy, context: TripContext) -> Int {
+    static func compute(_ policy: ClothingNeedPolicy, context: TripContext, formalTopUnits: Int = 0) -> Int {
         compute(
             policy,
             days: context.durationDays,
             style: context.packingStyle,
             bag: context.bagType,
-            laundry: context.laundryPlan
+            laundry: context.laundryPlan,
+            formalTopUnits: formalTopUnits
         )
     }
 
@@ -223,7 +230,8 @@ struct ClothingQuantityEngine: Sendable {
         days: Int,
         style: PackingStyle,
         bag: BagType,
-        laundry: LaundryAccess
+        laundry: LaundryAccess,
+        formalTopUnits: Int = 0
     ) -> Int {
         switch policy.usage {
         case .sleep:
@@ -232,11 +240,17 @@ struct ClothingQuantityEngine: Sendable {
             return days >= 6 && style != .light ? 2 : 1
         case .daily:
             let wears = policy.wearsPerItem[style] ?? 1
+            // Formal tops on the same list cover some of the daily-top
+            // days at the same reuse factor; the minimum floor still holds.
+            let covered = policy.offsetByFormalTops
+                ? Int(Double(formalTopUnits) * wears)
+                : 0
+            let effectiveDays = max(0, days - covered)
             let items = { (uses: Int) in Int((Double(uses) / wears).rounded(.up)) }
             return resolve(
                 policy,
-                none: items(days),
-                planned: items(min(days, policy.washIntervalDays)),
+                none: items(effectiveDays),
+                planned: items(min(effectiveDays, policy.washIntervalDays)),
                 style: style,
                 bag: bag,
                 laundry: laundry

@@ -768,6 +768,20 @@ struct PackingEngine: Sendable {
         let engine = QuantityEngine(policies: rules.quantities.policies, reasons: rules.reasons)
         let clothingEngine = ClothingQuantityEngine(reasons: rules.reasons)
         let party = context.effectiveParty
+
+        // Formal tops satisfy daily-top uses, so their counts resolve first,
+        // per traveler: two dress shirts on a five-day business trip leave
+        // three days for t-shirts, not seven t-shirts beside them.
+        var formalTopUnits: [String: Int] = [:]
+        for item in items {
+            guard let canonical = item.canonicalItemID,
+                  let catalogItem = catalog.item(id: canonical),
+                  catalogItem.quantityKind == "formal_top" else { continue }
+            let value = item.isUserModified
+                ? item.quantity
+                : engine.quantity(kind: "formal_top", context: context, itemName: catalogItem.displayName).value
+            formalTopUnits[substitutionGroup(item), default: 0] += value
+        }
         return items.map { item in
             var copy = item
             guard let canonical = item.canonicalItemID, let catalogItem = catalog.item(id: canonical) else {
@@ -795,7 +809,8 @@ struct PackingEngine: Sendable {
                     context: context,
                     itemName: catalogItem.displayName,
                     traveler: traveler,
-                    multipliers: multipliers
+                    multipliers: multipliers,
+                    formalTopUnits: formalTopUnits[substitutionGroup(item)] ?? 0
                 )
                 : engine.quantity(
                     kind: catalogItem.quantityKind,

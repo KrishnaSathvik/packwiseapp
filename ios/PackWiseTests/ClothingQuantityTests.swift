@@ -154,6 +154,61 @@ struct ClothingQuantityTests {
         }
     }
 
+    // MARK: - Formal tops satisfy daily-top uses
+
+    /// Two dress shirts on a five-day prepared business trip leave three
+    /// days for t-shirts — five with the style buffer, not seven beside the
+    /// dress shirts. The offset applies only to the daily-top need, and the
+    /// always-true floor of two survives any number of formal tops.
+    @Test func formalTopsReduceDailyTopCount() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let destination = try SharedLibrary.testDestinations().first { $0.city == "Chicago" }!
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let end = Calendar.current.date(byAdding: .day, value: 4, to: start)!
+        let math = TripDateMath.daysAndNights(from: start, to: end)
+        var prefs = TravelerPreferences.deviceDefaults()
+        prefs.homeCountryCode = "US"
+        prefs.homeCountrySource = .userConfirmed
+        let context = TripContext(
+            destination: destination,
+            startDate: start,
+            endDate: end,
+            durationDays: math.days,
+            durationNights: math.nights,
+            tripType: .business,
+            activities: ["work", "niceDinner"],
+            datedActivities: [],
+            bagType: .checked,
+            packingStyle: .prepared,
+            transportation: .unknown,
+            laundryAccess: .none,
+            travelerCount: 1,
+            userNotes: "",
+            contextChips: [],
+            weather: nil,
+            preferences: prefs
+        )
+        let items = engine.generate(context: context)
+        let dress = items.first { $0.canonicalItemID == "clothing.dress_shirt" }
+        let tshirt = items.first { $0.canonicalItemID == "clothing.tshirt" }
+        #expect(dress?.quantity == 2)
+        #expect(tshirt?.quantity == 5, "3 remaining days + prepared buffer of 2")
+    }
+
+    @Test func formalOffsetRespectsFloorAndScope() throws {
+        let tops = try #require(ClothingNeedPolicy.byKind["daily_top"])
+        let socks = try #require(ClothingNeedPolicy.byKind["daily_socks"])
+        #expect(
+            ClothingQuantityEngine.compute(tops, days: 5, style: .prepared, bag: .checked, laundry: .none, formalTopUnits: 10) == 2,
+            "any number of formal tops still leaves the floor of two daily tops"
+        )
+        #expect(
+            ClothingQuantityEngine.compute(socks, days: 5, style: .prepared, bag: .checked, laundry: .none, formalTopUnits: 10)
+                == ClothingQuantityEngine.compute(socks, days: 5, style: .prepared, bag: .checked, laundry: .none),
+            "the offset applies only to the daily-top need"
+        )
+    }
+
     // MARK: - Property 5: preservation
 
     /// A manual quantity edit survives regeneration with fresh weather. The
