@@ -584,11 +584,13 @@ struct PackingEngineTests {
         #expect(balancedLaundry.socks < balancedNoLaundry.socks)
         // Style modulates on top of laundry.
         #expect(lightLaundry.tops < balancedLaundry.tops)
-        // The specific rendered numbers from the policies file.
-        #expect(balancedLaundry.tops == 12)
-        #expect(balancedNoLaundry.tops == 15)
-        #expect(balancedLaundry.underwear == 15)
-        #expect(balancedNoLaundry.underwear == 16)
+        // The specific rendered numbers from the clothing need policies:
+        // planned laundry bounds at the wash interval plus the style buffer;
+        // no laundry grows to the bag cap, not to trip days.
+        #expect(balancedLaundry.tops == 7)
+        #expect(balancedNoLaundry.tops == 8)
+        #expect(balancedLaundry.underwear == 8)
+        #expect(balancedNoLaundry.underwear == 10)
     }
 
     /// Toggling laundry on an existing trip must surface quantity changes in
@@ -601,7 +603,7 @@ struct PackingEngineTests {
         let after = context(destination: dest, days: 15, bag: .carryOn, style: .balanced, chips: [.laundryAvailable], laundry: .planned)
         let diff = engine.recommendationDiff(context: after, existing: existing, overrides: [])
         let tshirt = diff.quantityChanges.first { $0.item.canonicalItemID == "clothing.tshirt" }
-        #expect(tshirt?.suggestedQuantity == 12)
+        #expect(tshirt?.suggestedQuantity == 7)
     }
 
     @Test func recommendationDiffHonorsNotNeededOverride() throws {

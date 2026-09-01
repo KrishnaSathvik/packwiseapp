@@ -646,6 +646,7 @@ struct PackingEngine: Sendable {
 
     private func applyQuantities(_ items: [PackingItemDraft], context: TripContext) -> [PackingItemDraft] {
         let engine = QuantityEngine(policies: rules.quantities.policies, reasons: rules.reasons)
+        let clothingEngine = ClothingQuantityEngine(reasons: rules.reasons)
         let party = context.effectiveParty
         return items.map { item in
             var copy = item
@@ -666,13 +667,23 @@ struct PackingEngine: Sendable {
 
             let traveler = party.travelers.first { $0.id == item.travelerID }
             let multipliers = traveler.flatMap { rules.party.ageGroups[$0.ageGroup.rawValue]?.quantityMultipliers } ?? [:]
-            let result = engine.quantity(
-                kind: catalogItem.quantityKind,
-                context: context,
-                itemName: catalogItem.displayName,
-                traveler: traveler,
-                multipliers: multipliers
-            )
+            // The clothing family runs on the needs-based V2 model; every
+            // other kind stays on the legacy policy file untouched.
+            let result = ClothingQuantityEngine.handles(catalogItem.quantityKind)
+                ? clothingEngine.quantity(
+                    kind: catalogItem.quantityKind,
+                    context: context,
+                    itemName: catalogItem.displayName,
+                    traveler: traveler,
+                    multipliers: multipliers
+                )
+                : engine.quantity(
+                    kind: catalogItem.quantityKind,
+                    context: context,
+                    itemName: catalogItem.displayName,
+                    traveler: traveler,
+                    multipliers: multipliers
+                )
             copy.quantity = result.value
             copy.quantityReason = result.reason
             return copy

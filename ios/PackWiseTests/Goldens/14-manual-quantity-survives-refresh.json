@@ -64,8 +64,8 @@
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "primary",
-      "quantity" : 6,
-      "quantityReason" : "6 based on a 15-day trip.",
+      "quantity" : 8,
+      "quantityReason" : "8 based on a 15-day trip.",
       "reason" : "A core item for almost every trip.",
       "reasonCode" : "base.essential",
       "signals" : [
@@ -93,8 +93,8 @@
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "primary",
-      "quantity" : 6,
-      "quantityReason" : "6 based on a 15-day trip.",
+      "quantity" : 8,
+      "quantityReason" : "8 based on a 15-day trip.",
       "reason" : "A core item for almost every trip.",
       "reasonCode" : "base.essential",
       "signals" : [

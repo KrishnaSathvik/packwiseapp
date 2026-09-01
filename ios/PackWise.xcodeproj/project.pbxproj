@@ -24,6 +24,7 @@
 		14F94621AC48CE1344061834 /* kids.json in Resources */ = {isa = PBXBuildFile; fileRef = B1A986A96E74E5F0F1F19A0A /* kids.json */; };
 		185BA2937668F7DBD86BBF6A /* toiletries.json in Resources */ = {isa = PBXBuildFile; fileRef = CD55EA854572ECEE7FA9732E /* toiletries.json */; };
 		1BAD1AF67DFD6823A4117373 /* SharedResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F616EEE232C5D9102FEFF0A /* SharedResources.swift */; };
+		AB12CD34EF56AB12CD34EF03 /* ClothingQuantity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF04 /* ClothingQuantity.swift */; };
 		1C9826EFAE9C06CBD37AE276 /* QuantityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D25C4D9DBB9CA201CE9AFE19 /* QuantityEngine.swift */; };
 		22D6624A4480DC8296942F91 /* reasons.json in Resources */ = {isa = PBXBuildFile; fileRef = 2FE1E38C26BC92E69F06B994 /* reasons.json */; };
 		258A37DC05324FDE3AC25890 /* OverrideKeepsRainJacketDeleted.json in Resources */ = {isa = PBXBuildFile; fileRef = 09EA2A16CECD08323014C5EA /* OverrideKeepsRainJacketDeleted.json */; };
@@ -63,6 +64,7 @@
 		7E48D2F733B024BDE448D7F2 /* WeatherDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F2B83007B4958B44D097006 /* WeatherDomain.swift */; };
 		7F2C5747BFE41966A3532F45 /* Intelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D97D97EAD26B92CD58E3532 /* Intelligence.swift */; };
 		7FB1D08DC382E87980CF444C /* ReykjavikPhotography.json in Resources */ = {isa = PBXBuildFile; fileRef = C4C86D8DBB3621F2D8B943F7 /* ReykjavikPhotography.json */; };
+		AB12CD34EF56AB12CD34EF05 /* ClothingQuantityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF06 /* ClothingQuantityTests.swift */; };
 		AB12CD34EF56AB12CD34EF01 /* GoldenEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF02 /* GoldenEngineTests.swift */; };
 		7FF1329C2272BBA507C66813 /* PackingEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA26A7C17A5C90EE5560B90 /* PackingEngineTests.swift */; };
 		81879A3CB0B4F423B9CC70FB /* Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55EC35C902E7A792FD006B6 /* Catalog.swift */; };
@@ -134,6 +136,7 @@
 		13120C417DB289253E83A8A3 /* LongHaulInternationalFlight.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = LongHaulInternationalFlight.json; sourceTree = "<group>"; };
 		1950E1306161A2A39193B017 /* ChicagoCityRainy5Day.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ChicagoCityRainy5Day.json; sourceTree = "<group>"; };
 		1B7DE8CD425F728619CE3F16 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		AB12CD34EF56AB12CD34EF06 /* ClothingQuantityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingQuantityTests.swift; sourceTree = "<group>"; };
 		AB12CD34EF56AB12CD34EF02 /* GoldenEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldenEngineTests.swift; sourceTree = "<group>"; };
 		1BA26A7C17A5C90EE5560B90 /* PackingEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingEngineTests.swift; sourceTree = "<group>"; };
 		1E21852207D4E351FC95A60A /* RecommendationDiffSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationDiffSheet.swift; sourceTree = "<group>"; };
@@ -192,6 +195,7 @@
 		C8F081E2EE749F5F3FEE3B81 /* PackWise.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PackWise.entitlements; sourceTree = "<group>"; };
 		CD55EA854572ECEE7FA9732E /* toiletries.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = toiletries.json; sourceTree = "<group>"; };
 		CD775C1F26E1E2EF54B4438D /* IntelligenceServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligenceServiceTests.swift; sourceTree = "<group>"; };
+		AB12CD34EF56AB12CD34EF04 /* ClothingQuantity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingQuantity.swift; sourceTree = "<group>"; };
 		D25C4D9DBB9CA201CE9AFE19 /* QuantityEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuantityEngine.swift; sourceTree = "<group>"; };
 		DA8D4A6D62927D0C704F9A5F /* WeatherDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDetailView.swift; sourceTree = "<group>"; };
 		DB488AD7F24BDF1D3D7A0BA4 /* AppIntegrityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntegrityProvider.swift; sourceTree = "<group>"; };
@@ -376,6 +380,7 @@
 			children = (
 				B55EC35C902E7A792FD006B6 /* Catalog.swift */,
 				1FAC7020262230D765C5188A /* PackingEngine.swift */,
+				AB12CD34EF56AB12CD34EF04 /* ClothingQuantity.swift */,
 				D25C4D9DBB9CA201CE9AFE19 /* QuantityEngine.swift */,
 			);
 			path = Packing;
@@ -417,6 +422,7 @@
 		8A47DFD989F74EC5A9A4B4E3 /* PackWiseTests */ = {
 			isa = PBXGroup;
 			children = (
+				AB12CD34EF56AB12CD34EF06 /* ClothingQuantityTests.swift */,
 				AB12CD34EF56AB12CD34EF02 /* GoldenEngineTests.swift */,
 				CD775C1F26E1E2EF54B4438D /* IntelligenceServiceTests.swift */,
 				F919525BF9A1ECC452F25537 /* M1LoopTests.swift */,
@@ -789,6 +795,7 @@
 				A769102BDA149D778AD481C3 /* PackingImpact.swift in Sources */,
 				869947D28D75C802C54385FA /* PackingImpactCard.swift in Sources */,
 				2B0817B1B3FE5CD7652AC685 /* Party.swift in Sources */,
+				AB12CD34EF56AB12CD34EF03 /* ClothingQuantity.swift in Sources */,
 				1C9826EFAE9C06CBD37AE276 /* QuantityEngine.swift in Sources */,
 				0DCB753D3F80211760E78F2D /* RecommendationDiffSheet.swift in Sources */,
 				B77931BAA25C0D3CAC306217 /* RemoteContextIntelligenceService.swift in Sources */,
@@ -817,6 +824,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB12CD34EF56AB12CD34EF05 /* ClothingQuantityTests.swift in Sources */,
 				AB12CD34EF56AB12CD34EF01 /* GoldenEngineTests.swift in Sources */,
 				0C635C13752D4BF0B3BB22CD /* IntelligenceServiceTests.swift in Sources */,
 				0ED919F211257F1F5B945938 /* M1LoopTests.swift in Sources */,

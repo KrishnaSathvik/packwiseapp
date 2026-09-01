@@ -79,8 +79,8 @@
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "Why 1 t-shirts? You're traveling for 1 days.",
+      "quantity" : 2,
+      "quantityReason" : "Why 2 t-shirts? You're traveling for 1 days.",
       "reason" : "A core item for almost every trip.",
       "reasonCode" : "base.essential",
       "signals" : [

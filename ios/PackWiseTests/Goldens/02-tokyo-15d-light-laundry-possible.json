@@ -64,8 +64,8 @@
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "primary",
-      "quantity" : 6,
-      "quantityReason" : "6 based on a 15-day trip.",
+      "quantity" : 8,
+      "quantityReason" : "8 based on a 15-day trip.",
       "reason" : "A core item for almost every trip.",
       "reasonCode" : "base.essential",
       "signals" : [
@@ -78,8 +78,8 @@
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "primary",
-      "quantity" : 10,
-      "quantityReason" : "Why 10 t-shirts? You're traveling for 15 days, packing light, and you indicated laundry access.",
+      "quantity" : 6,
+      "quantityReason" : "Why 6 t-shirts? You're traveling for 15 days, packing light, and you indicated laundry access.",
       "reason" : "A core item for almost every trip.",
       "reasonCode" : "base.essential",
       "signals" : [
@@ -92,8 +92,8 @@
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "primary",
-      "quantity" : 6,
-      "quantityReason" : "6 based on a 15-day trip.",
+      "quantity" : 8,
+      "quantityReason" : "8 based on a 15-day trip.",
       "reason" : "A core item for almost every trip.",
       "reasonCode" : "base.essential",
       "signals" : [

@@ -408,6 +408,19 @@ struct TripContext: Hashable, Sendable {
             || userNotes.localizedCaseInsensitiveContains("laundry")
     }
 
+    /// The three-way laundry state with the legacy signals folded in: an
+    /// explicit `laundryAccess` wins; the old boolean chip and a laundry
+    /// mention in the notes state availability, not intent, so they resolve
+    /// to `.possible`.
+    var laundryPlan: LaundryAccess {
+        if laundryAccess != .none { return laundryAccess }
+        if contextChips.contains(.laundryAvailable)
+            || userNotes.localizedCaseInsensitiveContains("laundry") {
+            return .possible
+        }
+        return .none
+    }
+
     var outdoorActivities: Bool {
         activities.contains(where: { ["hiking", "sightseeing", "walking", "running", "beachDays"].contains($0) })
     }
