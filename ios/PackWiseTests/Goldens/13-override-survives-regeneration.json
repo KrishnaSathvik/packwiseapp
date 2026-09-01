@@ -330,8 +330,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Based on what you'll be doing.",
-      "reasonCode" : "activity.generic",
+      "reason" : "You'll be on your feet a lot in Tokyo.",
+      "reasonCode" : "activity.walking",
       "signals" : [
         "activity"
       ]

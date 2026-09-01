@@ -192,7 +192,7 @@ struct PackingEngine: Sendable {
             addIDs(
                 ids,
                 signal: .userPreference,
-                code: "preference.generic",
+                code: "preference.\(chip.rawValue)",
                 arguments: [:],
                 fallback: chipReason(chip),
                 context: context,
@@ -256,13 +256,21 @@ struct PackingEngine: Sendable {
         context: TripContext,
         into collected: inout [String: RuleSuggestion]
     ) {
-        let reason = render(code, arguments, fallback: fallback)
         for id in ids {
             guard let item = catalog.item(id: id) else { continue }
             if item.travelRestrictionReviewRequired && context.bagType.isSpaceConstrained { continue }
+            let reason = render(code, arguments, category: item.category.rawValue, fallback: fallback)
             if var existing = collected[id] {
                 if !existing.signals.contains(signal) {
                     existing.signals.append(signal)
+                }
+                // The more trip-specific reason wins the row: walking shoes
+                // suggested as a base essential and for sightseeing should
+                // say sightseeing, not "a core item for almost every trip."
+                if ReasonRenderer.tier(code) > ReasonRenderer.tier(existing.reasonCode) {
+                    existing.reason = reason
+                    existing.reasonCode = code
+                    existing.reasonArguments = arguments
                 }
                 collected[id] = existing
             } else {
@@ -281,6 +289,11 @@ struct PackingEngine: Sendable {
         if var existing = collected[suggestion.canonicalItemID] {
             for signal in suggestion.signals where !existing.signals.contains(signal) {
                 existing.signals.append(signal)
+            }
+            if ReasonRenderer.tier(suggestion.reasonCode) > ReasonRenderer.tier(existing.reasonCode) {
+                existing.reason = suggestion.reason
+                existing.reasonCode = suggestion.reasonCode
+                existing.reasonArguments = suggestion.reasonArguments
             }
             collected[suggestion.canonicalItemID] = existing
         } else {
@@ -314,35 +327,15 @@ struct PackingEngine: Sendable {
         return result
     }
 
-    private func render(_ code: String, _ arguments: [String: String], fallback: String) -> String {
-        ReasonRenderer.render(code: code, arguments: arguments, templates: rules.reasons.templates, fallback: fallback)
+    private func render(_ code: String, _ arguments: [String: String], category: String? = nil, fallback: String) -> String {
+        ReasonRenderer.render(code: code, arguments: arguments, templates: rules.reasons.templates, category: category, fallback: fallback)
     }
 
     private func ruleSuggestions(for context: TripContext) -> [RuleSuggestion] {
         var collected: [String: RuleSuggestion] = [:]
 
         func add(_ ids: [String], signal: RecommendationSignal, code: String, arguments: [String: String] = [:], fallback: String) {
-            let reason = render(code, arguments, fallback: fallback)
-            for id in ids {
-                guard let item = catalog.item(id: id) else { continue }
-                if item.travelRestrictionReviewRequired && context.bagType.isSpaceConstrained {
-                    continue
-                }
-                if var existing = collected[id] {
-                    if !existing.signals.contains(signal) {
-                        existing.signals.append(signal)
-                    }
-                    collected[id] = existing
-                } else {
-                    collected[id] = RuleSuggestion(
-                        canonicalItemID: id,
-                        signals: [signal],
-                        reasonCode: code,
-                        reasonArguments: arguments,
-                        reason: reason
-                    )
-                }
-            }
+            addIDs(ids, signal: signal, code: code, arguments: arguments, fallback: fallback, context: context, into: &collected)
         }
 
         add(rules.baseEssentials, signal: .baseEssential, code: "base.essential", fallback: "A core item for almost every trip.")
@@ -359,11 +352,13 @@ struct PackingEngine: Sendable {
 
         for activity in context.activities {
             if let ids = rules.activities[activity] {
-                let code = ["hiking", "running", "sightseeing"].contains(activity) ? "activity.\(activity)" : "activity.generic"
+                // Every activity carries its own code; the template catalog
+                // has one entry per activity id, so the generic string never
+                // renders on an activity-driven item.
                 add(
                     ids,
                     signal: .activity,
-                    code: code,
+                    code: "activity.\(activity)",
                     arguments: ["destination": context.destination.displayName],
                     fallback: activityReason(activity, destination: context.destination.displayName)
                 )
@@ -372,21 +367,21 @@ struct PackingEngine: Sendable {
 
         for chip in context.contextChips {
             if let ids = rules.contextChips[chip.rawValue] {
-                add(ids, signal: .userPreference, code: "preference.generic", fallback: chipReason(chip))
+                add(ids, signal: .userPreference, code: "preference.\(chip.rawValue)", fallback: chipReason(chip))
             }
         }
 
         if context.preferences.usuallyWorkOut {
-            add(rules.contextChips[ContextChip.usuallyWorkOut.rawValue] ?? [], signal: .userPreference, code: "preference.generic", fallback: "You usually work out while traveling.")
+            add(rules.contextChips[ContextChip.usuallyWorkOut.rawValue] ?? [], signal: .userPreference, code: "preference.usuallyWorkOut", fallback: "You usually work out while traveling.")
         }
         if context.preferences.usuallyBringLaptop {
-            add(rules.contextChips[ContextChip.bringingLaptop.rawValue] ?? [], signal: .userPreference, code: "preference.generic", fallback: "You usually bring a laptop.")
+            add(rules.contextChips[ContextChip.bringingLaptop.rawValue] ?? [], signal: .userPreference, code: "preference.bringingLaptop", fallback: "You usually bring a laptop.")
         }
         if context.preferences.wearContacts {
-            add(rules.contextChips[ContextChip.wearContacts.rawValue] ?? [], signal: .userPreference, code: "preference.generic", fallback: "You wear contacts.")
+            add(rules.contextChips[ContextChip.wearContacts.rawValue] ?? [], signal: .userPreference, code: "preference.wearContacts", fallback: "You wear contacts.")
         }
         if context.preferences.alwaysBringMedication {
-            add(rules.contextChips[ContextChip.dailyMedication.rawValue] ?? [], signal: .userPreference, code: "preference.generic", fallback: "You take daily medication.")
+            add(rules.contextChips[ContextChip.dailyMedication.rawValue] ?? [], signal: .userPreference, code: "preference.dailyMedication", fallback: "You take daily medication.")
         }
 
         if context.isInternationalConfirmed {
@@ -432,12 +427,14 @@ struct PackingEngine: Sendable {
         )
 
         func add(_ ids: [String], code: String, arguments: [String: String], fallback: String) {
-            let reason = render(code, arguments, fallback: fallback)
             for id in ids {
-                guard catalog.item(id: id) != nil else { continue }
+                guard let item = catalog.item(id: id) else { continue }
+                let reason = render(code, arguments, category: item.category.rawValue, fallback: fallback)
                 if var existing = collected[id] {
                     if !existing.signals.contains(.weather) {
                         existing.signals.append(.weather)
+                    }
+                    if ReasonRenderer.tier(code) > ReasonRenderer.tier(existing.reasonCode) {
                         existing.reason = reason
                         existing.reasonCode = code
                         existing.reasonArguments = arguments

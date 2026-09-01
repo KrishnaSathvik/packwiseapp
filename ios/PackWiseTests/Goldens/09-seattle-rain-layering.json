@@ -10,8 +10,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Suggested for a city break trip.",
-      "reasonCode" : "trip_type.generic",
+      "reason" : "You'll have sightseeing days in Seattle.",
+      "reasonCode" : "activity.sightseeing",
       "signals" : [
         "activity",
         "tripType"
@@ -235,8 +235,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "You'll be on your feet a lot in Seattle.",
+      "reasonCode" : "activity.walking",
       "signals" : [
         "activity",
         "baseEssential"

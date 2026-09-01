@@ -18,6 +18,7 @@ PackWise is a personal packing intelligence app for iPhone. The user describes a
 8. Weather is trip-dated, not a general weather app. Never silently rewrite a list when the forecast changes.
 9. Stay in MVP unless the user expands scope. See `docs/roadmap.md`.
 10. No signup, no location permission, no notification permission, no paywall on first launch.
+11. Ambiguity resolves to **don't infer**, never to a guess. "My daughter needs medication" must not become medication for the primary traveler; an unassigned item in a party list claims coverage for nobody. Deduction is fine when only one answer exists (a solo list has one owner); anything less certain drops the signal rather than misattributing it.
 
 ## Where to look
 

@@ -36,5 +36,6 @@
     "clothing.gloves",
     "clothing.beanie",
     "health.hand_warmers"
-  ]
+  ],
+  "expectationNotes": "mustInclude expected clothing.windbreaker until 2026-09-01: that expectation predated the coverage resolver and demanded two shells (windbreaker + rain jacket) for one wind need. The rain shell now covers wind, so the eval asserts the covering item instead."
 }

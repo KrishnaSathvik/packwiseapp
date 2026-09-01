@@ -127,11 +127,42 @@ struct QuantityEngine: Sendable {
 }
 
 enum ReasonRenderer {
-    static func render(code: String, arguments: [String: String], templates: [String: String], fallback: String) -> String {
-        guard !code.isEmpty, var template = templates[code] else { return fallback }
-        for (key, value) in arguments {
-            template = template.replacingOccurrences(of: "{\(key)}", with: value)
+    /// The fallback ladder: the specific template for `code`, else the
+    /// category-level template, else the caller's fallback string. A generic
+    /// fallback rendering on a weather- or activity-driven item is a bug, and
+    /// a test walks the golden matrix to prove the ladder never falls that
+    /// far for those items.
+    static func render(
+        code: String,
+        arguments: [String: String],
+        templates: [String: String],
+        category: String? = nil,
+        fallback: String
+    ) -> String {
+        let template: String?
+        if !code.isEmpty, let specific = templates[code] {
+            template = specific
+        } else if let category, let categoryLevel = templates["category.\(category)"] {
+            template = categoryLevel
+        } else {
+            template = nil
         }
-        return template
+        guard var rendered = template else { return fallback }
+        for (key, value) in arguments {
+            rendered = rendered.replacingOccurrences(of: "{\(key)}", with: value)
+        }
+        return rendered
+    }
+
+    /// How trip-specific a reason code is. Weather beats activity and party,
+    /// which beat trip-type and preferences, which beat base essentials.
+    /// When signals merge onto one item, the more specific reason wins;
+    /// equals keep the incumbent so output stays deterministic.
+    static func tier(_ code: String) -> Int {
+        if code.hasPrefix("weather.") { return 4 }
+        if code.hasPrefix("activity.") || code.hasPrefix("party.") || code.hasPrefix("substitution.") { return 3 }
+        if code.hasPrefix("preference.") || code.hasPrefix("trip_type.") || code.hasPrefix("destination.")
+            || code.hasPrefix("documents.") || code.hasPrefix("flight.") { return 2 }
+        return 1
     }
 }

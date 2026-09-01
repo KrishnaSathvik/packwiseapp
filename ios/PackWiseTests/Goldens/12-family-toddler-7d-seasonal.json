@@ -38,8 +38,8 @@
       "owner" : "child",
       "quantity" : 2,
       "quantityReason" : "2 based on a 7-day trip.",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
       "signals" : [
         "baseEssential",
         "party"
@@ -165,8 +165,8 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "You'll be on your feet a lot in Miami.",
+      "reasonCode" : "activity.walking",
       "signals" : [
         "activity",
         "baseEssential"
@@ -614,8 +614,8 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "You'll be on your feet a lot in Miami.",
+      "reasonCode" : "activity.walking",
       "signals" : [
         "activity",
         "baseEssential"
@@ -979,8 +979,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "You'll be on your feet a lot in Miami.",
+      "reasonCode" : "activity.walking",
       "signals" : [
         "activity",
         "baseEssential"

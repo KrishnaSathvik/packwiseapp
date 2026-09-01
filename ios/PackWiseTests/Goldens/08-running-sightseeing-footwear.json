@@ -22,8 +22,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Suggested for a city break trip.",
-      "reasonCode" : "trip_type.generic",
+      "reason" : "You'll have sightseeing days in Chicago.",
+      "reasonCode" : "activity.sightseeing",
       "signals" : [
         "activity",
         "tripType"

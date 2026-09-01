@@ -23,8 +23,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Suggested for a beach trip.",
-      "reasonCode" : "trip_type.generic",
+      "reason" : "Beach days are on your plans.",
+      "reasonCode" : "activity.beachDays",
       "signals" : [
         "activity",
         "tripType"
@@ -110,8 +110,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Suggested for a beach trip.",
-      "reasonCode" : "trip_type.generic",
+      "reason" : "You'll be swimming on this trip.",
+      "reasonCode" : "activity.swimming",
       "signals" : [
         "activity",
         "tripType"
@@ -251,8 +251,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Suggested for a beach trip.",
-      "reasonCode" : "trip_type.generic",
+      "reason" : "Beach days are on your plans.",
+      "reasonCode" : "activity.beachDays",
       "signals" : [
         "activity",
         "tripType"

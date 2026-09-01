@@ -52,8 +52,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Based on what you'll be doing.",
-      "reasonCode" : "activity.generic",
+      "reason" : "You have a nice dinner planned.",
+      "reasonCode" : "activity.niceDinner",
       "signals" : [
         "activity"
       ]
@@ -164,8 +164,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Based on what you'll be doing.",
-      "reasonCode" : "activity.generic",
+      "reason" : "You'll be working on this trip.",
+      "reasonCode" : "activity.work",
       "signals" : [
         "activity"
       ]
@@ -178,8 +178,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Suggested for a business trip.",
-      "reasonCode" : "trip_type.generic",
+      "reason" : "You'll be working on this trip.",
+      "reasonCode" : "activity.work",
       "signals" : [
         "activity",
         "tripType"
@@ -193,8 +193,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Suggested for a business trip.",
-      "reasonCode" : "trip_type.generic",
+      "reason" : "You'll be working on this trip.",
+      "reasonCode" : "activity.work",
       "signals" : [
         "activity",
         "tripType"
