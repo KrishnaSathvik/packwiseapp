@@ -10,6 +10,7 @@ struct TripDraft {
     var customActivity: String = ""
     var bagType: BagType = .notSure
     var packingStyle: PackingStyle = .balanced
+    var laundry: LaundryAccess = .none
     var chips: Set<ContextChip> = []
     var notes: String = ""
     var travelMode: TravelMode = .solo
@@ -59,6 +60,7 @@ struct TripDraft {
         draft.activities = trip.activities
         draft.bagType = trip.bagType
         draft.packingStyle = trip.packingStyle
+        draft.laundry = trip.laundryAccess
         draft.chips = Set(trip.contextChips)
         draft.notes = trip.userNotes
         draft.travelMode = party.travelMode
@@ -721,6 +723,25 @@ struct TripSetupView: View {
                     }
                 }
             }
+
+            VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                Text("Laundry on this trip?")
+                    .font(.title3.bold())
+                group {
+                    ForEach(Array(LaundryAccess.allCases.enumerated()), id: \.element.rawValue) { index, laundry in
+                        if index > 0 { PackWiseRowDivider() }
+                        PackWiseSelectionRow(
+                            symbol: laundry.setupSymbol,
+                            tint: laundry.setupTint,
+                            title: laundry.setupTitle,
+                            subtitle: laundry.setupSubtitle,
+                            isSelected: draft.laundry == laundry
+                        ) {
+                            draft.laundry = laundry
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -737,7 +758,9 @@ struct TripSetupView: View {
             )
             chipField(
                 "About this trip",
-                ContextChip.allCases.filter { ContextChip.tripLevel.contains($0) }
+                // Laundry moved to the bag-and-style step as a three-way
+                // control; the boolean chip stays in the enum for old trips.
+                ContextChip.allCases.filter { ContextChip.tripLevel.contains($0) && $0 != .laundryAvailable }
             )
 
             VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
@@ -826,7 +849,9 @@ struct TripSetupView: View {
                             draft.bagType.symbol,
                             draft.bagType.tint,
                             "Packing",
-                            "\(draft.bagType.title) · \(draft.packingStyle.title)"
+                            draft.laundry == .none
+                                ? "\(draft.bagType.title) · \(draft.packingStyle.title)"
+                                : "\(draft.bagType.title) · \(draft.packingStyle.title) · \(draft.laundry.setupTitle)"
                         )
                         PackWiseRowDivider()
                         reviewRow(
@@ -1013,6 +1038,7 @@ struct TripSetupView: View {
                 activities: activities,
                 bagType: draft.bagType,
                 packingStyle: draft.packingStyle,
+                laundryAccess: draft.laundry,
                 userNotes: notes,
                 contextChips: Array(draft.chips),
                 party: party,
@@ -1063,7 +1089,8 @@ struct TripSetupView: View {
             userNotes: notes,
             contextChips: Array(draft.chips),
             travelerCount: party.travelers.count,
-            travelMode: party.travelMode
+            travelMode: party.travelMode,
+            laundryAccess: draft.laundry
         )
 
         var context = trip.context(preferences: prefs, weather: weather)
@@ -1158,6 +1185,44 @@ struct TripSetupView: View {
 /// six options on one screen those full sentences make the rows twice the
 /// height the board draws, so the setup step gets its own short labels. This
 /// lives here rather than in `Domain/` because it is presentation only.
+/// Presentation-only, like `BagType.setupSubtitle` below. The middle option
+/// deliberately reads as availability ("there if I need it") and the last as
+/// intent ("planning on it") — the engine treats them differently, so the
+/// wording must establish which one the user meant.
+private extension LaundryAccess {
+    var setupTitle: String {
+        switch self {
+        case .none: "No laundry"
+        case .possible: "Laundry if I need it"
+        case .planned: "Planning to do laundry"
+        }
+    }
+
+    var setupSubtitle: String {
+        switch self {
+        case .none: "Pack for the full trip"
+        case .possible: "Available, but not counting on it"
+        case .planned: "Pack fewer clothes and wash mid-trip"
+        }
+    }
+
+    var setupSymbol: String {
+        switch self {
+        case .none: "xmark.circle"
+        case .possible: "circle.dotted"
+        case .planned: "washer"
+        }
+    }
+
+    var setupTint: Color {
+        switch self {
+        case .none: PackWiseColor.textSecondary
+        case .possible: PackWiseColor.info
+        case .planned: PackWiseColor.accent
+        }
+    }
+}
+
 private extension BagType {
     var setupSubtitle: String {
         switch self {

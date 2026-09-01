@@ -135,6 +135,7 @@ final class TripRepository {
         activities: [String],
         bagType: BagType,
         packingStyle: PackingStyle,
+        laundryAccess: LaundryAccess,
         userNotes: String,
         contextChips: [ContextChip],
         party: TripParty,
@@ -158,6 +159,7 @@ final class TripRepository {
         trip.activitiesRaw = activities.joined(separator: ",")
         trip.bagTypeRaw = bagType.rawValue
         trip.packingStyleRaw = packingStyle.rawValue
+        trip.laundryAccessRaw = laundryAccess.rawValue
         trip.userNotes = userNotes
         trip.contextChipsRaw = contextChips.map(\.rawValue).joined(separator: ",")
         trip.updatedAt = .now

@@ -438,6 +438,7 @@ struct WeatherChangeTests {
             activities: trip.activities,
             bagType: trip.bagType,
             packingStyle: trip.packingStyle,
+            laundryAccess: trip.laundryAccess,
             userNotes: trip.userNotes,
             contextChips: trip.contextChips,
             party: trip.party,

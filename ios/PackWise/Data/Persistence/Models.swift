@@ -149,8 +149,16 @@ final class TripRecord {
         return TripParty(travelMode: travelMode, travelers: mapped)
     }
 
+    /// The stored three-way value wins; the legacy `laundryAvailable` chip maps
+    /// to `.possible`, not `.planned` — "I'll have laundry" states availability,
+    /// not intent, and `.planned` requires deliberate user intent.
+    var laundryAccess: LaundryAccess {
+        let stored = LaundryAccess(rawValue: laundryAccessRaw) ?? .none
+        if stored != .none { return stored }
+        return contextChips.contains(.laundryAvailable) ? .possible : .none
+    }
+
     func context(preferences: TravelerPreferences, weather: TripWeatherContext?) -> TripContext {
-        let laundry = LaundryAccess(rawValue: laundryAccessRaw) ?? .none
         let resolvedParty = party
         return TripContext(
             destination: destination,
@@ -164,7 +172,7 @@ final class TripRecord {
             bagType: bagType,
             packingStyle: packingStyle,
             transportation: Transportation(rawValue: transportationRaw) ?? .unknown,
-            laundryAccess: contextChips.contains(.laundryAvailable) ? .planned : laundry,
+            laundryAccess: laundryAccess,
             travelerCount: max(1, resolvedParty.travelers.count),
             userNotes: userNotes,
             contextChips: Set(contextChips),
