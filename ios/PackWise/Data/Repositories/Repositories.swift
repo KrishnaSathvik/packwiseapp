@@ -47,11 +47,18 @@ final class TripRepository {
     }
 
     func replaceItems(on trip: TripRecord, with drafts: [PackingItemDraft]) {
+        let previous = Set(trip.items.compactMap(\.canonicalItemID))
         for item in trip.items {
             context.delete(item)
         }
         trip.items = drafts.map { PackingItemRecord(from: $0, trip: trip) }
         trip.updatedAt = .now
+        // First appearance of an engine suggestion is a memory event;
+        // regenerations that keep an item don't re-record it.
+        for draft in drafts where !draft.isUserAdded {
+            guard let canonical = draft.canonicalItemID, !previous.contains(canonical) else { continue }
+            recordMemoryEvent(.suggested, canonicalItemID: canonical, travelerID: draft.travelerID, value: draft.quantity, on: trip)
+        }
     }
 
     func attach(party: TripParty, bagType: BagType, on trip: TripRecord) {
@@ -90,6 +97,13 @@ final class TripRepository {
     func addItem(_ draft: PackingItemDraft, to trip: TripRecord, syncWeatherChange: Bool = true) {
         trip.items.append(PackingItemRecord(from: draft, trip: trip))
         trip.updatedAt = .now
+        recordMemoryEvent(
+            draft.isUserAdded ? .userAdded : .suggested,
+            canonicalItemID: draft.canonicalItemID ?? "custom:\(draft.displayName)",
+            travelerID: draft.travelerID,
+            value: draft.quantity,
+            on: trip
+        )
         if syncWeatherChange {
             syncPendingWeatherChange(on: trip)
         }
@@ -107,6 +121,9 @@ final class TripRepository {
                 )
             )
         }
+        if let canonical = item.canonicalItemID {
+            recordMemoryEvent(.notNeeded, canonicalItemID: canonical, travelerID: item.travelerID, value: nil, on: trip)
+        }
         context.delete(item)
         trip.items.removeAll { $0.id == item.id }
         trip.updatedAt = .now
@@ -120,9 +137,54 @@ final class TripRepository {
         syncPendingWeatherChange(on: trip)
     }
 
+    /// Completion snapshots the trip's final state into memory: what was
+    /// actually packed, and where the user overrode a suggested quantity.
+    /// Pack/unpack churn during the trip is noise; the final state is what
+    /// memory can learn from.
     func complete(_ trip: TripRecord) {
+        guard trip.statusRaw != TripStatus.completed.rawValue else {
+            trip.updatedAt = .now
+            return
+        }
         trip.statusRaw = TripStatus.completed.rawValue
         trip.updatedAt = .now
+        for item in trip.items {
+            let canonical = item.canonicalItemID ?? "custom:\(item.displayName)"
+            if item.isUserModified && !item.isUserAdded {
+                recordMemoryEvent(.quantityChanged, canonicalItemID: canonical, travelerID: item.travelerID, value: item.quantity, on: trip)
+            }
+            if item.packedQuantity > 0 {
+                recordMemoryEvent(.packed, canonicalItemID: canonical, travelerID: item.travelerID, value: item.packedQuantity, on: trip)
+            }
+        }
+    }
+
+    /// Events carry the trip's UUID but no relationship: they survive trip
+    /// deletion by design (see `Domain/PackingMemory.swift`).
+    private func recordMemoryEvent(
+        _ kind: PackingMemoryEventKind,
+        canonicalItemID: String,
+        travelerID: UUID?,
+        value: Int?,
+        on trip: TripRecord
+    ) {
+        let event = PackingMemoryEvent(
+            tripID: trip.id,
+            travelerID: travelerID,
+            canonicalItemID: canonicalItemID,
+            kind: kind,
+            value: value,
+            timestamp: .now,
+            context: ContextFingerprint(
+                durationBucket: .from(days: trip.durationDays),
+                laundryPlan: trip.laundryAccess,
+                packingStyle: trip.packingStyle,
+                bag: trip.bagType,
+                tripType: trip.tripType,
+                partySize: max(1, trip.travelerCount)
+            )
+        )
+        context.insert(PackingMemoryEventRecord(event))
     }
 
     func apply(

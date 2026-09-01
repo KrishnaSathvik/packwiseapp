@@ -299,3 +299,26 @@ Actions:
 - **Plan a Similar Trip**
 
 Not a blind clone. Repeat-trip intelligence lives in [intelligence-features.md](intelligence-features.md).
+
+---
+
+## Memory event log — retention (decided 2026-09-01)
+
+Engine V2 Step 6 replaced the aggregate `PackingMemoryRecord` counters (which
+nothing ever wrote) with an immutable event log: `PackingMemoryEventRecord`,
+one row per `suggested / userAdded / notNeeded / packed / quantityChanged`
+event, each carrying a structured `ContextFingerprint` (duration bucket,
+laundry plan, style, bag, trip type, party size) so future memory features are
+group-bys, not a research project. Suggested/added/declined record at the
+repository mediation points; packed and quantity-changed snapshot once at trip
+completion — final state, not mid-trip churn.
+
+**Events survive trip deletion, deliberately.** They reference the trip's
+UUID with no SwiftData relationship, so deleting a trip removes the trip but
+keeps the packing history it produced — accumulated memory is the point of
+collecting them, and the data is local-first and never leaves the device.
+
+**Me gets a "Clear packing history" control when memory ships a user-visible
+feature.** Until something reads the log there is nothing user-visible to
+clear; when Packing Memory surfaces in the product, the control ships in the
+same release.

@@ -515,6 +515,9 @@ final class PackingPreferenceRecord {
 }
 
 @Model
+/// Superseded by `PackingMemoryEventRecord`: aggregate counters can't answer
+/// the queries memory needs, and nothing ever wrote these. Kept in the schema
+/// until a cleanup migration retires it.
 final class PackingMemoryRecord {
     var canonicalItemID: String
     var travelerID: UUID?
@@ -530,6 +533,63 @@ final class PackingMemoryRecord {
         self.removedCount = 0
         self.packedCount = 0
         self.usedCount = 0
+    }
+}
+
+/// One immutable packing-memory event (Engine V2, Step 6). Write-only for
+/// now; the fingerprint is stored as flat raw fields so future memory
+/// queries are simple predicates.
+///
+/// Deliberately not related to `TripRecord`: events survive trip deletion.
+/// The retention decision is documented in `Domain/PackingMemory.swift` and
+/// `docs/lifecycle-memory-and-me.md`.
+@Model
+final class PackingMemoryEventRecord {
+    var tripID: UUID
+    var travelerID: UUID?
+    var canonicalItemID: String
+    var kindRaw: String
+    var value: Int?
+    var timestamp: Date
+    var durationBucketRaw: String
+    var laundryPlanRaw: String
+    var packingStyleRaw: String
+    var bagRaw: String
+    var tripTypeRaw: String
+    var partySize: Int
+
+    init(_ event: PackingMemoryEvent) {
+        tripID = event.tripID
+        travelerID = event.travelerID
+        canonicalItemID = event.canonicalItemID
+        kindRaw = event.kind.rawValue
+        value = event.value
+        timestamp = event.timestamp
+        durationBucketRaw = event.context.durationBucket.rawValue
+        laundryPlanRaw = event.context.laundryPlan.rawValue
+        packingStyleRaw = event.context.packingStyle.rawValue
+        bagRaw = event.context.bag.rawValue
+        tripTypeRaw = event.context.tripType.rawValue
+        partySize = event.context.partySize
+    }
+
+    var event: PackingMemoryEvent {
+        PackingMemoryEvent(
+            tripID: tripID,
+            travelerID: travelerID,
+            canonicalItemID: canonicalItemID,
+            kind: PackingMemoryEventKind(rawValue: kindRaw) ?? .suggested,
+            value: value,
+            timestamp: timestamp,
+            context: ContextFingerprint(
+                durationBucket: DurationBucket(rawValue: durationBucketRaw) ?? .medium,
+                laundryPlan: LaundryAccess(rawValue: laundryPlanRaw) ?? .none,
+                packingStyle: PackingStyle(rawValue: packingStyleRaw) ?? .balanced,
+                bag: BagType(rawValue: bagRaw) ?? .notSure,
+                tripType: TripType(rawValue: tripTypeRaw) ?? .other,
+                partySize: partySize
+            )
+        )
     }
 }
 
@@ -564,24 +624,36 @@ enum PackWiseSchemaV2: VersionedSchema {
     }
 }
 
+enum PackWiseSchemaV3: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(3, 0, 0) }
+    static var models: [any PersistentModel.Type] {
+        PackWiseSchemaV2.models + [PackingMemoryEventRecord.self]
+    }
+}
+
 enum PackWiseMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [PackWiseSchemaV1.self, PackWiseSchemaV2.self]
+        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self]
     }
 
     static var stages: [MigrationStage] {
-        [migrateV1toV2]
+        [migrateV1toV2, migrateV2toV3]
     }
 
     static let migrateV1toV2 = MigrationStage.lightweight(
         fromVersion: PackWiseSchemaV1.self,
         toVersion: PackWiseSchemaV2.self
     )
+
+    static let migrateV2toV3 = MigrationStage.lightweight(
+        fromVersion: PackWiseSchemaV2.self,
+        toVersion: PackWiseSchemaV3.self
+    )
 }
 
 enum PackWisePersistence {
     static func container(inMemory: Bool = false) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: PackWiseSchemaV2.self)
+        let schema = Schema(versionedSchema: PackWiseSchemaV3.self)
         let config: ModelConfiguration
         if inMemory {
             config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)

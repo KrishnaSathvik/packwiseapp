@@ -27,6 +27,7 @@
 		AB12CD34EF56AB12CD34EF03 /* ClothingQuantity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF04 /* ClothingQuantity.swift */; };
 		AB12CD34EF56AB12CD34EF07 /* CoverageResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF08 /* CoverageResolver.swift */; };
 		AB12CD34EF56AB12CD34EF0D /* ConstraintResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF0E /* ConstraintResolver.swift */; };
+		AB12CD34EF56AB12CD34EF11 /* PackingMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF12 /* PackingMemory.swift */; };
 		1C9826EFAE9C06CBD37AE276 /* QuantityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D25C4D9DBB9CA201CE9AFE19 /* QuantityEngine.swift */; };
 		22D6624A4480DC8296942F91 /* reasons.json in Resources */ = {isa = PBXBuildFile; fileRef = 2FE1E38C26BC92E69F06B994 /* reasons.json */; };
 		258A37DC05324FDE3AC25890 /* OverrideKeepsRainJacketDeleted.json in Resources */ = {isa = PBXBuildFile; fileRef = 09EA2A16CECD08323014C5EA /* OverrideKeepsRainJacketDeleted.json */; };
@@ -70,6 +71,7 @@
 		AB12CD34EF56AB12CD34EF09 /* CoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF0A /* CoverageTests.swift */; };
 		AB12CD34EF56AB12CD34EF0B /* ReasonQualityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF0C /* ReasonQualityTests.swift */; };
 		AB12CD34EF56AB12CD34EF0F /* ConstraintTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF10 /* ConstraintTests.swift */; };
+		AB12CD34EF56AB12CD34EF13 /* MemoryEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF14 /* MemoryEventTests.swift */; };
 		AB12CD34EF56AB12CD34EF01 /* GoldenEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12CD34EF56AB12CD34EF02 /* GoldenEngineTests.swift */; };
 		7FF1329C2272BBA507C66813 /* PackingEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA26A7C17A5C90EE5560B90 /* PackingEngineTests.swift */; };
 		81879A3CB0B4F423B9CC70FB /* Catalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55EC35C902E7A792FD006B6 /* Catalog.swift */; };
@@ -145,6 +147,7 @@
 		AB12CD34EF56AB12CD34EF0A /* CoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageTests.swift; sourceTree = "<group>"; };
 		AB12CD34EF56AB12CD34EF0C /* ReasonQualityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasonQualityTests.swift; sourceTree = "<group>"; };
 		AB12CD34EF56AB12CD34EF10 /* ConstraintTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstraintTests.swift; sourceTree = "<group>"; };
+		AB12CD34EF56AB12CD34EF14 /* MemoryEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryEventTests.swift; sourceTree = "<group>"; };
 		AB12CD34EF56AB12CD34EF02 /* GoldenEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoldenEngineTests.swift; sourceTree = "<group>"; };
 		1BA26A7C17A5C90EE5560B90 /* PackingEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingEngineTests.swift; sourceTree = "<group>"; };
 		1E21852207D4E351FC95A60A /* RecommendationDiffSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationDiffSheet.swift; sourceTree = "<group>"; };
@@ -206,6 +209,7 @@
 		AB12CD34EF56AB12CD34EF04 /* ClothingQuantity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingQuantity.swift; sourceTree = "<group>"; };
 		AB12CD34EF56AB12CD34EF08 /* CoverageResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageResolver.swift; sourceTree = "<group>"; };
 		AB12CD34EF56AB12CD34EF0E /* ConstraintResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstraintResolver.swift; sourceTree = "<group>"; };
+		AB12CD34EF56AB12CD34EF12 /* PackingMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingMemory.swift; sourceTree = "<group>"; };
 		D25C4D9DBB9CA201CE9AFE19 /* QuantityEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuantityEngine.swift; sourceTree = "<group>"; };
 		DA8D4A6D62927D0C704F9A5F /* WeatherDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDetailView.swift; sourceTree = "<group>"; };
 		DB488AD7F24BDF1D3D7A0BA4 /* AppIntegrityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntegrityProvider.swift; sourceTree = "<group>"; };
@@ -393,6 +397,7 @@
 				AB12CD34EF56AB12CD34EF04 /* ClothingQuantity.swift */,
 				AB12CD34EF56AB12CD34EF08 /* CoverageResolver.swift */,
 				AB12CD34EF56AB12CD34EF0E /* ConstraintResolver.swift */,
+				AB12CD34EF56AB12CD34EF12 /* PackingMemory.swift */,
 				D25C4D9DBB9CA201CE9AFE19 /* QuantityEngine.swift */,
 			);
 			path = Packing;
@@ -438,6 +443,7 @@
 				AB12CD34EF56AB12CD34EF0A /* CoverageTests.swift */,
 				AB12CD34EF56AB12CD34EF0C /* ReasonQualityTests.swift */,
 				AB12CD34EF56AB12CD34EF10 /* ConstraintTests.swift */,
+				AB12CD34EF56AB12CD34EF14 /* MemoryEventTests.swift */,
 				AB12CD34EF56AB12CD34EF02 /* GoldenEngineTests.swift */,
 				CD775C1F26E1E2EF54B4438D /* IntelligenceServiceTests.swift */,
 				F919525BF9A1ECC452F25537 /* M1LoopTests.swift */,
@@ -813,6 +819,7 @@
 				AB12CD34EF56AB12CD34EF03 /* ClothingQuantity.swift in Sources */,
 				AB12CD34EF56AB12CD34EF07 /* CoverageResolver.swift in Sources */,
 				AB12CD34EF56AB12CD34EF0D /* ConstraintResolver.swift in Sources */,
+				AB12CD34EF56AB12CD34EF11 /* PackingMemory.swift in Sources */,
 				1C9826EFAE9C06CBD37AE276 /* QuantityEngine.swift in Sources */,
 				0DCB753D3F80211760E78F2D /* RecommendationDiffSheet.swift in Sources */,
 				B77931BAA25C0D3CAC306217 /* RemoteContextIntelligenceService.swift in Sources */,
@@ -845,6 +852,7 @@
 				AB12CD34EF56AB12CD34EF09 /* CoverageTests.swift in Sources */,
 				AB12CD34EF56AB12CD34EF0B /* ReasonQualityTests.swift in Sources */,
 				AB12CD34EF56AB12CD34EF0F /* ConstraintTests.swift in Sources */,
+				AB12CD34EF56AB12CD34EF13 /* MemoryEventTests.swift in Sources */,
 				AB12CD34EF56AB12CD34EF01 /* GoldenEngineTests.swift in Sources */,
 				0C635C13752D4BF0B3BB22CD /* IntelligenceServiceTests.swift in Sources */,
 				0ED919F211257F1F5B945938 /* M1LoopTests.swift in Sources */,
