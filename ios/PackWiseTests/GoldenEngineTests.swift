@@ -247,11 +247,21 @@ struct GoldenEngineTests {
         var coveredBy: [String]
     }
 
+    /// One recorded constraint resolution: the machine key, the one-sentence
+    /// user-terms summary, and the canonical IDs it removed.
+    private struct GoldenConstraintEntry: Codable {
+        var owner: String
+        var constraint: String
+        var summary: String
+        var items: [String]
+    }
+
     private struct GoldenOutput: Codable {
         var fixture: String
         var engineVersion: String
         var items: [GoldenItem]
         var coverage: [GoldenCoverageEntry]?
+        var constraints: [GoldenConstraintEntry]?
     }
 
     private static func serialize(
@@ -311,6 +321,19 @@ struct GoldenEngineTests {
                 .sorted {
                     if $0.owner != $1.owner { return $0.owner < $1.owner }
                     return $0.suppressed < $1.suppressed
+                },
+            constraints: generation.constraintDecisions.isEmpty ? nil : generation.constraintDecisions
+                .map { decision in
+                    GoldenConstraintEntry(
+                        owner: decision.travelerID.flatMap { slugs[$0] } ?? "primary",
+                        constraint: decision.constraint,
+                        summary: decision.summary,
+                        items: decision.items
+                    )
+                }
+                .sorted {
+                    if $0.owner != $1.owner { return $0.owner < $1.owner }
+                    return $0.constraint < $1.constraint
                 }
         )
 

@@ -1,4 +1,16 @@
 {
+  "constraints" : [
+    {
+      "constraint" : "bag.personal_item",
+      "items" : [
+        "activities.goggles",
+        "clothing.coverup",
+        "footwear.flip_flops"
+      ],
+      "owner" : "primary",
+      "summary" : "Trimmed to fit a personal item."
+    }
+  ],
   "coverage" : [
     {
       "capabilities" : [

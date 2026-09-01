@@ -40,6 +40,7 @@
     "context.optimize_generic": "You could likely leave this behind.",
     "context.optimize_quantity": "{quantity} should be enough for {tripDays} days.",
     "context.optimize_style": "Your {packingStyle} packing style suggests you can leave this.",
+    "dependency.companion": "Goes with the {item} on your list.",
     "destination.international": "You're traveling internationally. Check the entry requirements that apply to you.",
     "documents.visa_check": "Check the entry requirements that apply to you.",
     "flight.empty_bottle": "Useful after airport security.",

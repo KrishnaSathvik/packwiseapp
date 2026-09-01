@@ -7,7 +7,12 @@ import Foundation
 struct EngineGeneration: Sendable {
     var items: [PackingItemDraft]
     var coverageSuppressions: [CoverageSuppression]
+    var constraintDecisions: [ConstraintDecision]
 }
+
+/// Raw constraint drops collected during resolution, aggregated into
+/// `ConstraintDecision` records at the end of a generation.
+typealias ConstraintDrops = [(travelerID: UUID?, canonicalItemID: String, key: String)]
 
 struct PackingEngine: Sendable {
     var catalog: PackingCatalog
@@ -32,7 +37,8 @@ struct PackingEngine: Sendable {
             : generateForParty(context: context, existing: existing, overrides: overrides)
         return EngineGeneration(
             items: generated.items.map { PartyInvariants.normalize($0, in: party) },
-            coverageSuppressions: generated.suppressions
+            coverageSuppressions: generated.suppressions,
+            constraintDecisions: ConstraintResolver.decisions(from: generated.drops)
         )
     }
 
@@ -93,7 +99,8 @@ struct PackingEngine: Sendable {
         context: TripContext,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
-    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression]) {
+    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
+        var drops: ConstraintDrops = []
         let suggestions = ruleSuggestions(for: context)
         let resolved = resolve(
             suggestions: suggestions,
@@ -102,17 +109,20 @@ struct PackingEngine: Sendable {
             overrides: overrides,
             ownership: .personal,
             travelerID: context.effectiveParty.primary.id,
-            assignedTravelerID: context.effectiveParty.primary.id
+            assignedTravelerID: context.effectiveParty.primary.id,
+            drops: &drops
         )
         let (covered, suppressions) = applyCoverage(resolved, context: context)
-        return (applyQuantities(covered, context: context), suppressions)
+        let completed = addCompanions(covered, context: context, overrides: overrides)
+        return (applyQuantities(completed, context: context), suppressions, drops)
     }
 
     private func generateForParty(
         context: TripContext,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
-    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression]) {
+    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
+        var drops: ConstraintDrops = []
         let party = context.effectiveParty
         let sharedIDs = Set(rules.party.sharedByDefault)
         // Weather and trip-wide activity signals are computed once, then split
@@ -144,7 +154,8 @@ struct PackingEngine: Sendable {
                 overrides: overrides,
                 ownership: .personal,
                 travelerID: traveler.id,
-                assignedTravelerID: traveler.carrierID
+                assignedTravelerID: traveler.carrierID,
+                drops: &drops
             ))
         }
 
@@ -155,13 +166,15 @@ struct PackingEngine: Sendable {
             overrides: overrides,
             ownership: .shared,
             travelerID: nil,
-            assignedTravelerID: nil
+            assignedTravelerID: nil,
+            drops: &drops
         ))
 
         var seen = Set<UUID>()
         result = result.filter { seen.insert($0.id).inserted }
         let (covered, suppressions) = applyCoverage(result, context: context)
-        return (applyQuantities(covered, context: context), suppressions)
+        let completed = addCompanions(covered, context: context, overrides: overrides)
+        return (applyQuantities(completed, context: context), suppressions, drops)
     }
 
     private func tripWideContext(_ context: TripContext) -> TripContext {
@@ -527,6 +540,10 @@ struct PackingEngine: Sendable {
         }
     }
 
+    /// Decision hierarchy (see `ConstraintResolver`): explicit user state
+    /// wins here — user-added and user-modified items pass through untouched,
+    /// and removed-item overrides keep suggestions out. Trip requirements and
+    /// constraints resolve below that, with every constraint drop recorded.
     private func resolve(
         suggestions: [RuleSuggestion],
         context: TripContext,
@@ -534,7 +551,8 @@ struct PackingEngine: Sendable {
         overrides: [RecommendationOverrideDraft],
         ownership: PackingOwnership,
         travelerID: UUID?,
-        assignedTravelerID: UUID?
+        assignedTravelerID: UUID?,
+        drops: inout ConstraintDrops
     ) -> [PackingItemDraft] {
         let includeUserAdded = context.effectiveParty.usesSimpleList
         var result: [PackingItemDraft] = includeUserAdded ? existing.filter(\.isUserAdded) : []
@@ -579,7 +597,19 @@ struct PackingEngine: Sendable {
             }
 
             guard let catalogItem = catalog.item(id: suggestion.canonicalItemID) else { continue }
-            if shouldSkipOptional(catalogItem, context: context) { continue }
+            if catalogItem.travelRestrictionReviewRequired && context.bagType.isSpaceConstrained { continue }
+            let ruling = ConstraintResolver.optionalRuling(
+                importance: catalogItem.importance,
+                tags: catalogItem.tags,
+                bag: context.bagType,
+                style: context.packingStyle
+            )
+            if !ruling.keep {
+                if let key = ruling.conflictKey {
+                    drops.append((travelerID, catalogItem.id, key))
+                }
+                continue
+            }
 
             result.append(
                 PackingItemDraft(
@@ -623,15 +653,70 @@ struct PackingEngine: Sendable {
         }
     }
 
-    private func shouldSkipOptional(_ item: CatalogItem, context: TripContext) -> Bool {
-        if item.travelRestrictionReviewRequired && context.bagType.isSpaceConstrained { return true }
-        guard item.importance == .optional else { return false }
-        guard context.bagType.appliesBagConstraint, context.bagType.isSpaceConstrained else { return false }
-        if context.packingStyle == .prepared { return false }
-        if context.packingStyle == .light {
-            return !item.tags.contains(where: { ["base", "rain", "cold", "medication"].contains($0) })
+    /// Companions are first-class dependencies: an item on the list pulls in
+    /// what it can't work without (laptop → charger, contact solution → case),
+    /// including for user-added triggers — with a reason naming the trigger,
+    /// never silently. A removed-item override keeps a companion out for
+    /// good, and a companion that is shared-by-default lands in the shared
+    /// group rather than duplicating per traveler.
+    private func addCompanions(
+        _ items: [PackingItemDraft],
+        context: TripContext,
+        overrides: [RecommendationOverrideDraft]
+    ) -> [PackingItemDraft] {
+        var result = items
+        let sharedIDs = Set(rules.party.sharedByDefault)
+        var presentShared = Set(items.filter { $0.ownershipType == .shared }.compactMap(\.canonicalItemID))
+        var presentByGroup = Dictionary(
+            grouping: items.compactMap { item in item.canonicalItemID.map { (substitutionGroup(item), $0) } },
+            by: \.0
+        ).mapValues { Set($0.map(\.1)) }
+
+        for item in items {
+            guard let canonical = item.canonicalItemID,
+                  let catalogItem = catalog.item(id: canonical) else { continue }
+            for companionID in catalogItem.companions {
+                guard let companion = catalog.item(id: companionID) else { continue }
+                let sharedCompanion = sharedIDs.contains(companionID) && !context.effectiveParty.usesSimpleList
+                let ownership: PackingOwnership = sharedCompanion ? .shared : item.ownershipType
+                let travelerID = sharedCompanion ? nil : item.travelerID
+                let group = "\(ownership.rawValue):\(travelerID?.uuidString ?? "shared")"
+                if presentShared.contains(companionID) || presentByGroup[group]?.contains(companionID) == true {
+                    continue
+                }
+                if isRemoved(companionID, ownership: ownership, travelerID: travelerID, overrides: overrides) {
+                    continue
+                }
+                let arguments = ["item": item.displayName.lowercased()]
+                result.append(
+                    PackingItemDraft(
+                        canonicalItemID: companion.id,
+                        displayName: companion.displayName,
+                        category: companion.category,
+                        quantity: 1,
+                        importance: companion.importance,
+                        sourceSignals: item.sourceSignals,
+                        reason: render(
+                            "dependency.companion",
+                            arguments,
+                            category: companion.category.rawValue,
+                            fallback: "Goes with the \(item.displayName.lowercased()) on your list."
+                        ),
+                        reasonCode: "dependency.companion",
+                        reasonArguments: arguments,
+                        ownershipType: ownership,
+                        travelerID: travelerID,
+                        assignedTravelerID: sharedCompanion ? nil : item.assignedTravelerID
+                    )
+                )
+                if sharedCompanion {
+                    presentShared.insert(companionID)
+                } else {
+                    presentByGroup[group, default: []].insert(companionID)
+                }
+            }
         }
-        return item.tags.contains("optional_luxury")
+        return result
     }
 
     /// Capability coverage for footwear and outerwear, per traveler.

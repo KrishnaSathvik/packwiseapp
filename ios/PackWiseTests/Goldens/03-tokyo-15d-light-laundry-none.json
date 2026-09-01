@@ -1,4 +1,14 @@
 {
+  "constraints" : [
+    {
+      "constraint" : "bag.space_constrained",
+      "items" : [
+        "travel_comfort.book"
+      ],
+      "owner" : "primary",
+      "summary" : "Left out to keep the bag light."
+    }
+  ],
   "coverage" : [
     {
       "capabilities" : [
