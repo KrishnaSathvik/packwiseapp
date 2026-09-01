@@ -1,5 +1,14 @@
 import Foundation
 
+/// Engine output plus the coverage decisions behind it. `items` is what the
+/// product consumes; `coverageSuppressions` is the record of what the
+/// resolver removed and why, kept from the start so the golden ledger shows
+/// reasoning rather than rules silently not firing.
+struct EngineGeneration: Sendable {
+    var items: [PackingItemDraft]
+    var coverageSuppressions: [CoverageSuppression]
+}
+
 struct PackingEngine: Sendable {
     var catalog: PackingCatalog
     var rules: PackingRulesFile
@@ -9,11 +18,22 @@ struct PackingEngine: Sendable {
         existing: [PackingItemDraft] = [],
         overrides: [RecommendationOverrideDraft] = []
     ) -> [PackingItemDraft] {
+        generateDetailed(context: context, existing: existing, overrides: overrides).items
+    }
+
+    func generateDetailed(
+        context: TripContext,
+        existing: [PackingItemDraft] = [],
+        overrides: [RecommendationOverrideDraft] = []
+    ) -> EngineGeneration {
         let party = context.effectiveParty
         let generated = party.usesSimpleList
             ? generateSimple(context: context, existing: existing, overrides: overrides)
             : generateForParty(context: context, existing: existing, overrides: overrides)
-        return generated.map { PartyInvariants.normalize($0, in: party) }
+        return EngineGeneration(
+            items: generated.items.map { PartyInvariants.normalize($0, in: party) },
+            coverageSuppressions: generated.suppressions
+        )
     }
 
     func recommendationDiff(
@@ -73,7 +93,7 @@ struct PackingEngine: Sendable {
         context: TripContext,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
-    ) -> [PackingItemDraft] {
+    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression]) {
         let suggestions = ruleSuggestions(for: context)
         let resolved = resolve(
             suggestions: suggestions,
@@ -84,15 +104,15 @@ struct PackingEngine: Sendable {
             travelerID: context.effectiveParty.primary.id,
             assignedTravelerID: context.effectiveParty.primary.id
         )
-        let substituted = applySubstitutions(resolved, context: context)
-        return applyQuantities(substituted, context: context)
+        let (covered, suppressions) = applyCoverage(resolved, context: context)
+        return (applyQuantities(covered, context: context), suppressions)
     }
 
     private func generateForParty(
         context: TripContext,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
-    ) -> [PackingItemDraft] {
+    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression]) {
         let party = context.effectiveParty
         let sharedIDs = Set(rules.party.sharedByDefault)
         // Weather and trip-wide activity signals are computed once, then split
@@ -140,8 +160,8 @@ struct PackingEngine: Sendable {
 
         var seen = Set<UUID>()
         result = result.filter { seen.insert($0.id).inserted }
-        let substituted = applySubstitutions(result, context: context)
-        return applyQuantities(substituted, context: context)
+        let (covered, suppressions) = applyCoverage(result, context: context)
+        return (applyQuantities(covered, context: context), suppressions)
     }
 
     private func tripWideContext(_ context: TripContext) -> TripContext {
@@ -617,27 +637,45 @@ struct PackingEngine: Sendable {
         return item.tags.contains("optional_luxury")
     }
 
-    private func applySubstitutions(_ items: [PackingItemDraft], context: TripContext) -> [PackingItemDraft] {
-        var result = items
-        let groups = Set(result.map { substitutionGroup($0) })
-        for group in groups {
-            for preference in rules.substitutions.preferSingleWhen.values {
-                guard let activity = preference.ifActivity, context.activities.contains(activity) else { continue }
-                if let unless = preference.unlessActivity, context.activities.contains(unless) { continue }
-                guard let keep = preference.keep else { continue }
-                let drop = preference.drop ?? rules.substitutions.needs["walking"]?.first { $0 != keep }
-                guard let drop,
-                      result.contains(where: { substitutionGroup($0) == group && $0.canonicalItemID == drop }),
-                      result.contains(where: { substitutionGroup($0) == group && $0.canonicalItemID == keep })
-                else { continue }
-                result.removeAll { substitutionGroup($0) == group && $0.canonicalItemID == drop }
-                guard let keepIndex = result.firstIndex(where: { substitutionGroup($0) == group && $0.canonicalItemID == keep }) else { continue }
-                let code = preference.reasonCode ?? "substitution.running_covers_walking"
-                result[keepIndex].reasonCode = code
-                result[keepIndex].reason = render(code, [:], fallback: result[keepIndex].reason)
-            }
+    /// Capability coverage for footwear and outerwear, per traveler.
+    /// Generalizes the old one-off substitution rules: the resolver decides
+    /// from derived needs and an explicit priority order, and every
+    /// suppression is recorded rather than silently dropped.
+    private func applyCoverage(
+        _ items: [PackingItemDraft],
+        context: TripContext
+    ) -> ([PackingItemDraft], [CoverageSuppression]) {
+        let needs = CoverageResolver.needs(context: context, thresholds: rules.weather.thresholds)
+        // A solo list has one owner, so user-added items (nil travelerID)
+        // fold into the primary's group and can claim coverage. In a party
+        // list an unassigned item stays its own group — guessing whose it is
+        // would be inference, and ambiguous inference resolves to don't.
+        let primaryID = context.effectiveParty.primary.id
+        let groups = Dictionary(grouping: items) { (item: PackingItemDraft) -> String in
+            if item.ownershipType == .shared { return "shared" }
+            let owner = item.travelerID ?? (context.effectiveParty.usesSimpleList ? primaryID : nil)
+            return "personal:\(owner?.uuidString ?? "unassigned")"
         }
-        return result
+        var keptAll: [PackingItemDraft] = []
+        var suppressionsAll: [CoverageSuppression] = []
+        for key in groups.keys.sorted() {
+            var (kept, suppressions) = CoverageResolver.resolve(items: groups[key] ?? [], needs: needs)
+            // The versatile shoe that absorbed the walking need keeps V1's
+            // substitution copy until Step 4's trace-driven reasons land.
+            for suppression in suppressions where suppression.canonicalItemID == "footwear.walking_shoes" {
+                guard let coverer = suppression.coveredBy.first,
+                      let index = kept.firstIndex(where: { $0.canonicalItemID == coverer })
+                else { continue }
+                let code = coverer == "footwear.hiking_shoes"
+                    ? "substitution.hiking_covers_walking"
+                    : "substitution.running_covers_walking"
+                kept[index].reasonCode = code
+                kept[index].reason = render(code, [:], fallback: kept[index].reason)
+            }
+            keptAll.append(contentsOf: kept)
+            suppressionsAll.append(contentsOf: suppressions)
+        }
+        return (keptAll, suppressionsAll)
     }
 
     private func substitutionGroup(_ item: PackingItemDraft) -> String {

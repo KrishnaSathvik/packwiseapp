@@ -179,9 +179,9 @@ struct GoldenEngineTests {
             RecommendationOverrideDraft(canonicalItemID: $0.canonicalItemID, action: $0.action)
         }
 
-        let items = engine.generate(context: context, existing: existing, overrides: overrides)
+        let generation = engine.generateDetailed(context: context, existing: existing, overrides: overrides)
         return Self.serialize(
-            items,
+            generation,
             fixtureID: fixture.id,
             engineVersion: engineVersion,
             party: context.effectiveParty
@@ -238,18 +238,29 @@ struct GoldenEngineTests {
         var userModified: Bool?
     }
 
+    /// One coverage suppression: the needs the item would have covered and
+    /// what covered them instead (empty `coveredBy` = the need was absent).
+    private struct GoldenCoverageEntry: Codable {
+        var owner: String
+        var suppressed: String
+        var capabilities: [String]
+        var coveredBy: [String]
+    }
+
     private struct GoldenOutput: Codable {
         var fixture: String
         var engineVersion: String
         var items: [GoldenItem]
+        var coverage: [GoldenCoverageEntry]?
     }
 
     private static func serialize(
-        _ items: [PackingItemDraft],
+        _ generation: EngineGeneration,
         fixtureID: String,
         engineVersion: String,
         party: TripParty
     ) -> String {
+        let items = generation.items
         var slugs: [UUID: String] = [:]
         var counts: [String: Int] = [:]
         for traveler in party.travelers {
@@ -287,6 +298,19 @@ struct GoldenEngineTests {
                 .sorted {
                     if $0.owner != $1.owner { return $0.owner < $1.owner }
                     return $0.canonicalItemID < $1.canonicalItemID
+                },
+            coverage: generation.coverageSuppressions.isEmpty ? nil : generation.coverageSuppressions
+                .map { suppression in
+                    GoldenCoverageEntry(
+                        owner: suppression.travelerID.flatMap { slugs[$0] } ?? "primary",
+                        suppressed: suppression.canonicalItemID,
+                        capabilities: suppression.capabilities,
+                        coveredBy: suppression.coveredBy
+                    )
+                }
+                .sorted {
+                    if $0.owner != $1.owner { return $0.owner < $1.owner }
+                    return $0.suppressed < $1.suppressed
                 }
         )
 

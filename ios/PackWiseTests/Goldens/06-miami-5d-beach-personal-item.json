@@ -1,4 +1,17 @@
 {
+  "coverage" : [
+    {
+      "capabilities" : [
+        "outerwear.rain_shell",
+        "outerwear.wind_shell"
+      ],
+      "coveredBy" : [
+
+      ],
+      "owner" : "primary",
+      "suppressed" : "clothing.rain_jacket"
+    }
+  ],
   "engineVersion" : "v1",
   "fixture" : "06-miami-5d-beach-personal-item",
   "items" : [
@@ -44,20 +57,6 @@
       "reasonCode" : "base.essential",
       "signals" : [
         "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "clothing.rain_jacket",
-      "category" : "clothing",
-      "displayName" : "Rain jacket",
-      "importance" : "important",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Rain is expected Tuesday.",
-      "reasonCode" : "weather.rain_weekday",
-      "signals" : [
-        "weather"
       ]
     },
     {

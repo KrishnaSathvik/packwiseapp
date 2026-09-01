@@ -1,4 +1,16 @@
 {
+  "coverage" : [
+    {
+      "capabilities" : [
+        "footwear.everyday_walking"
+      ],
+      "coveredBy" : [
+        "footwear.running_shoes"
+      ],
+      "owner" : "primary",
+      "suppressed" : "footwear.walking_shoes"
+    }
+  ],
   "engineVersion" : "v1",
   "fixture" : "13-override-survives-regeneration",
   "items" : [
