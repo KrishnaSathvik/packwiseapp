@@ -366,6 +366,89 @@
           "summary": "Brighter but cold"
         }
       ]
+    },
+    "MinneapolisDeepWinter": {
+      "id": "MinneapolisDeepWinter",
+      "summary": "Sub-freezing all week, snow, one day of freezing drizzle.",
+      "days": [
+        {
+          "offset": 0,
+          "symbol": "cloud.snow",
+          "highF": 18,
+          "lowF": 2,
+          "rainProbability": 0.15,
+          "uvIndex": 1,
+          "windMph": 12,
+          "snowExpected": true,
+          "summary": "Snow"
+        },
+        {
+          "offset": 1,
+          "symbol": "cloud.snow",
+          "highF": 12,
+          "lowF": -4,
+          "rainProbability": 0.1,
+          "uvIndex": 1,
+          "windMph": 18,
+          "snowExpected": true,
+          "summary": "Cold and snowy"
+        },
+        {
+          "offset": 2,
+          "symbol": "sun.max",
+          "highF": 8,
+          "lowF": -8,
+          "rainProbability": 0.05,
+          "uvIndex": 2,
+          "windMph": 15,
+          "snowExpected": false,
+          "summary": "Bitter cold sun"
+        },
+        {
+          "offset": 3,
+          "symbol": "cloud.sleet",
+          "highF": 24,
+          "lowF": 10,
+          "rainProbability": 0.55,
+          "uvIndex": 1,
+          "windMph": 10,
+          "snowExpected": false,
+          "summary": "Freezing drizzle"
+        },
+        {
+          "offset": 4,
+          "symbol": "wind.snow",
+          "highF": 28,
+          "lowF": 15,
+          "rainProbability": 0.2,
+          "uvIndex": 1,
+          "windMph": 24,
+          "snowExpected": true,
+          "summary": "Snow and wind"
+        },
+        {
+          "offset": 5,
+          "symbol": "cloud",
+          "highF": 20,
+          "lowF": 6,
+          "rainProbability": 0.1,
+          "uvIndex": 1,
+          "windMph": 14,
+          "snowExpected": false,
+          "summary": "Cloudy and cold"
+        },
+        {
+          "offset": 6,
+          "symbol": "sun.max",
+          "highF": 15,
+          "lowF": 0,
+          "rainProbability": 0.05,
+          "uvIndex": 2,
+          "windMph": 10,
+          "snowExpected": false,
+          "summary": "Cold sun"
+        }
+      ]
     }
   }
 }

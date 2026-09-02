@@ -42,7 +42,7 @@ struct ReasonQualityTests {
             at: Self.goldensDirectory,
             includingPropertiesForKeys: nil
         ).filter { $0.pathExtension == "json" }
-        #expect(urls.count == 15)
+        #expect(urls.count == 17)
         return try urls.map { try JSONDecoder().decode(GoldenFile.self, from: Data(contentsOf: $0)) }
     }
 

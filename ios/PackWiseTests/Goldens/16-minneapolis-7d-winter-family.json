@@ -1,0 +1,1302 @@
+{
+  "coverage" : [
+    {
+      "capabilities" : [
+        "outerwear.wind_shell"
+      ],
+      "coveredBy" : [
+        "clothing.winter_coat"
+      ],
+      "owner" : "child",
+      "suppressed" : "clothing.windbreaker"
+    },
+    {
+      "capabilities" : [
+        "outerwear.wind_shell"
+      ],
+      "coveredBy" : [
+        "clothing.winter_coat"
+      ],
+      "owner" : "partner",
+      "suppressed" : "clothing.windbreaker"
+    },
+    {
+      "capabilities" : [
+        "outerwear.wind_shell"
+      ],
+      "coveredBy" : [
+        "clothing.winter_coat"
+      ],
+      "owner" : "primary",
+      "suppressed" : "clothing.windbreaker"
+    }
+  ],
+  "engineVersion" : "v1",
+  "fixture" : "16-minneapolis-7d-winter-family",
+  "items" : [
+    {
+      "canonicalItemID" : "activities.daypack",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.beanie",
+      "category" : "clothing",
+      "displayName" : "Beanie / warm hat",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.gloves",
+      "category" : "clothing",
+      "displayName" : "Gloves",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.light_sweater",
+      "category" : "clothing",
+      "displayName" : "Light sweater",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Rain is expected on 1 of your 7 travel days.",
+      "reasonCode" : "weather.rain_days",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 3,
+      "quantityReason" : "3 based on a 7-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.rain_jacket",
+      "category" : "clothing",
+      "displayName" : "Rain jacket",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Rain is expected Thursday.",
+      "reasonCode" : "weather.rain_weekday",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 2,
+      "quantityReason" : "2 based on a 7-day trip.",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "baseEssential",
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 12,
+      "quantityReason" : "12 socks for Child. 7 travel days plus extra changes for a toddler.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 13,
+      "quantityReason" : "13 t-shirts for Child. 7 travel days plus extra changes for a toddler.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 3,
+      "quantityReason" : "Child is mostly in diapers — 3 pairs as backup.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.winter_coat",
+      "category" : "clothing",
+      "displayName" : "Winter coat",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.power_bank",
+      "category" : "electronics",
+      "displayName" : "Portable charger",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.boots",
+      "category" : "footwear",
+      "displayName" : "Boots",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.walking_shoes",
+      "category" : "footwear",
+      "displayName" : "Walking shoes",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll be on your feet a lot in Minneapolis.",
+      "reasonCode" : "activity.walking",
+      "signals" : [
+        "activity",
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.activities",
+      "category" : "kids",
+      "displayName" : "Small activities",
+      "importance" : "optional",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.comfort_item",
+      "category" : "kids",
+      "displayName" : "Comfort toy / blanket",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "userPreference"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.diapers",
+      "category" : "kids",
+      "displayName" : "Diapers",
+      "importance" : "critical",
+      "owner" : "child",
+      "quantity" : 35,
+      "quantityReason" : "About 5 a day for Child — 35 for 7 days.",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "userPreference"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.extra_outfits",
+      "category" : "kids",
+      "displayName" : "Extra outfits",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 3,
+      "quantityReason" : "3 spare outfits for Child — spills and surprises happen.",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.sippy",
+      "category" : "kids",
+      "displayName" : "Sippy cup",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.snacks",
+      "category" : "kids",
+      "displayName" : "Kid snacks",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "activities.daypack",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.beanie",
+      "category" : "clothing",
+      "displayName" : "Beanie / warm hat",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.gloves",
+      "category" : "clothing",
+      "displayName" : "Gloves",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.light_sweater",
+      "category" : "clothing",
+      "displayName" : "Light sweater",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Rain is expected on 1 of your 7 travel days.",
+      "reasonCode" : "weather.rain_days",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 3,
+      "quantityReason" : "3 based on a 7-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.rain_jacket",
+      "category" : "clothing",
+      "displayName" : "Rain jacket",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Rain is expected Thursday.",
+      "reasonCode" : "weather.rain_weekday",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 2,
+      "quantityReason" : "2 based on a 7-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 8,
+      "quantityReason" : "8 based on a 7-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 7,
+      "quantityReason" : "Why 7 t-shirts? You're traveling for 7 days.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 8,
+      "quantityReason" : "8 based on a 7-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.winter_coat",
+      "category" : "clothing",
+      "displayName" : "Winter coat",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.id",
+      "category" : "documents",
+      "displayName" : "Photo ID",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.headphones",
+      "category" : "electronics",
+      "displayName" : "Headphones",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a vacation trip.",
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.power_bank",
+      "category" : "electronics",
+      "displayName" : "Portable charger",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.keys",
+      "category" : "essentials",
+      "displayName" : "Keys",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.phone",
+      "category" : "essentials",
+      "displayName" : "Phone",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.wallet",
+      "category" : "essentials",
+      "displayName" : "Wallet",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.boots",
+      "category" : "footwear",
+      "displayName" : "Boots",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.walking_shoes",
+      "category" : "footwear",
+      "displayName" : "Walking shoes",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll be on your feet a lot in Minneapolis.",
+      "reasonCode" : "activity.walking",
+      "signals" : [
+        "activity",
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.blister_pads",
+      "category" : "health",
+      "displayName" : "Blister pads",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.deodorant",
+      "category" : "toiletries",
+      "displayName" : "Deodorant",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.book",
+      "category" : "travel_comfort",
+      "displayName" : "Book or magazine",
+      "importance" : "optional",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a vacation trip.",
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.compression_packing",
+      "category" : "travel_comfort",
+      "displayName" : "Packing cubes",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "category" : "travel_comfort",
+      "displayName" : "Toiletry bag",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "activities.daypack",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.beanie",
+      "category" : "clothing",
+      "displayName" : "Beanie / warm hat",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.gloves",
+      "category" : "clothing",
+      "displayName" : "Gloves",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.light_sweater",
+      "category" : "clothing",
+      "displayName" : "Light sweater",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Rain is expected on 1 of your 7 travel days.",
+      "reasonCode" : "weather.rain_days",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 3,
+      "quantityReason" : "3 based on a 7-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.rain_jacket",
+      "category" : "clothing",
+      "displayName" : "Rain jacket",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Rain is expected Thursday.",
+      "reasonCode" : "weather.rain_weekday",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 2,
+      "quantityReason" : "2 based on a 7-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 8,
+      "quantityReason" : "8 based on a 7-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 7,
+      "quantityReason" : "Why 7 t-shirts? You're traveling for 7 days.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 8,
+      "quantityReason" : "8 based on a 7-day trip.",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.winter_coat",
+      "category" : "clothing",
+      "displayName" : "Winter coat",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.id",
+      "category" : "documents",
+      "displayName" : "Photo ID",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.headphones",
+      "category" : "electronics",
+      "displayName" : "Headphones",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a vacation trip.",
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.power_bank",
+      "category" : "electronics",
+      "displayName" : "Portable charger",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.keys",
+      "category" : "essentials",
+      "displayName" : "Keys",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.phone",
+      "category" : "essentials",
+      "displayName" : "Phone",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.wallet",
+      "category" : "essentials",
+      "displayName" : "Wallet",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.boots",
+      "category" : "footwear",
+      "displayName" : "Boots",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Snow is expected during your trip.",
+      "reasonCode" : "weather.snow",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.walking_shoes",
+      "category" : "footwear",
+      "displayName" : "Walking shoes",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll be on your feet a lot in Minneapolis.",
+      "reasonCode" : "activity.walking",
+      "signals" : [
+        "activity",
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.blister_pads",
+      "category" : "health",
+      "displayName" : "Blister pads",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.deodorant",
+      "category" : "toiletries",
+      "displayName" : "Deodorant",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.book",
+      "category" : "travel_comfort",
+      "displayName" : "Book or magazine",
+      "importance" : "optional",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a vacation trip.",
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.compression_packing",
+      "category" : "travel_comfort",
+      "displayName" : "Packing cubes",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "category" : "travel_comfort",
+      "displayName" : "Toiletry bag",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "A core item for almost every trip.",
+      "reasonCode" : "base.essential",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.umbrella_compact",
+      "category" : "essentials",
+      "displayName" : "Compact umbrella",
+      "importance" : "normal",
+      "owner" : "shared",
+      "quantity" : 2,
+      "quantityReason" : "Rain is expected on 1 days. 2 umbrellas should cover your family without packing one per person.",
+      "reason" : "Rain is expected Thursday.",
+      "reasonCode" : "weather.rain_weekday",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.stroller",
+      "category" : "kids",
+      "displayName" : "Stroller",
+      "importance" : "important",
+      "owner" : "shared",
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "userPreference"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.wipes",
+      "category" : "kids",
+      "displayName" : "Wipes",
+      "importance" : "important",
+      "owner" : "shared",
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "reason" : "Suggested for Child (toddler).",
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "userPreference"
+      ]
+    }
+  ]
+}

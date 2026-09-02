@@ -74,7 +74,7 @@ struct GoldenEngineTests {
             GoldenFixtureFile.self,
             from: Data(contentsOf: Self.fixturesFile)
         )
-        #expect(file.fixtures.count == 15)
+        #expect(file.fixtures.count == 17)
         let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
         let destinations = try SharedLibrary.testDestinations()
         let weatherFixtures = try SharedLibrary.weatherFixtures()

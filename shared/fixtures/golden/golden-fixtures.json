@@ -238,6 +238,42 @@
           "isUserModified": true
         }
       ]
+    },
+    {
+      "id": "15-minneapolis-6d-deep-winter",
+      "proves": "First genuinely cold full list: sub-freezing week fires coldRain, snowExposure, and shell layering together, not in isolated unit tests",
+      "destination": "Minneapolis",
+      "weatherFixture": "MinneapolisDeepWinter",
+      "startDate": "2027-01-18",
+      "days": 6,
+      "tripType": "cityBreak",
+      "activities": ["sightseeing", "walking"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "16-minneapolis-7d-winter-family",
+      "proves": "Cold compounded with children: winter gear per traveler, care items beside snow layers, toddler bottoms under cold",
+      "destination": "Minneapolis",
+      "weatherFixture": "MinneapolisDeepWinter",
+      "startDate": "2027-01-18",
+      "days": 7,
+      "tripType": "vacation",
+      "activities": ["sightseeing", "walking"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "party": {
+        "travelMode": "family",
+        "travelers": [
+          { "role": "self", "ageGroup": "adult" },
+          { "role": "partner", "ageGroup": "adult" },
+          { "role": "child", "ageGroup": "toddler", "needs": ["diapers", "stroller", "comfortItem"] }
+        ]
+      }
     }
   ]
 }
