@@ -1,6 +1,6 @@
 {
   "comment": "Golden-harness fixtures for the packing engine (Engine V2 plan, Step 1). Dates are frozen absolute values so output never depends on the run date; weather is always the named fixture from weather/named-fixtures.json, injected directly — never fetched. A null weatherFixture deliberately exercises the seasonal-only path (month + latitude). Fixture 02b is constructible at the TripContext level but no shipped control emits laundry 'possible' vs 'planned' yet; the three-way control lands with Step 2's LaundryPlan migration.",
-  "engineVersion": "v1",
+  "engineVersion": "v2",
   "fixtures": [
     {
       "id": "01-chicago-5d-city-balanced",

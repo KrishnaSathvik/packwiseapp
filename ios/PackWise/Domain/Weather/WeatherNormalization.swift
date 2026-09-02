@@ -133,8 +133,13 @@ enum WeatherForecastNormalizer {
         let high = Int((days.map(\.highF).max() ?? 0).rounded())
         let low = Int((days.map(\.lowF).min() ?? 0).rounded())
         var parts = ["Highs around \(high)° with lows near \(low)°."]
-        if let rainDay = days.first(where: isRainDay) {
+        let rainDays = days.filter(isRainDay)
+        // One rain day is a weekday; more are a count — "Rain is expected
+        // Sunday" on a three-rain-day trip understated the week.
+        if rainDays.count == 1, let rainDay = rainDays.first {
             parts.append("Rain is expected \(rainDay.date.formatted(.dateTime.weekday(.wide))).")
+        } else if let first = rainDays.first {
+            parts.append("Rain is expected on \(rainDays.count) days, starting \(first.date.formatted(.dateTime.weekday(.wide))).")
         }
         return parts.joined(separator: " ")
     }

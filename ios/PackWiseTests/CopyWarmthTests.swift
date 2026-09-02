@@ -93,6 +93,55 @@ struct CopyWarmthTests {
         #expect(twoIDs.contains("travel_comfort.laundry_bag"))
     }
 
+    /// The audit's P2: a 3-of-5-rain-days trip summarized as "Rain is
+    /// expected Sunday." The count is the information; the first day is
+    /// the anchor.
+    @Test func summaryCountsRainDaysInsteadOfNamingOnlyTheFirst() throws {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: calendar.date(from: DateComponents(year: 2026, month: 10, day: 5))!)
+        let probabilities = [0.6, 0.2, 0.7, 0.1, 0.6]
+        let days = probabilities.enumerated().map { index, rain in
+            DailyForecast(
+                date: calendar.date(byAdding: .day, value: index, to: start)!,
+                symbol: "cloud", highF: 58, lowF: 48, rainProbability: rain,
+                uvIndex: 2, windMph: 8, snowExpected: false, summary: "d"
+            )
+        }
+        let ctx = WeatherForecastNormalizer.context(
+            days: days,
+            tripStart: start,
+            tripEnd: calendar.date(byAdding: .day, value: 4, to: start)!,
+            fetchedAt: start,
+            providerFetchedAt: start,
+            providerExpiresAt: calendar.date(byAdding: .hour, value: 1, to: start),
+            source: .weatherKit,
+            calendar: calendar
+        )
+        #expect(ctx.rainDays == 3)
+        #expect(ctx.weatherSummary.contains("Rain is expected on 3 days"))
+
+        // A single rain day keeps the plain weekday form.
+        let oneRainDays = [0.6, 0.2, 0.1, 0.1, 0.2].enumerated().map { index, rain in
+            DailyForecast(
+                date: calendar.date(byAdding: .day, value: index, to: start)!,
+                symbol: "cloud", highF: 58, lowF: 48, rainProbability: rain,
+                uvIndex: 2, windMph: 8, snowExpected: false, summary: "d"
+            )
+        }
+        let oneRain = WeatherForecastNormalizer.context(
+            days: oneRainDays,
+            tripStart: start,
+            tripEnd: calendar.date(byAdding: .day, value: 4, to: start)!,
+            fetchedAt: start,
+            providerFetchedAt: start,
+            providerExpiresAt: calendar.date(byAdding: .hour, value: 1, to: start),
+            source: .weatherKit,
+            calendar: calendar
+        )
+        #expect(oneRain.weatherSummary.contains("Rain is expected Monday"))
+        #expect(!oneRain.weatherSummary.contains("1 days"))
+    }
+
     @Test func sharedUmbrellaCopyReadsPlainly() throws {
         let dest = try destination("Seattle")
         let start = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 5))!

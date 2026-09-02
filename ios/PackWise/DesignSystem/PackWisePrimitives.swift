@@ -109,9 +109,17 @@ struct PackWiseProgressBar: View {
 /// Always carries a label, and optionally a glyph, so state never depends on
 /// colour alone.
 struct PackWiseStatusBadge: View {
+    /// `.onPhoto` sits over imagery or the branded panel, where a tinted
+    /// wash disappears: the capsule goes solid white so the tint reads.
+    enum Style {
+        case standard
+        case onPhoto
+    }
+
     var title: String
     var symbol: String?
     var tint: Color = PackWiseColor.accent
+    var style: Style = .standard
 
     var body: some View {
         HStack(spacing: PackWiseSpacing.tight) {
@@ -126,7 +134,9 @@ struct PackWiseStatusBadge: View {
         .padding(.horizontal, PackWiseSpacing.snug)
         .padding(.vertical, PackWiseSpacing.tight)
         .background(
-            tint == PackWiseColor.accent ? PackWiseColor.accentWash : tint.opacity(0.12),
+            style == .onPhoto
+                ? AnyShapeStyle(.white)
+                : AnyShapeStyle(tint == PackWiseColor.accent ? PackWiseColor.accentWash : tint.opacity(0.12)),
             in: Capsule()
         )
     }

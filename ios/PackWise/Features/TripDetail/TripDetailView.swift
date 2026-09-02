@@ -120,7 +120,8 @@ struct TripDetailView: View {
                     PackWiseStatusBadge(
                         title: "Completed",
                         symbol: "checkmark.circle.fill",
-                        tint: PackWiseColor.success
+                        tint: PackWiseColor.success,
+                        style: .onPhoto
                     )
                 }
                 Text(trip.destinationDisplayName)

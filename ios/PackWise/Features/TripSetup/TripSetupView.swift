@@ -154,6 +154,11 @@ struct TripSetupView: View {
         .background(PackWiseColor.screen)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
+        // The reference sheet's toolbar area is white; without an explicit
+        // background the bar renders the grouped-gray system default above
+        // the progress underline.
+        .toolbarBackground(PackWiseColor.screen, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .toolbar { setupToolbar(for: step) }
     }
 
