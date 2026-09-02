@@ -32,6 +32,22 @@ codesign -d --entitlements - --xml "<PackWise.app>" | plutil -convert xml1 -o - 
 
 ---
 
+## First: take a real trip through it
+
+Before the matrix below, use the app the way its owner would, not the way
+its author would. Pick somewhere you would actually go. Run all eight setup
+steps for real. Pack a few things. Not to test features — to notice what is
+annoying. Every screenshot so far came from a debug harness at a fixed
+size; nobody has felt the scrolling, the tap targets, or the setup flow on
+a real phone.
+
+While doing it, keep a plain list of what feels wrong, **without
+diagnosing**. "The date picker is fiddly" is more useful raw than
+pre-sorted into P1s and P2s — the sorting judgment works better on
+unfiltered observations, afterwards.
+
+---
+
 ## 1. App Attest — technical
 
 The chain this proves:
@@ -78,7 +94,8 @@ When something fails, the server's `message` names the exact reason —
 [ ] no notification permission prompt
 [ ] no location permission prompt
 [ ] no unexpected permission dialogs
-[ ] light and dark mode both correct
+[ ] app renders light even with the system in dark mode
+    (dark is intentionally disabled as of 2026-08-31)
 [ ] no layout clipping
 [ ] navigation feels native
 ```
@@ -242,16 +259,21 @@ Then a far-future trip:
 
 ## 9. Intelligence, on real hardware
 
-Use a real note:
-
-> Going to Tokyo, lots of walking, one fancy dinner, I'll work out twice, and I
-> get cold easily.
+**Note enrichment is gated off until M3B** (`ContextIntelligenceGate`,
+2026-09-01 audit): the model's output was reaching persisted trip data with
+no acceptance step. On device, a trip note must therefore change nothing:
 
 ```text
-[ ] interpretation yields walking, niceDinner, usuallyWorkOut, getColdEasily
+[ ] a note like "lots of walking, one fancy dinner" is stored on the trip
+[ ] it adds no activities and no chips — the list is the same with and
+    without it
 [ ] the UI never says GPT, AI, LLM, model, or a confidence number
-[ ] it still reads like PackWise
 ```
+
+The live interpret endpoint is still exercised — by the App Attest happy
+path in section 1 and the Developer Tools probes, which call it directly.
+That verifies the wire, not the wiring; the wiring returns with M3B's
+acceptance step and traveler-attribution guard.
 
 Then break the network:
 
@@ -301,7 +323,7 @@ On the device, not the simulator.
 
 ```text
 [ ] light mode
-[ ] dark mode
+[ ] system dark mode does not leak into the app (dark is locked off)
 [ ] larger Dynamic Type
 [ ] VoiceOver on the major controls
 [ ] Reduce Motion
