@@ -3,11 +3,13 @@
 iOS 18, SwiftUI, SwiftData. Bundle ID `com.packwiseapp.app`.
 
 ```sh
-brew install xcodegen   # if needed
+brew install xcodegen   # if needed; project.yml pins the minimum version
 cd ios
 xcodegen generate
 open PackWise.xcodeproj
 ```
+
+The committed `PackWise.xcodeproj` is xcodegen 2.45.4 output. Regenerating with a different generator version produces pbxproj churn that drowns the real diff — if your regeneration diff touches more than the files you added or removed, check `xcodegen version` before committing it.
 
 Set your Apple Developer Team under Signing & Capabilities. Enable **WeatherKit** on the App ID in [Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/identifiers/list). The `com.apple.developer.weatherkit` entitlement is in `PackWise.entitlements`.
 

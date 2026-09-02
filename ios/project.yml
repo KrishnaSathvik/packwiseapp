@@ -1,5 +1,9 @@
 name: PackWise
 options:
+  # Pin the generator: different xcodegen versions emit different pbxproj
+  # structure, which turns regeneration diffs into unreviewable churn.
+  # Bump this deliberately and regenerate in the same commit.
+  minimumXcodeGenVersion: 2.45.4
   bundleIdPrefix: com.packwise
   deploymentTarget:
     iOS: "18.0"
@@ -17,17 +21,14 @@ targets:
     sources:
       - path: PackWise
       - path: ../shared/catalog
-        group: Shared/Catalog
         buildPhase: resources
         includes:
           - "*.json"
       - path: ../shared/rules
-        group: Shared/Rules
         buildPhase: resources
         includes:
           - "*.json"
       - path: ../shared/fixtures
-        group: Shared/Fixtures
         buildPhase: resources
         includes:
           - "**/*.json"
