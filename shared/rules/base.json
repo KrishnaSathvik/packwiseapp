@@ -1,4 +1,11 @@
 {
+  "short_trip_skips": {
+    "max_days": 1,
+    "ids": [
+      "travel_comfort.compression_packing",
+      "travel_comfort.laundry_bag"
+    ]
+  },
   "base_essentials": [
     "essentials.wallet",
     "essentials.phone",

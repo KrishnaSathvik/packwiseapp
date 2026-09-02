@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		040D9D6C87FE22095BCAE9FE /* GoldenEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E27BDF139EA12060F23F68 /* GoldenEngineTests.swift */; };
+		0B166F5B69F9A40904D8A584 /* CopyWarmthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B3C88021D1FC4408A8EF995 /* CopyWarmthTests.swift */; };
 		0B2F13F8BAE6AA985012F7AC /* CareQuantity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11EDFD2E14659115F91752CB /* CareQuantity.swift */; };
 		0C635C13752D4BF0B3BB22CD /* IntelligenceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD775C1F26E1E2EF54B4438D /* IntelligenceServiceTests.swift */; };
 		0DCB753D3F80211760E78F2D /* RecommendationDiffSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E21852207D4E351FC95A60A /* RecommendationDiffSheet.swift */; };
@@ -208,6 +209,7 @@
 		769A9A7D41136A31F7347658 /* WeatherStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherStripView.swift; sourceTree = "<group>"; };
 		76C3410DE2AE6F0AC7A445CB /* 07-chicago-5d-business-checked.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "07-chicago-5d-business-checked.json"; sourceTree = "<group>"; };
 		7AF7D042F392558AC4913F2D /* WeatherKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WeatherKit.framework; path = System/Library/Frameworks/WeatherKit.framework; sourceTree = SDKROOT; };
+		7B3C88021D1FC4408A8EF995 /* CopyWarmthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyWarmthTests.swift; sourceTree = "<group>"; };
 		7B67C55D92F47066465D403A /* WeatherKitClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherKitClient.swift; sourceTree = "<group>"; };
 		7CEDE0CD9BDC27DF8AA9EEDD /* PackWiseTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PackWiseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7D97D97EAD26B92CD58E3532 /* Intelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Intelligence.swift; sourceTree = "<group>"; };
@@ -502,6 +504,7 @@
 				A19D6F8D79EB38C152DEA6F4 /* ClothingQuantityTests.swift */,
 				1C0849A86554DFBBE2314AAC /* ConstraintTests.swift */,
 				453CAF1B6D79899AE5FF8909 /* ContextIntelligenceGateTests.swift */,
+				7B3C88021D1FC4408A8EF995 /* CopyWarmthTests.swift */,
 				76504170E4729881CEE47E44 /* CoverageTests.swift */,
 				90E27BDF139EA12060F23F68 /* GoldenEngineTests.swift */,
 				CD775C1F26E1E2EF54B4438D /* IntelligenceServiceTests.swift */,
@@ -926,6 +929,7 @@
 				2378744014C623FD843F0B79 /* ClothingQuantityTests.swift in Sources */,
 				75505C44F5798222CBCF13A3 /* ConstraintTests.swift in Sources */,
 				58092CC8619394C9498A3635 /* ContextIntelligenceGateTests.swift in Sources */,
+				0B166F5B69F9A40904D8A584 /* CopyWarmthTests.swift in Sources */,
 				CE41B2A0B05B0C312E57C154 /* CoverageTests.swift in Sources */,
 				040D9D6C87FE22095BCAE9FE /* GoldenEngineTests.swift in Sources */,
 				0C635C13752D4BF0B3BB22CD /* IntelligenceServiceTests.swift in Sources */,

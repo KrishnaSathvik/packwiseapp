@@ -25,7 +25,9 @@ test("catalog membership is the only source of valid item IDs", () => {
 
 test("reason codes must resolve to a template", () => {
   assert.ok(isKnownReasonCode("context.gap_activity"));
-  assert.ok(isKnownReasonCode("base.essential"));
+  assert.ok(isKnownReasonCode("base.essential.toiletries"));
+  // Retired when base essentials moved to per-category copy (Slice 10).
+  assert.ok(!isKnownReasonCode("base.essential"));
   assert.ok(!isKnownReasonCode("context.sounds_plausible"));
 });
 

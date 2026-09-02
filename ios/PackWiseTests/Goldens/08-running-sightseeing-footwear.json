@@ -51,8 +51,8 @@
       "owner" : "primary",
       "quantity" : 2,
       "quantityReason" : "2 based on a 5-day trip.",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "The basics you'll wear every day.",
+      "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
       ]
@@ -79,8 +79,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "The basics you'll wear every day.",
+      "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
       ]
@@ -93,8 +93,8 @@
       "owner" : "primary",
       "quantity" : 5,
       "quantityReason" : "5 based on a 5-day trip.",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "The basics you'll wear every day.",
+      "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
       ]
@@ -107,8 +107,8 @@
       "owner" : "primary",
       "quantity" : 4,
       "quantityReason" : "Why 4 t-shirts? You're traveling for 5 days, packing light.",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "The basics you'll wear every day.",
+      "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
       ]
@@ -121,8 +121,8 @@
       "owner" : "primary",
       "quantity" : 5,
       "quantityReason" : "5 based on a 5-day trip.",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "The basics you'll wear every day.",
+      "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
       ]
@@ -163,8 +163,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Easy to forget, hard to replace.",
+      "reasonCode" : "base.essential.documents",
       "signals" : [
         "baseEssential"
       ]
@@ -177,8 +177,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Dead batteries cut days short.",
+      "reasonCode" : "base.essential.electronics",
       "signals" : [
         "baseEssential"
       ]
@@ -205,8 +205,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "The pocket check before you head out.",
+      "reasonCode" : "base.essential.essentials",
       "signals" : [
         "baseEssential"
       ]
@@ -219,8 +219,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "The pocket check before you head out.",
+      "reasonCode" : "base.essential.essentials",
       "signals" : [
         "baseEssential"
       ]
@@ -261,8 +261,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "The pocket check before you head out.",
+      "reasonCode" : "base.essential.essentials",
       "signals" : [
         "baseEssential"
       ]
@@ -303,8 +303,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Better to have and not need.",
+      "reasonCode" : "base.essential.health",
       "signals" : [
         "baseEssential"
       ]
@@ -317,8 +317,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
       ]
@@ -331,8 +331,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
       ]
@@ -345,8 +345,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
       ]
@@ -359,8 +359,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
       ]
@@ -373,8 +373,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
       ]
@@ -387,8 +387,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Keeps a full bag livable.",
+      "reasonCode" : "base.essential.travel_comfort",
       "signals" : [
         "baseEssential"
       ]
@@ -415,8 +415,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Keeps a full bag livable.",
+      "reasonCode" : "base.essential.travel_comfort",
       "signals" : [
         "baseEssential"
       ]
@@ -429,8 +429,8 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
+      "reason" : "Keeps a full bag livable.",
+      "reasonCode" : "base.essential.travel_comfort",
       "signals" : [
         "baseEssential"
       ]

@@ -73,17 +73,31 @@ struct PackingCatalog: Sendable {
     }
 }
 
+struct ShortTripSkips: Codable, Sendable {
+    /// Skip `ids` on trips of at most this many days: an organizer that
+    /// claims to be core to almost every trip has to actually be one.
+    var maxDays: Int
+    var ids: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case maxDays = "max_days"
+        case ids
+    }
+}
+
 struct BaseRulesFile: Codable, Sendable {
     var baseEssentials: [String]
     var internationalAdds: [String]
     var contextChips: [String: [String]]
     var freeTextKeywords: [String: String]
+    var shortTripSkips: ShortTripSkips?
 
     enum CodingKeys: String, CodingKey {
         case baseEssentials = "base_essentials"
         case internationalAdds = "international_adds"
         case contextChips = "context_chips"
         case freeTextKeywords = "free_text_keywords"
+        case shortTripSkips = "short_trip_skips"
     }
 }
 

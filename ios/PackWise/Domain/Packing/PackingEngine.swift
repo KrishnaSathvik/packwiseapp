@@ -354,7 +354,20 @@ struct PackingEngine: Sendable {
             addIDs(ids, signal: signal, code: code, arguments: arguments, fallback: fallback, context: context, into: &collected)
         }
 
-        add(rules.baseEssentials, signal: .baseEssential, code: "base.essential", fallback: "A core item for almost every trip.")
+        // One warm line per category beats twenty rows of "a core item for
+        // almost every trip". The code stays specific-tier so the template
+        // test keeps guarding it.
+        let skips = rules.base.shortTripSkips
+        for id in rules.baseEssentials {
+            if let skips, context.durationDays <= skips.maxDays, skips.ids.contains(id) { continue }
+            let category = catalog.item(id: id)?.category.rawValue ?? "essentials"
+            add(
+                [id],
+                signal: .baseEssential,
+                code: "base.essential.\(category)",
+                fallback: "A core item for almost every trip."
+            )
+        }
 
         if let typeRule = rules.tripTypes[context.tripType.rawValue] {
             add(
@@ -902,10 +915,15 @@ struct PackingEngine: Sendable {
 
     private func sharedQuantityReason(_ canonical: String, quantity: Int, context: TripContext, party: TripParty) -> String {
         if canonical == "essentials.umbrella_compact", let weather = context.weather, weather.rainDays > 0 {
+            // Templates can't pluralize, so the phrases arrive pre-built:
+            // never "1 days", never "1 umbrellas", and a couple is a group,
+            // not a "family".
+            let rainDaysPhrase = weather.rainDays == 1 ? "1 day" : "\(weather.rainDays) days"
+            let umbrellaPhrase = quantity == 1 ? "One umbrella" : "\(quantity) umbrellas"
             return render(
                 "party.shared_umbrella",
-                ["quantity": "\(quantity)", "rainDays": "\(weather.rainDays)"],
-                fallback: "Rain is expected on \(weather.rainDays) days. \(quantity) umbrellas should cover your family without packing one per person."
+                ["rainDaysPhrase": rainDaysPhrase, "umbrellaPhrase": umbrellaPhrase],
+                fallback: "Rain is expected on \(rainDaysPhrase). \(umbrellaPhrase) should cover your group — no need to pack one each."
             )
         }
         return render(

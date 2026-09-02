@@ -53,7 +53,8 @@ struct ReasonQualityTests {
             for item in golden.items {
                 guard item.signals.contains("weather") || item.signals.contains("activity") else { continue }
                 #expect(
-                    !Self.genericCodes.contains(item.reasonCode),
+                    !Self.genericCodes.contains(item.reasonCode)
+                        && !item.reasonCode.hasPrefix("base.essential"),
                     "\(golden.fixture): \(item.canonicalItemID) carries \(item.signals) but renders generic code '\(item.reasonCode)'"
                 )
                 for banned in Self.bannedOnSignaledItems {
