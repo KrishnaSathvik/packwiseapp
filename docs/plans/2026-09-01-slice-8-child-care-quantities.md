@@ -29,6 +29,17 @@ frozen catalog gives diapers and extra outfits one shared `quantity_kind`:
 
 - **Diapers**: daily rate × days (toddler 5/day, infant 8/day), capped at a
   week's worth with a buy-more-there reason on longer trips.
+
+  Why the plateau applies here at all: the 30-day clothing plateau exists
+  because laundry resets a washable item's supply mid-trip, so quantity
+  tracks the reuse cycle, not the calendar. A consumable has no wash cycle,
+  but it has the same underlying property — the supply can be replenished
+  mid-trip, by buying instead of washing. Quantity therefore tracks days
+  until the first realistic replenishment, not total days. That is the
+  general rule for any future consumable (wipes, formula, medication
+  courses): plateau at the replenishment horizon, and say so in the reason
+  — never let a long trip multiply a consumable to an absurd count, and
+  never cap silently as if the capped amount covered the whole trip.
 - **Extra outfits**: ceil(days/3), at most 3 — an accident buffer, not a
   second wardrobe beside the age-multiplied daily clothing.
 - **Underwear beside diapers**: capped at 3 as a backup, reason naming
