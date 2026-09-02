@@ -83,15 +83,13 @@ multipliers, sharing per/min, skip lists · `substitutions.json` ·
 
 ## Findings
 
-1. **The rain-day threshold has three homes and two production readers.**
-   `weather.json rain_probability_add` (0.35) is read by **Trip Detail's
-   UI** to pick rainy-day glyphs and detail lines; `WeatherNormalization.
-   defaultRainProbability` (0.35) is what actually computes `rainDays` for
-   the **engine**, because no caller passes the rules value in; and
-   `compactHeadline`'s default parameter carries a third copy. They agree
-   today. Tune the JSON and the screen calls a day rainy that the packing
-   list ignored. Fix shape: normalization takes the threshold from the
-   rules file, and the Swift constants become fallbacks or disappear.
+1. **The rain-day threshold had three homes and two production readers**
+   (plus a fourth copy in `MockWeatherService`'s aggregation). ~~Fixed in
+   Slice 9 (`9c42da5`)~~: the normalizer's defaults now load from
+   weather.json with a test pinning them to the file
+   (`normalizerThresholdsComeFromSharedRules`), and day classification
+   lives in `isRainDay`/`isWinterPrecipDay` helpers shared by every
+   aggregator. The Swift literals remain only as bundle-load fallbacks.
 
 2. **The "prepared buffers +3" test: two files, routed by quantity kind.**
    For the V2 clothing needs the buffer is `styleBuffer` in
@@ -101,9 +99,10 @@ multipliers, sharing per/min, skip lists · `substitutions.json` ·
    `ClothingQuantityEngine.handles(kind)` — invisible from either file.
    Not a three-file smell, but you must know the routing to find both.
 
-3. **persistentRain's 0.5 ratio is the one threshold not in
-   weather.json** — its siblings (cold, hot, wind, UV, swing) all live in
-   the thresholds block; this one is inline at `WeatherDomain.swift:283`.
+3. **persistentRain's 0.5 ratio was the one threshold not in
+   weather.json.** ~~Fixed in Slice 9~~: it now lives in the thresholds
+   block as `persistent_rain_ratio`, beside `freezing_max_f` which
+   arrived with the temperature dimension.
 
 4. **Verdict on the original question:** no hardcoded *outputs* — every
    quantity in the goldens moves when its declared inputs move, and the
