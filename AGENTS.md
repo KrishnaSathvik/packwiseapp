@@ -14,7 +14,7 @@ PackWise is a personal packing intelligence app for iPhone. The user describes a
 4. Never call OpenAI from the iPhone. Secrets stay on the PackWise Intelligence API.
 5. Explicit user decisions always win. Removed items do not silently return.
 6. Two tabs only: **Trips** and **Me**. The trip is the container for weather, packing, and Ask PackWise.
-7. The product spec decides behavior, structure, and intent; the 10-screen sheet at `design/ui-flow-overview.png` decides visual treatment where the spec is silent. Screens compose from the design system in `ios/PackWise/DesignSystem/` — tokens (`PackWiseColor`, `PackWiseFont`, `PackWiseSpacing`) and primitives — never from raw colors, fonts, or paddings. The full Packing List uses plain Reminders-style grouped rows, not cards; cards are for emphasis surfaces — Trip Detail sections, trip cards, setup summaries. Where both are silent, derive: white screen, 28pt bold headline + gray subtitle, white cards with hairline border, blue for selection, green for progress. Importance renders as a trailing `exclamationmark.circle.fill` (warning hue for critical, accent for important) and never occupies the checkbox slot — no stars.
+7. The product spec decides behavior, structure, and intent; the 10-screen sheet at `design/ui-flow-overview.png` decides visual treatment where the spec is silent. Screens compose from the design system in `ios/PackWise/DesignSystem/` — tokens (`PackWiseColor`, `PackWiseFont`, `PackWiseSpacing`) and primitives — never from raw colors, fonts, or paddings. The full Packing List uses plain Reminders-style grouped rows, not cards; cards are for emphasis surfaces — Trip Detail sections, trip cards, setup summaries. Where both are silent, derive: white screen, 28pt bold headline + gray subtitle, white cards with hairline border, blue for selection, green for progress. Importance renders as a trailing `exclamationmark.circle.fill` (warning hue for critical, accent for important) and never occupies the checkbox slot — no stars. Section-header case is decided by screen structure, not screen name: uppercase micro headers on long scrolling screens with many pinned sections (Trip Detail, Packing List); title case on short list screens (Trips Home, setup steps).
 8. Weather is trip-dated, not a general weather app. Never silently rewrite a list when the forecast changes.
 9. Stay in MVP unless the user expands scope. See `docs/roadmap.md`.
 10. No signup, no location permission, no notification permission, no paywall on first launch.
@@ -54,7 +54,7 @@ The next code should be either a fix the external pass discovers, or — once th
 
 `PACKWISE_APP_ATTEST_ENVIRONMENT` is stated per deployment, never inferred: TestFlight and App Store builds always use `production` regardless of the local entitlement. An unset value is a boot failure, not a default.
 
-M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `TripContext` is M3B; wiring gap candidates into suggestions is M3C.
+M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `TripContext` is M3B; wiring gap candidates into suggestions is M3C. The trip-setup note-enrichment path is gated off in `ContextIntelligenceGate` (2026-09-01 audit finding: it wrote inferred activities/chips into `TripRecord` with no acceptance step). It stays off until M3B lands the acceptance step and a traveler-attribution guard in the interpret prompt.
 
 - Monorepo: `ios/`, `api/`, `shared/`, `docs/`
 - iOS 18, `com.packwiseapp.app`, display name PackWise
