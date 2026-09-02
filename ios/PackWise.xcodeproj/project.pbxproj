@@ -52,6 +52,7 @@
 		558B9C1464ED49A084AAFE73 /* PackWiseTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B6824B7FF0747095620CD8 /* PackWiseTheme.swift */; };
 		55B3379BA79125DD20740E94 /* 14-manual-quantity-survives-refresh.json in Resources */ = {isa = PBXBuildFile; fileRef = F1B0A25B34293B302E287B1F /* 14-manual-quantity-survives-refresh.json */; };
 		57335D157385ECDB172ACD1B /* activity-rules.json in Resources */ = {isa = PBXBuildFile; fileRef = 6761AB2778BC52D002A33C53 /* activity-rules.json */; };
+		58092CC8619394C9498A3635 /* ContextIntelligenceGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 453CAF1B6D79899AE5FF8909 /* ContextIntelligenceGateTests.swift */; };
 		5901B22663CBB8632BF56AD8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6E0071DA45D7D698FAA37F5F /* Assets.xcassets */; };
 		5AE0A345798BEAB1798A1764 /* WeatherChangedCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E841A106CF842902CF6F2192 /* WeatherChangedCard.swift */; };
 		6045ABD7F124AAF586080F8F /* WeatherChangeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D8E37093BBD8239F626DCC /* WeatherChangeTests.swift */; };
@@ -112,6 +113,7 @@
 		BEA50475369F93B982CF9618 /* TripWeatherRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80A892375FB702AB4FC298BA /* TripWeatherRefresh.swift */; };
 		BEE5EAD5D20D877F2664DA4B /* Repositories.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD0BB23A68999DD0F3C253E /* Repositories.swift */; };
 		C2300A742E1CD13CE4DD1817 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = E888E86C4D266D4C4AD14ECA /* Models.swift */; };
+		C5AD4119C3EBE734CB5B7F99 /* ContextIntelligenceGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FC1FE12B8EBB60922B35CC /* ContextIntelligenceGate.swift */; };
 		C5FDD0FCCCE0D268AEF509B1 /* DebugAttestProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86E1F072718D3C623D2C52D /* DebugAttestProbe.swift */; };
 		CE41B2A0B05B0C312E57C154 /* CoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76504170E4729881CEE47E44 /* CoverageTests.swift */; };
 		CED45D53779C19E6874BC000 /* PackingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC7020262230D765C5188A /* PackingEngine.swift */; };
@@ -173,11 +175,13 @@
 		3E401F684F94716F65AC8AF2 /* WeatherAttributionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherAttributionView.swift; sourceTree = "<group>"; };
 		40FC0820E9532861F4745CDB /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		419BFBCE3DD60FBA874B76FB /* 12-family-toddler-7d-seasonal.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "12-family-toddler-7d-seasonal.json"; sourceTree = "<group>"; };
+		453CAF1B6D79899AE5FF8909 /* ContextIntelligenceGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextIntelligenceGateTests.swift; sourceTree = "<group>"; };
 		4E812707BD481CCBB4FD9DD7 /* health.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = health.json; sourceTree = "<group>"; };
 		4F5EAFFAE5F2B1F58EB12BED /* 10-one-day-trip.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "10-one-day-trip.json"; sourceTree = "<group>"; };
 		4FF3C085A457BD3BED136805 /* MeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeView.swift; sourceTree = "<group>"; };
 		528ED5CB95D9DF9AC5545C02 /* quantities.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = quantities.json; sourceTree = "<group>"; };
 		5496997B0838CD27A56E1012 /* FamilyToddlerThemePark.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = FamilyToddlerThemePark.json; sourceTree = "<group>"; };
+		54FC1FE12B8EBB60922B35CC /* ContextIntelligenceGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextIntelligenceGate.swift; sourceTree = "<group>"; };
 		584866B9CD3F1D17C91D8C2C /* PackingImpactCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingImpactCard.swift; sourceTree = "<group>"; };
 		5AACE49193E887E030286C47 /* TokyoInternationalWalking.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = TokyoInternationalWalking.json; sourceTree = "<group>"; };
 		5B50B260EFF252BBC08DBC17 /* ReasonQualityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasonQualityTests.swift; sourceTree = "<group>"; };
@@ -475,6 +479,7 @@
 		7323532149FED6D7E75E6DC5 /* Recommendations */ = {
 			isa = PBXGroup;
 			children = (
+				54FC1FE12B8EBB60922B35CC /* ContextIntelligenceGate.swift */,
 				7D97D97EAD26B92CD58E3532 /* Intelligence.swift */,
 			);
 			path = Recommendations;
@@ -485,6 +490,7 @@
 			children = (
 				A19D6F8D79EB38C152DEA6F4 /* ClothingQuantityTests.swift */,
 				1C0849A86554DFBBE2314AAC /* ConstraintTests.swift */,
+				453CAF1B6D79899AE5FF8909 /* ContextIntelligenceGateTests.swift */,
 				76504170E4729881CEE47E44 /* CoverageTests.swift */,
 				90E27BDF139EA12060F23F68 /* GoldenEngineTests.swift */,
 				CD775C1F26E1E2EF54B4438D /* IntelligenceServiceTests.swift */,
@@ -845,6 +851,7 @@
 				81879A3CB0B4F423B9CC70FB /* Catalog.swift in Sources */,
 				A235B0766E6B218D250B2285 /* ClothingQuantity.swift in Sources */,
 				65692DE9A267699A415B23F6 /* ConstraintResolver.swift in Sources */,
+				C5AD4119C3EBE734CB5B7F99 /* ContextIntelligenceGate.swift in Sources */,
 				F53F1533BD914916391666D5 /* CoverageResolver.swift in Sources */,
 				C5FDD0FCCCE0D268AEF509B1 /* DebugAttestProbe.swift in Sources */,
 				481B620CDC524ACBE2F66E2D /* DebugPreviewScene.swift in Sources */,
@@ -903,6 +910,7 @@
 			files = (
 				2378744014C623FD843F0B79 /* ClothingQuantityTests.swift in Sources */,
 				75505C44F5798222CBCF13A3 /* ConstraintTests.swift in Sources */,
+				58092CC8619394C9498A3635 /* ContextIntelligenceGateTests.swift in Sources */,
 				CE41B2A0B05B0C312E57C154 /* CoverageTests.swift in Sources */,
 				040D9D6C87FE22095BCAE9FE /* GoldenEngineTests.swift in Sources */,
 				0C635C13752D4BF0B3BB22CD /* IntelligenceServiceTests.swift in Sources */,

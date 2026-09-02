@@ -1046,7 +1046,7 @@ struct TripSetupView: View {
             )
             var context = existing.context(preferences: prefs, weather: weather)
             context.party = party
-            if !notes.isEmpty, let enrichment = try? await dependencies.intelligence.interpretTripNote(notes, context: context) {
+            if let enrichment = await ContextIntelligenceGate.noteEnrichment(notes: notes, context: context, intelligence: dependencies.intelligence) {
                 activities.append(contentsOf: enrichment.inferredActivities.filter { !activities.contains($0) })
                 existing.activitiesRaw = activities.joined(separator: ",")
                 var chips = Set(existing.contextChips)
@@ -1095,16 +1095,14 @@ struct TripSetupView: View {
 
         var context = trip.context(preferences: prefs, weather: weather)
         context.party = party
-        if !notes.isEmpty {
-            if let enrichment = try? await dependencies.intelligence.interpretTripNote(notes, context: context) {
-                activities.append(contentsOf: enrichment.inferredActivities.filter { !activities.contains($0) })
-                trip.activitiesRaw = activities.joined(separator: ",")
-                var chips = Set(trip.contextChips)
-                enrichment.inferredChips.forEach { chips.insert($0) }
-                trip.contextChipsRaw = chips.map(\.rawValue).joined(separator: ",")
-                context.activities = activities
-                context.contextChips = chips
-            }
+        if let enrichment = await ContextIntelligenceGate.noteEnrichment(notes: notes, context: context, intelligence: dependencies.intelligence) {
+            activities.append(contentsOf: enrichment.inferredActivities.filter { !activities.contains($0) })
+            trip.activitiesRaw = activities.joined(separator: ",")
+            var chips = Set(trip.contextChips)
+            enrichment.inferredChips.forEach { chips.insert($0) }
+            trip.contextChipsRaw = chips.map(\.rawValue).joined(separator: ",")
+            context.activities = activities
+            context.contextChips = chips
         }
 
         let items = dependencies.engine.generate(context: context)
