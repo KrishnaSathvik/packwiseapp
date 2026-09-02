@@ -226,10 +226,29 @@ struct ReasonTemplatesFile: Codable, Sendable {
 
 struct PartyRulesFile: Codable, Sendable {
     var sharedByDefault: [String]
+    /// Skipped for infants, toddlers, and school-age children.
     var skipForYoungChildren: [String]
+    /// Skipped only below school age: items a school-age child plausibly
+    /// carries (headphones, a book, their own organizers) that a toddler
+    /// does not.
+    var skipForInfantsAndToddlers: [String]
     var ageGroups: [String: AgeGroupRule]
     var activityAdds: [String: [String]]
     var sharingPolicies: [String: SharingPolicyRule]
+
+    enum CodingKeys: String, CodingKey {
+        case sharedByDefault, skipForYoungChildren, skipForInfantsAndToddlers, ageGroups, activityAdds, sharingPolicies
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sharedByDefault = try container.decode([String].self, forKey: .sharedByDefault)
+        skipForYoungChildren = try container.decode([String].self, forKey: .skipForYoungChildren)
+        skipForInfantsAndToddlers = try container.decodeIfPresent([String].self, forKey: .skipForInfantsAndToddlers) ?? []
+        ageGroups = try container.decode([String: AgeGroupRule].self, forKey: .ageGroups)
+        activityAdds = try container.decode([String: [String]].self, forKey: .activityAdds)
+        sharingPolicies = try container.decode([String: SharingPolicyRule].self, forKey: .sharingPolicies)
+    }
 }
 
 struct AgeGroupRule: Codable, Sendable {

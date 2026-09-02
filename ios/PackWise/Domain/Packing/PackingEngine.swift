@@ -319,6 +319,9 @@ struct PackingEngine: Sendable {
         if rules.party.skipForYoungChildren.contains(id), traveler.ageGroup.isYoungChild {
             return true
         }
+        if rules.party.skipForInfantsAndToddlers.contains(id), traveler.ageGroup.skipsAdultPersonalEssentials {
+            return true
+        }
         if ageRule?.skipAdultClothing == true, id.hasPrefix("clothing.") {
             return true
         }

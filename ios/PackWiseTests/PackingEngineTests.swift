@@ -353,6 +353,44 @@ struct PackingEngineTests {
         #expect(items.contains { $0.canonicalItemID == "clothing.sleepwear" && $0.travelerID == toddler.id })
     }
 
+    @Test func toddlerSkipsAdultCareItemsAndCarryables() throws {
+        let adult = Traveler.primarySelf()
+        let toddler = Traveler(name: "Ada", role: .child, ageGroup: .toddler, needs: [.diapers])
+        var ctx = context(destination: try destination("Chicago"), days: 7, type: .vacation, bag: .checked, style: .balanced, chips: [], laundry: .none)
+        ctx.party = TripParty(travelMode: .family, travelers: [adult, toddler])
+        let items = try makeEngine().generate(context: ctx)
+        let toddlerIDs = Set(items.filter { $0.travelerID == toddler.id }.map(\.canonicalItemID))
+        for id in [
+            "toiletries.deodorant", "health.pain_reliever", "health.blister_pads", "documents.id",
+            "electronics.headphones", "travel_comfort.book", "travel_comfort.compression_packing",
+            "travel_comfort.laundry_bag", "travel_comfort.toiletry_bag"
+        ] {
+            #expect(!toddlerIDs.contains(id), "\(id) should not be packed for a toddler")
+        }
+        // The gate is per-traveler: the same items stay on the adult's list.
+        let adultIDs = Set(items.filter { $0.travelerID == adult.id }.map(\.canonicalItemID))
+        #expect(adultIDs.contains("toiletries.deodorant"))
+        #expect(adultIDs.contains("documents.id"))
+        #expect(adultIDs.contains("travel_comfort.book"))
+    }
+
+    @Test func schoolAgeChildKeepsCarryablesButNotAdultCareItems() throws {
+        // A school-age child plausibly has headphones, a book, and their own
+        // packing organizers; deodorant, adult pain relief, and a photo ID
+        // stay off the list.
+        let adult = Traveler.primarySelf()
+        let child = Traveler(name: "Sam", role: .child, ageGroup: .child)
+        var ctx = context(destination: try destination("Chicago"), days: 7, type: .vacation, bag: .checked, style: .balanced, chips: [], laundry: .none)
+        ctx.party = TripParty(travelMode: .family, travelers: [adult, child])
+        let items = try makeEngine().generate(context: ctx)
+        let childIDs = Set(items.filter { $0.travelerID == child.id }.map(\.canonicalItemID))
+        #expect(childIDs.contains("electronics.headphones"))
+        #expect(childIDs.contains("travel_comfort.book"))
+        #expect(!childIDs.contains("toiletries.deodorant"))
+        #expect(!childIDs.contains("health.pain_reliever"))
+        #expect(!childIDs.contains("documents.id"))
+    }
+
     @Test func partyListFiltersUseNamesAndCollapseKids() {
         let krishna = Traveler.primarySelf(name: "Krishna")
         let maya = Traveler(name: "Maya", role: .partner, ageGroup: .adult)

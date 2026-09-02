@@ -23,7 +23,18 @@
     "electronics.laptop",
     "electronics.laptop_charger",
     "electronics.mouse",
-    "health.daily_medication"
+    "health.daily_medication",
+    "toiletries.deodorant",
+    "health.pain_reliever",
+    "health.blister_pads",
+    "documents.id"
+  ],
+  "skipForInfantsAndToddlers": [
+    "electronics.headphones",
+    "travel_comfort.book",
+    "travel_comfort.compression_packing",
+    "travel_comfort.laundry_bag",
+    "travel_comfort.toiletry_bag"
   ],
   "ageGroups": {
     "infant": {

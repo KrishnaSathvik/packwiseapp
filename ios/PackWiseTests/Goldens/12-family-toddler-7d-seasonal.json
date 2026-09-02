@@ -88,34 +88,6 @@
       ]
     },
     {
-      "canonicalItemID" : "documents.id",
-      "category" : "documents",
-      "displayName" : "Photo ID",
-      "importance" : "critical",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.headphones",
-      "category" : "electronics",
-      "displayName" : "Headphones",
-      "importance" : "normal",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Suggested for a vacation trip.",
-      "reasonCode" : "trip_type.generic",
-      "signals" : [
-        "tripType"
-      ]
-    },
-    {
       "canonicalItemID" : "electronics.phone_charger",
       "category" : "electronics",
       "displayName" : "Phone charger",
@@ -169,34 +141,6 @@
       "reasonCode" : "activity.walking",
       "signals" : [
         "activity",
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "health.blister_pads",
-      "category" : "health",
-      "displayName" : "Blister pads",
-      "importance" : "normal",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "You'll have sightseeing days in Miami.",
-      "reasonCode" : "activity.sightseeing",
-      "signals" : [
-        "activity"
-      ]
-    },
-    {
-      "canonicalItemID" : "health.pain_reliever",
-      "category" : "health",
-      "displayName" : "Pain reliever",
-      "importance" : "normal",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
-      "signals" : [
         "baseEssential"
       ]
     },
@@ -299,20 +243,6 @@
       ]
     },
     {
-      "canonicalItemID" : "toiletries.deodorant",
-      "category" : "toiletries",
-      "displayName" : "Deodorant",
-      "importance" : "important",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "toiletries.shampoo",
       "category" : "toiletries",
       "displayName" : "Shampoo",
@@ -344,62 +274,6 @@
       "canonicalItemID" : "toiletries.toothpaste",
       "category" : "toiletries",
       "displayName" : "Toothpaste",
-      "importance" : "important",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "travel_comfort.book",
-      "category" : "travel_comfort",
-      "displayName" : "Book or magazine",
-      "importance" : "optional",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Suggested for a vacation trip.",
-      "reasonCode" : "trip_type.generic",
-      "signals" : [
-        "tripType"
-      ]
-    },
-    {
-      "canonicalItemID" : "travel_comfort.compression_packing",
-      "category" : "travel_comfort",
-      "displayName" : "Packing cubes",
-      "importance" : "normal",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "travel_comfort.laundry_bag",
-      "category" : "travel_comfort",
-      "displayName" : "Laundry bag",
-      "importance" : "normal",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "A core item for almost every trip.",
-      "reasonCode" : "base.essential",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "travel_comfort.toiletry_bag",
-      "category" : "travel_comfort",
-      "displayName" : "Toiletry bag",
       "importance" : "important",
       "owner" : "child",
       "quantity" : 1,
