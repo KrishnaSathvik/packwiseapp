@@ -163,6 +163,51 @@ struct ClothingNeedPolicy: Sendable {
     }()
 }
 
+/// Slice 9: warm layers rotate on genuinely cold trips.
+///
+/// The needs model above scales daily clothing but has no temperature
+/// dimension, so an 8°F week used to pack six t-shirts and one light
+/// sweater. On a sustained-cold trip (warmest day at or below the cold
+/// threshold) the mid layers rotate like clothing instead of appearing
+/// once; at or below freezing the thermal base layers rotate too.
+///
+/// Routed by canonical id: these items' catalog quantity kinds are frozen
+/// fixed-count kinds.
+enum WarmLayerQuantities {
+    static func quantity(
+        canonicalID: String,
+        days: Int,
+        weather: TripWeatherContext?,
+        thresholds: WeatherThresholds
+    ) -> (value: Int, reasonCode: String, arguments: [String: String], fallback: String)? {
+        guard let weather, weather.isPreciseForecast else { return nil }
+        let freezing = weather.maxTemperatureF <= thresholds.freezingMaxF
+        let cold = weather.maxTemperatureF <= thresholds.coldMaxF
+        guard cold else { return nil }
+        // ceil(days / 3): a mid or base layer is re-worn about three days
+        // before it needs a wash; capped so long trips plateau.
+        let rotation = min(3, max(1, (days + 2) / 3))
+        let value: Int
+        switch canonicalID {
+        case "clothing.light_sweater":
+            value = max(freezing ? 2 : 1, rotation)
+        case "clothing.thermal_top" where freezing:
+            value = max(2, rotation)
+        case "clothing.thermal_bottom" where freezing:
+            value = days >= 5 ? 2 : 1
+        default:
+            return nil
+        }
+        guard value > 1 else { return nil }
+        return (
+            value,
+            "quantity.warm_rotation",
+            ["quantity": "\(value)", "days": "\(days)"],
+            "\(value) to rotate through \(days) cold days."
+        )
+    }
+}
+
 struct ClothingQuantityEngine: Sendable {
     var reasons: ReasonTemplatesFile
 

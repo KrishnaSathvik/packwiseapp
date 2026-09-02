@@ -18,6 +18,7 @@
 		137F8DF912389324E15AE4BA /* 11-couple-5d-rain.json in Resources */ = {isa = PBXBuildFile; fileRef = 0F0ECFBBC7733A3A441A6CE5 /* 11-couple-5d-rain.json */; };
 		14F94621AC48CE1344061834 /* kids.json in Resources */ = {isa = PBXBuildFile; fileRef = B1A986A96E74E5F0F1F19A0A /* kids.json */; };
 		185BA2937668F7DBD86BBF6A /* toiletries.json in Resources */ = {isa = PBXBuildFile; fileRef = CD55EA854572ECEE7FA9732E /* toiletries.json */; };
+		1B2B9458F221E771E25B10F3 /* 16-minneapolis-7d-winter-family.json in Resources */ = {isa = PBXBuildFile; fileRef = CED486B1F2E9DC6200786F91 /* 16-minneapolis-7d-winter-family.json */; };
 		1BAD1AF67DFD6823A4117373 /* SharedResources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F616EEE232C5D9102FEFF0A /* SharedResources.swift */; };
 		1C9826EFAE9C06CBD37AE276 /* QuantityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D25C4D9DBB9CA201CE9AFE19 /* QuantityEngine.swift */; };
 		1E32E98F30FB706BAADA6328 /* 02b-tokyo-15d-light-laundry-planned.json in Resources */ = {isa = PBXBuildFile; fileRef = 7F38D4D57832076765D83EE2 /* 02b-tokyo-15d-light-laundry-planned.json */; };
@@ -66,6 +67,7 @@
 		6CA5117851609B173C955328 /* DeviceCheck.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22613741C791A0030FE55069 /* DeviceCheck.framework */; };
 		6D350D5284D957BCD030D1E2 /* weather.json in Resources */ = {isa = PBXBuildFile; fileRef = A6AE810A85AF6BA7A557FDB9 /* weather.json */; };
 		7224A822D35F820B13C8180B /* ChicagoCityRainy5Day.json in Resources */ = {isa = PBXBuildFile; fileRef = 1950E1306161A2A39193B017 /* ChicagoCityRainy5Day.json */; };
+		73478534EFF932732A441BA9 /* WarmLayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15CC5CF6B7D99AE5A8E5A735 /* WarmLayerTests.swift */; };
 		75064360D2C13B306E238C17 /* TripTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F50866E7F4D96E58B7ED50F /* TripTypes.swift */; };
 		75505C44F5798222CBCF13A3 /* ConstraintTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0849A86554DFBBE2314AAC /* ConstraintTests.swift */; };
 		7808EC84FE78D4CF1B110722 /* DestinationVisualService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63A581C16BDF559C7FD7820B /* DestinationVisualService.swift */; };
@@ -105,6 +107,7 @@
 		A769102BDA149D778AD481C3 /* PackingImpact.swift in Sources */ = {isa = PBXBuildFile; fileRef = 601CEC4F1966DC6849FD3A22 /* PackingImpact.swift */; };
 		A852BA31FDF1C6BB401E7AB3 /* WeddingWeekend.json in Resources */ = {isa = PBXBuildFile; fileRef = 821341F2C714FD4579CC562C /* WeddingWeekend.json */; };
 		A9E4916CFA1758C9C122F87A /* party.json in Resources */ = {isa = PBXBuildFile; fileRef = AE454C66486A6A8C2B1A1691 /* party.json */; };
+		AC257A971F0BEB0703F25F24 /* 15-minneapolis-6d-deep-winter.json in Resources */ = {isa = PBXBuildFile; fileRef = E64ADDC82F92866F0B00471A /* 15-minneapolis-6d-deep-winter.json */; };
 		AD4DB3A83FFB530B89CD3966 /* DestinationVisualView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C289009870B2CA11F37870F /* DestinationVisualView.swift */; };
 		B003FFA1D2C59CCFB18E8A6C /* 03-tokyo-15d-light-laundry-none.json in Resources */ = {isa = PBXBuildFile; fileRef = B9ECE2F88390C545EB2B39DF /* 03-tokyo-15d-light-laundry-none.json */; };
 		B503D479CD083DA3779E6971 /* PackWiseDateRangePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0951C827AD2AE7CA3BAEC4C3 /* PackWiseDateRangePicker.swift */; };
@@ -158,6 +161,7 @@
 		1008F7B7F264ED80DD08EF0D /* WeatherKitWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherKitWeatherService.swift; sourceTree = "<group>"; };
 		11EDFD2E14659115F91752CB /* CareQuantity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareQuantity.swift; sourceTree = "<group>"; };
 		13120C417DB289253E83A8A3 /* LongHaulInternationalFlight.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = LongHaulInternationalFlight.json; sourceTree = "<group>"; };
+		15CC5CF6B7D99AE5A8E5A735 /* WarmLayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarmLayerTests.swift; sourceTree = "<group>"; };
 		1697CEA5933B892DFBA0BB45 /* PackWisePrimitives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackWisePrimitives.swift; sourceTree = "<group>"; };
 		1950E1306161A2A39193B017 /* ChicagoCityRainy5Day.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ChicagoCityRainy5Day.json; sourceTree = "<group>"; };
 		1B7DE8CD425F728619CE3F16 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -245,6 +249,7 @@
 		C8F081E2EE749F5F3FEE3B81 /* PackWise.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PackWise.entitlements; sourceTree = "<group>"; };
 		CD55EA854572ECEE7FA9732E /* toiletries.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = toiletries.json; sourceTree = "<group>"; };
 		CD775C1F26E1E2EF54B4438D /* IntelligenceServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelligenceServiceTests.swift; sourceTree = "<group>"; };
+		CED486B1F2E9DC6200786F91 /* 16-minneapolis-7d-winter-family.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "16-minneapolis-7d-winter-family.json"; sourceTree = "<group>"; };
 		D03309136A7EDCCFFFBD7539 /* MemoryEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryEventTests.swift; sourceTree = "<group>"; };
 		D25C4D9DBB9CA201CE9AFE19 /* QuantityEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuantityEngine.swift; sourceTree = "<group>"; };
 		DA8D4A6D62927D0C704F9A5F /* WeatherDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDetailView.swift; sourceTree = "<group>"; };
@@ -252,6 +257,7 @@
 		DC009A7A04A110F08355DAF6 /* activities.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = activities.json; sourceTree = "<group>"; };
 		DDF5BE8B1B28103EBA3C62FB /* 01-chicago-5d-city-balanced.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "01-chicago-5d-city-balanced.json"; sourceTree = "<group>"; };
 		E47C039C1E11EB46C84B8841 /* electronics.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = electronics.json; sourceTree = "<group>"; };
+		E64ADDC82F92866F0B00471A /* 15-minneapolis-6d-deep-winter.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "15-minneapolis-6d-deep-winter.json"; sourceTree = "<group>"; };
 		E841A106CF842902CF6F2192 /* WeatherChangedCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherChangedCard.swift; sourceTree = "<group>"; };
 		E86E1F072718D3C623D2C52D /* DebugAttestProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugAttestProbe.swift; sourceTree = "<group>"; };
 		E888E86C4D266D4C4AD14ECA /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -303,6 +309,8 @@
 				419BFBCE3DD60FBA874B76FB /* 12-family-toddler-7d-seasonal.json */,
 				21FBBB0B2886E794175C914A /* 13-override-survives-regeneration.json */,
 				F1B0A25B34293B302E287B1F /* 14-manual-quantity-survives-refresh.json */,
+				E64ADDC82F92866F0B00471A /* 15-minneapolis-6d-deep-winter.json */,
+				CED486B1F2E9DC6200786F91 /* 16-minneapolis-7d-winter-family.json */,
 			);
 			path = Goldens;
 			sourceTree = "<group>";
@@ -502,6 +510,7 @@
 				1BA26A7C17A5C90EE5560B90 /* PackingEngineTests.swift */,
 				F9237E072B633D8169D5D161 /* PackingImpactTests.swift */,
 				5B50B260EFF252BBC08DBC17 /* ReasonQualityTests.swift */,
+				15CC5CF6B7D99AE5A8E5A735 /* WarmLayerTests.swift */,
 				A8D8E37093BBD8239F626DCC /* WeatherChangeTests.swift */,
 				A8672F58A94DB708E98B9C4B /* WeatherNormalizationTests.swift */,
 				0E86FA48F852F85AF4C6FA1B /* Goldens */,
@@ -797,6 +806,8 @@
 				883123CD7F97DB67BAFC7AFD /* 12-family-toddler-7d-seasonal.json in Resources */,
 				9109079EE95FD679E7E55979 /* 13-override-survives-regeneration.json in Resources */,
 				55B3379BA79125DD20740E94 /* 14-manual-quantity-survives-refresh.json in Resources */,
+				AC257A971F0BEB0703F25F24 /* 15-minneapolis-6d-deep-winter.json in Resources */,
+				1B2B9458F221E771E25B10F3 /* 16-minneapolis-7d-winter-family.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -923,6 +934,7 @@
 				7FF1329C2272BBA507C66813 /* PackingEngineTests.swift in Sources */,
 				97AAB3482B02A10C51B0BFFE /* PackingImpactTests.swift in Sources */,
 				4C354A096430ECAA283B0AD3 /* ReasonQualityTests.swift in Sources */,
+				73478534EFF932732A441BA9 /* WarmLayerTests.swift in Sources */,
 				6045ABD7F124AAF586080F8F /* WeatherChangeTests.swift in Sources */,
 				2DFF425EC229FB2F7D42CF15 /* WeatherNormalizationTests.swift in Sources */,
 			);

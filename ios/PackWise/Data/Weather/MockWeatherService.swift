@@ -80,14 +80,14 @@ struct MockWeatherService: WeatherService {
                 summary: template.summary
             )
         }
-        let rainDays = days.filter { $0.rainProbability >= WeatherForecastNormalizer.defaultRainProbability }.count
+        let rainDays = days.filter { WeatherForecastNormalizer.isRainDay($0) }.count
         return TripWeatherContext(
             minTemperatureF: days.map(\.lowF).min() ?? 60,
             maxTemperatureF: days.map(\.highF).max() ?? 75,
             dailyForecast: days,
             rainDays: rainDays,
-            heavyRainDays: days.filter { $0.rainProbability >= WeatherForecastNormalizer.defaultHeavyRainProbability }.count,
-            snowDays: days.filter(\.snowExpected).count,
+            heavyRainDays: days.filter { $0.rainProbability >= WeatherForecastNormalizer.defaultHeavyRainProbability && $0.highF > WeatherForecastNormalizer.defaultFreezingMaxF }.count,
+            snowDays: days.filter { WeatherForecastNormalizer.isWinterPrecipDay($0) }.count,
             outdoorRainOverlapDays: rainDays,
             maxDailyTemperatureSwing: days.map(\.swingF).max() ?? 0,
             uvRange: days.map(\.uvIndex).max() ?? 0,

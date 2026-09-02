@@ -21,9 +21,9 @@ struct WeatherSignalChange: Hashable, Identifiable, Codable, Sendable {
 enum WeatherSignalDiffer {
     static func importance(for signal: WeatherSignal) -> WeatherSignalChangeImportance {
         switch signal {
-        case .meaningfulRain, .persistentRain, .snowExposure:
+        case .meaningfulRain, .persistentRain, .snowExposure, .freezingCold:
             return .high
-        case .coldEvenings, .coldRain, .hotOutdoorExposure, .highUVExposure, .largeTemperatureSwing:
+        case .coldEvenings, .coldRain, .sustainedCold, .hotOutdoorExposure, .highUVExposure, .largeTemperatureSwing:
             return .medium
         case .highWindExposure:
             return .low
@@ -155,6 +155,27 @@ enum WeatherChangeCopy {
                 arguments: [:],
                 templates: templates,
                 fallback: "Snow is no longer expected."
+            )
+        case (.freezingCold, true):
+            return ReasonRenderer.render(
+                code: "weather_change.freezing.now",
+                arguments: [:],
+                templates: templates,
+                fallback: "Sub-freezing temperatures are now expected."
+            )
+        case (.freezingCold, false):
+            return ReasonRenderer.render(
+                code: "weather_change.freezing.ended",
+                arguments: [:],
+                templates: templates,
+                fallback: "Temperatures no longer look sub-freezing."
+            )
+        case (.sustainedCold, true):
+            return ReasonRenderer.render(
+                code: "weather_change.sustained_cold.now",
+                arguments: [:],
+                templates: templates,
+                fallback: "Cold is now expected for your whole trip."
             )
         case (.highWindExposure, true):
             return ReasonRenderer.render(

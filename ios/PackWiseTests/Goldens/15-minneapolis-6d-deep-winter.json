@@ -58,15 +58,29 @@
       ]
     },
     {
+      "canonicalItemID" : "clothing.hoodie",
+      "category" : "clothing",
+      "displayName" : "Hoodie",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Cold through your whole trip — plan to layer.",
+      "reasonCode" : "weather.sustained_cold",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
       "canonicalItemID" : "clothing.light_sweater",
       "category" : "clothing",
       "displayName" : "Light sweater",
       "importance" : "normal",
       "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Rain is expected on 1 of your 6 travel days.",
-      "reasonCode" : "weather.rain_days",
+      "quantity" : 2,
+      "quantityReason" : "2 to rotate through 6 cold days.",
+      "reason" : "Cold temperatures are expected.",
+      "reasonCode" : "weather.cold",
       "signals" : [
         "weather"
       ]
@@ -86,15 +100,15 @@
       ]
     },
     {
-      "canonicalItemID" : "clothing.rain_jacket",
+      "canonicalItemID" : "clothing.scarf",
       "category" : "clothing",
-      "displayName" : "Rain jacket",
-      "importance" : "important",
+      "displayName" : "Scarf",
+      "importance" : "optional",
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
-      "reason" : "Rain is expected Thursday.",
-      "reasonCode" : "weather.rain_weekday",
+      "reason" : "Sub-freezing temperatures are expected.",
+      "reasonCode" : "weather.freezing",
       "signals" : [
         "weather"
       ]
@@ -125,6 +139,34 @@
       "reasonCode" : "base.essential",
       "signals" : [
         "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.thermal_bottom",
+      "category" : "clothing",
+      "displayName" : "Thermal bottoms",
+      "importance" : "optional",
+      "owner" : "primary",
+      "quantity" : 2,
+      "quantityReason" : "2 to rotate through 6 cold days.",
+      "reason" : "Sub-freezing temperatures are expected.",
+      "reasonCode" : "weather.freezing",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.thermal_top",
+      "category" : "clothing",
+      "displayName" : "Thermal top",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 2,
+      "quantityReason" : "2 to rotate through 6 cold days.",
+      "reason" : "Sub-freezing temperatures are expected.",
+      "reasonCode" : "weather.freezing",
+      "signals" : [
+        "weather"
       ]
     },
     {
@@ -251,20 +293,6 @@
       "reasonCode" : "trip_type.generic",
       "signals" : [
         "tripType"
-      ]
-    },
-    {
-      "canonicalItemID" : "essentials.umbrella_compact",
-      "category" : "essentials",
-      "displayName" : "Compact umbrella",
-      "importance" : "normal",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Rain is expected Thursday.",
-      "reasonCode" : "weather.rain_weekday",
-      "signals" : [
-        "weather"
       ]
     },
     {

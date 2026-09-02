@@ -79,6 +79,7 @@
         "daily_top": 1.75,
         "daily_underwear": 1.4,
         "daily_socks": 1.4,
+        "bottoms": 1.4,
         "toddler_backup": 1.0
       }
     },

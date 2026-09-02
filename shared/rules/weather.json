@@ -7,7 +7,9 @@
     "uv_add": 6,
     "wind_mph_add": 22,
     "temperature_swing_add": 20,
-    "heavy_rain_probability": 0.6
+    "heavy_rain_probability": 0.6,
+    "freezing_max_f": 32,
+    "persistent_rain_ratio": 0.5
   },
   "signalAdds": {
     "meaningfulRain": [
@@ -31,6 +33,15 @@
     ],
     "coldEvenings": [
       "clothing.light_sweater"
+    ],
+    "sustainedCold": [
+      "clothing.light_sweater",
+      "clothing.hoodie"
+    ],
+    "freezingCold": [
+      "clothing.thermal_top",
+      "clothing.thermal_bottom",
+      "clothing.scarf"
     ],
     "hotOutdoorExposure": [
       "clothing.shorts",

@@ -119,6 +119,12 @@ struct WeatherThresholds: Codable, Sendable {
     var windMphAdd: Double
     var temperatureSwingAdd: Double
     var heavyRainProbability: Double
+    /// At or below this high, precipitation is winter precipitation and the
+    /// trip counts as freezing for warm-layer purposes.
+    var freezingMaxF: Double
+    /// Rain on at least this fraction of trip days upgrades meaningfulRain
+    /// to persistentRain.
+    var persistentRainRatio: Double
 
     enum CodingKeys: String, CodingKey {
         case rainProbabilityAdd = "rain_probability_add"
@@ -129,6 +135,46 @@ struct WeatherThresholds: Codable, Sendable {
         case windMphAdd = "wind_mph_add"
         case temperatureSwingAdd = "temperature_swing_add"
         case heavyRainProbability = "heavy_rain_probability"
+        case freezingMaxF = "freezing_max_f"
+        case persistentRainRatio = "persistent_rain_ratio"
+    }
+
+    init(
+        rainProbabilityAdd: Double,
+        coolEveningMaxF: Double,
+        coldMaxF: Double,
+        hotMinF: Double,
+        uvAdd: Double,
+        windMphAdd: Double,
+        temperatureSwingAdd: Double,
+        heavyRainProbability: Double,
+        freezingMaxF: Double = 32,
+        persistentRainRatio: Double = 0.5
+    ) {
+        self.rainProbabilityAdd = rainProbabilityAdd
+        self.coolEveningMaxF = coolEveningMaxF
+        self.coldMaxF = coldMaxF
+        self.hotMinF = hotMinF
+        self.uvAdd = uvAdd
+        self.windMphAdd = windMphAdd
+        self.temperatureSwingAdd = temperatureSwingAdd
+        self.heavyRainProbability = heavyRainProbability
+        self.freezingMaxF = freezingMaxF
+        self.persistentRainRatio = persistentRainRatio
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        rainProbabilityAdd = try container.decode(Double.self, forKey: .rainProbabilityAdd)
+        coolEveningMaxF = try container.decode(Double.self, forKey: .coolEveningMaxF)
+        coldMaxF = try container.decode(Double.self, forKey: .coldMaxF)
+        hotMinF = try container.decode(Double.self, forKey: .hotMinF)
+        uvAdd = try container.decode(Double.self, forKey: .uvAdd)
+        windMphAdd = try container.decode(Double.self, forKey: .windMphAdd)
+        temperatureSwingAdd = try container.decode(Double.self, forKey: .temperatureSwingAdd)
+        heavyRainProbability = try container.decode(Double.self, forKey: .heavyRainProbability)
+        freezingMaxF = try container.decodeIfPresent(Double.self, forKey: .freezingMaxF) ?? 32
+        persistentRainRatio = try container.decodeIfPresent(Double.self, forKey: .persistentRainRatio) ?? 0.5
     }
 }
 

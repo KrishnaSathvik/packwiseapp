@@ -470,8 +470,13 @@ struct PackingEngine: Sendable {
 
         let rainArgs = ["rainDays": "\(conditions.rainDays)", "tripDays": "\(conditions.tripDays)"]
         if conditions.signals.contains(.meaningfulRain) || conditions.signals.contains(.persistentRain) {
-            let weekday = weather.dailyForecast.first(where: { $0.rainProbability >= rules.weather.thresholds.rainProbabilityAdd })?
-                .date.formatted(.dateTime.weekday(.wide))
+            // Sub-freezing precip days were reclassified as snow upstream;
+            // keep the named rain day consistent with that count.
+            let weekday = weather.dailyForecast.first(where: {
+                $0.rainProbability >= rules.weather.thresholds.rainProbabilityAdd
+                    && $0.highF > rules.weather.thresholds.freezingMaxF
+            })?
+            .date.formatted(.dateTime.weekday(.wide))
             if conditions.rainDays >= 2 {
                 add(rules.weather.signalAdds["persistentRain"] ?? [], code: "weather.rain_days", arguments: rainArgs, fallback: "Rain is expected on \(conditions.rainDays) of your \(conditions.tripDays) travel days.")
             } else if let weekday {
@@ -490,6 +495,12 @@ struct PackingEngine: Sendable {
             add(rules.weather.signalAdds["coldEvenings"] ?? rules.weather.signalAdds["snowExposure"] ?? [], code: "weather.cold", arguments: [:], fallback: "Cold temperatures are expected.")
         } else if conditions.signals.contains(.coldEvenings) {
             add(rules.weather.signalAdds["coldEvenings"] ?? [], code: "weather.cool_evenings", arguments: [:], fallback: "Evenings look cool.")
+        }
+        if conditions.signals.contains(.sustainedCold) {
+            add(rules.weather.signalAdds["sustainedCold"] ?? [], code: "weather.sustained_cold", arguments: [:], fallback: "Cold through your whole trip — plan to layer.")
+        }
+        if conditions.signals.contains(.freezingCold) {
+            add(rules.weather.signalAdds["freezingCold"] ?? [], code: "weather.freezing", arguments: [:], fallback: "Sub-freezing temperatures are expected.")
         }
         if conditions.signals.contains(.hotOutdoorExposure) {
             add(rules.weather.signalAdds["hotOutdoorExposure"] ?? [], code: "weather.hot", arguments: [:], fallback: "Hot weather is expected.")
@@ -810,6 +821,19 @@ struct PackingEngine: Sendable {
             if let care = CareQuantityEngine.quantity(canonicalID: canonical, days: context.durationDays, traveler: traveler) {
                 copy.quantity = care.value
                 copy.quantityReason = render(care.reasonCode, care.arguments, fallback: care.fallback)
+                return copy
+            }
+
+            // Warm layers rotate on sustained-cold trips instead of
+            // appearing once beside a week of t-shirts.
+            if let warm = WarmLayerQuantities.quantity(
+                canonicalID: canonical,
+                days: context.durationDays,
+                weather: context.weather,
+                thresholds: rules.weather.thresholds
+            ) {
+                copy.quantity = warm.value
+                copy.quantityReason = render(warm.reasonCode, warm.arguments, fallback: warm.fallback)
                 return copy
             }
 

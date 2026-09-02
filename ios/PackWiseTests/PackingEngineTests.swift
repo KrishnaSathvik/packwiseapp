@@ -427,6 +427,15 @@ struct PackingEngineTests {
         #expect(underwear.quantityReason.contains("diapers"))
     }
 
+    @Test func toddlerBottomsScaleLikeTheRestOfTheirClothing() throws {
+        // Slice 9 rider: tops, underwear, and socks had toddler multipliers;
+        // bottoms didn't — three pants for a toddler week reads thin, and at
+        // -8°F it reads dangerous.
+        let (items, toddlerID) = try familyWithToddler([.diapers])
+        let pants = try #require(items.first { $0.canonicalItemID == "clothing.pants" && $0.travelerID == toddlerID })
+        #expect(pants.quantity == 5)
+    }
+
     @Test func toddlerWithoutDiapersKeepsFullUnderwear() throws {
         // The reduction keys off the explicit diapers need, never the age.
         let (items, toddlerID) = try familyWithToddler([])

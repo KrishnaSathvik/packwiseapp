@@ -256,6 +256,11 @@ enum WeatherSignal: String, Codable, CaseIterable, Sendable {
     case highUVExposure
     case hotOutdoorExposure
     case coldEvenings
+    /// The warmest day of the trip is still cold: layers rotate, they
+    /// don't just exist.
+    case sustainedCold
+    /// The warmest day is at or below freezing: base layers and a scarf.
+    case freezingCold
     case highWindExposure
     case snowExposure
     case largeTemperatureSwing
@@ -280,7 +285,7 @@ enum WeatherSignalExtractor {
         if weather.rainDays > 0 {
             signals.insert(.meaningfulRain)
         }
-        if Double(weather.rainDays) / Double(resolvedTripDays) >= 0.5 {
+        if Double(weather.rainDays) / Double(resolvedTripDays) >= thresholds.persistentRainRatio {
             signals.insert(.persistentRain)
         }
         if weather.rainDays > 0 && weather.minTemperatureF <= thresholds.coolEveningMaxF {
@@ -291,6 +296,12 @@ enum WeatherSignalExtractor {
         }
         if weather.minTemperatureF <= thresholds.coolEveningMaxF {
             signals.insert(.coldEvenings)
+        }
+        if weather.maxTemperatureF <= thresholds.coldMaxF {
+            signals.insert(.sustainedCold)
+        }
+        if weather.maxTemperatureF <= thresholds.freezingMaxF {
+            signals.insert(.freezingCold)
         }
         if weather.maxTemperatureF >= thresholds.hotMinF && outdoorActivities {
             signals.insert(.hotOutdoorExposure)

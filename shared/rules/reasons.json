@@ -70,6 +70,9 @@
     "preference.wearContacts": "You wear contacts.",
     "quantity.age_extra": "{quantity} {item} for {name}. {days} travel days plus extra changes for a {ageGroup}.",
     "quantity.daily_top": "You're traveling for {days} days{styleClause}{laundryClause}.",
+    "weather.sustained_cold": "Cold through your whole trip — plan to layer.",
+    "weather.freezing": "Sub-freezing temperatures are expected.",
+    "quantity.warm_rotation": "{quantity} to rotate through {days} cold days.",
     "quantity.diapers": "About {rate} a day for {name} — {quantity} for {days} days.",
     "quantity.diapers_restock": "About {rate} a day for {name}. {quantity} covers the first week — plan to buy more there.",
     "quantity.extra_outfits": "{quantity} spare outfits for {name} — spills and surprises happen.",
@@ -100,6 +103,9 @@
     "weather_change.snow.now": "Snow is now expected.",
     "weather_change.swing.now": "Larger temperature swings are now expected.",
     "weather_change.uv.now": "Sun exposure is now high.",
-    "weather_change.wind.now": "It's now looking windy."
+    "weather_change.wind.now": "It's now looking windy.",
+    "weather_change.freezing.now": "Sub-freezing temperatures are now expected.",
+    "weather_change.freezing.ended": "Temperatures no longer look sub-freezing.",
+    "weather_change.sustained_cold.now": "Cold is now expected for your whole trip."
   }
 }

@@ -116,6 +116,8 @@ struct RecommendationDiffScreen: View {
         case .highUVExposure: active ? "High sun exposure" : "Moderate sun"
         case .hotOutdoorExposure: active ? "Hot days" : "Milder days"
         case .coldEvenings: active ? "Cool evenings" : "Mild evenings"
+        case .sustainedCold: active ? "Cold all trip" : "Milder trip"
+        case .freezingCold: active ? "Sub-freezing" : "Above freezing"
         case .highWindExposure: active ? "Windy" : "Calm winds"
         case .snowExposure: active ? "Snow expected" : "No snow"
         case .largeTemperatureSwing: active ? "Big day-night swings" : "Steady temperatures"

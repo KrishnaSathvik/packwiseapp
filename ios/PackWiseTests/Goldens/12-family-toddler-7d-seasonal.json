@@ -22,8 +22,8 @@
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "child",
-      "quantity" : 3,
-      "quantityReason" : "3 based on a 7-day trip.",
+      "quantity" : 5,
+      "quantityReason" : "5 pants for Child. 7 travel days plus extra changes for a toddler.",
       "reason" : "A core item for almost every trip.",
       "reasonCode" : "base.essential",
       "signals" : [

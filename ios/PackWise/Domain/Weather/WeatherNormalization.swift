@@ -2,8 +2,16 @@ import Foundation
 
 enum WeatherForecastNormalizer {
     static let dailyHorizonDays = 10
-    static let defaultRainProbability = 0.35
-    static let defaultHeavyRainProbability = 0.6
+
+    /// Single source for precipitation thresholds: shared/rules/weather.json.
+    /// Trip Detail reads the same file to pick rainy-day glyphs, so the
+    /// screen and the engine can never disagree about which day counts as
+    /// rainy. The literals below are last-resort fallbacks for a bundle
+    /// that failed to load, and a test pins the loaded values to the file.
+    private static let ruleThresholds = try? SharedLibrary.rules().weather.thresholds
+    static let defaultRainProbability = ruleThresholds?.rainProbabilityAdd ?? 0.35
+    static let defaultHeavyRainProbability = ruleThresholds?.heavyRainProbability ?? 0.6
+    static let defaultFreezingMaxF = ruleThresholds?.freezingMaxF ?? 32
     static let farFutureCopy =
         "Detailed forecast isn't available yet. Your list currently uses seasonal conditions and trip details."
 
@@ -53,7 +61,8 @@ enum WeatherForecastNormalizer {
         attribution: WeatherAttribution? = nil,
         calendar: Calendar,
         rainProbability: Double = defaultRainProbability,
-        heavyRainProbability: Double = defaultHeavyRainProbability
+        heavyRainProbability: Double = defaultHeavyRainProbability,
+        freezingMaxF: Double = defaultFreezingMaxF
     ) -> TripWeatherContext {
         let clipped = clip(days, tripStart: tripStart, tripEnd: tripEnd, calendar: calendar)
         let trip = tripDays(start: tripStart, end: tripEnd, calendar: calendar)
@@ -61,22 +70,23 @@ enum WeatherForecastNormalizer {
         let coveredCount = trip.filter { covered.contains(calendar.startOfDay(for: $0)) }.count
         let whole = !trip.isEmpty && coveredCount == trip.count
         let partial = coveredCount > 0 && !whole
-        let rainDays = clipped.filter { $0.rainProbability >= rainProbability }.count
+        let isRainDay = { self.isRainDay($0, rainProbability: rainProbability, freezingMaxF: freezingMaxF) }
+        let rainDays = clipped.filter(isRainDay).count
         let summary: String
         if clipped.isEmpty {
             summary = farFutureCopy
         } else if partial {
             summary = "Forecast available for part of your trip."
         } else {
-            summary = makeSummary(from: clipped, rainProbability: rainProbability)
+            summary = makeSummary(from: clipped, isRainDay: isRainDay)
         }
         return TripWeatherContext(
             minTemperatureF: clipped.map(\.lowF).min() ?? 0,
             maxTemperatureF: clipped.map(\.highF).max() ?? 0,
             dailyForecast: clipped,
             rainDays: rainDays,
-            heavyRainDays: clipped.filter { $0.rainProbability >= heavyRainProbability }.count,
-            snowDays: clipped.filter(\.snowExpected).count,
+            heavyRainDays: clipped.filter { $0.rainProbability >= heavyRainProbability && $0.highF > freezingMaxF }.count,
+            snowDays: clipped.filter { isWinterPrecipDay($0, rainProbability: rainProbability, freezingMaxF: freezingMaxF) }.count,
             outdoorRainOverlapDays: rainDays,
             maxDailyTemperatureSwing: clipped.map(\.swingF).max() ?? 0,
             uvRange: clipped.map(\.uvIndex).max() ?? 0,
@@ -97,12 +107,33 @@ enum WeatherForecastNormalizer {
         )
     }
 
-    private static func makeSummary(from days: [DailyForecast], rainProbability: Double) -> String {
+    /// Precipitation on a sub-freezing day is sleet or snow, not rain: it
+    /// belongs to the winter kit (parka, boots), never the umbrella-and-
+    /// shell path. Every aggregator — this normalizer, the mock service,
+    /// anything counting rainy days — must classify through these two, so
+    /// the counts can never drift apart.
+    static func isRainDay(
+        _ day: DailyForecast,
+        rainProbability: Double = defaultRainProbability,
+        freezingMaxF: Double = defaultFreezingMaxF
+    ) -> Bool {
+        day.rainProbability >= rainProbability && day.highF > freezingMaxF
+    }
+
+    static func isWinterPrecipDay(
+        _ day: DailyForecast,
+        rainProbability: Double = defaultRainProbability,
+        freezingMaxF: Double = defaultFreezingMaxF
+    ) -> Bool {
+        day.snowExpected || (day.rainProbability >= rainProbability && day.highF <= freezingMaxF)
+    }
+
+    private static func makeSummary(from days: [DailyForecast], isRainDay: (DailyForecast) -> Bool) -> String {
         guard !days.isEmpty else { return farFutureCopy }
         let high = Int((days.map(\.highF).max() ?? 0).rounded())
         let low = Int((days.map(\.lowF).min() ?? 0).rounded())
         var parts = ["Highs around \(high)° with lows near \(low)°."]
-        if let rainDay = days.first(where: { $0.rainProbability >= rainProbability }) {
+        if let rainDay = days.first(where: isRainDay) {
             parts.append("Rain is expected \(rainDay.date.formatted(.dateTime.weekday(.wide))).")
         }
         return parts.joined(separator: " ")

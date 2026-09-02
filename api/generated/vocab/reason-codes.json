@@ -75,22 +75,27 @@
     "quantity.extra_outfit_single",
     "quantity.extra_outfits",
     "quantity.underwear_diapered",
+    "quantity.warm_rotation",
     "substitution.hiking_covers_walking",
     "substitution.running_covers_walking",
     "trip_type.generic",
     "weather.cold",
     "weather.cool_evenings",
+    "weather.freezing",
     "weather.hot",
     "weather.rain_days",
     "weather.rain_weekday",
     "weather.seasonal_layer",
     "weather.seasonal_sun",
     "weather.snow",
+    "weather.sustained_cold",
     "weather.temperature_swing",
     "weather.uv",
     "weather.wind",
     "weather_change.cold_evenings.ended",
     "weather_change.cold_evenings.now",
+    "weather_change.freezing.ended",
+    "weather_change.freezing.now",
     "weather_change.generic",
     "weather_change.hot.now",
     "weather_change.rain.ended",
@@ -98,6 +103,7 @@
     "weather_change.rain.now_generic",
     "weather_change.snow.ended",
     "weather_change.snow.now",
+    "weather_change.sustained_cold.now",
     "weather_change.swing.now",
     "weather_change.uv.now",
     "weather_change.wind.now"
@@ -253,6 +259,10 @@
       "name",
       "quantity"
     ],
+    "quantity.warm_rotation": [
+      "days",
+      "quantity"
+    ],
     "substitution.hiking_covers_walking": [],
     "substitution.running_covers_walking": [],
     "trip_type.generic": [
@@ -260,6 +270,7 @@
     ],
     "weather.cold": [],
     "weather.cool_evenings": [],
+    "weather.freezing": [],
     "weather.hot": [],
     "weather.rain_days": [
       "rainDays",
@@ -271,6 +282,7 @@
     "weather.seasonal_layer": [],
     "weather.seasonal_sun": [],
     "weather.snow": [],
+    "weather.sustained_cold": [],
     "weather.temperature_swing": [
       "swing"
     ],
@@ -278,6 +290,8 @@
     "weather.wind": [],
     "weather_change.cold_evenings.ended": [],
     "weather_change.cold_evenings.now": [],
+    "weather_change.freezing.ended": [],
+    "weather_change.freezing.now": [],
     "weather_change.generic": [],
     "weather_change.hot.now": [],
     "weather_change.rain.ended": [],
@@ -287,6 +301,7 @@
     "weather_change.rain.now_generic": [],
     "weather_change.snow.ended": [],
     "weather_change.snow.now": [],
+    "weather_change.sustained_cold.now": [],
     "weather_change.swing.now": [],
     "weather_change.uv.now": [],
     "weather_change.wind.now": []
