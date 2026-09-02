@@ -79,8 +79,8 @@
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "child",
-      "quantity" : 12,
-      "quantityReason" : "12 underwear for Child. 7 travel days plus extra changes for a toddler.",
+      "quantity" : 3,
+      "quantityReason" : "Child is mostly in diapers — 3 pairs as backup.",
       "reason" : "A core item for almost every trip.",
       "reasonCode" : "base.essential",
       "signals" : [
@@ -178,8 +178,8 @@
       "displayName" : "Diapers",
       "importance" : "critical",
       "owner" : "child",
-      "quantity" : 9,
-      "quantityReason" : "9 based on a 7-day trip.",
+      "quantity" : 35,
+      "quantityReason" : "About 5 a day for Child — 35 for 7 days.",
       "reason" : "Suggested for Child (toddler).",
       "reasonCode" : "party.age_group",
       "signals" : [
@@ -192,8 +192,8 @@
       "displayName" : "Extra outfits",
       "importance" : "important",
       "owner" : "child",
-      "quantity" : 9,
-      "quantityReason" : "9 based on a 7-day trip.",
+      "quantity" : 3,
+      "quantityReason" : "3 spare outfits for Child — spills and surprises happen.",
       "reason" : "Suggested for Child (toddler).",
       "reasonCode" : "party.age_group",
       "signals" : [

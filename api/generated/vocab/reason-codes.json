@@ -70,6 +70,11 @@
     "preference.wearContacts",
     "quantity.age_extra",
     "quantity.daily_top",
+    "quantity.diapers",
+    "quantity.diapers_restock",
+    "quantity.extra_outfit_single",
+    "quantity.extra_outfits",
+    "quantity.underwear_diapered",
     "substitution.hiking_covers_walking",
     "substitution.running_covers_walking",
     "trip_type.generic",
@@ -225,6 +230,28 @@
       "days",
       "laundryClause",
       "styleClause"
+    ],
+    "quantity.diapers": [
+      "days",
+      "name",
+      "quantity",
+      "rate"
+    ],
+    "quantity.diapers_restock": [
+      "name",
+      "quantity",
+      "rate"
+    ],
+    "quantity.extra_outfit_single": [
+      "name"
+    ],
+    "quantity.extra_outfits": [
+      "name",
+      "quantity"
+    ],
+    "quantity.underwear_diapered": [
+      "name",
+      "quantity"
     ],
     "substitution.hiking_covers_walking": [],
     "substitution.running_covers_walking": [],

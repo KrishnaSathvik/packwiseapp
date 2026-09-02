@@ -374,6 +374,66 @@ struct PackingEngineTests {
         #expect(adultIDs.contains("travel_comfort.book"))
     }
 
+    private func familyWithToddler(_ needs: Set<ChildNeed>, days: Int = 7) throws -> (items: [PackingItemDraft], toddlerID: UUID) {
+        let adult = Traveler.primarySelf()
+        let toddler = Traveler(name: "Ada", role: .child, ageGroup: .toddler, needs: needs)
+        var ctx = context(destination: try destination("Chicago"), days: days, type: .vacation, bag: .checked, style: .balanced, chips: [], laundry: .none)
+        ctx.party = TripParty(travelMode: .family, travelers: [adult, toddler])
+        return (try makeEngine().generate(context: ctx), toddler.id)
+    }
+
+    @Test func diapersScalePerUseNotByTripDays() throws {
+        // A toddler runs through about five diapers a day; "days + 2" was a
+        // week of trouble dressed as arithmetic.
+        let (items, toddlerID) = try familyWithToddler([.diapers])
+        let diapers = try #require(items.first { $0.canonicalItemID == "kids.diapers" && $0.travelerID == toddlerID })
+        #expect(diapers.quantity == 35)
+        #expect(diapers.quantityReason.contains("a day"))
+    }
+
+    @Test func infantDiapersUseTheInfantRate() throws {
+        let adult = Traveler.primarySelf()
+        let infant = Traveler(name: "Noor", role: .child, ageGroup: .infant, needs: [.diapers])
+        var ctx = context(destination: try destination("Chicago"), days: 5, type: .vacation, bag: .checked, style: .balanced, chips: [], laundry: .none)
+        ctx.party = TripParty(travelMode: .family, travelers: [adult, infant])
+        let items = try makeEngine().generate(context: ctx)
+        let diapers = try #require(items.first { $0.canonicalItemID == "kids.diapers" && $0.travelerID == infant.id })
+        #expect(diapers.quantity == 40)
+    }
+
+    @Test func diapersPlateauWithARestockReasonOnLongTrips() throws {
+        // Nobody hauls a month of diapers: a week's worth, then buy there.
+        let (items, toddlerID) = try familyWithToddler([.diapers], days: 14)
+        let diapers = try #require(items.first { $0.canonicalItemID == "kids.diapers" && $0.travelerID == toddlerID })
+        #expect(diapers.quantity == 35)
+        #expect(diapers.quantityReason.contains("first week"))
+    }
+
+    @Test func extraOutfitsAreASmallBufferNotADuration() throws {
+        // Daily clothing already scales through the age multipliers; extra
+        // outfits are an accident buffer beside it, not a second wardrobe.
+        let (items, toddlerID) = try familyWithToddler([.diapers])
+        let outfits = try #require(items.first { $0.canonicalItemID == "kids.extra_outfits" && $0.travelerID == toddlerID })
+        #expect(outfits.quantity == 3)
+    }
+
+    @Test func diaperedToddlerGetsBackupUnderwearOnly() throws {
+        // Partial coverage, deliberately: diapers satisfy most underwear
+        // uses, but a potty-training toddler whose parent ticked diapers
+        // still needs a few pairs — wrong in the cheap direction only.
+        let (items, toddlerID) = try familyWithToddler([.diapers])
+        let underwear = try #require(items.first { $0.canonicalItemID == "clothing.underwear" && $0.travelerID == toddlerID })
+        #expect(underwear.quantity == 3)
+        #expect(underwear.quantityReason.contains("diapers"))
+    }
+
+    @Test func toddlerWithoutDiapersKeepsFullUnderwear() throws {
+        // The reduction keys off the explicit diapers need, never the age.
+        let (items, toddlerID) = try familyWithToddler([])
+        let underwear = try #require(items.first { $0.canonicalItemID == "clothing.underwear" && $0.travelerID == toddlerID })
+        #expect(underwear.quantity == 12)
+    }
+
     @Test func schoolAgeChildKeepsCarryablesButNotAdultCareItems() throws {
         // A school-age child plausibly has headphones, a book, and their own
         // packing organizers; deodorant, adult pain relief, and a photo ID

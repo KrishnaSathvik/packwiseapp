@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		040D9D6C87FE22095BCAE9FE /* GoldenEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E27BDF139EA12060F23F68 /* GoldenEngineTests.swift */; };
+		0B2F13F8BAE6AA985012F7AC /* CareQuantity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11EDFD2E14659115F91752CB /* CareQuantity.swift */; };
 		0C635C13752D4BF0B3BB22CD /* IntelligenceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD775C1F26E1E2EF54B4438D /* IntelligenceServiceTests.swift */; };
 		0DCB753D3F80211760E78F2D /* RecommendationDiffSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E21852207D4E351FC95A60A /* RecommendationDiffSheet.swift */; };
 		0DE3A765C66D87C6FFC1E05A /* WeatherNormalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE539FC3C1958BCC9C7D4E35 /* WeatherNormalization.swift */; };
@@ -155,6 +156,7 @@
 		0CEC422A445C994396AF856A /* 06-miami-5d-beach-personal-item.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "06-miami-5d-beach-personal-item.json"; sourceTree = "<group>"; };
 		0F0ECFBBC7733A3A441A6CE5 /* 11-couple-5d-rain.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "11-couple-5d-rain.json"; sourceTree = "<group>"; };
 		1008F7B7F264ED80DD08EF0D /* WeatherKitWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherKitWeatherService.swift; sourceTree = "<group>"; };
+		11EDFD2E14659115F91752CB /* CareQuantity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareQuantity.swift; sourceTree = "<group>"; };
 		13120C417DB289253E83A8A3 /* LongHaulInternationalFlight.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = LongHaulInternationalFlight.json; sourceTree = "<group>"; };
 		1697CEA5933B892DFBA0BB45 /* PackWisePrimitives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackWisePrimitives.swift; sourceTree = "<group>"; };
 		1950E1306161A2A39193B017 /* ChicagoCityRainy5Day.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ChicagoCityRainy5Day.json; sourceTree = "<group>"; };
@@ -448,6 +450,7 @@
 		6FEF913E762E0098A9F12471 /* Packing */ = {
 			isa = PBXGroup;
 			children = (
+				11EDFD2E14659115F91752CB /* CareQuantity.swift */,
 				B55EC35C902E7A792FD006B6 /* Catalog.swift */,
 				6A0E8822DF70E9125BAF7BCF /* ClothingQuantity.swift */,
 				1B8A06F50222634571D50FD7 /* ConstraintResolver.swift */,
@@ -848,6 +851,7 @@
 			files = (
 				9A99E0FD6BB9530E6A13B2A9 /* AppDependencies.swift in Sources */,
 				EC3F86D0EAF75C79A2AD2C54 /* AppIntegrityProvider.swift in Sources */,
+				0B2F13F8BAE6AA985012F7AC /* CareQuantity.swift in Sources */,
 				81879A3CB0B4F423B9CC70FB /* Catalog.swift in Sources */,
 				A235B0766E6B218D250B2285 /* ClothingQuantity.swift in Sources */,
 				65692DE9A267699A415B23F6 /* ConstraintResolver.swift in Sources */,

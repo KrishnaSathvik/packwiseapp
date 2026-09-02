@@ -803,6 +803,16 @@ struct PackingEngine: Sendable {
             }
 
             let traveler = party.travelers.first { $0.id == item.travelerID }
+
+            // Care items are consumed per use, not worn per day; they route
+            // by id because the frozen catalog gives diapers and extra
+            // outfits one shared kind.
+            if let care = CareQuantityEngine.quantity(canonicalID: canonical, days: context.durationDays, traveler: traveler) {
+                copy.quantity = care.value
+                copy.quantityReason = render(care.reasonCode, care.arguments, fallback: care.fallback)
+                return copy
+            }
+
             let multipliers = traveler.flatMap { rules.party.ageGroups[$0.ageGroup.rawValue]?.quantityMultipliers } ?? [:]
             // The clothing family runs on the needs-based V2 model; every
             // other kind stays on the legacy policy file untouched.
@@ -824,6 +834,21 @@ struct PackingEngine: Sendable {
                 )
             copy.quantity = result.value
             copy.quantityReason = result.reason
+            // Diapers satisfy most underwear uses — partial coverage, keyed
+            // to the explicit diapers need and never the age alone, and a
+            // few pairs stay for the potty-training case.
+            if catalogItem.quantityKind == "daily_underwear",
+               let traveler,
+               traveler.ageGroup.skipsAdultPersonalEssentials,
+               traveler.needs.contains(.diapers),
+               copy.quantity > CareQuantityEngine.diaperedUnderwearBackup {
+                copy.quantity = CareQuantityEngine.diaperedUnderwearBackup
+                copy.quantityReason = render(
+                    "quantity.underwear_diapered",
+                    ["quantity": "\(copy.quantity)", "name": traveler.displayName],
+                    fallback: "\(traveler.displayName) is mostly in diapers — \(copy.quantity) pairs as backup."
+                )
+            }
             return copy
         }
         .sorted {
