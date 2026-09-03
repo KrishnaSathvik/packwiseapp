@@ -1,0 +1,1296 @@
+{
+  "coverage" : [
+    {
+      "capabilities" : [
+        "outerwear.rain_shell",
+        "outerwear.wind_shell"
+      ],
+      "coveredBy" : [
+
+      ],
+      "owner" : "partner",
+      "suppressed" : "clothing.rain_jacket"
+    },
+    {
+      "capabilities" : [
+        "outerwear.rain_shell",
+        "outerwear.wind_shell"
+      ],
+      "coveredBy" : [
+
+      ],
+      "owner" : "primary",
+      "suppressed" : "clothing.rain_jacket"
+    }
+  ],
+  "engineVersion" : "v2",
+  "fixture" : "24-miami-6d-family-infant-no-needs",
+  "items" : [
+    {
+      "canonicalItemID" : "activities.daypack",
+      "carrier" : "primary",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.electronics",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.power_bank",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Portable charger",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.sunglasses",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Sunglasses",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Hot weather is expected.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.hot",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.walking_shoes",
+      "carrier" : "primary",
+      "category" : "footwear",
+      "displayName" : "Walking shoes",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll be on your feet a lot in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.walking",
+      "signals" : [
+        "activity",
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.burp_cloths",
+      "carrier" : "primary",
+      "category" : "kids",
+      "displayName" : "Burp cloths",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for Child (infant).",
+      "reasonArguments" : {
+        "ageGroup" : "infant",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.extra_outfits",
+      "carrier" : "primary",
+      "category" : "kids",
+      "displayName" : "Extra outfits",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 2,
+      "quantityReason" : "2 spare outfits for Child — spills and surprises happen.",
+      "reason" : "Suggested for Child (infant).",
+      "reasonArguments" : {
+        "ageGroup" : "infant",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.sleep_sack",
+      "carrier" : "primary",
+      "category" : "kids",
+      "displayName" : "Sleep sack",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for Child (infant).",
+      "reasonArguments" : {
+        "ageGroup" : "infant",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "activities.daypack",
+      "carrier" : "partner",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.hat_sun",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Sun hat",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Hot weather is expected.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.hot",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 3,
+      "quantityReason" : "3 based on a 6-day trip.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.shorts",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Shorts",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 3,
+      "quantityReason" : "3 based on a 6-day trip.",
+      "reason" : "Hot weather is expected.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.hot",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 2,
+      "quantityReason" : "2 based on a 6-day trip.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 7,
+      "quantityReason" : "7 based on a 6-day trip.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 6,
+      "quantityReason" : "Why 6 t-shirts? You're traveling for 6 days.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 7,
+      "quantityReason" : "7 based on a 6-day trip.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.id",
+      "carrier" : "partner",
+      "category" : "documents",
+      "displayName" : "Photo ID",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Easy to forget, hard to replace.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.documents",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.headphones",
+      "carrier" : "partner",
+      "category" : "electronics",
+      "displayName" : "Headphones",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a vacation trip.",
+      "reasonArguments" : {
+        "tripType" : "vacation"
+      },
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "partner",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.electronics",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.power_bank",
+      "carrier" : "partner",
+      "category" : "electronics",
+      "displayName" : "Portable charger",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.keys",
+      "carrier" : "partner",
+      "category" : "essentials",
+      "displayName" : "Keys",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.phone",
+      "carrier" : "partner",
+      "category" : "essentials",
+      "displayName" : "Phone",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.sunglasses",
+      "carrier" : "partner",
+      "category" : "essentials",
+      "displayName" : "Sunglasses",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Hot weather is expected.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.hot",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.wallet",
+      "carrier" : "partner",
+      "category" : "essentials",
+      "displayName" : "Wallet",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.walking_shoes",
+      "carrier" : "partner",
+      "category" : "footwear",
+      "displayName" : "Walking shoes",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll be on your feet a lot in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.walking",
+      "signals" : [
+        "activity",
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.blister_pads",
+      "carrier" : "partner",
+      "category" : "health",
+      "displayName" : "Blister pads",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "carrier" : "partner",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Better to have and not need.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.health",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.deodorant",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Deodorant",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.book",
+      "carrier" : "partner",
+      "category" : "travel_comfort",
+      "displayName" : "Book or magazine",
+      "importance" : "optional",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a vacation trip.",
+      "reasonArguments" : {
+        "tripType" : "vacation"
+      },
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.compression_packing",
+      "carrier" : "partner",
+      "category" : "travel_comfort",
+      "displayName" : "Packing cubes",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "carrier" : "partner",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "carrier" : "partner",
+      "category" : "travel_comfort",
+      "displayName" : "Toiletry bag",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "activities.daypack",
+      "carrier" : "primary",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.hat_sun",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Sun hat",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Hot weather is expected.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.hot",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 3,
+      "quantityReason" : "3 based on a 6-day trip.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.shorts",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Shorts",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 3,
+      "quantityReason" : "3 based on a 6-day trip.",
+      "reason" : "Hot weather is expected.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.hot",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 2,
+      "quantityReason" : "2 based on a 6-day trip.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 7,
+      "quantityReason" : "7 based on a 6-day trip.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 6,
+      "quantityReason" : "Why 6 t-shirts? You're traveling for 6 days.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 7,
+      "quantityReason" : "7 based on a 6-day trip.",
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.id",
+      "carrier" : "primary",
+      "category" : "documents",
+      "displayName" : "Photo ID",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Easy to forget, hard to replace.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.documents",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.headphones",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Headphones",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a vacation trip.",
+      "reasonArguments" : {
+        "tripType" : "vacation"
+      },
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.electronics",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.power_bank",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Portable charger",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.keys",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Keys",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.phone",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Phone",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.sunglasses",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Sunglasses",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Hot weather is expected.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.hot",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.wallet",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Wallet",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.walking_shoes",
+      "carrier" : "primary",
+      "category" : "footwear",
+      "displayName" : "Walking shoes",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll be on your feet a lot in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.walking",
+      "signals" : [
+        "activity",
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.blister_pads",
+      "carrier" : "primary",
+      "category" : "health",
+      "displayName" : "Blister pads",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You'll have sightseeing days in Miami.",
+      "reasonArguments" : {
+        "destination" : "Miami"
+      },
+      "reasonCode" : "activity.sightseeing",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "carrier" : "primary",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Better to have and not need.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.health",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.deodorant",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Deodorant",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.book",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Book or magazine",
+      "importance" : "optional",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Suggested for a vacation trip.",
+      "reasonArguments" : {
+        "tripType" : "vacation"
+      },
+      "reasonCode" : "trip_type.generic",
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.compression_packing",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Packing cubes",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Toiletry bag",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.umbrella_compact",
+      "carrier" : "unassigned",
+      "category" : "essentials",
+      "displayName" : "Compact umbrella",
+      "importance" : "normal",
+      "owner" : "shared",
+      "quantity" : 2,
+      "quantityReason" : "Rain is expected on 1 day. 2 umbrellas should cover your group — no need to pack one each.",
+      "reason" : "Rain is expected Tuesday.",
+      "reasonArguments" : {
+        "weekday" : "Tuesday"
+      },
+      "reasonCode" : "weather.rain_weekday",
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.sunscreen",
+      "carrier" : "unassigned",
+      "category" : "toiletries",
+      "displayName" : "Sunscreen",
+      "importance" : "important",
+      "owner" : "shared",
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "reason" : "Hot weather is expected.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.hot",
+      "signals" : [
+        "weather"
+      ]
+    }
+  ]
+}

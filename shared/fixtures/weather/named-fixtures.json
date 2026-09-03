@@ -367,6 +367,128 @@
         }
       ]
     },
+    "PhoenixHotDry": {
+      "id": "PhoenixHotDry",
+      "summary": "Extreme dry heat all week. Virtually no rain chance.",
+      "days": [
+        {
+          "offset": 0,
+          "symbol": "sun.max",
+          "highF": 108,
+          "lowF": 84,
+          "rainProbability": 0.02,
+          "uvIndex": 11,
+          "windMph": 6,
+          "snowExpected": false,
+          "summary": "Scorching sun"
+        },
+        {
+          "offset": 1,
+          "symbol": "sun.max",
+          "highF": 110,
+          "lowF": 85,
+          "rainProbability": 0.01,
+          "uvIndex": 11,
+          "windMph": 5,
+          "snowExpected": false,
+          "summary": "Extreme heat"
+        },
+        {
+          "offset": 2,
+          "symbol": "sun.max",
+          "highF": 106,
+          "lowF": 82,
+          "rainProbability": 0.03,
+          "uvIndex": 10,
+          "windMph": 7,
+          "snowExpected": false,
+          "summary": "Hot and dry"
+        },
+        {
+          "offset": 3,
+          "symbol": "sun.max",
+          "highF": 104,
+          "lowF": 80,
+          "rainProbability": 0.05,
+          "uvIndex": 10,
+          "windMph": 8,
+          "snowExpected": false,
+          "summary": "Sunny and hot"
+        },
+        {
+          "offset": 4,
+          "symbol": "sun.max",
+          "highF": 107,
+          "lowF": 83,
+          "rainProbability": 0.02,
+          "uvIndex": 11,
+          "windMph": 6,
+          "snowExpected": false,
+          "summary": "Blazing sun"
+        }
+      ]
+    },
+    "AspenSkiSnow": {
+      "id": "AspenSkiSnow",
+      "summary": "Sub-freezing all week with frequent snow — classic ski conditions.",
+      "days": [
+        {
+          "offset": 0,
+          "symbol": "cloud.snow",
+          "highF": 24,
+          "lowF": 8,
+          "rainProbability": 0.1,
+          "uvIndex": 3,
+          "windMph": 10,
+          "snowExpected": true,
+          "summary": "Snow showers"
+        },
+        {
+          "offset": 1,
+          "symbol": "snowflake",
+          "highF": 20,
+          "lowF": 2,
+          "rainProbability": 0.05,
+          "uvIndex": 3,
+          "windMph": 14,
+          "snowExpected": true,
+          "summary": "Heavy snow"
+        },
+        {
+          "offset": 2,
+          "symbol": "cloud.snow",
+          "highF": 22,
+          "lowF": 4,
+          "rainProbability": 0.1,
+          "uvIndex": 3,
+          "windMph": 12,
+          "snowExpected": true,
+          "summary": "Snow and cold"
+        },
+        {
+          "offset": 3,
+          "symbol": "sun.max",
+          "highF": 28,
+          "lowF": 10,
+          "rainProbability": 0.05,
+          "uvIndex": 4,
+          "windMph": 8,
+          "snowExpected": false,
+          "summary": "Cold sun, packed powder"
+        },
+        {
+          "offset": 4,
+          "symbol": "cloud.snow",
+          "highF": 18,
+          "lowF": 0,
+          "rainProbability": 0.1,
+          "uvIndex": 3,
+          "windMph": 15,
+          "snowExpected": true,
+          "summary": "Fresh snow"
+        }
+      ]
+    },
     "MinneapolisDeepWinter": {
       "id": "MinneapolisDeepWinter",
       "summary": "Sub-freezing all week, snow, one day of freezing drizzle.",

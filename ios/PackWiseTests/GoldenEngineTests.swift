@@ -220,6 +220,7 @@ struct GoldenEngineTests {
                 importance: .normal,
                 sourceSignals: [],
                 reason: "",
+                isUserAdded: row.isUserAdded ?? false,
                 isUserModified: row.isUserModified
             )
         }

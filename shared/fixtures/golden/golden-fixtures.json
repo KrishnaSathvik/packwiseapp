@@ -1,5 +1,5 @@
 {
-  "comment": "Golden-harness fixtures for the packing engine (Engine V2 plan, Step 1). Dates are frozen absolute values so output never depends on the run date; weather is always the named fixture from weather/named-fixtures.json, injected directly — never fetched. A null weatherFixture deliberately exercises the seasonal-only path (month + latitude). Fixture 02b is constructible at the TripContext level but no shipped control emits laundry 'possible' vs 'planned' yet; the three-way control lands with Step 2's LaundryPlan migration.",
+  "comment": "Golden-harness fixtures for the packing engine (Engine V2 plan, Step 1). Dates are frozen absolute values so output never depends on the run date; weather is always the named fixture from weather/named-fixtures.json, injected directly — never fetched. A null weatherFixture deliberately exercises the seasonal-only path (month + latitude). Fixture 02b is constructible at the TripContext level but no shipped control emits laundry 'possible' vs 'planned' yet; the three-way control lands with Step 2's LaundryPlan migration. Fixtures 18-27 (Phase 1 hardening ledger, Task 3) record realistic-but-exceptional combinations as-is, current behavior included — they are not assertions of correctness, and defects they expose are findings for a later phase, not fixes made here. Fixture 18 uses Reykjavik in place of the plan's 'Anchorage' because Anchorage is not in test-destinations.json and adding a destination was out of this task's authorized file list; Reykjavik is a higher-latitude stand-in that preserves the same seasonal/high-latitude/long-duration intent. Fixture 27 needed an additive 'isUserAdded' field on ExistingEval (GoldenEngineTests.swift / SharedResources.swift), authorized as a narrow test-harness-only extension of Task 3's scope — it defaults to false, so fixtures 1-26 are unaffected.",
   "engineVersion": "v2",
   "fixtures": [
     {
@@ -274,6 +274,173 @@
           { "role": "child", "ageGroup": "toddler", "needs": ["diapers", "stroller", "comfortItem"] }
         ]
       }
+    },
+    {
+      "id": "18-reykjavik-64d-roadtrip-camping-seasonal",
+      "proves": "Plateau at an extreme duration, camping's absent activity rule (stands in for the plan's Anchorage — see file comment), and seasonal-layer choices on the seasonal-only weather path, together on one long road trip",
+      "destination": "Reykjavik",
+      "weatherFixture": null,
+      "startDate": "2027-08-15",
+      "days": 64,
+      "tripType": "roadTrip",
+      "activities": ["hiking", "camping"],
+      "bag": "roadTripLuggage",
+      "style": "balanced",
+      "laundry": "planned",
+      "homeCountryCode": "IS"
+    },
+    {
+      "id": "19-phoenix-5d-city-walking-hot",
+      "proves": "Hot, dry city trip must not pull in cold-weather or rain gear",
+      "destination": "Phoenix",
+      "weatherFixture": "PhoenixHotDry",
+      "startDate": "2026-07-20",
+      "days": 5,
+      "tripType": "cityBreak",
+      "activities": ["walking"],
+      "bag": "carryOn",
+      "style": "light",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "20-seattle-5d-vacation-rain-sufficiency",
+      "proves": "Rain gear sufficiency and duplication under sustained wet weather on a vacation (not city-break) trip type",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripType": "vacation",
+      "activities": ["walking", "sightseeing"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "21-aspen-5d-skisnow-checked-prepared-snow",
+      "proves": "Cold-category completeness for a dedicated ski/snow trip type, which has no ski-specific activity rule to lean on",
+      "destination": "Aspen",
+      "weatherFixture": "AspenSkiSnow",
+      "startDate": "2027-01-10",
+      "days": 5,
+      "tripType": "skiSnow",
+      "activities": ["sightseeing"],
+      "bag": "checked",
+      "style": "prepared",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "22-chicago-5d-business-running-overlap",
+      "proves": "Formal business wear and fitness/running gear must coexist without either crowding out the other",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 5,
+      "tripType": "business",
+      "activities": ["work", "running"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "23-cancun-7d-international-beach-personal-item",
+      "proves": "International beach trip in the smallest bag — documents, unmistakable beach identity, and compactness together",
+      "destination": "Cancun",
+      "weatherFixture": "MiamiHotBeach",
+      "startDate": "2026-06-20",
+      "days": 7,
+      "tripType": "beach",
+      "activities": ["swimming", "beachDays"],
+      "bag": "personalItem",
+      "style": "light",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "24-miami-6d-family-infant-no-needs",
+      "proves": "An infant on the party with no declared needs must not trigger diaper/formula/stroller inference — contrast with fixture 12's toddler, which declares needs explicitly",
+      "destination": "Miami",
+      "weatherFixture": "MiamiHotBeach",
+      "startDate": "2026-07-06",
+      "days": 6,
+      "tripType": "vacation",
+      "activities": ["sightseeing", "walking"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "party": {
+        "travelMode": "family",
+        "travelers": [
+          { "role": "self", "ageGroup": "adult" },
+          { "role": "partner", "ageGroup": "adult" },
+          { "role": "child", "ageGroup": "infant", "needs": [] }
+        ]
+      }
+    },
+    {
+      "id": "25-chicago-5d-unknown-activity-cosplay",
+      "proves": "A genuinely unknown activity ID must degrade inertly — no crash, no invented items. Identical to fixture 01 with one unknown activity appended, so the diff against 01 isolates its effect",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 5,
+      "tripType": "cityBreak",
+      "activities": ["sightseeing", "walking", "cosplayConvention"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "26-seattle-5d-existing-rain-shell",
+      "proves": "A user-added rain shell already on the list before regeneration should be recognized as covering the rain need, not duplicated. Identical to fixture 09 except the rain jacket pre-exists as user-modified",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripType": "cityBreak",
+      "activities": ["sightseeing", "walking"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "existing": [
+        {
+          "canonicalItemID": "clothing.rain_jacket",
+          "displayName": "Rain jacket",
+          "category": "clothing",
+          "quantity": 1,
+          "isUserModified": true
+        }
+      ]
+    },
+    {
+      "id": "27-chicago-5d-custom-item-survives-regeneration",
+      "proves": "A genuinely off-catalog, user-added item (one no rule would ever suggest) survives regeneration unchanged via the isUserAdded pass-through — distinct from fixture 14's isUserModified proxy, which only preserves an edit to an item the rules would already suggest. Identical to fixture 01 plus one custom item",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 5,
+      "tripType": "cityBreak",
+      "activities": ["sightseeing", "walking"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "existing": [
+        {
+          "canonicalItemID": "custom.lucky_travel_journal",
+          "displayName": "Lucky travel journal",
+          "category": "miscellaneous",
+          "quantity": 1,
+          "isUserModified": false,
+          "isUserAdded": true
+        }
+      ]
     }
   ]
 }
