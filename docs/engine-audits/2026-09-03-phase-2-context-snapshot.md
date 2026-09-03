@@ -63,7 +63,7 @@ all in `ios/PackWiseTests/TripContextSnapshotTests.swift` unless noted:
 | Deterministic compilation across repeated runs | `compilationIsDeterministicAcrossRepeatedRuns` (single context), `partyCompilationIsDeterministicAcrossRepeatedRuns` (a violation-bearing context), `everyGoldenFixtureCompilesToADeterministicSnapshot` in `GoldenEngineTests.swift` (all 27 real fixtures, compiled twice each) |
 | Ambiguous traveler context → don't infer | `ambiguousGuardianAmongMultipleAdultsIsNeverInferred` (a `nil`-guardian child with two candidate adults present stays `nil`, never defaults to "the first adult"), `childWithGuardianOutsidePartyLosesTheReferenceRatherThanGuessing`, `guardianNotAdultIsDroppedNotReassigned` (a dropped reference is never rewritten to a guessed real member) |
 
-All 11 required cases are covered. `ambiguousGuardianAmongMultipleAdultsIsNeverInferred`
+All 12 required cases are covered. `ambiguousGuardianAmongMultipleAdultsIsNeverInferred`
 additionally asserts `!diagnostics.contains { $0.field == "party" }` — a
 `nil` guardian on a child who needs one is not itself a `PartyInvariants`
 violation (it's an already-valid "no guardian assigned" state), so it
