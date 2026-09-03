@@ -75,4 +75,57 @@ struct TripContextSnapshotTests {
         let second = TripContextCompiler.compile(context, rules: r)
         #expect(first == second)
     }
+
+    @Test func knownActivitiesAreClassifiedKnown() throws {
+        var context = baseContext()
+        context.activities = ["sightseeing", "hiking"]
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(Set(snapshot.knownActivityIDs) == ["sightseeing", "hiking"])
+        #expect(snapshot.unknownActivityIDs.isEmpty)
+        #expect(!snapshot.diagnostics.contains { $0.field == "activities" })
+    }
+
+    @Test func unrecognizedActivityIsPreservedAndFlaggedUnsupportedButSafe() throws {
+        var context = baseContext()
+        context.activities = ["sightseeing", "cosplayConvention"]
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.knownActivityIDs == ["sightseeing"])
+        #expect(snapshot.unknownActivityIDs == ["cosplayConvention"]) // preserved verbatim, never dropped
+        // Assert kind + a substring of the reason, not full string equality — a
+        // later wording polish to the reason text should not break this test.
+        let activityDiagnostic = snapshot.diagnostics.first { $0.field == "activities" }
+        #expect(activityDiagnostic?.outcome.isUnsupportedButSafe == true)
+        if case .unsupportedButSafe(let reason) = activityDiagnostic?.outcome {
+            #expect(reason.contains("cosplayConvention"))
+        }
+    }
+
+    @Test func campingIsHonestlyClassifiedUnknownLikeAnyOtherRulelessActivity() throws {
+        // Matches the published Phase 1 finding: camping has no rules.activities
+        // entry. The compiler does not special-case it — this is the exact
+        // "advertised input with no effect" pattern, and hiding it behind a
+        // hardcoded exception would be exactly what the Phase 1 plan forbade
+        // ("do not relabel a broken control as context-only to make the report
+        // green"). See docs/engine-audits/2026-09-03-engine-findings.md.
+        var context = baseContext()
+        context.activities = ["hiking", "camping"]
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.unknownActivityIDs == ["camping"])
+    }
+
+    @Test func notSureBagAppliesNoConstraint() throws {
+        var context = baseContext()
+        context.bagType = .notSure
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.bagType == .notSure)
+        #expect(snapshot.appliesBagConstraint == false)
+        #expect(!snapshot.diagnostics.contains { $0.field == "bagType" }) // notSure is valid, not a fallback
+    }
+
+    @Test func packingStylePassesThroughUnchanged() throws {
+        var context = baseContext()
+        context.packingStyle = .prepared
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.packingStyle == .prepared)
+    }
 }
