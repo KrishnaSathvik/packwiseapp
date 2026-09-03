@@ -10,6 +10,48 @@ enum PackingFilter: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+/// Presentation-only wording for recommendations that share one engine
+/// signal but have different practical consequences. Structured provenance
+/// remains unchanged.
+enum PackingReasonPresentation {
+    static func inclusionReason(
+        canonicalItemID: String?,
+        reasonCode: String,
+        tripType: TripType?,
+        original: String
+    ) -> String {
+        if reasonCode == "activity.sightseeing" {
+            switch canonicalItemID {
+            case "health.blister_pads":
+                return "Helpful for long walking and sightseeing days."
+            case "activities.daypack":
+                return "Useful for carrying daily essentials while sightseeing."
+            case "electronics.power_bank":
+                return "Sightseeing can keep you away from outlets for long periods."
+            default:
+                break
+            }
+        }
+        if reasonCode == "trip_type.generic", let tripType {
+            return "Useful for your \(tripType.title.lowercased())."
+        }
+        return original
+    }
+}
+
+#if DEBUG
+enum PackingListDebugPresentation {
+    case itemDetailMedium
+    case itemDetailLarge
+    case addItem
+    case addItemCategory
+}
+#endif
+
+private enum AddItemRoute: Hashable {
+    case category
+}
+
 /// The checklist.
 ///
 /// Reminders-style rows under flat section headers, not a stack of cards:
@@ -20,6 +62,9 @@ struct PackingListView: View {
     @Bindable var trip: TripRecord
     /// Category to bring into view when arriving from a summary row.
     var focusedCategory: PackingCategory?
+#if DEBUG
+    var debugPresentation: PackingListDebugPresentation?
+#endif
 
     @Environment(AppDependencies.self) private var dependencies
     @Environment(\.modelContext) private var modelContext
@@ -33,9 +78,14 @@ struct PackingListView: View {
     @State private var selectedItem: PackingItemRecord?
     @State private var newItemName = ""
     @State private var newItemQuantity = 1
-    @State private var newItemCategory: PackingCategory = .miscellaneous
+    @State private var newItemCategory: PackingCategory = .clothing
     @State private var newItemOwner: PartyListFilter = .all
     @State private var newItemImportant = false
+    @State private var addPath: [AddItemRoute] = []
+    @State private var itemDetailDetent: PresentationDetent = .medium
+#if DEBUG
+    @State private var appliedDebugPresentation = false
+#endif
 
     var body: some View {
         VStack(spacing: 0) {
@@ -55,19 +105,24 @@ struct PackingListView: View {
             prompt: "Search items"
         )
         .overlay(alignment: .bottomTrailing) { addButton }
-        // A push, not a sheet — the detail is a full screen in the trip's
-        // navigation, per spec.
-        .navigationDestination(item: $selectedItem) { item in
-            ItemDetailView(
-                item: item,
-                travelers: trip.party.travelers,
-                showsAssignment: !trip.party.usesSimpleList && item.ownershipType == .shared,
-                onNotNeeded: !item.isUserAdded && item.canonicalItemID != nil
-                    ? { notNeeded(item) } : nil,
-                onDelete: item.isUserAdded ? { delete(item) } : nil
-            )
+        .sheet(item: $selectedItem) { item in
+            NavigationStack {
+                ItemDetailView(
+                    item: item,
+                    travelers: trip.party.travelers,
+                    showsAssignment: !trip.party.usesSimpleList && item.ownershipType == .shared,
+                    onNotNeeded: !item.isUserAdded && item.canonicalItemID != nil
+                        ? { notNeeded(item) } : nil,
+                    onDelete: item.isUserAdded ? { delete(item) } : nil
+                )
+            }
+            .presentationDetents([.medium, .large], selection: $itemDetailDetent)
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $adding) { addSheet }
+#if DEBUG
+        .onAppear { applyDebugPresentationIfNeeded() }
+#endif
     }
 
     // MARK: - List
@@ -242,7 +297,7 @@ struct PackingListView: View {
     /// A full sheet with a proper primary action — not a grayed nav-bar
     /// "Add".
     private var addSheet: some View {
-        NavigationStack {
+        NavigationStack(path: $addPath) {
             ScrollView {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
                     PackWiseCard {
@@ -250,16 +305,14 @@ struct PackingListView: View {
                             TextField("Item name", text: $newItemName)
                                 .font(.title3)
                             PackWiseRowDivider(inset: 0)
-                            HStack {
-                                Text("Category")
-                                Spacer()
-                                Picker("Category", selection: $newItemCategory) {
-                                    ForEach(PackingCategory.allCases) { category in
-                                        Text(category.title).tag(category)
-                                    }
+                            NavigationLink(value: AddItemRoute.category) {
+                                HStack {
+                                    Text("Category")
+                                        .foregroundStyle(PackWiseColor.textPrimary)
+                                    Spacer()
+                                    Text(newItemCategory.title)
+                                        .foregroundStyle(PackWiseColor.textSecondary)
                                 }
-                                .labelsHidden()
-                                .pickerStyle(.menu)
                             }
                             PackWiseRowDivider(inset: 0)
                             Stepper("Quantity  \(newItemQuantity)", value: $newItemQuantity, in: 1...20)
@@ -306,8 +359,41 @@ struct PackingListView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { adding = false } }
             }
+            .navigationDestination(for: AddItemRoute.self) { route in
+                switch route {
+                case .category: categorySelection
+                }
+            }
         }
         .presentationDetents([.medium, .large])
+    }
+
+    private var categorySelection: some View {
+        List(PackingCategory.allCases) { category in
+            Button {
+                newItemCategory = category
+            } label: {
+                HStack(spacing: PackWiseSpacing.regular) {
+                    PackWiseIconBadge(symbol: category.style.symbol, tint: category.style.tint)
+                    Text(category.title)
+                        .foregroundStyle(PackWiseColor.textPrimary)
+                    Spacer()
+                    if newItemCategory == category {
+                        Image(systemName: "checkmark")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(PackWiseColor.accent)
+                            .accessibilityLabel("Selected")
+                    }
+                }
+                .frame(minHeight: PackWiseSize.tapTarget)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(newItemCategory == category ? .isSelected : [])
+        }
+        .listStyle(.plain)
+        .navigationTitle("Choose Category")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     // MARK: - Data
@@ -376,6 +462,27 @@ struct PackingListView: View {
             .filter { !(hidePacked && $0.isPacked) }
             .sorted { $0.displayName < $1.displayName }
     }
+
+#if DEBUG
+    private func applyDebugPresentationIfNeeded() {
+        guard !appliedDebugPresentation, let debugPresentation else { return }
+        appliedDebugPresentation = true
+        switch debugPresentation {
+        case .itemDetailMedium:
+            itemDetailDetent = .medium
+            selectedItem = trip.items.first { $0.canonicalItemID == "clothing.tshirts" } ?? trip.items.first
+        case .itemDetailLarge:
+            itemDetailDetent = .large
+            selectedItem = trip.items.first { $0.canonicalItemID == "clothing.tshirts" } ?? trip.items.first
+        case .addItem:
+            adding = true
+        case .addItemCategory:
+            newItemCategory = .clothing
+            addPath = [.category]
+            adding = true
+        }
+    }
+#endif
 
     // MARK: - Actions
 
@@ -489,7 +596,7 @@ struct PackingRow: View {
                     // The chevron makes the tap-through to detail
                     // discoverable on rows that have more to say.
                     HStack(spacing: PackWiseSpacing.tight) {
-                        Text(item.reason)
+                        Text(presentedReason)
                             .font(.footnote)
                             .foregroundStyle(PackWiseColor.textSecondary)
                         Image(systemName: "chevron.right")
@@ -553,6 +660,15 @@ struct PackingRow: View {
         guard !item.reason.isEmpty else { return false }
         return item.sourceSignals.contains { $0 != .baseEssential }
     }
+
+    private var presentedReason: String {
+        PackingReasonPresentation.inclusionReason(
+            canonicalItemID: item.canonicalItemID,
+            reasonCode: item.reasonCode,
+            tripType: item.trip?.tripType,
+            original: item.reason
+        )
+    }
 }
 
 struct ItemDetailView: View {
@@ -565,6 +681,7 @@ struct ItemDetailView: View {
     var onDelete: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         ScrollView {
@@ -586,26 +703,7 @@ struct ItemDetailView: View {
     private var header: some View {
         PackWiseCard {
             VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                HStack(spacing: PackWiseSpacing.regular) {
-                    PackWiseIconBadge(
-                        symbol: item.category.style.symbol,
-                        tint: item.category.style.tint
-                    )
-                    VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
-                        Text(item.displayName)
-                            .font(.title3.weight(.semibold))
-                        HStack(spacing: PackWiseSpacing.snug) {
-                            Text(item.category.title)
-                                .font(.subheadline)
-                                .foregroundStyle(PackWiseColor.textSecondary)
-                            if !item.isUserAdded {
-                                // PackWise put it here; the sheet below says
-                                // why.
-                                PackWiseStatusBadge(title: "Recommended")
-                            }
-                        }
-                    }
-                }
+                headerIdentity
                 PackWiseRowDivider(inset: 0)
                 Stepper("Quantity  \(item.quantity)", value: $item.quantity, in: 1...30)
                     .onChange(of: item.quantity) {
@@ -615,19 +713,66 @@ struct ItemDetailView: View {
                 PackWiseRowDivider(inset: 0)
                 // Outside a Form a Picker renders its selection only, so the
                 // label is supplied explicitly.
-                HStack {
-                    Text("Category")
-                    Spacer()
-                    Picker("Category", selection: $item.categoryRaw) {
-                        ForEach(PackingCategory.allCases) { category in
-                            Text(category.title).tag(category.rawValue)
+                Group {
+                    if dynamicTypeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                            Text("Category")
+                            categoryPicker
+                        }
+                    } else {
+                        HStack {
+                            Text("Category")
+                            Spacer()
+                            categoryPicker
                         }
                     }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private var headerIdentity: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                HStack(spacing: PackWiseSpacing.regular) {
+                    PackWiseIconBadge(symbol: item.category.style.symbol, tint: item.category.style.tint)
+                    Text(item.displayName)
+                        .font(.title3.weight(.semibold))
+                }
+                Text(item.category.title)
+                    .foregroundStyle(PackWiseColor.textSecondary)
+                if !item.isUserAdded {
+                    PackWiseStatusBadge(title: "Recommended")
+                }
+            }
+        } else {
+            HStack(spacing: PackWiseSpacing.regular) {
+                PackWiseIconBadge(symbol: item.category.style.symbol, tint: item.category.style.tint)
+                VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                    Text(item.displayName)
+                        .font(.title3.weight(.semibold))
+                    HStack(spacing: PackWiseSpacing.snug) {
+                        Text(item.category.title)
+                            .font(.subheadline)
+                            .foregroundStyle(PackWiseColor.textSecondary)
+                        if !item.isUserAdded {
+                            PackWiseStatusBadge(title: "Recommended")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var categoryPicker: some View {
+        Picker("Category", selection: $item.categoryRaw) {
+            ForEach(PackingCategory.allCases) { category in
+                Text(category.title).tag(category.rawValue)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
     }
 
     private var reasons: some View {
@@ -635,7 +780,7 @@ struct ItemDetailView: View {
             PackWiseSectionHeader(title: "Why it's on your list")
             PackWiseCard {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                    Text(item.reason.isEmpty ? "Added for this trip." : item.reason)
+                    Text(item.reason.isEmpty ? "Added for this trip." : presentedReason)
                     if !item.quantityReason.isEmpty {
                         PackWiseRowDivider(inset: 0)
                         VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
@@ -660,6 +805,15 @@ struct ItemDetailView: View {
                 }
             }
         }
+    }
+
+    private var presentedReason: String {
+        PackingReasonPresentation.inclusionReason(
+            canonicalItemID: item.canonicalItemID,
+            reasonCode: item.reasonCode,
+            tripType: item.trip?.tripType,
+            original: item.reason
+        )
     }
 
     private var assignment: some View {

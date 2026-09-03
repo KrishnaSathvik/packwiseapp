@@ -21,7 +21,7 @@ struct DestinationVisualView: View {
                     .scaledToFill()
                     .transition(.opacity)
             case .graphical, nil:
-                BrandedDestinationPanel(compact: purpose == .tripThumbnail)
+                BrandedDestinationPanel(destination: destination, compact: purpose == .tripThumbnail)
             }
 
             if overlaysText {
@@ -41,10 +41,11 @@ struct DestinationVisualView: View {
     }
 }
 
-/// The last tier: a branded panel in the blue family with a large low-opacity
-/// location glyph. It looks deliberate — never a muddy gradient or a loading
-/// failure.
+/// The last tier is a destination-aware travel poster, not a generic location
+/// placeholder. A regional globe and route motif make unavailable imagery a
+/// deliberate visual state.
 struct BrandedDestinationPanel: View {
+    var destination: Destination? = nil
     var compact: Bool = false
 
     var body: some View {
@@ -56,18 +57,51 @@ struct BrandedDestinationPanel: View {
             )
 
             GeometryReader { proxy in
-                Image(systemName: "location.fill")
-                    .font(.system(size: min(proxy.size.width, proxy.size.height) * (compact ? 0.5 : 0.42), weight: .regular))
-                    .foregroundStyle(.white.opacity(0.16))
-                    .rotationEffect(.degrees(-8))
-                    .position(x: proxy.size.width * 0.7, y: proxy.size.height * 0.42)
+                ZStack {
+                    Circle()
+                        .stroke(.white.opacity(0.13), lineWidth: 1)
+                        .frame(width: proxy.size.height * 0.9)
+                    Circle()
+                        .stroke(.white.opacity(0.1), lineWidth: 1)
+                        .frame(width: proxy.size.height * 0.62)
+                    Image(systemName: globeSymbol)
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundStyle(.white.opacity(0.16))
+                        .frame(width: min(proxy.size.width, proxy.size.height) * (compact ? 0.68 : 0.72))
+                    Image(systemName: "airplane")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .offset(
+                            x: compact ? 0 : -proxy.size.width * 0.23,
+                            y: compact ? 0 : proxy.size.height * 0.2
+                        )
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .rotationEffect(.degrees(-7))
             }
 
             if compact {
-                Image(systemName: "mappin.and.ellipse")
-                    .font(.system(size: 20, weight: .light))
-                    .foregroundStyle(.white.opacity(0.92))
+                Text(monogram)
+                    .font(PackWiseFont.cardTitle)
+                    .foregroundStyle(.white)
             }
         }
+    }
+
+    private var monogram: String {
+        guard let destination else { return "P" }
+        return String((destination.city.isEmpty ? destination.country : destination.city).prefix(1)).uppercased()
+    }
+
+    private var globeSymbol: String {
+        guard let destination else { return "globe.americas.fill" }
+        if destination.longitude > 60 || destination.longitude < -150 {
+            return "globe.asia.australia.fill"
+        }
+        if destination.longitude >= -30 {
+            return "globe.europe.africa.fill"
+        }
+        return "globe.americas.fill"
     }
 }

@@ -91,30 +91,38 @@ private struct MeContent: View {
                 .buttonStyle(SecondaryButtonStyle())
             }
             PackWiseRowDivider()
-            HStack(spacing: PackWiseSpacing.regular) {
-                PackWiseIconBadge(symbol: packingStyle.symbol, tint: packingStyle.tint)
-                Text("Packing style")
-                Spacer()
-                Picker("Packing style", selection: $prefs.packingStyleRaw) {
-                    ForEach(PackingStyle.allCases) { style in
-                        Text(style.title).tag(style.rawValue)
-                    }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: PackWiseSpacing.regular) {
+                    PackWiseIconBadge(symbol: packingStyle.symbol, tint: packingStyle.tint)
+                    Text("Packing style")
+                    Spacer()
+                    packingStylePicker
                 }
-                .labelsHidden()
-                .pickerStyle(.menu)
+                VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                    HStack(spacing: PackWiseSpacing.regular) {
+                        PackWiseIconBadge(symbol: packingStyle.symbol, tint: packingStyle.tint)
+                        Text("Packing style")
+                    }
+                    packingStylePicker
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
             }
             PackWiseRowDivider()
-            HStack(spacing: PackWiseSpacing.regular) {
-                PackWiseIconBadge(symbol: preferredBag.symbol, tint: preferredBag.tint)
-                Text("Preferred bag")
-                Spacer()
-                Picker("Preferred bag", selection: $prefs.preferredBagRaw) {
-                    ForEach(BagType.allCases) { bag in
-                        Text(bag.title).tag(bag.rawValue)
-                    }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: PackWiseSpacing.regular) {
+                    PackWiseIconBadge(symbol: preferredBag.symbol, tint: preferredBag.tint)
+                    Text("Preferred bag")
+                    Spacer()
+                    preferredBagPicker
                 }
-                .labelsHidden()
-                .pickerStyle(.menu)
+                VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                    HStack(spacing: PackWiseSpacing.regular) {
+                        PackWiseIconBadge(symbol: preferredBag.symbol, tint: preferredBag.tint)
+                        Text("Preferred bag")
+                    }
+                    preferredBagPicker
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
             }
             PackWiseRowDivider()
             // One summary row, as the sheet draws it — but the model keeps
@@ -122,17 +130,24 @@ private struct MeContent: View {
             NavigationLink {
                 UnitsDetailView(prefs: prefs)
             } label: {
-                HStack(spacing: PackWiseSpacing.regular) {
-                    PackWiseIconBadge(symbol: "ruler", tint: .teal)
-                    Text("Units")
-                        .foregroundStyle(PackWiseColor.textPrimary)
-                    Spacer()
-                    Text(unitsSummary)
-                        .font(.subheadline)
-                        .foregroundStyle(PackWiseColor.textSecondary)
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(PackWiseColor.textTertiary)
+                ViewThatFits(in: .horizontal) {
+                    unitsRow
+                    VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                        HStack(spacing: PackWiseSpacing.regular) {
+                            PackWiseIconBadge(symbol: "ruler", tint: .teal)
+                            Text("Units")
+                                .foregroundStyle(PackWiseColor.textPrimary)
+                        }
+                        HStack {
+                            Spacer()
+                            Text(unitsSummary)
+                                .font(.subheadline)
+                                .foregroundStyle(PackWiseColor.textSecondary)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(PackWiseColor.textTertiary)
+                        }
+                    }
                 }
                 .contentShape(Rectangle())
             }
@@ -144,6 +159,43 @@ private struct MeContent: View {
         let temperature = prefs.usesFahrenheit ? "Fahrenheit" : "Celsius"
         let distance = prefs.usesImperial ? "Miles" : "Kilometers"
         return "\(temperature) · \(distance)"
+    }
+
+    private var packingStylePicker: some View {
+        Picker("Packing style", selection: $prefs.packingStyleRaw) {
+            ForEach(PackingStyle.allCases) { style in
+                Text(style.title).tag(style.rawValue)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .fixedSize()
+    }
+
+    private var preferredBagPicker: some View {
+        Picker("Preferred bag", selection: $prefs.preferredBagRaw) {
+            ForEach(BagType.allCases) { bag in
+                Text(bag.title).tag(bag.rawValue)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .fixedSize()
+    }
+
+    private var unitsRow: some View {
+        HStack(spacing: PackWiseSpacing.regular) {
+            PackWiseIconBadge(symbol: "ruler", tint: .teal)
+            Text("Units")
+                .foregroundStyle(PackWiseColor.textPrimary)
+            Spacer()
+            Text(unitsSummary)
+                .font(.subheadline)
+                .foregroundStyle(PackWiseColor.textSecondary)
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(PackWiseColor.textTertiary)
+        }
     }
 
     private var usuallyTrue: some View {

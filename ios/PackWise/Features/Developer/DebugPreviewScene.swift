@@ -18,12 +18,19 @@ import SwiftUI
 ///     xcrun simctl launch booted com.packwiseapp.app -PackWiseScreen tripDetail
 enum DebugPreviewScreen: String {
     case tripDetail
+    case tripDetailSeasonal
     case packingList
-    /// Sheets are rendered as plain screens — a capture cannot tap one open.
+    case packingListScrolled
+    /// Legacy full-screen item detail plus real-sheet states for comparison.
     case itemDetail
+    case itemDetailSheet
+    case itemDetailLarge
+    case addItem
+    case addItemCategory
     case tripsHome
     case tripsHomeEmpty
     case setupDestination
+    case setupDestinationFallback
     case setupDates
     case setupParty
     case setupPartyFamily
@@ -39,6 +46,7 @@ enum DebugPreviewScreen: String {
     case onboardingTrip
     case onboardingPersonal
     case weatherDetail
+    case weatherDetailSeasonal
     case tripDetailCompleted
 
     /// The screen named by `-PackWiseScreen`, if the app was launched with one.
@@ -72,12 +80,18 @@ struct DebugPreviewScene: View {
             switch screen {
             case .tripDetail:
                 NavigationStack { TripDetailView(trip: seed.trip) }
+            case .tripDetailSeasonal:
+                NavigationStack { TripDetailView(trip: seed.seasonalTrip) }
             case .packingList:
                 NavigationStack { PackingListView(trip: seed.trip) }
+            case .packingListScrolled:
+                NavigationStack { PackingListView(trip: seed.trip, focusedCategory: .toiletries) }
             case .tripsHome, .tripsHomeEmpty:
                 TripsHomeView()
             case .setupDestination:
-                TripSetupView()
+                setup(.destination)
+            case .setupDestinationFallback:
+                TripSetupView(existingTrip: seed.completedTrip, initialStep: .destination)
             case .setupDates:
                 setup(.dates)
             case .setupParty:
@@ -124,6 +138,19 @@ struct DebugPreviewScene: View {
                         windThreshold: 15
                     )
                 }
+            case .weatherDetailSeasonal:
+                NavigationStack {
+                    WeatherDetailView(
+                        destinationName: seed.seasonalTrip.destinationDisplayName,
+                        dateLine: "Nov 4 – Nov 11",
+                        weather: .seasonal(),
+                        impacts: [],
+                        usesFahrenheit: true,
+                        rainThreshold: 0.35,
+                        uvThreshold: 6,
+                        windThreshold: 15
+                    )
+                }
             case .tripDetailCompleted:
                 NavigationStack { TripDetailView(trip: seed.completedTrip) }
             case .weatherChanged:
@@ -149,6 +176,22 @@ struct DebugPreviewScene: View {
                         )
                     }
                 }
+            case .itemDetailSheet:
+                NavigationStack {
+                    PackingListView(trip: seed.trip, debugPresentation: .itemDetailMedium)
+                }
+            case .itemDetailLarge:
+                NavigationStack {
+                    PackingListView(trip: seed.trip, debugPresentation: .itemDetailLarge)
+                }
+            case .addItem:
+                NavigationStack {
+                    PackingListView(trip: seed.trip, debugPresentation: .addItem)
+                }
+            case .addItemCategory:
+                NavigationStack {
+                    PackingListView(trip: seed.trip, debugPresentation: .addItemCategory)
+                }
             }
         }
     }
@@ -160,6 +203,8 @@ struct DebugPreviewScene: View {
 final class DebugTripSeed {
     let container: ModelContainer
     let trip: TripRecord
+    /// Far-future trip with no precise forecast, for seasonal presentation.
+    let seasonalTrip: TripRecord
     /// Two adults and a toddler, so the family branch of the party step has
     /// something to draw.
     let familyTrip: TripRecord
@@ -206,7 +251,7 @@ final class DebugTripSeed {
             durationDays: 5,
             durationNights: 4,
             tripType: .cityBreak,
-            activities: ["sightseeing", "walking"],
+            activities: ["sightseeing", "walking", "museum sketching"],
             bagType: .carryOn,
             packingStyle: .balanced,
             status: .packing
@@ -228,7 +273,7 @@ final class DebugTripSeed {
 
         // A generated list nobody has started, and a finished trip, so Trips
         // Home shows all three of its states at once.
-        let tokyo = TripRecord(
+        seasonalTrip = TripRecord(
             destination: Destination(
                 displayName: "Tokyo",
                 city: "Tokyo",
@@ -251,9 +296,9 @@ final class DebugTripSeed {
             packingStyle: .light,
             status: .planning
         )
-        context.insert(tokyo)
-        for item in Self.items().prefix(12) {
-            repository.addItem(item.draft, to: tokyo, syncWeatherChange: false)
+        context.insert(seasonalTrip)
+        for item in Self.items().filter({ !$0.draft.sourceSignals.contains(.weather) }).prefix(12) {
+            repository.addItem(item.draft, to: seasonalTrip, syncWeatherChange: false)
         }
 
         let maui = TripRecord(
@@ -389,6 +434,7 @@ final class DebugTripSeed {
         _ category: PackingCategory,
         quantity: Int = 1,
         reason: String = "",
+        quantityReason: String = "",
         importance: ItemImportance = .normal,
         signals: [RecommendationSignal] = [.baseEssential],
         packed: Bool = false
@@ -402,6 +448,7 @@ final class DebugTripSeed {
                 importance: importance,
                 sourceSignals: signals,
                 reason: reason,
+                quantityReason: quantityReason,
                 isUserAdded: false,
                 ownershipType: .personal,
                 travelerID: nil
@@ -422,7 +469,16 @@ final class DebugTripSeed {
         item("essentials.sunglasses", "Sunglasses", .essentials),
         item("essentials.travel_insurance", "Travel insurance card", .essentials, reason: "Required for travel"),
 
-        item("clothing.tshirts", "T-shirts", .clothing, quantity: 4, reason: "Five-day trip", packed: true),
+        item(
+            "clothing.tshirts",
+            "T-shirts",
+            .clothing,
+            quantity: 4,
+            reason: "A versatile everyday layer for this trip.",
+            quantityReason: "Four tops cover this five-day trip with normal reuse.",
+            signals: [.duration],
+            packed: true
+        ),
         item("clothing.pants", "Pants", .clothing, quantity: 2, reason: "Five-day trip", packed: true),
         item("clothing.sweater", "Light sweater", .clothing, reason: "Cool evenings", signals: [.weather], packed: true),
         item("clothing.rain_jacket", "Rain jacket", .clothing, reason: "Rain expected Sunday", signals: [.weather]),

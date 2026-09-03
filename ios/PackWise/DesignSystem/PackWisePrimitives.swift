@@ -163,6 +163,25 @@ struct PackWisePageDots: View {
     }
 }
 
+/// Quiet chrome for controls placed over destination imagery.
+///
+/// The 32pt visible disc stays visually subordinate to the hero while the
+/// outer frame preserves Apple's 44pt interaction target.
+struct PackWiseHeroControlLabel: View {
+    var symbol: String
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(PackWiseColor.onAccent)
+            .frame(width: 32, height: 32)
+            .background(.thinMaterial, in: Circle())
+            .environment(\.colorScheme, .dark)
+            .frame(width: PackWiseSize.tapTarget, height: PackWiseSize.tapTarget)
+            .contentShape(Circle())
+    }
+}
+
 /// Hairline divider between rows in a card, inset to the left edge of the
 /// text — not the card edge.
 struct PackWiseRowDivider: View {
@@ -240,6 +259,7 @@ struct PackWiseFlowLayout: Layout {
 struct ProgressSummary: View {
     var packed: Int
     var total: Int
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var remaining: Int { max(0, total - packed) }
     var fraction: Double { total == 0 ? 0 : Double(packed) / Double(total) }
@@ -247,15 +267,17 @@ struct ProgressSummary: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("\(packed) of \(total) packed")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(PackWiseColor.textPrimary)
-                Spacer()
-                Text("\(percentage)%")
-                    .font(PackWiseFont.numeral)
-                    .foregroundStyle(PackWiseColor.accent)
-                    .monospacedDigit()
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                    packedLabel
+                    percentageLabel
+                }
+            } else {
+                HStack(alignment: .firstTextBaseline) {
+                    packedLabel
+                    Spacer()
+                    percentageLabel
+                }
             }
             PackWiseProgressBar(fraction: fraction)
             PackWiseStatusBadge(
@@ -269,6 +291,19 @@ struct ProgressSummary: View {
                 ? "All \(total) items packed"
                 : "\(packed) of \(total) packed, \(remaining) left"
         )
+    }
+
+    private var packedLabel: some View {
+        Text("\(packed) of \(total) packed")
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(PackWiseColor.textPrimary)
+    }
+
+    private var percentageLabel: some View {
+        Text("\(percentage)%")
+            .font(PackWiseFont.numeral)
+            .foregroundStyle(PackWiseColor.accent)
+            .monospacedDigit()
     }
 }
 

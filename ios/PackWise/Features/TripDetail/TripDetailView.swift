@@ -13,6 +13,7 @@ struct TripDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Query private var preferenceRecords: [PackingPreferenceRecord]
 
     @State private var expandedImpactID: String?
@@ -20,57 +21,59 @@ struct TripDetailView: View {
     @State private var isRefreshingWeather = false
     @State private var editing = false
     @State private var openList: PackingListDestination?
+    @State private var showingTripOptions = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                hero
-                VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
-                    progress
-                    weatherChanged
-                    weather
-                    impact
-                    categories
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    ZStack(alignment: .topLeading) {
+                        hero
+                        HStack {
+                            heroBackButton
+                            Spacer()
+                            heroOptionsMenu
+                        }
+                        .frame(width: proxy.size.width - (PackWiseSpacing.comfortable * 2))
+                        .padding(.horizontal, PackWiseSpacing.comfortable)
+                        .padding(.top, PackWiseSize.heroControlTopInset)
+                        .zIndex(2)
+                    }
+                    VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
+                        progress
+                        weatherChanged
+                        weather
+                        impact
+                        categories
+                    }
+                    .padding(.horizontal, PackWiseSpacing.comfortable)
+                    // The progress card overlaps the hero's bottom edge, which is
+                    // what stitches the photo and the content into one screen.
+                    .padding(.top, -PackWiseSpacing.loose)
                 }
-                .padding(.horizontal, PackWiseSpacing.comfortable)
-                // The progress card overlaps the hero's bottom edge, which is
-                // what stitches the photo and the content into one screen.
-                .padding(.top, -PackWiseSpacing.loose)
+                // Nested horizontal content (weather days and chips) must not
+                // widen the vertical page at accessibility sizes.
+                .frame(width: proxy.size.width, alignment: .leading)
+                .padding(.bottom, PackWiseSpacing.section)
             }
-            .padding(.bottom, PackWiseSpacing.section)
         }
         .ignoresSafeArea(edges: .top)
         .background(PackWiseColor.screen)
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         // A pushed screen with a full-bleed hero. The root tabs floating over
         // it belong to the root experience, not to one trip.
         .toolbar(.hidden, for: .tabBar)
-        // Circular translucent chrome over the photo, in place of the
-        // default bar buttons.
+        // Circular translucent chrome is drawn directly over the hero. This
+        // avoids iOS adding Liquid Glass containers around custom labels.
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button {
-                    dismiss()
-                } label: {
-                    heroChromeCircle("chevron.left")
-                }
-                .accessibilityLabel("Back")
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button("Edit Trip") { editing = true }
-                    if trip.status != .completed && trip.status != .archived {
-                        Button("Complete Trip") { completeTrip() }
-                    }
-                } label: {
-                    heroChromeCircle("ellipsis")
-                }
-                .accessibilityLabel("Trip options")
-            }
-        }
         .fullScreenCover(isPresented: $editing) {
             TripSetupView(existingTrip: trip)
+        }
+        .confirmationDialog("Trip options", isPresented: $showingTripOptions, titleVisibility: .visible) {
+            Button("Edit Trip") { editing = true }
+            if trip.status != .completed && trip.status != .archived {
+                Button("Complete Trip") { completeTrip() }
+            }
         }
         // A pushed screen, not a bottom sheet — reviewing a proposal is a
         // full job with three sections and a decision at the end.
@@ -99,12 +102,24 @@ struct TripDetailView: View {
 
     // MARK: - Hero
 
-    private func heroChromeCircle(_ symbol: String) -> some View {
-        Image(systemName: symbol)
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(.white)
-            .frame(width: 32, height: 32)
-            .background(.black.opacity(0.3), in: Circle())
+    private var heroBackButton: some View {
+        Button {
+            dismiss()
+        } label: {
+            PackWiseHeroControlLabel(symbol: "chevron.left")
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Back")
+    }
+
+    private var heroOptionsMenu: some View {
+        Button {
+            showingTripOptions = true
+        } label: {
+            PackWiseHeroControlLabel(symbol: "ellipsis")
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Trip options")
     }
 
     private var hero: some View {
@@ -113,7 +128,11 @@ struct TripDetailView: View {
             purpose: .tripHero,
             overlaysText: true
         )
-        .frame(height: PackWiseSize.heroHeight)
+        .frame(
+            height: dynamicTypeSize.isAccessibilitySize
+                ? PackWiseSize.heroAccessibilityHeight
+                : PackWiseSize.heroHeight
+        )
         .overlay(alignment: .bottomLeading) {
             VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
                 if isFinished {
@@ -126,8 +145,12 @@ struct TripDetailView: View {
                 }
                 Text(trip.destinationDisplayName)
                     .font(.largeTitle.bold())
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.75)
                 Text(dateLine)
                     .font(.subheadline)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                     .foregroundStyle(.white.opacity(0.9))
                 if !trip.party.usesSimpleList {
                     Text(trip.party.summary)
@@ -185,9 +208,35 @@ struct TripDetailView: View {
                     Spacer(minLength: 0)
                 }
             }
-        } else {
+        } else if TripPackingPresentationState.resolve(
+            packed: trip.packedCount,
+            total: trip.items.count,
+            isFinished: false
+        ) == .inProgress {
             PackWiseCard {
                 ProgressSummary(packed: trip.packedCount, total: trip.items.count)
+            }
+        } else {
+            let state = TripPackingPresentationState.resolve(
+                packed: trip.packedCount,
+                total: trip.items.count,
+                isFinished: false
+            )
+            PackWiseCard {
+                HStack(spacing: PackWiseSpacing.regular) {
+                    PackWiseIconBadge(
+                        symbol: state == .allPacked ? "checkmark.circle.fill" : "checklist",
+                        tint: state == .allPacked ? PackWiseColor.success : PackWiseColor.accent
+                    )
+                    VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                        Text(state == .empty ? "Ready to build" : state == .allPacked ? "Everything packed" : "Packing list ready")
+                            .font(.headline)
+                        Text(state == .empty ? "Build your list when you're ready." : "\(trip.items.count) items")
+                            .font(.subheadline)
+                            .foregroundStyle(PackWiseColor.textSecondary)
+                    }
+                    Spacer(minLength: 0)
+                }
             }
         }
     }
@@ -245,22 +294,34 @@ struct TripDetailView: View {
             }
 
             PackWiseRowDivider(inset: 0)
-            HStack {
-                if affectedItemCount > 0 {
-                    PackWiseStatusBadge(
-                        title: affectedItemCount == 1
-                            ? "1 item affected"
-                            : "\(affectedItemCount) items affected",
-                        symbol: "exclamationmark.circle"
-                    )
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                    affectedItemsBadge
+                    viewWeatherLink
                 }
-                Spacer()
-                viewWeatherLink
+            } else {
+                HStack {
+                    affectedItemsBadge
+                    Spacer()
+                    viewWeatherLink
+                }
             }
 
             if snapshot.showsAppleWeatherAttribution, let attribution = snapshot.attribution {
                 WeatherAttributionFooter(attribution: attribution)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var affectedItemsBadge: some View {
+        if affectedItemCount > 0 {
+            PackWiseStatusBadge(
+                title: affectedItemCount == 1
+                    ? "1 item affected"
+                    : "\(affectedItemCount) items affected",
+                symbol: "exclamationmark.circle"
+            )
         }
     }
 
@@ -364,9 +425,7 @@ struct TripDetailView: View {
             }
             PackWiseCard {
                 VStack(spacing: 0) {
-                    // Every category with progress — the overview does not
-                    // truncate; "See All" is the full-checklist path.
-                    ForEach(Array(categorySummaries.enumerated()), id: \.element.category) { index, summary in
+                    ForEach(Array(visibleCategorySummaries.enumerated()), id: \.element.category) { index, summary in
                         if index > 0 {
                             PackWiseRowDivider()
                         }
@@ -374,6 +433,19 @@ struct TripDetailView: View {
                             openList = PackingListDestination(category: summary.category)
                         } label: {
                             categoryRow(summary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    if remainingCategoryCount > 0 {
+                        PackWiseRowDivider()
+                        Button {
+                            openList = PackingListDestination(category: nil)
+                        } label: {
+                            Text("\(remainingCategoryCount) more categories")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(PackWiseColor.accent)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, PackWiseSpacing.regular)
                         }
                         .buttonStyle(.plain)
                     }
@@ -445,6 +517,14 @@ struct TripDetailView: View {
                 total: items.count
             )
         }
+    }
+
+    private var visibleCategorySummaries: [CategorySummary] {
+        Array(categorySummaries.prefix(5))
+    }
+
+    private var remainingCategoryCount: Int {
+        max(0, categorySummaries.count - visibleCategorySummaries.count)
     }
 
     private var isInternational: Bool {

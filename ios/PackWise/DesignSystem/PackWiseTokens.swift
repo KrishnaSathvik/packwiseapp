@@ -36,6 +36,10 @@ enum PackWiseSize {
     static let tripCardPhotoHeight: CGFloat = 140
     /// Full-bleed destination hero on Trip Detail.
     static let heroHeight: CGFloat = 240
+    /// Extra hero height keeps two-line destination context clear at large text sizes.
+    static let heroAccessibilityHeight: CGFloat = 320
+    /// Clears the status region while keeping hero controls inside the image.
+    static let heroControlTopInset: CGFloat = 58
     /// Destination confirmation image in trip setup.
     static let previewHeight: CGFloat = 150
     static let progressBarHeight: CGFloat = 6
@@ -239,6 +243,8 @@ enum PackWiseActivityStyle {
         case "yoga": "figure.yoga"
         case "photography": "camera.aperture"
         case "wildlife": "binoculars"
+        case "camping": "tent"
+        case "roadTrip": "car"
         default: "sparkles"
         }
     }
@@ -256,6 +262,8 @@ enum PackWiseActivityStyle {
         case "work": .gray
         case "walking": .mint
         case "wildlife": .teal
+        case "camping": .orange
+        case "roadTrip": .red
         default: PackWiseColor.accent
         }
     }

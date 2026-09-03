@@ -1,6 +1,22 @@
 import SwiftData
 import SwiftUI
 
+enum TripPackingPresentationState: Equatable {
+    case empty
+    case ready
+    case inProgress
+    case allPacked
+    case completed
+
+    static func resolve(packed: Int, total: Int, isFinished: Bool) -> Self {
+        if isFinished { return .completed }
+        if total == 0 { return .empty }
+        if packed == 0 { return .ready }
+        if packed >= total { return .allPacked }
+        return .inProgress
+    }
+}
+
 struct TripsHomeView: View {
     @Environment(AppDependencies.self) private var dependencies
     @Environment(\.destinationVisuals) private var destinationVisuals
@@ -246,8 +262,13 @@ struct HeroTripCard: View {
         return weather
     }
 
-    /// A trip whose list has not been built yet.
-    private var awaitingList: Bool { trip.items.isEmpty }
+    private var packingState: TripPackingPresentationState {
+        .resolve(
+            packed: trip.packedCount,
+            total: trip.items.count,
+            isFinished: trip.status == .completed || trip.status == .archived
+        )
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -269,13 +290,29 @@ struct HeroTripCard: View {
             VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
                 weatherRow
 
-                if awaitingList {
+                switch packingState {
+                case .empty:
                     PackWiseStatusBadge(title: "No items yet", symbol: "tray")
-                } else {
-                    // Packed count, percentage, the green bar, and items
-                    // left — the hero always carries its progress block,
-                    // even pinned at zero.
+                case .ready:
+                    PackWiseStatusBadge(
+                        title: "Packing list ready",
+                        symbol: "checklist",
+                        tint: PackWiseColor.success
+                    )
+                case .inProgress:
                     ProgressSummary(packed: trip.packedCount, total: trip.items.count)
+                case .allPacked:
+                    PackWiseStatusBadge(
+                        title: "All packed",
+                        symbol: "checkmark.circle.fill",
+                        tint: PackWiseColor.success
+                    )
+                case .completed:
+                    PackWiseStatusBadge(
+                        title: "Completed",
+                        symbol: "checkmark.circle.fill",
+                        tint: PackWiseColor.success
+                    )
                 }
 
                 if let forecast, forecast.showsAppleWeatherAttribution, let attribution = forecast.attribution {
@@ -344,6 +381,10 @@ struct CompactTripCard: View {
         return weather
     }
 
+    private var packingState: TripPackingPresentationState {
+        .resolve(packed: trip.packedCount, total: trip.items.count, isFinished: isFinished)
+    }
+
     var body: some View {
         PackWiseCard {
             HStack(spacing: PackWiseSpacing.regular) {
@@ -379,28 +420,24 @@ struct CompactTripCard: View {
 
     @ViewBuilder
     private var statusLine: some View {
-        if isFinished {
+        switch packingState {
+        case .completed:
             Text("Completed")
                 .font(PackWiseFont.rowSubtitle.weight(.medium))
                 .foregroundStyle(PackWiseColor.success)
-        } else if trip.items.isEmpty {
+        case .empty:
             Text("No items yet")
                 .font(PackWiseFont.rowSubtitle)
                 .foregroundStyle(PackWiseColor.textSecondary)
-        } else if trip.packedCount == 0 {
+        case .ready:
             Text("Packing list ready")
                 .font(PackWiseFont.rowSubtitle.weight(.medium))
                 .foregroundStyle(PackWiseColor.success)
-        } else if let forecast {
-            HStack(spacing: PackWiseSpacing.tight) {
-                Image(systemName: forecast.headlineSymbol(rainThreshold: rainThreshold))
-                    .font(.caption)
-                    .weatherGlyphStyle(forecast.headlineSymbol(rainThreshold: rainThreshold))
-                Text(forecast.highLowLabel(usesFahrenheit: usesFahrenheit))
-            }
-            .font(PackWiseFont.rowSubtitle)
-            .foregroundStyle(PackWiseColor.textSecondary)
-        } else {
+        case .allPacked:
+            Text("All packed")
+                .font(PackWiseFont.rowSubtitle.weight(.medium))
+                .foregroundStyle(PackWiseColor.success)
+        case .inProgress:
             Text("\(trip.packedCount) of \(trip.items.count) packed")
                 .font(PackWiseFont.rowSubtitle)
                 .foregroundStyle(PackWiseColor.textSecondary)

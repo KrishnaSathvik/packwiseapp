@@ -107,30 +107,6 @@ struct SecondaryButtonStyle: ButtonStyle {
     }
 }
 
-/// The navigation bar's `Next`: a filled blue pill, not plain text.
-///
-/// Disabled it turns to a border-gray pill with tertiary text rather than
-/// disappearing into the bar.
-struct NavPillButtonStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(isEnabled ? PackWiseColor.onAccent : PackWiseColor.textTertiary)
-            .padding(.horizontal, 18)
-            .frame(height: 34)
-            .background(
-                isEnabled
-                    ? PackWiseColor.accent.opacity(configuration.isPressed ? 0.85 : 1)
-                    : PackWiseColor.border
-            )
-            .clipShape(Capsule())
-            .lineLimit(1)
-            .fixedSize()
-    }
-}
-
 struct PackWiseCard<Content: View>: View {
     @ViewBuilder var content: Content
 

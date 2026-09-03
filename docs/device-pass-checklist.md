@@ -405,6 +405,62 @@ anything.
 
 ## Gate
 
+### Simulator UI refinement evidence — 2026-09-03
+
+This evidence closes the simulator half of the UI refinement pass. It does not
+substitute for any physical-device checkbox above.
+
+```text
+[x] Debug simulator build — iPhone 17 Pro / iOS 26.3.1
+[x] Automated suite — 143 tests in 15 suites
+[x] Full screenshot harness — 29 states × 3 variants = 87 PNGs
+[x] Light comparison reviewed
+[x] System-dark comparison reviewed — app correctly remained locked light
+[x] Accessibility-large comparison reviewed
+[x] Reference-board comparison reviewed
+[x] Focused recapture after accessibility corrections
+[ ] Physical-device UI/UX pass
+[ ] Physical-device App Attest — development
+```
+
+Evidence locations for this run:
+
+```text
+Screenshots: /tmp/packwise-ui-freeze-2026-09-03
+Light contact sheet: /tmp/packwise-ui-freeze-2026-09-03-light-contact.png
+Locked-dark contact sheet: /tmp/packwise-ui-freeze-2026-09-03-dark-contact.png
+Accessibility contact sheet: /tmp/packwise-ui-freeze-2026-09-03-xl-contact.png
+Test result bundle: /tmp/PackWise-UI-Freeze-Final-2026-09-03.xcresult
+```
+
+Final simulator observations:
+
+```text
+- The welcome image fills the display and the bottom action remains readable.
+- Setup Back and Next controls remain flat and readable at accessibility size.
+- Selected and custom activities share one chip flow.
+- Maui uses a designed graphical fallback rather than a generic location tile.
+- Zero-packed lists read "Packing list ready" without an empty progress track.
+- Trip Detail shows precise and seasonal weather states and five category rows.
+- Both Trip Detail hero controls remain visible at accessibility size.
+- Packing List rows remain below opaque pinned chrome in top and scrolled states.
+- Item Detail renders as medium/large sheets with truthful quantity evidence.
+- Add Item uses a nested category selector with a visible selection checkmark.
+- Me preference values no longer break into fragments at accessibility size.
+```
+
+`python3 scripts/validate_shared.py` was not run: this pass did not modify
+`shared/`, catalog data, or packing rules.
+
+Connected-device audit on 2026-09-03 found the paired iPhone 17 Pro Max, but
+Xcode reported it unavailable and advised unlocking/attaching it or restoring
+same-network Developer Mode connectivity. The product owner subsequently
+deferred the physical-device pass and authorized deterministic Product
+Hardening Phases 1–8 after the simulator-verified presentation baseline commit.
+This is a sequencing decision, not verification: the two device checks remain
+open, no device-verified tag is created, and M3B/M3C remain blocked until the
+M3A device exit gate is green.
+
 This pass covers Apple's **development** App Attest environment. A locally
 signed build cannot exercise the **production** environment — TestFlight and the
 App Store always use production regardless of the entitlement — so that remains

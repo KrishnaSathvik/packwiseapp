@@ -524,6 +524,13 @@ M3 ← CURRENT — Context intelligence
   M3C Packing-gap detection (resolver-filtered optional suggestions)
   /v1/packing/optimize is backend-only; Pack lighter UI is V1+
 
+Product-hardening sequencing decision (2026-09-03): the physical-device
+UI/App Attest pass is deferred while deterministic Product Hardening Phases
+1–8 proceed from the simulator-verified presentation baseline. This does not
+mark either device check complete and does not unlock M3B/M3C. Note enrichment
+and gap wiring remain blocked until the M3A physical-device exit gate is green
+and the required acceptance/traveler-attribution safeguards exist.
+
 M4 — Departure experience
   Share sheet, notifications, Final Check, near-departure state, polish
 

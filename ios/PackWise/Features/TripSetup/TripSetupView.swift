@@ -230,9 +230,12 @@ struct TripSetupView: View {
     }
 
     private func nextButton(for step: SetupStep) -> some View {
-        // A filled blue pill, not plain bar text.
         Button("Next") { Task { await advance(from: step) } }
-            .buttonStyle(NavPillButtonStyle())
+            .buttonStyle(.plain)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(PackWiseColor.accent)
+            .lineLimit(1)
+            .fixedSize()
             .disabled(!canAdvance(for: step))
     }
 
@@ -663,23 +666,6 @@ struct TripSetupView: View {
                 }
             }
 
-            if !draft.activities.isEmpty {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                    Text("Your activities")
-                        .font(PackWiseFont.sectionTitle)
-                        .foregroundStyle(PackWiseColor.textSecondary)
-                    PackWiseFlowLayout {
-                        ForEach(draft.activities, id: \.self) { id in
-                            PackWiseRemovableChip(
-                                title: activityTitle(id),
-                                symbol: PackWiseActivityStyle.symbol(for: id)
-                            ) {
-                                toggleActivity(id)
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -768,13 +754,6 @@ struct TripSetupView: View {
                 ContextChip.allCases.filter { ContextChip.tripLevel.contains($0) && $0 != .laundryAvailable }
             )
 
-            VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                PackWiseSectionHeader(title: "Add a note")
-                PackWiseCard {
-                    TextField("I'll probably do laundry halfway through.", text: $draft.notes, axis: .vertical)
-                        .lineLimit(2...6)
-                }
-            }
         }
     }
 
@@ -836,62 +815,74 @@ struct TripSetupView: View {
                 // collapse into a handful of named facts.
                 PackWiseCard {
                     VStack(spacing: 0) {
-                        reviewRow(
-                            draft.tripType.symbol,
-                            draft.tripType.tint,
-                            "Your trip",
-                            "\(draft.tripType.title) · \(draft.party.summary)"
+                        reviewSummaryBlock(
+                            title: "Your trip",
+                            symbol: draft.tripType.symbol,
+                            tint: draft.tripType.tint,
+                            value: "\(draft.tripType.title) · \(draft.party.summary)"
                         )
                         PackWiseRowDivider()
-                        reviewRow(
-                            "figure.walk",
-                            .green,
-                            "Activities",
-                            draft.activities.isEmpty ? "None chosen" : draft.activities.map(activityTitle).joined(separator: ", ")
+                        reviewSummaryBlock(
+                            title: "Activities",
+                            symbol: "figure.walk",
+                            tint: .green,
+                            value: draft.activities.isEmpty
+                                ? "None chosen"
+                                : draft.activities.map(activityTitle).joined(separator: " · ")
                         )
                         PackWiseRowDivider()
-                        reviewRow(
-                            draft.bagType.symbol,
-                            draft.bagType.tint,
-                            "Packing",
-                            draft.laundry == .none
-                                ? "\(draft.bagType.title) · \(draft.packingStyle.title)"
-                                : "\(draft.bagType.title) · \(draft.packingStyle.title) · \(draft.laundry.setupTitle)"
+                        reviewSummaryBlock(
+                            title: "Packing",
+                            symbol: draft.bagType.symbol,
+                            tint: draft.bagType.tint,
+                            value: "\(draft.bagType.title) · \(draft.packingStyle.title)"
                         )
                         PackWiseRowDivider()
-                        reviewRow(
-                            "slider.horizontal.3",
-                            PackWiseColor.accent,
-                            "Preferences",
-                            draft.chips.isEmpty
+                        reviewSummaryBlock(
+                            title: "Laundry",
+                            symbol: draft.laundry.setupSymbol,
+                            tint: draft.laundry.setupTint,
+                            value: draft.laundry.setupTitle
+                        )
+                        PackWiseRowDivider()
+                        reviewSummaryBlock(
+                            title: "Preferences",
+                            symbol: "slider.horizontal.3",
+                            tint: PackWiseColor.accent,
+                            value: draft.chips.isEmpty
                                 ? "None"
-                                : ContextChip.allCases.filter { draft.chips.contains($0) }.map(\.chipTitle).joined(separator: ", ")
+                                : ContextChip.allCases.filter { draft.chips.contains($0) }.map(\.chipTitle).joined(separator: " · ")
                         )
-                        if !draft.notes.isEmpty {
-                            PackWiseRowDivider()
-                            reviewRow("note.text", PackWiseColor.info, "Notes", draft.notes)
-                        }
                     }
                 }
             }
         }
     }
 
-    private func reviewRow(_ symbol: String, _ tint: Color, _ label: String, _ value: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.regular) {
+    private func reviewSummaryBlock(
+        title: String,
+        symbol: String,
+        tint: Color,
+        value: String
+    ) -> some View {
+        HStack(spacing: PackWiseSpacing.regular) {
             PackWiseIconBadge(symbol: symbol, tint: tint)
-                .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 6 }
-            Text(label)
-                .font(PackWiseFont.rowTitle)
-                .foregroundStyle(PackWiseColor.textPrimary)
-            Spacer(minLength: PackWiseSpacing.snug)
-            Text(value)
-                .font(.subheadline)
-                .foregroundStyle(PackWiseColor.textSecondary)
-                .multilineTextAlignment(.trailing)
+            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                Text(title)
+                    .font(PackWiseFont.microLabel)
+                    .foregroundStyle(PackWiseColor.textSecondary)
+                    .textCase(.uppercase)
+                    .kerning(0.5)
+                Text(value)
+                    .font(PackWiseFont.rowTitle)
+                    .foregroundStyle(PackWiseColor.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
         }
-        .padding(.vertical, PackWiseSpacing.regular)
+        .padding(.vertical, PackWiseSpacing.snug)
         .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(value)")
     }
 
     private var dateSpan: String {

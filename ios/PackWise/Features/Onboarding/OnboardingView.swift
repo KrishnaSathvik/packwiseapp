@@ -3,10 +3,8 @@ import SwiftUI
 /// Three screens: what PackWise promises, how it gets there, and that it
 /// improves with use.
 ///
-/// Panel one is two zones — a white top with the wordmark, dark headline and
-/// gray subtitle, and destination photography below with the benefits and the
-/// button over it. The two explanatory panels are white card screens with no
-/// hero imagery, exactly as the sheet draws them.
+/// Panel one is a single full-bleed travel photograph with a restrained scrim.
+/// The two explanatory panels keep their teaching cards close to their copy.
 ///
 /// The habits shown on the third screen are an illustration of the idea, the
 /// same way the Chicago example on the second is. They are not the user's
@@ -19,45 +17,53 @@ struct OnboardingView: View {
     var initialPage = 0
 
     @State private var page = 0
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private static let lastPage = 2
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            TabView(selection: $page) {
-                welcome.tag(0)
-                howItWorks.tag(1)
-                personal.tag(2)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            // The welcome photo runs edge to edge, under the status bar and
-            // behind the floating button.
-            .ignoresSafeArea()
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                TabView(selection: $page) {
+                    welcome(topInset: 0).tag(0)
+                    howItWorks(topInset: 0).tag(1)
+                    personal(topInset: 0).tag(2)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .preferredColorScheme(page == 0 ? .dark : .light)
 
-            VStack(spacing: PackWiseSpacing.regular) {
-                Button(action: advance) {
-                    HStack(spacing: PackWiseSpacing.snug) {
-                        Text(buttonTitle)
-                        if page == 0 {
-                            // The only arrow in the flow — the sheet draws it
-                            // on "Get Started" and nowhere else.
-                            Image(systemName: "arrow.right")
-                                .font(.body.weight(.semibold))
+                VStack(spacing: PackWiseSpacing.regular) {
+                    Button(action: advance) {
+                        HStack(spacing: PackWiseSpacing.snug) {
+                            Text(buttonTitle)
+                            if page == 0 {
+                                Image(systemName: "arrow.right")
+                                    .font(.body.weight(.semibold))
+                            }
                         }
                     }
-                }
-                .buttonStyle(PrimaryButtonStyle())
+                    .buttonStyle(PrimaryButtonStyle())
 
-                PackWisePageDots(
-                    count: Self.lastPage + 1,
-                    current: page,
-                    inactive: page == 0 ? .white.opacity(0.4) : PackWiseColor.border
-                )
+                    PackWisePageDots(
+                        count: Self.lastPage + 1,
+                        current: page,
+                        inactive: page == 0 ? .white.opacity(0.4) : PackWiseColor.border
+                    )
+                }
+                .padding(.horizontal, PackWiseSpacing.loose)
+                .padding(.bottom, PackWiseSpacing.snug)
             }
-            .padding(.horizontal, PackWiseSpacing.loose)
-            .padding(.bottom, PackWiseSpacing.snug)
+            .frame(width: proxy.size.width, height: proxy.size.height)
         }
-        .background(PackWiseColor.screen)
+        .background {
+            if page == 0 {
+                OnboardingImage(slot: PackWiseImageSlot.welcome)
+                    .ignoresSafeArea()
+            } else {
+                PackWiseColor.screen.ignoresSafeArea()
+            }
+        }
+        .preferredColorScheme(page == 0 ? .dark : .light)
         .onAppear { page = initialPage }
     }
 
@@ -84,59 +90,58 @@ struct OnboardingView: View {
 
     // MARK: - Welcome
 
-    /// Two zones: a white top (~40%) carrying the identity and headline in
-    /// dark text, and the photograph below (~60%) carrying the benefits and
-    /// the floating button. The white top also keeps the status bar legible
-    /// without fighting the photo's luminance.
-    private var welcome: some View {
+    private func welcome(topInset: CGFloat) -> some View {
         GeometryReader { proxy in
-            VStack(spacing: 0) {
-                VStack(spacing: PackWiseSpacing.regular) {
-                    Spacer(minLength: 0)
-                    HStack(spacing: PackWiseSpacing.snug) {
-                        Image(systemName: "suitcase.fill")
-                            .font(.title2)
-                            .foregroundStyle(PackWiseColor.accent)
-                            .accessibilityHidden(true)
-                        Text("PackWise")
-                            .font(.title.bold())
-                            .foregroundStyle(PackWiseColor.textPrimary)
-                    }
-                    Text("Pack what this trip actually needs.")
-                        .font(PackWiseFont.screenTitle)
-                        .foregroundStyle(PackWiseColor.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("Weather, activities, trip length and the way you travel — all considered.")
-                        .font(PackWiseFont.screenSubtitle)
-                        .foregroundStyle(PackWiseColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 0)
-                }
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, PackWiseSpacing.loose)
-                .frame(maxWidth: .infinity)
-                .frame(height: proxy.size.height * 0.4)
-                .background(PackWiseColor.screen)
+            ZStack {
+                Color.clear
 
-                ZStack(alignment: .bottomLeading) {
-                    OnboardingImage(slot: PackWiseImageSlot.welcome)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
+                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                            HStack(spacing: PackWiseSpacing.snug) {
+                                Image(systemName: "suitcase.fill")
+                                    .font(.title2)
+                                    .foregroundStyle(.white)
+                                    .accessibilityHidden(true)
+                                Text("PackWise")
+                                    .font(.title.bold())
+                                    .foregroundStyle(.white)
+                            }
+                            Text("Pack what this trip actually needs.")
+                                .font(PackWiseFont.screenTitle)
+                                .foregroundStyle(.white)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text("Weather, activities, trip length and the way you travel — all considered.")
+                                .font(PackWiseFont.screenSubtitle)
+                                .foregroundStyle(.white.opacity(0.88))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
 
-                    VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                        benefit("checkmark", "Smarter packing lists")
-                        benefit("cloud.sun.fill", "Weather-aware suggestions")
-                        benefit("person.fill", "Personalized over time")
+                        Spacer(minLength: PackWiseSpacing.section)
+
+                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                            benefit("checkmark", "Smarter packing lists")
+                            benefit("cloud.sun.fill", "Weather-aware suggestions")
+                            benefit("person.fill", "Personalized over time")
+                        }
+                        .foregroundStyle(.white)
+
+                        Spacer()
+                            .frame(height: floatingControlsClearance)
                     }
-                    .foregroundStyle(.white)
-                    .padding(PackWiseSpacing.loose)
-                    // Clears the button and dots floating at the bottom of
-                    // the ZStack.
-                    .padding(.bottom, floatingControlsClearance)
+                    .padding(.horizontal, PackWiseSpacing.loose)
+                    .padding(
+                        .top,
+                        topInset + PackWiseSpacing.loose
+                            + (dynamicTypeSize.isAccessibilitySize ? 52 : 0)
+                    )
+                    .padding(.bottom, PackWiseSpacing.snug)
+                    .frame(minHeight: proxy.size.height, alignment: .top)
                 }
-                .frame(height: proxy.size.height * 0.6)
-                .clipped()
+                .scrollIndicators(.hidden)
             }
+            .ignoresSafeArea()
         }
-        .ignoresSafeArea(edges: .bottom)
     }
 
     private func benefit(_ symbol: String, _ title: String) -> some View {
@@ -160,7 +165,7 @@ struct OnboardingView: View {
     /// The content group stretches to the height the floating controls leave
     /// free, so the screen does not end at 60% with a void below — the
     /// spacers distribute the slack around the teaching device.
-    private var howItWorks: some View {
+    private func howItWorks(topInset: CGFloat) -> some View {
         GeometryReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
@@ -172,8 +177,6 @@ struct OnboardingView: View {
                             .font(PackWiseFont.screenSubtitle)
                             .foregroundStyle(PackWiseColor.textSecondary)
                     }
-
-                    Spacer(minLength: 0)
 
                     PackWiseCard {
                         HStack(alignment: .top) {
@@ -222,10 +225,9 @@ struct OnboardingView: View {
                         }
                     }
 
-                    Spacer(minLength: 0)
                 }
                 .padding(PackWiseSpacing.loose)
-                .safeAreaPadding(.top)
+                .padding(.top, topInset)
                 .padding(.bottom, floatingControlsClearance)
                 // Stretch the group to the visible height so the slack
                 // distributes through the spacers instead of pooling at the
@@ -259,7 +261,7 @@ struct OnboardingView: View {
 
     // MARK: - Personalization
 
-    private var personal: some View {
+    private func personal(topInset: CGFloat) -> some View {
         GeometryReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
@@ -271,8 +273,6 @@ struct OnboardingView: View {
                             .font(PackWiseFont.screenSubtitle)
                             .foregroundStyle(PackWiseColor.textSecondary)
                     }
-
-                    Spacer(minLength: 0)
 
                     PackWiseCard {
                         VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
@@ -298,10 +298,9 @@ struct OnboardingView: View {
                         .frame(maxWidth: .infinity)
                         .multilineTextAlignment(.center)
 
-                    Spacer(minLength: 0)
                 }
                 .padding(PackWiseSpacing.loose)
-                .safeAreaPadding(.top)
+                .padding(.top, topInset)
                 .padding(.bottom, floatingControlsClearance)
                 .frame(minHeight: proxy.size.height)
             }
@@ -346,14 +345,14 @@ private struct OnboardingImage: View {
             } else {
                 BrandedDestinationPanel()
             }
-            // Keeps the overlaid copy legible on any photograph. The ramp
-            // starts below the midpoint so the sky stays open while the text
-            // band gets enough weight to survive bright water.
+            // Both text zones need contrast, while the center stays open so
+            // the photograph still reads as travel rather than a dark panel.
             LinearGradient(
                 stops: [
-                    .init(color: .clear, location: 0.25),
-                    .init(color: .black.opacity(0.45), location: 0.58),
-                    .init(color: .black.opacity(0.82), location: 1.0)
+                    .init(color: .black.opacity(0.58), location: 0),
+                    .init(color: .black.opacity(0.18), location: 0.36),
+                    .init(color: .black.opacity(0.22), location: 0.55),
+                    .init(color: .black.opacity(0.78), location: 1.0)
                 ],
                 startPoint: .top,
                 endPoint: .bottom

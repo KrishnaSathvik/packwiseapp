@@ -8,6 +8,7 @@
 # -PackWiseScreen launch argument.
 #
 #   scripts/capture_ios_screens.sh <output-dir> <screen> [screen ...]
+#   scripts/capture_ios_screens.sh <output-dir> all
 #
 # Screens are the cases of DebugPreviewScreen, e.g. tripDetail, packingList.
 
@@ -21,6 +22,19 @@ fi
 OUTPUT_DIR="$1"
 shift
 SCREENS=("$@")
+
+if [ "${#SCREENS[@]}" -eq 1 ] && [ "${SCREENS[0]}" = "all" ]; then
+    SCREENS=(
+        onboarding onboardingTrip onboardingPersonal
+        tripsHome tripsHomeEmpty
+        setupDestination setupDestinationFallback setupDates setupParty setupPartyFamily
+        setupType setupActivities setupBagStyle setupExtras setupReview
+        tripDetail tripDetailSeasonal packingList packingListScrolled
+        itemDetailSheet itemDetailLarge addItem addItemCategory
+        weatherDetail weatherDetailSeasonal reviewChanges weatherChanged
+        tripDetailCompleted me
+    )
+fi
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 SIMULATOR="${PACKWISE_SIMULATOR:-iPhone 17 Pro}"
