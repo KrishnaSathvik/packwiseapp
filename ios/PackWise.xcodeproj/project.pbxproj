@@ -133,6 +133,8 @@
 		F70240D380A399786325B5C3 /* substitutions.json in Resources */ = {isa = PBXBuildFile; fileRef = 80EEC6508BE45DA115516182 /* substitutions.json */; };
 		F7F89C50F44AE543A1C8A4B1 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40FC0820E9532861F4745CDB /* CoreLocation.framework */; };
 		FB9E892DB5F234700B754B96 /* travel-comfort.json in Resources */ = {isa = PBXBuildFile; fileRef = 026895DA8AD94D9E26C65186 /* travel-comfort.json */; };
+		97D615B4D3EB1F143F217E6D /* TripContextSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF18A6EE3693ADFC33265B8 /* TripContextSnapshot.swift */; };
+		B07750D23CC323DD86689C63 /* TripContextSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CF1C942A8267114C19350B /* TripContextSnapshotTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -277,6 +279,8 @@
 		F97E3A4C2581A7CC10CC38E9 /* MiamiBeachCarryOn.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = MiamiBeachCarryOn.json; sourceTree = "<group>"; };
 		FD44B8454240EBE0F41B79C3 /* SchemaV1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchemaV1.swift; sourceTree = "<group>"; };
 		FD7167A22C009DDA79027D79 /* documents.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = documents.json; sourceTree = "<group>"; };
+		CAF18A6EE3693ADFC33265B8 /* TripContextSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripContextSnapshot.swift; sourceTree = "<group>"; };
+		F1CF1C942A8267114C19350B /* TripContextSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripContextSnapshotTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -514,6 +518,7 @@
 				F9237E072B633D8169D5D161 /* PackingImpactTests.swift */,
 				5B50B260EFF252BBC08DBC17 /* ReasonQualityTests.swift */,
 				15CC5CF6B7D99AE5A8E5A735 /* WarmLayerTests.swift */,
+				F1CF1C942A8267114C19350B /* TripContextSnapshotTests.swift */,
 				A8D8E37093BBD8239F626DCC /* WeatherChangeTests.swift */,
 				A8672F58A94DB708E98B9C4B /* WeatherNormalizationTests.swift */,
 				0E86FA48F852F85AF4C6FA1B /* Goldens */,
@@ -539,6 +544,7 @@
 			isa = PBXGroup;
 			children = (
 				94EE478A71B6717F17248D18 /* Party.swift */,
+				CAF18A6EE3693ADFC33265B8 /* TripContextSnapshot.swift */,
 				8F50866E7F4D96E58B7ED50F /* TripTypes.swift */,
 				6FEF913E762E0098A9F12471 /* Packing */,
 				7323532149FED6D7E75E6DC5 /* Recommendations */,
@@ -906,6 +912,7 @@
 				1BAD1AF67DFD6823A4117373 /* SharedResources.swift in Sources */,
 				98DA3E593C0C540EC98557DD /* TripDetailView.swift in Sources */,
 				D595B518D1CC16AC13E5DBA3 /* TripSetupView.swift in Sources */,
+				97D615B4D3EB1F143F217E6D /* TripContextSnapshot.swift in Sources */,
 				75064360D2C13B306E238C17 /* TripTypes.swift in Sources */,
 				BEA50475369F93B982CF9618 /* TripWeatherRefresh.swift in Sources */,
 				EE860595EB05FA04AE2E514E /* TripsHomeView.swift in Sources */,
@@ -939,6 +946,7 @@
 				97AAB3482B02A10C51B0BFFE /* PackingImpactTests.swift in Sources */,
 				4C354A096430ECAA283B0AD3 /* ReasonQualityTests.swift in Sources */,
 				73478534EFF932732A441BA9 /* WarmLayerTests.swift in Sources */,
+				B07750D23CC323DD86689C63 /* TripContextSnapshotTests.swift in Sources */,
 				6045ABD7F124AAF586080F8F /* WeatherChangeTests.swift in Sources */,
 				2DFF425EC229FB2F7D42CF15 /* WeatherNormalizationTests.swift in Sources */,
 			);
