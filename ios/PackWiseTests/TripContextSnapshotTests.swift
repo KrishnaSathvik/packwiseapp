@@ -214,4 +214,86 @@ struct TripContextSnapshotTests {
         let cachedSnapshot = TripContextCompiler.compile(context, rules: try rules())
         #expect(cachedSnapshot.weatherQuality == .complete) // unchanged by the source flip
     }
+
+    @Test func emptyPartyIsAlreadySafeViaEffectiveParty() throws {
+        var context = baseContext()
+        context.party = TripParty(travelMode: .solo, travelers: [])
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.party.travelers.count == 1)
+        #expect(snapshot.party.travelers.first?.role == .self)
+    }
+
+    @Test func childWithGuardianOutsidePartyLosesTheReferenceRatherThanGuessing() throws {
+        var context = baseContext()
+        let ghostGuardianID = UUID() // not a real party member
+        let child = Traveler(role: .child, ageGroup: .child, packingResponsibility: .guardian, guardianTravelerID: ghostGuardianID)
+        context.party = TripParty(travelMode: .family, travelers: [.primarySelf(), child])
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        let normalizedChild = snapshot.party.travelers.first { $0.role == .child }
+        #expect(normalizedChild?.guardianTravelerID == nil) // dropped, never reassigned to a guessed adult
+        #expect(snapshot.diagnostics.contains { $0.field == "party" && $0.outcome.isUnsupportedButSafe })
+    }
+
+    @Test func ambiguousGuardianAmongMultipleAdultsIsNeverInferred() throws {
+        var context = baseContext()
+        let child = Traveler(role: .child, ageGroup: .child, packingResponsibility: .guardian, guardianTravelerID: nil)
+        let extraAdult = Traveler(role: .otherAdult, ageGroup: .adult)
+        context.party = TripParty(travelMode: .family, travelers: [.primarySelf(), extraAdult, child])
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        let normalizedChild = snapshot.party.travelers.first { $0.role == .child }
+        #expect(normalizedChild?.guardianTravelerID == nil) // still nil — the compiler must not default to "the first adult"
+        #expect(!snapshot.diagnostics.contains { $0.field == "party" }) // nil guardian is not itself a violation
+    }
+
+    @Test func validPartyPassesThroughWithNoDiagnostic() throws {
+        var context = baseContext()
+        let primary = Traveler.primarySelf()
+        let child = Traveler(role: .child, ageGroup: .child, packingResponsibility: .guardian, guardianTravelerID: primary.id)
+        context.party = TripParty(travelMode: .family, travelers: [primary, child])
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.party.travelers.count == 2)
+        #expect(snapshot.party.travelers.first { $0.role == .child }?.guardianTravelerID == primary.id)
+        #expect(!snapshot.diagnostics.contains { $0.field == "party" })
+    }
+
+    @Test func guardianNotAllowedOnAdultTravelerIsAlsoDropped() throws {
+        // An adult with a (structurally nonsensical) guardianTravelerID set —
+        // AgeGroup.allowsGuardian is false for .adult, so this is the
+        // guardianNotAllowed violation, not guardianNotInParty. Must be
+        // stripped just like the other two guardian violation kinds.
+        var context = baseContext()
+        let primary = Traveler.primarySelf()
+        var strangeAdult = Traveler(role: .otherAdult, ageGroup: .adult)
+        strangeAdult.guardianTravelerID = primary.id
+        context.party = TripParty(travelMode: .family, travelers: [primary, strangeAdult])
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        let normalized = snapshot.party.travelers.first { $0.id == strangeAdult.id }
+        #expect(normalized?.guardianTravelerID == nil)
+        #expect(snapshot.diagnostics.contains { $0.field == "party" && $0.outcome.isUnsupportedButSafe })
+    }
+
+    @Test func guardianNotAdultIsDroppedNotReassigned() throws {
+        // Guardian reference points at a real party member who is not an
+        // adult (e.g. a teen sibling) — guardianNotAdult violation.
+        var context = baseContext()
+        let primary = Traveler.primarySelf()
+        let teenSibling = Traveler(role: .otherAdult, ageGroup: .teen)
+        let child = Traveler(role: .child, ageGroup: .child, packingResponsibility: .guardian, guardianTravelerID: teenSibling.id)
+        context.party = TripParty(travelMode: .family, travelers: [primary, teenSibling, child])
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        let normalizedChild = snapshot.party.travelers.first { $0.role == .child }
+        #expect(normalizedChild?.guardianTravelerID == nil) // never reassigned to `primary`, either
+        #expect(snapshot.diagnostics.contains { $0.field == "party" && $0.outcome.isUnsupportedButSafe })
+    }
+
+    @Test func partyCompilationIsDeterministicAcrossRepeatedRuns() throws {
+        var context = baseContext()
+        let ghostGuardianID = UUID()
+        let child = Traveler(role: .child, ageGroup: .child, packingResponsibility: .guardian, guardianTravelerID: ghostGuardianID)
+        context.party = TripParty(travelMode: .family, travelers: [.primarySelf(), child])
+        let r = try rules()
+        let first = TripContextCompiler.compile(context, rules: r)
+        let second = TripContextCompiler.compile(context, rules: r)
+        #expect(first == second)
+    }
 }

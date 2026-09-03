@@ -79,6 +79,15 @@ struct TripContextSnapshot: Hashable, Sendable {
     /// value with no `now`/refresh-state parameters.
     var weatherQuality: WeatherQuality
 
+    /// `context.effectiveParty` (already folds an empty `travelers` array to
+    /// `.solo()`) with any structurally invalid `guardianTravelerID`
+    /// reference stripped to `nil`. Never reassigned to a guessed real party
+    /// member — see `PartyInvariants.violations`: a guardian reference that
+    /// isn't allowed for the traveler's age group, doesn't resolve to a real
+    /// party member, or resolves to a non-adult member is dropped, never
+    /// replaced. This is the "don't infer ambiguous attribution" rule.
+    var party: TripParty
+
     var diagnostics: [ContextDiagnostic]
 }
 
@@ -110,6 +119,9 @@ enum TripContextCompiler {
 
         let weatherQuality = normalizedWeatherQuality(context.weather, tripDays: days)
 
+        let (party, partyDiagnostic) = normalizedParty(context)
+        if let partyDiagnostic { diagnostics.append(partyDiagnostic) }
+
         return TripContextSnapshot(
             destination: context.destination,
             startDate: context.startDate,
@@ -124,8 +136,36 @@ enum TripContextCompiler {
             packingStyle: context.packingStyle,
             laundryPlan: laundry,
             weatherQuality: weatherQuality,
+            party: party,
             diagnostics: diagnostics
         )
+    }
+
+    /// Never invents a guardian. `context.effectiveParty` already folds an
+    /// empty party to `.solo()`, so this only has to handle a non-empty but
+    /// structurally malformed party: any `guardianTravelerID` that
+    /// `PartyInvariants.violations` flags — not allowed for the traveler's
+    /// age group, not a real party member, or not an adult — is set to
+    /// `nil`. It is never rewritten to some other traveler's id; the only
+    /// values a `guardianTravelerID` can end up holding here are `nil` or a
+    /// value that was already present, verbatim, in the raw input.
+    private static func normalizedParty(_ context: TripContext) -> (party: TripParty, diagnostic: ContextDiagnostic?) {
+        let effectiveParty = context.effectiveParty
+        let violations = PartyInvariants.violations(party: effectiveParty)
+        guard !violations.isEmpty else { return (effectiveParty, nil) }
+
+        let ids = Set(effectiveParty.travelers.map(\.id))
+        let adults = Set(effectiveParty.travelers.filter(\.ageGroup.isAdult).map(\.id))
+        var normalized = effectiveParty
+        normalized.travelers = effectiveParty.travelers.map { traveler in
+            var copy = traveler
+            if let guardian = copy.guardianTravelerID,
+               !(copy.ageGroup.allowsGuardian && ids.contains(guardian) && adults.contains(guardian)) {
+                copy.guardianTravelerID = nil // drop, never reassign to a guessed adult
+            }
+            return copy
+        }
+        return (normalized, ContextDiagnostic(field: "party", outcome: .unsupportedButSafe(reason: "invalid guardian reference(s) dropped, not reassigned")))
     }
 
     /// Mirrors `TripWeatherContext.state()`'s precedence: `.seasonal` and
