@@ -189,4 +189,29 @@ struct TripContextSnapshotTests {
         let snapshot = TripContextCompiler.compile(context, rules: try rules())
         #expect(snapshot.weatherQuality == .complete)
     }
+
+    @Test func cacheSourceDoesNotChangeWeatherQualityFromLiveCoverage() throws {
+        // Pins the deliberate divergence from `TripWeatherContext.state()`:
+        // `.cache` is produced by `markingAsCache()` from a real prior fetch,
+        // so it always carries that fetch's actual coverage data.
+        // `weatherQuality` tracks structural coverage only, not staleness —
+        // flipping the source to `.cache` must not change the classification
+        // `state()`'s unconditional `.cache` -> `.failedUsingCache` mapping
+        // would otherwise suggest.
+        var context = baseContext(days: 5)
+        var weather = TripWeatherContext.seasonal()
+        weather.source = .fixture
+        weather.isPreciseForecast = true
+        weather.dailyForecast = (0..<5).map { i in
+            DailyForecast(date: Calendar.current.date(byAdding: .day, value: i, to: context.startDate)!, symbol: "sun.max", highF: 70, lowF: 50, rainProbability: 0, uvIndex: 3, windMph: 5, snowExpected: false, summary: "")
+        }
+        weather.forecastAvailableForWholeTrip = true
+        context.weather = weather
+        let liveSnapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(liveSnapshot.weatherQuality == .complete)
+
+        context.weather = weather.markingAsCache()
+        let cachedSnapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(cachedSnapshot.weatherQuality == .complete) // unchanged by the source flip
+    }
 }
