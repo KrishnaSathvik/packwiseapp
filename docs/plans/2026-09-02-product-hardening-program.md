@@ -1,7 +1,7 @@
 # PackWise Product Hardening Program
 
 **Date:** 2026-09-02  
-**Status:** active; Phase 1 is authorized after the simulator-verified presentation baseline commit  
+**Status:** active; Phase 1 closed 2026-09-03 (see "Phase 1 closure" below); Phase 2 not yet started  
 **Source of truth:** this program orders the user-approved Final UI Refinement & Freeze Plan and Product Hardening + Engine V2 Plan against the repository as it exists today.
 
 ## Goal
@@ -30,6 +30,31 @@ Presentation baseline           frozen for deterministic hardening
 Phase 1                         authorized
 M3B/M3C                         still blocked by the M3A device exit gate
 ```
+
+## Phase 1 closure — 2026-09-03
+
+Phase 1 (golden ledger audit and fixture expansion) is complete. Six tasks:
+
+1. Golden schema completeness (`carrier`, `reasonArguments`) — 17 → 27 fixtures serialize.
+2. `scripts/report_engine_goldens.py` — semantic golden diff tool.
+3. Fixture ledger expanded 17 → 27, closing coverage gaps the original set didn't reach (extreme duration/latitude, hot/dry climate, sustained rain sufficiency, ski/snow trip type, activity overlap, international-plus-beach, infant-vs-toddler contrast, unknown-input degradation, existing-item/custom-item authority).
+4. Invariant/authority/failure audits across `ClothingQuantityTests`, `ConstraintTests`, `IntelligenceServiceTests`, `ContextIntelligenceGateTests`, `WeatherChangeTests`.
+5. `docs/engine-audits/surfaced-input-contracts.json` — 49-record surfaced-input inventory; `scripts/audit_engine_inputs.py`.
+6. `scripts/audit_recommendation_traces.py` (trace-completeness audit), `scripts/run_engine_audit.sh` (one reproducible command), and the closing report set below.
+
+Exit evidence:
+
+- `docs/engine-audits/2026-09-03-phase-1-baseline.md` — fixture manifest, schema gaps, two-run determinism (verified byte-identical, not assumed), quantity properties, authority/fallback matrix, surfaced-input coverage, trace metrics, the Miami/Chicago gate, and a full evidence-path index.
+- `docs/engine-audits/2026-09-03-trace-coverage.md` — the trace-completeness numbers in full.
+- `docs/engine-audits/2026-09-03-engine-findings.md` — every defect and coverage gap found across Tasks 3–6, ranked P0/P1/P2, each routed to the phase below that owns its fix. No P0s. Five P1s, six P2s (one of the P2s — 23 untested-but-deterministic surfaced inputs — spans phases 2, 5, and 7 by kind).
+- `scripts/run_engine_audit.sh` passed end-to-end: shared-data validation, the full Python audit test suite, the five Task 4 Swift suites, the semantic golden diff against HEAD (clean), the surfaced-input audit, and the trace audit.
+- Full `xcodebuild test` (all of `PackWiseTests`, not just the five focused suites) and `npm --prefix api run preflight` were run as this task's final validation pass — see the closing commit's evidence for pass/fail detail.
+
+**Phase 2 (context model hardening) has not started.** No work under
+`ios/PackWise/Domain/`, `ios/PackWise/Data/`, `api/`, or `shared/` happened
+in Phase 1 beyond what the six tasks above required to build audit tooling
+and fixtures — Phase 1 changed measurement and evidence, not engine or
+production behavior.
 
 ## Program order
 
