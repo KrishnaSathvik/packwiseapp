@@ -101,8 +101,9 @@ Exit evidence:
 - `scripts/run_engine_audit.sh` passed clean, all 6 steps, numbers unchanged
   from the Phase 1 baseline (Phase 2 touched no golden-affecting code path).
 - Full `xcodebuild test`: `** TEST SUCCEEDED **`, 191 tests across 16
-  suites, including `TripContextSnapshotTests` (24/24) and
-  `GoldenEngineTests`'s full-ledger snapshot-compilation test.
+  suites, including `TripContextSnapshotTests` (23/23) and
+  `GoldenEngineTests`'s full-ledger snapshot-compilation test (the 24th new
+  Phase 2 test).
 - Zero recommendation-behavior drift proven twice: `report_engine_goldens.py
   --baseline-ref 81be9bb` (Phase 1's closing commit) shows 27/27 unchanged
   on the full modern schema, isolating Phase 2's own contribution; a

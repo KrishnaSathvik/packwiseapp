@@ -35,9 +35,9 @@ context model hardening` commit records).
   observability in this phase. `contextDiagnostics` is not serialized into
   golden JSON (`GoldenEngineTests.swift`'s `GoldenOutput`/`GoldenItem` never
   reference it), so it cannot appear in a golden diff.
-- **Tests:** `ios/PackWiseTests/TripContextSnapshotTests.swift` — 24 tests,
-  one per normalization case plus determinism (narrow and broad). The
-  full-ledger fixture test lives in
+- **Tests:** `ios/PackWiseTests/TripContextSnapshotTests.swift` — 23 tests,
+  one per normalization case plus determinism (narrow and broad). The 24th
+  new Phase 2 test — the full-ledger fixture test — lives in
   `ios/PackWiseTests/GoldenEngineTests.swift`'s
   `everyGoldenFixtureCompilesToADeterministicSnapshot()`.
 
@@ -225,7 +225,7 @@ xcodebuild test -project ios/PackWise.xcodeproj -scheme PackWise \
 ```
 
 `** TEST SUCCEEDED **` — `Test run with 191 tests in 16 suites passed after
-0.874 seconds`. Includes `TripContextSnapshotTests` (24/24) and
+0.874 seconds`. Includes `TripContextSnapshotTests` (23/23) and
 `GoldenEngineTests`'s `everyGoldenFixtureCompilesToADeterministicSnapshot`,
 both passing. Zero failures anywhere in the suite.
 
@@ -344,7 +344,7 @@ engine-behavior defect beyond the one tooling gap above.
 | --- | --- |
 | Snapshot type + compiler | `ios/PackWise/Domain/TripContextSnapshot.swift` |
 | Engine wiring | `ios/PackWise/Domain/Packing/PackingEngine.swift` (`EngineGeneration.contextDiagnostics`, `generateDetailed`) |
-| Unit tests | `ios/PackWiseTests/TripContextSnapshotTests.swift` (24 tests) |
+| Unit tests | `ios/PackWiseTests/TripContextSnapshotTests.swift` (23 tests) |
 | Full-ledger fixture test | `ios/PackWiseTests/GoldenEngineTests.swift` (`everyGoldenFixtureCompilesToADeterministicSnapshot`) |
 | Phase 2 plan | `docs/plans/2026-09-03-phase-2-context-model-hardening.md` |
 | This report | `docs/engine-audits/2026-09-03-phase-2-context-snapshot.md` |
