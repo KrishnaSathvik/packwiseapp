@@ -742,4 +742,108 @@ struct PackingEngineTests {
         #expect(family.travelers.contains { $0.id == child.id })
         #expect(familyAgain.travelers.contains { $0.id == child.id })
     }
+
+    // MARK: - Surfaced-input contract completeness (Phase 1, Task 5)
+
+    /// One record per trip/bag/style/laundry/activity value a user can
+    /// surface, from `docs/engine-audits/surfaced-input-contracts.json`.
+    /// Field-for-field mirror of `ContractRecord` in
+    /// `scripts/audit_engine_inputs.py`, and `record[...]` in
+    /// `scripts/tests/test_audit_engine_inputs.py`.
+    struct SurfacedInputContract: Codable {
+        var kind: String
+        var id: String
+        var exposed: Bool
+        var engineContract: String
+        var fixtureIDs: [String]
+        var iconContract: String
+        var ownerScope: String
+        var note: String?
+    }
+
+    struct SurfacedInputContractFile: Codable {
+        var version: Int
+        var records: [SurfacedInputContract]
+    }
+
+    // ios/PackWiseTests -> ios -> repo root, same path-building GoldenEngineTests
+    // uses for shared/fixtures/golden/golden-fixtures.json.
+    private static let surfacedInputContractsFile = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()  // PackingEngineTests.swift -> ios/PackWiseTests
+        .deletingLastPathComponent()  // ios/PackWiseTests -> ios
+        .deletingLastPathComponent()  // ios -> repo root
+        .appendingPathComponent("docs/engine-audits/surfaced-input-contracts.json")
+
+    private static let legalEngineContracts: Set<String> = ["deterministic", "contextOnly", "missing"]
+
+    private func loadSurfacedInputContracts() throws -> [SurfacedInputContract] {
+        let file = try JSONDecoder().decode(
+            SurfacedInputContractFile.self,
+            from: Data(contentsOf: Self.surfacedInputContractsFile)
+        )
+        return file.records
+    }
+
+    @Test func surfacedInputContractCoversEveryTripBagStyleLaundryOption() throws {
+        let records = try loadSurfacedInputContracts()
+
+        func ids(kind: String) -> Set<String> {
+            Set(records.filter { $0.kind == kind }.map(\.id))
+        }
+
+        #expect(ids(kind: "tripType") == Set(TripType.allCases.map(\.rawValue)))
+        #expect(ids(kind: "bagType") == Set(BagType.allCases.map(\.rawValue)))
+        #expect(ids(kind: "packingStyle") == Set(PackingStyle.allCases.map(\.rawValue)))
+        #expect(ids(kind: "laundryAccess") == Set(LaundryAccess.allCases.map(\.rawValue)))
+    }
+
+    /// The engine's activity vocabulary is `rules.activities`' keys — every id
+    /// `PackingEngine.ruleSuggestions(for:)` actually looks up — plus
+    /// `camping`, which has full presentation styling and a golden fixture
+    /// but deliberately no rule entry (that absence is what this ledger
+    /// exists to record). `TripType.suggestedActivityIDs` is a subset of
+    /// `rules.activities`' keys, so covering the rule vocabulary covers
+    /// every suggested-chip activity too.
+    @Test func surfacedInputContractCoversEverySuggestedActivity() throws {
+        let records = try loadSurfacedInputContracts()
+        let rules = try SharedLibrary.rules()
+
+        let suggestedChipActivities = Set(TripType.allCases.flatMap(\.suggestedActivityIDs))
+        let engineActivityVocabulary = Set(rules.activities.keys)
+        let unmatched = suggestedChipActivities.subtracting(engineActivityVocabulary)
+        #expect(
+            suggestedChipActivities.isSubset(of: engineActivityVocabulary),
+            "A suggested-activity chip references an id with no rule entry: \(unmatched)"
+        )
+
+        let expectedActivityIDs = engineActivityVocabulary.union(["camping"])
+        let contractActivityIDs = Set(records.filter { $0.kind == "activity" }.map(\.id))
+        #expect(contractActivityIDs == expectedActivityIDs)
+    }
+
+    @Test func surfacedInputContractHasNoDuplicatesAndOnlyLegalContracts() throws {
+        let records = try loadSurfacedInputContracts()
+        var seen: Set<String> = []
+        for record in records {
+            let key = "\(record.kind)/\(record.id)"
+            #expect(seen.insert(key).inserted, "duplicate contract row for \(key)")
+            #expect(
+                Self.legalEngineContracts.contains(record.engineContract),
+                "\(key) has an illegal engineContract: \(record.engineContract)"
+            )
+            #expect(!record.iconContract.isEmpty, "\(key) is missing an iconContract")
+        }
+    }
+
+    /// The known Phase 1 finding this task exists to preserve: camping is
+    /// presentation-complete (tent icon) and exercised by golden fixture 18,
+    /// but has no deterministic engine effect. The contract must say so, not
+    /// be relabelled `contextOnly` to make the report read clean.
+    @Test func campingIsRecordedMissingAndPointsAtFixture18() throws {
+        let records = try loadSurfacedInputContracts()
+        let camping = try #require(records.first { $0.kind == "activity" && $0.id == "camping" })
+        #expect(camping.engineContract == "missing")
+        #expect(camping.fixtureIDs.contains("18-reykjavik-64d-roadtrip-camping-seasonal"))
+        #expect(camping.iconContract == "tent")
+    }
 }

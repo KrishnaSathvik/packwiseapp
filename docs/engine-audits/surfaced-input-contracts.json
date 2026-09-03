@@ -1,0 +1,433 @@
+{
+  "$schema-comment": "One record per surfaced trip/bag/style/laundry/activity input a user can end up with in a TripContext. See scripts/audit_engine_inputs.py for the dead/context-only/untested report this feeds and docs/superpowers/plans/2026-09-03-product-hardening-phase-1-and-next-phases.md Task 5 for the record shape and allowed engineContract values.",
+  "version": 1,
+  "records": [
+    {
+      "kind": "tripType",
+      "id": "vacation",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "02-tokyo-15d-light-laundry-possible"
+      ],
+      "iconContract": "sun.horizon",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "tripType",
+      "id": "cityBreak",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "01-chicago-5d-city-balanced"
+      ],
+      "iconContract": "building.2",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "tripType",
+      "id": "beach",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "06-miami-5d-beach-personal-item"
+      ],
+      "iconContract": "beach.umbrella",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "tripType",
+      "id": "business",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "07-chicago-5d-business-checked"
+      ],
+      "iconContract": "briefcase",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "tripType",
+      "id": "outdoor",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "mountain.2",
+      "ownerScope": "trip",
+      "note": "shared/rules/trip-types.json adds 5 outdoor items (daypack, water bottle, insect repellent, blister pads, first aid) but no golden fixture sets tripType=outdoor; deterministic and currently untested."
+    },
+    {
+      "kind": "tripType",
+      "id": "roadTrip",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "18-reykjavik-64d-roadtrip-camping-seasonal"
+      ],
+      "iconContract": "car",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "tripType",
+      "id": "weddingEvent",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "heart",
+      "ownerScope": "trip",
+      "note": "shared/rules/trip-types.json adds formal_outfit/dress_shoes/wedding_card but no golden fixture sets tripType=weddingEvent; deterministic and currently untested."
+    },
+    {
+      "kind": "tripType",
+      "id": "skiSnow",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "21-aspen-5d-skisnow-checked-prepared-snow"
+      ],
+      "iconContract": "snowflake",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "tripType",
+      "id": "festival",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "music.note",
+      "ownerScope": "trip",
+      "note": "shared/rules/trip-types.json adds festival_earplugs/power_bank/sunscreen/hand_sanitizer but no golden fixture sets tripType=festival; deterministic and currently untested."
+    },
+    {
+      "kind": "tripType",
+      "id": "visitingFamily",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "house",
+      "ownerScope": "trip",
+      "note": "shared/rules/trip-types.json adds a gift item but no golden fixture sets tripType=visitingFamily; deterministic and currently untested."
+    },
+    {
+      "kind": "tripType",
+      "id": "other",
+      "exposed": true,
+      "engineContract": "missing",
+      "fixtureIDs": [],
+      "iconContract": "ellipsis.circle",
+      "ownerScope": "trip",
+      "note": "shared/rules/trip-types.json['other'].add is an explicit empty list: selecting Other contributes zero trip-type-specific items or reason codes, the same observable effect as a trip type absent from the rules file entirely. No golden fixture exercises it."
+    },
+    {
+      "kind": "bagType",
+      "id": "personalItem",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "06-miami-5d-beach-personal-item",
+        "23-cancun-7d-international-beach-personal-item"
+      ],
+      "iconContract": "bag",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "bagType",
+      "id": "carryOn",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "01-chicago-5d-city-balanced"
+      ],
+      "iconContract": "suitcase",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "bagType",
+      "id": "checked",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "04-tokyo-15d-prepared-checked"
+      ],
+      "iconContract": "suitcase.rolling",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "bagType",
+      "id": "backpack",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "backpack",
+      "ownerScope": "trip",
+      "note": "BagType.isSpaceConstrained groups backpack with carryOn (same trim/cap path in ConstraintResolver.optionalRuling and ClothingQuantityEngine), but no golden fixture sets bag=backpack; deterministic and currently untested."
+    },
+    {
+      "kind": "bagType",
+      "id": "roadTripLuggage",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "18-reykjavik-64d-roadtrip-camping-seasonal"
+      ],
+      "iconContract": "car",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "bagType",
+      "id": "notSure",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "questionmark.circle",
+      "ownerScope": "trip",
+      "note": "BagType.appliesBagConstraint is false only for notSure, documented in the Phase 1 plan's global constraints as an intended contract ('BagType.notSure applies no bag constraint'). It is also TravelerPreferences.deviceDefaults()'s starting value, yet no golden fixture sets bag=notSure; deterministic and currently untested."
+    },
+    {
+      "kind": "packingStyle",
+      "id": "light",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "02-tokyo-15d-light-laundry-possible"
+      ],
+      "iconContract": "leaf",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "packingStyle",
+      "id": "balanced",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "01-chicago-5d-city-balanced"
+      ],
+      "iconContract": "circle.lefthalf.filled",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "packingStyle",
+      "id": "prepared",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "04-tokyo-15d-prepared-checked"
+      ],
+      "iconContract": "shield",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "laundryAccess",
+      "id": "none",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "03-tokyo-15d-light-laundry-none"
+      ],
+      "iconContract": "xmark.circle",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "laundryAccess",
+      "id": "possible",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "02-tokyo-15d-light-laundry-possible"
+      ],
+      "iconContract": "circle.dotted",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "laundryAccess",
+      "id": "planned",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "02b-tokyo-15d-light-laundry-planned"
+      ],
+      "iconContract": "washer",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "activity",
+      "id": "sightseeing",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "01-chicago-5d-city-balanced"
+      ],
+      "iconContract": "camera",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "activity",
+      "id": "walking",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "01-chicago-5d-city-balanced"
+      ],
+      "iconContract": "figure.walk",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "activity",
+      "id": "niceDinner",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "07-chicago-5d-business-checked"
+      ],
+      "iconContract": "fork.knife",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "activity",
+      "id": "nightlife",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "moon.stars",
+      "ownerScope": "trip",
+      "note": "Suggested for cityBreak/vacation/festival trip types; rules.activities adds clothing.nice_outfit, but no golden fixture selects nightlife; deterministic and currently untested."
+    },
+    {
+      "kind": "activity",
+      "id": "running",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "08-running-sightseeing-footwear"
+      ],
+      "iconContract": "figure.run",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "activity",
+      "id": "shopping",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "bag",
+      "ownerScope": "trip",
+      "note": "Suggested for cityBreak/vacation; rules.activities adds essentials.reusable_bag, but no golden fixture selects shopping; deterministic and currently untested."
+    },
+    {
+      "kind": "activity",
+      "id": "museums",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "building.columns",
+      "ownerScope": "trip",
+      "note": "Suggested for cityBreak/vacation; rules.activities adds clothing.light_sweater, but no golden fixture selects museums; deterministic and currently untested."
+    },
+    {
+      "kind": "activity",
+      "id": "work",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "07-chicago-5d-business-checked"
+      ],
+      "iconContract": "laptopcomputer",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "activity",
+      "id": "hiking",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "18-reykjavik-64d-roadtrip-camping-seasonal"
+      ],
+      "iconContract": "figure.hiking",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "activity",
+      "id": "wildlife",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "binoculars",
+      "ownerScope": "trip",
+      "note": "Suggested for outdoor trips; rules.activities adds activities.binoculars/electronics.camera, but no golden fixture selects wildlife; deterministic and currently untested."
+    },
+    {
+      "kind": "activity",
+      "id": "swimming",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "06-miami-5d-beach-personal-item"
+      ],
+      "iconContract": "figure.pool.swim",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "activity",
+      "id": "beachDays",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [
+        "06-miami-5d-beach-personal-item"
+      ],
+      "iconContract": "beach.umbrella",
+      "ownerScope": "trip"
+    },
+    {
+      "kind": "activity",
+      "id": "snorkeling",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "water.waves",
+      "ownerScope": "trip",
+      "note": "Suggested for beach trips; rules.activities adds activities.snorkel/footwear.water_shoes/toiletries.sunscreen, but no golden fixture selects snorkeling (06 and 23 use swimming/beachDays only); deterministic and currently untested."
+    },
+    {
+      "kind": "activity",
+      "id": "boatTrip",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "sailboat",
+      "ownerScope": "trip",
+      "note": "Suggested for beach trips; rules.activities adds activities.dry_bag/health.motion_sickness/toiletries.sunscreen, but no golden fixture selects boatTrip; deterministic and currently untested."
+    },
+    {
+      "kind": "activity",
+      "id": "yoga",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "figure.yoga",
+      "ownerScope": "trip",
+      "note": "Not offered as a suggested-activity chip for any TripType; reachable only via the free-text keyword \"yoga\" in shared/rules/base.json. rules.activities adds a travel yoga mat and workout clothing, but no golden fixture selects yoga; deterministic and currently untested."
+    },
+    {
+      "kind": "activity",
+      "id": "photography",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "camera.aperture",
+      "ownerScope": "trip",
+      "note": "Not offered as a suggested-activity chip for any TripType; reachable only via the free-text keyword \"photo\" in shared/rules/base.json. rules.activities adds camera/charger/memory card, but no golden fixture selects photography; deterministic and currently untested."
+    },
+    {
+      "kind": "activity",
+      "id": "camping",
+      "exposed": true,
+      "engineContract": "missing",
+      "fixtureIDs": [
+        "18-reykjavik-64d-roadtrip-camping-seasonal"
+      ],
+      "iconContract": "tent",
+      "ownerScope": "trip",
+      "note": "PackWiseActivityStyle gives camping a full icon/tint (tent, orange) and golden fixture 18 exercises it directly, but camping has no entry in shared/rules/activity-rules.json: the activity contributes zero items, signals, or reason codes. It is also not reachable from any TripType.suggestedActivityIDs chip or shared/rules/base.json free-text keyword today, so a new trip cannot currently select it \u2014 the only way to see it is a trip whose activities array already contains it. Recorded missing, not context-only, per the Phase 1 plan's explicit instruction not to relabel a broken control as context-only to make the report green."
+    }
+  ]
+}
