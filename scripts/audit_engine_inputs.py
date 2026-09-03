@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Audit for `docs/engine-audits/surfaced-input-contracts.json`.
 
-Every trip type, bag type, packing style, laundry access value, and suggested
-activity a user can select in `TripSetupView` ends up as one field on
-`TripContext`. That field either drives the deterministic engine (`PackingEngine`,
+Every trip type, bag type, packing style, laundry access value, suggested
+activity, and preference/context chip a user can select in `TripSetupView`
+ends up as one field on `TripContext` (chips land on `TripContext.contextChips`
+or, per-traveler, on `Traveler.chips`). That field either drives the
+deterministic engine (`PackingEngine`,
 `ClothingQuantityEngine`, `ConstraintResolver`) in some observable way, is
 merely stored/descriptive, or — the failure mode this audit exists to catch —
 is offered to the user and silently does nothing. `surfaced-input-contracts.json`
@@ -46,9 +48,10 @@ does check mechanically:
     duplicate (kind, id) pairs, `engineContract` is one of the three legal
     values, every record has a non-empty `iconContract`.
   * optionally, that the file's ids for tripType/bagType/packingStyle/
-    laundryAccess exactly match the real Swift enum cases (`--verify-source`,
-    on by default when the repo can be located), and that the activity ids
-    are a superset of `shared/rules/activity-rules.json`'s keys.
+    laundryAccess/contextChip exactly match the real Swift enum cases
+    (`--verify-source`, on by default when the repo can be located), and
+    that the activity ids are a superset of
+    `shared/rules/activity-rules.json`'s keys.
 
 It then buckets every record that passed validation into a report:
 
@@ -87,7 +90,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
 ALLOWED_CONTRACTS = ("deterministic", "contextOnly", "missing")
-ALLOWED_KINDS = ("tripType", "bagType", "packingStyle", "laundryAccess", "activity")
+ALLOWED_KINDS = ("tripType", "bagType", "packingStyle", "laundryAccess", "activity", "contextChip")
 
 _REQUIRED_STRING_FIELDS = ("kind", "id", "engineContract", "iconContract", "ownerScope")
 
@@ -235,6 +238,10 @@ class SourceExpectation:
     packing_styles: Set[str]
     laundry_access: Set[str]
     activities: Set[str]
+    # Defaulted (rather than a fifth positional field) so existing call sites
+    # that predate ContextChip coverage — including test helpers that build
+    # a SourceExpectation by hand — keep working unchanged.
+    context_chips: Set[str] = field(default_factory=set)
 
 
 def discover_expected_ids(repo_root: Path) -> SourceExpectation:
@@ -245,6 +252,7 @@ def discover_expected_ids(repo_root: Path) -> SourceExpectation:
     bag_types = swift_enum_cases(trip_types_path, "BagType")
     packing_styles = swift_enum_cases(trip_types_path, "PackingStyle")
     laundry_access = swift_enum_cases(trip_types_path, "LaundryAccess")
+    context_chips = swift_enum_cases(trip_types_path, "ContextChip")
 
     activities: Set[str] = set()
     if activity_rules_path.is_file():
@@ -260,6 +268,7 @@ def discover_expected_ids(repo_root: Path) -> SourceExpectation:
         packing_styles=packing_styles,
         laundry_access=laundry_access,
         activities=activities,
+        context_chips=context_chips,
     )
 
 
@@ -269,6 +278,7 @@ _KIND_TO_EXPECTATION_FIELD = {
     "packingStyle": "packing_styles",
     "laundryAccess": "laundry_access",
     "activity": "activities",
+    "contextChip": "context_chips",
 }
 
 

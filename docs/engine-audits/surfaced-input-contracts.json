@@ -1,5 +1,5 @@
 {
-  "$schema-comment": "One record per surfaced trip/bag/style/laundry/activity input a user can end up with in a TripContext. See scripts/audit_engine_inputs.py for the dead/context-only/untested report this feeds and docs/superpowers/plans/2026-09-03-product-hardening-phase-1-and-next-phases.md Task 5 for the record shape and allowed engineContract values.",
+  "$schema-comment": "One record per surfaced trip/bag/style/laundry/activity/context-chip input a user can end up with in a TripContext. See scripts/audit_engine_inputs.py for the dead/context-only/untested report this feeds and docs/superpowers/plans/2026-09-03-product-hardening-phase-1-and-next-phases.md Task 5 for the record shape and allowed engineContract values.",
   "version": 1,
   "records": [
     {
@@ -428,6 +428,96 @@
       "iconContract": "tent",
       "ownerScope": "trip",
       "note": "PackWiseActivityStyle gives camping a full icon/tint (tent, orange) and golden fixture 18 exercises it directly, but camping has no entry in shared/rules/activity-rules.json: the activity contributes zero items, signals, or reason codes. It is also not reachable from any TripType.suggestedActivityIDs chip or shared/rules/base.json free-text keyword today, so a new trip cannot currently select it \u2014 the only way to see it is a trip whose activities array already contains it. Recorded missing, not context-only, per the Phase 1 plan's explicit instruction not to relabel a broken control as context-only to make the report green."
+    },
+    {
+      "kind": "contextChip",
+      "id": "dailyMedication",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "pills",
+      "ownerScope": "traveler",
+      "note": "rules.contextChips['dailyMedication'] adds health.daily_medication + health.prescription_copy via PackingEngine.addTravelerSuggestions, keyed per traveler (Traveler.chips, toggled in the extras step's 'About you' field and mirrored by TravelerPreferences.alwaysBringMedication for the self traveler). No golden fixture's party rows or top-level chips ever set a ContextChip (verified by grep across shared/fixtures/golden/golden-fixtures.json); deterministic and currently untested."
+    },
+    {
+      "kind": "contextChip",
+      "id": "wearContacts",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "eyeglasses",
+      "ownerScope": "traveler",
+      "note": "rules.contextChips['wearContacts'] adds toiletries.contacts_solution, toiletries.contact_case, and health.eye_drops per traveler; also mirrored by TravelerPreferences.wearContacts for the self traveler and exposed in ContextChip.partnerDifferences for the partner. No golden fixture sets it; deterministic and currently untested."
+    },
+    {
+      "kind": "contextChip",
+      "id": "bringingLaptop",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "laptopcomputer",
+      "ownerScope": "traveler",
+      "note": "rules.contextChips['bringingLaptop'] adds electronics.laptop + electronics.laptop_charger per traveler; also mirrored by TravelerPreferences.usuallyBringLaptop for the self traveler. Not listed in ContextChip.partnerDifferences, so only the self traveler can toggle it from the extras step, but it is still stored on Traveler.chips like the rest of the non-trip-level chips. No golden fixture sets it; deterministic and currently untested."
+    },
+    {
+      "kind": "contextChip",
+      "id": "usuallyWorkOut",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "dumbbell",
+      "ownerScope": "traveler",
+      "note": "rules.contextChips['usuallyWorkOut'] adds clothing.workout_top, clothing.workout_bottom, and footwear.running_shoes per traveler; also mirrored by TravelerPreferences.usuallyWorkOut for the self traveler and exposed in ContextChip.partnerDifferences for the partner. No golden fixture sets it; deterministic and currently untested."
+    },
+    {
+      "kind": "contextChip",
+      "id": "runWhileTraveling",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "figure.run",
+      "ownerScope": "traveler",
+      "note": "rules.contextChips['runWhileTraveling'] adds footwear.running_shoes, clothing.workout_top, and activities.running_belt; CoverageResolver.needs also inserts .running for this chip alongside the 'running' activity, so it can satisfy running-shoe coverage without the activity itself being selected. Not listed in ContextChip.partnerDifferences (self-only toggle). No golden fixture sets it; deterministic and currently untested."
+    },
+    {
+      "kind": "contextChip",
+      "id": "needFormalOutfit",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "sparkles",
+      "ownerScope": "traveler",
+      "note": "rules.contextChips['needFormalOutfit'] adds clothing.formal_outfit + footwear.dress_shoes; CoverageResolver.needs also inserts .formal for this chip alongside business/weddingEvent trip types and work/niceDinner activities, and it is exposed in ContextChip.partnerDifferences for the partner. No golden fixture sets it; deterministic and currently untested."
+    },
+    {
+      "kind": "contextChip",
+      "id": "travelingInternationally",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "airplane",
+      "ownerScope": "trip",
+      "note": "rules.contextChips['travelingInternationally'] adds documents.passport, electronics.travel_adapter, and essentials.cash. Trip-level (in ContextChip.tripLevel, shown under the extras step's 'About this trip' field), distinct from the separately-computed TripContext.isInternationalConfirmed path (which also adds documents.visa and international entry-requirement notes). Golden fixture 23 exercises isInternationalConfirmed by mismatching homeCountryCode against the destination's country, not by setting this chip; no fixture sets the chip itself. Deterministic and currently untested."
+    },
+    {
+      "kind": "contextChip",
+      "id": "getColdEasily",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "thermometer.snowflake",
+      "ownerScope": "traveler",
+      "note": "rules.contextChips['getColdEasily'] adds clothing.light_sweater + clothing.light_jacket per traveler; exposed in ContextChip.partnerDifferences for the partner. No golden fixture sets it; deterministic and currently untested."
+    },
+    {
+      "kind": "contextChip",
+      "id": "laundryAvailable",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "iconContract": "washer",
+      "ownerScope": "trip",
+      "note": "rules.contextChips['laundryAvailable'] adds toiletries.laundry_sheets. Trip-level (in ContextChip.tripLevel), but TripSetupView.extrasStep explicitly filters it out of the 'About this trip' chip field ('Laundry moved to the bag-and-style step as a three-way control; the boolean chip stays in the enum for old trips') \u2014 it is not user-toggleable in the current UI, only reachable via legacy trip data, the same 'real enum case, not currently reachable from a fresh trip' status the camping activity record above documents. No golden fixture sets it (fixtures exercise LaundryAccess instead, at 02/02b/03); deterministic and currently untested."
     }
   ]
 }

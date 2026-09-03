@@ -745,8 +745,8 @@ struct PackingEngineTests {
 
     // MARK: - Surfaced-input contract completeness (Phase 1, Task 5)
 
-    /// One record per trip/bag/style/laundry/activity value a user can
-    /// surface, from `docs/engine-audits/surfaced-input-contracts.json`.
+    /// One record per trip/bag/style/laundry/activity/context-chip value a
+    /// user can surface, from `docs/engine-audits/surfaced-input-contracts.json`.
     /// Field-for-field mirror of `ContractRecord` in
     /// `scripts/audit_engine_inputs.py`, and `record[...]` in
     /// `scripts/tests/test_audit_engine_inputs.py`.
@@ -784,7 +784,7 @@ struct PackingEngineTests {
         return file.records
     }
 
-    @Test func surfacedInputContractCoversEveryTripBagStyleLaundryOption() throws {
+    @Test func surfacedInputContractCoversEveryTripBagStyleLaundryChipOption() throws {
         let records = try loadSurfacedInputContracts()
 
         func ids(kind: String) -> Set<String> {
@@ -795,6 +795,7 @@ struct PackingEngineTests {
         #expect(ids(kind: "bagType") == Set(BagType.allCases.map(\.rawValue)))
         #expect(ids(kind: "packingStyle") == Set(PackingStyle.allCases.map(\.rawValue)))
         #expect(ids(kind: "laundryAccess") == Set(LaundryAccess.allCases.map(\.rawValue)))
+        #expect(ids(kind: "contextChip") == Set(ContextChip.allCases.map(\.rawValue)))
     }
 
     /// The engine's activity vocabulary is `rules.activities`' keys — every id
