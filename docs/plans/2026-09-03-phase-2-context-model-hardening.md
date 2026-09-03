@@ -255,9 +255,15 @@ git commit -m "feat: introduce TripContextSnapshot with date normalization"
     let snapshot = TripContextCompiler.compile(context, rules: try rules())
     #expect(snapshot.knownActivityIDs == ["sightseeing"])
     #expect(snapshot.unknownActivityIDs == ["cosplayConvention"]) // preserved verbatim, never dropped
-    #expect(snapshot.diagnostics.contains {
-        $0.field == "activities" && $0.outcome == .unsupportedButSafe(reason: "cosplayConvention: no rule in the engine's activity vocabulary")
-    })
+    // Assert kind + a substring of the reason, not full string equality — a
+    // later wording polish to the reason text should not break this test.
+    // (Task 1's own tests got this right via `.isNormalized`/
+    // `.isUnsupportedButSafe`; match that pattern here too.)
+    let activityDiagnostic = snapshot.diagnostics.first { $0.field == "activities" }
+    #expect(activityDiagnostic?.outcome.isUnsupportedButSafe == true)
+    if case .unsupportedButSafe(let reason) = activityDiagnostic?.outcome {
+        #expect(reason.contains("cosplayConvention"))
+    }
 }
 
 @Test func campingIsHonestlyClassifiedUnknownLikeAnyOtherRulelessActivity() throws {
