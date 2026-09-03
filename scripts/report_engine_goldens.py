@@ -44,7 +44,7 @@ import sys
 from collections import namedtuple
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # ---------------------------------------------------------------------------
 # Schema — mirrors GoldenItem/GoldenCoverageEntry/GoldenConstraintEntry/
@@ -380,36 +380,62 @@ def compare_directories(baseline: Dict[str, dict], candidate: Dict[str, dict]) -
 # ---------------------------------------------------------------------------
 
 
+class GoldenLoadError(Exception):
+    """A golden file or git ref could not be loaded cleanly.
+
+    `main()` catches this and prints a friendly `error: ...` message
+    (exit 2) instead of letting the underlying traceback (JSONDecodeError,
+    CalledProcessError) reach the caller.
+    """
+
+
+def _git_error_detail(error: subprocess.CalledProcessError) -> str:
+    stderr = (error.stderr or "").strip()
+    return stderr if stderr else str(error)
+
+
 def load_golden_dir(directory: Path) -> Dict[str, dict]:
     """Read every `*.json` golden file directly from a directory on disk."""
     result: Dict[str, dict] = {}
     for path in sorted(directory.glob("*.json")):
-        result[path.stem] = json.loads(path.read_text())
+        try:
+            result[path.stem] = json.loads(path.read_text())
+        except json.JSONDecodeError as e:
+            raise GoldenLoadError(f"{path}: invalid JSON ({e})") from e
     return result
 
 
 def load_golden_git_ref(ref: str, rel_dir: Path, repo_root: Path) -> Dict[str, dict]:
     """Read every `*.json` golden file at `rel_dir` as it existed at `ref`,
     without touching the working tree (`git ls-tree` + `git show`)."""
-    listing = subprocess.run(
-        ["git", "ls-tree", "-r", "--name-only", ref, "--", str(rel_dir)],
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.splitlines()
-    result: Dict[str, dict] = {}
-    for rel_path in listing:
-        if not rel_path.endswith(".json"):
-            continue
-        content = subprocess.run(
-            ["git", "show", f"{ref}:{rel_path}"],
+    try:
+        listing = subprocess.run(
+            ["git", "ls-tree", "-r", "--name-only", ref, "--", str(rel_dir)],
             cwd=repo_root,
             capture_output=True,
             text=True,
             check=True,
-        ).stdout
-        result[Path(rel_path).stem] = json.loads(content)
+        ).stdout.splitlines()
+    except subprocess.CalledProcessError as e:
+        raise GoldenLoadError(f"{ref}: {_git_error_detail(e)}") from e
+    result: Dict[str, dict] = {}
+    for rel_path in listing:
+        if not rel_path.endswith(".json"):
+            continue
+        try:
+            content = subprocess.run(
+                ["git", "show", f"{ref}:{rel_path}"],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout
+        except subprocess.CalledProcessError as e:
+            raise GoldenLoadError(f"{ref}: {_git_error_detail(e)}") from e
+        try:
+            result[Path(rel_path).stem] = json.loads(content)
+        except json.JSONDecodeError as e:
+            raise GoldenLoadError(f"{ref}:{rel_path}: invalid JSON ({e})") from e
     return result
 
 
@@ -578,40 +604,45 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: List[str] = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     args = build_arg_parser().parse_args(argv)
 
     candidate_dir = Path(args.candidate).resolve()
     if not candidate_dir.is_dir():
         print(f"error: --candidate {candidate_dir} is not a directory", file=sys.stderr)
         return 2
-    candidate = load_golden_dir(candidate_dir)
 
-    if args.baseline_dir:
-        baseline_dir = Path(args.baseline_dir).resolve()
-        if not baseline_dir.is_dir():
-            print(f"error: --baseline-dir {baseline_dir} is not a directory", file=sys.stderr)
-            return 2
-        baseline = load_golden_dir(baseline_dir)
-    else:
-        repo_root = Path(
-            subprocess.run(
-                ["git", "rev-parse", "--show-toplevel"],
-                capture_output=True,
-                text=True,
-                check=True,
-            ).stdout.strip()
-        )
-        try:
-            rel_dir = candidate_dir.relative_to(repo_root)
-        except ValueError:
-            print(
-                f"error: --candidate {candidate_dir} is outside repo {repo_root}; "
-                "--baseline-ref needs a repo-relative path",
-                file=sys.stderr,
+    try:
+        candidate = load_golden_dir(candidate_dir)
+
+        if args.baseline_dir:
+            baseline_dir = Path(args.baseline_dir).resolve()
+            if not baseline_dir.is_dir():
+                print(f"error: --baseline-dir {baseline_dir} is not a directory", file=sys.stderr)
+                return 2
+            baseline = load_golden_dir(baseline_dir)
+        else:
+            repo_root = Path(
+                subprocess.run(
+                    ["git", "rev-parse", "--show-toplevel"],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                ).stdout.strip()
             )
-            return 2
-        baseline = load_golden_git_ref(args.baseline_ref, rel_dir, repo_root)
+            try:
+                rel_dir = candidate_dir.relative_to(repo_root)
+            except ValueError:
+                print(
+                    f"error: --candidate {candidate_dir} is outside repo {repo_root}; "
+                    "--baseline-ref needs a repo-relative path",
+                    file=sys.stderr,
+                )
+                return 2
+            baseline = load_golden_git_ref(args.baseline_ref, rel_dir, repo_root)
+    except GoldenLoadError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
 
     report = compare_directories(baseline, candidate)
     render = render_markdown if args.format == "markdown" else render_text

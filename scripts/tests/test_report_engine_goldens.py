@@ -13,9 +13,12 @@ exercise the exact parsing path production goldens go through.
 
 from __future__ import annotations
 
+import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 
-from scripts.report_engine_goldens import compare_fixture
+from scripts.report_engine_goldens import GoldenLoadError, compare_fixture, load_golden_dir, load_golden_git_ref
 
 
 def golden(fixture="fixture", items=None, coverage=None, constraints=None):
@@ -253,6 +256,68 @@ class ReportOverallSummaryTests(unittest.TestCase):
         candidate = {"a": golden(fixture="a", items=[item("clothing.tshirt", 5)])}
         report = compare_directories(baseline, candidate)
         self.assertTrue(report.is_clean)
+
+
+class LoaderErrorTests(unittest.TestCase):
+    """Malformed input must raise a clean GoldenLoadError, not a raw
+    traceback — see `main()`'s `except GoldenLoadError` handling below."""
+
+    def test_malformed_json_in_golden_file_raises_clean_error_naming_the_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bad_path = Path(tmp) / "broken.json"
+            bad_path.write_text("{not valid json")
+            with self.assertRaises(GoldenLoadError) as ctx:
+                load_golden_dir(Path(tmp))
+            message = str(ctx.exception)
+            self.assertIn(str(bad_path), message)
+            self.assertIn("invalid JSON", message)
+
+    def test_well_formed_json_alongside_a_malformed_file_still_raises(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "ok.json").write_text('{"fixture": "ok", "items": []}')
+            bad_path = Path(tmp) / "broken.json"
+            bad_path.write_text("{not valid json")
+            with self.assertRaises(GoldenLoadError):
+                load_golden_dir(Path(tmp))
+
+    def test_bad_baseline_ref_raises_clean_error_naming_the_ref(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+            with self.assertRaises(GoldenLoadError) as ctx:
+                load_golden_git_ref("this-ref-does-not-exist", Path("goldens"), repo_root)
+            message = str(ctx.exception)
+            self.assertIn("this-ref-does-not-exist", message)
+
+
+class MainErrorExitCodeTests(unittest.TestCase):
+    """These error paths must exit 2 ("tool/usage-level failure"), the same
+    code as the existing --candidate/--baseline-dir "is not a directory"
+    checks — never 1, which means "real diffs found"."""
+
+    def test_malformed_json_candidate_exits_2_not_1(self):
+        from scripts.report_engine_goldens import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate_dir = Path(tmp) / "candidate"
+            candidate_dir.mkdir()
+            (candidate_dir / "broken.json").write_text("{not valid json")
+            baseline_dir = Path(tmp) / "baseline"
+            baseline_dir.mkdir()
+            exit_code = main(["--baseline-dir", str(baseline_dir), "--candidate", str(candidate_dir)])
+            self.assertEqual(exit_code, 2)
+
+    def test_malformed_json_baseline_dir_exits_2_not_1(self):
+        from scripts.report_engine_goldens import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate_dir = Path(tmp) / "candidate"
+            candidate_dir.mkdir()
+            baseline_dir = Path(tmp) / "baseline"
+            baseline_dir.mkdir()
+            (baseline_dir / "broken.json").write_text("{not valid json")
+            exit_code = main(["--baseline-dir", str(baseline_dir), "--candidate", str(candidate_dir)])
+            self.assertEqual(exit_code, 2)
 
 
 class RenderTests(unittest.TestCase):
