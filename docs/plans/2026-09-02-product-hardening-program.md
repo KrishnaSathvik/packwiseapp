@@ -1,7 +1,7 @@
 # PackWise Product Hardening Program
 
 **Date:** 2026-09-02  
-**Status:** active; Phase 1 closed 2026-09-03 (see "Phase 1 closure" below); Phase 2 not yet started  
+**Status:** active; Phase 1 closed 2026-09-03 (see "Phase 1 closure" below); Phase 2 closed 2026-09-03 (see "Phase 2 closure" below); Phase 3 not yet started  
 **Source of truth:** this program orders the user-approved Final UI Refinement & Freeze Plan and Product Hardening + Engine V2 Plan against the repository as it exists today.
 
 ## Goal
@@ -55,6 +55,70 @@ Exit evidence:
 in Phase 1 beyond what the six tasks above required to build audit tooling
 and fixtures — Phase 1 changed measurement and evidence, not engine or
 production behavior.
+
+## Phase 2 closure — 2026-09-03
+
+Phase 2 (context model hardening) is complete. Six tasks:
+
+1. `TripContextSnapshot`/`TripContextCompiler` type and date normalization
+   (`ios/PackWise/Domain/TripContextSnapshot.swift`) — recomputes
+   `durationDays`/`durationNights` from real dates rather than trusting a
+   stale stored value, and reuses `TripDateMath`'s existing safe clamp for a
+   reversed date range rather than inventing new date-safety logic.
+2. Activity and bag/style normalization — known vs. unknown activity IDs
+   against `rules.activities` (the engine's real vocabulary, no separate
+   source of truth), `BagType.notSure` applying no invented constraint,
+   `PackingStyle` passed through unchanged.
+3. Laundry and weather-quality normalization — `laundryPlan` provably
+   equivalent to `TripContext.laundryPlan` across every legacy signal path,
+   `WeatherQuality` (`missing`/`seasonalOnly`/`partial`/`complete`)
+   deliberately diverging from `TripWeatherContext.state()` only on
+   cache-staleness handling (tracks structural coverage, not refresh
+   timing).
+4. Party normalization — reuses `PartyInvariants.violations`, drops invalid
+   guardian references, never reassigns to a guessed adult even when
+   multiple candidate adults exist on the party.
+5. Full-ledger fixture compilation (all 27 golden fixtures compile
+   deterministically) and engine-boundary wiring — `EngineGeneration`
+   gained one additive `contextDiagnostics` field; `generateDetailed`
+   compiles one snapshot per call for diagnostics only, read by no decision
+   logic anywhere in the engine.
+6. Full audit run, evidence report, and this closure section.
+
+Exit evidence:
+
+- `docs/engine-audits/2026-09-03-phase-2-context-snapshot.md` — what the
+  snapshot/compiler do, the full 11-case edge-case coverage matrix mapped to
+  tests, the independently-verified per-fixture diagnostics ledger (exactly
+  fixtures 18 and 25 carry a diagnostic, both the expected `activities`
+  case — every other fixture is diagnostic-free, confirmed by running the
+  compiler against all 27 fixtures directly rather than assumed), the
+  migration-boundary state (`ClothingQuantity.swift:268` named as the one
+  known internal `laundryPlan` read left unmigrated, deliberately, for
+  Phase 3), and one new tooling finding (F-1, P2: `report_engine_goldens.py`
+  can't diff against a pre-Task-1 golden schema without a `KeyError` —
+  worked around for this closure, routed for a future fix).
+- `scripts/run_engine_audit.sh` passed clean, all 6 steps, numbers unchanged
+  from the Phase 1 baseline (Phase 2 touched no golden-affecting code path).
+- Full `xcodebuild test`: `** TEST SUCCEEDED **`, 191 tests across 16
+  suites, including `TripContextSnapshotTests` (24/24) and
+  `GoldenEngineTests`'s full-ledger snapshot-compilation test.
+- Zero recommendation-behavior drift proven twice: `report_engine_goldens.py
+  --baseline-ref 81be9bb` (Phase 1's closing commit) shows 27/27 unchanged
+  on the full modern schema, isolating Phase 2's own contribution; a
+  schema-tolerant comparison against `fe7aca0` (pre-Phase-1) shows all 17
+  fixtures that existed then are unchanged on every field that schema
+  had, across the whole Phase 1 + Phase 2 arc.
+
+**Phase 3 (clothing needs and quantities) has not started.** No work under
+`ios/PackWise/Domain/Packing/ClothingQuantity.swift`,
+`CoverageResolver.swift`, `ConstraintResolver.swift`, `QuantityEngine.swift`,
+or weather/reconciliation logic happened in Phase 2 beyond reading
+`TripWeatherContext` structurally for `WeatherQuality` classification —
+those files stay exactly as Phase 1 left them, reserved for Phases 3–6.
+`ClothingQuantity.swift:268`'s `context.laundryPlan` read is the one
+identified candidate for migrating to the snapshot; that decision is left to
+Phase 3.
 
 ## Program order
 
