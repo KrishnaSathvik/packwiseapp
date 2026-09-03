@@ -61,7 +61,40 @@ struct ClothingQuantityTests {
         bag: BagType,
         laundry: LaundryAccess
     ) -> Int {
-        ClothingQuantityEngine.compute(policy, days: days, style: style, bag: bag, laundry: laundry)
+        let activities: Set<String>
+        switch policy.usage {
+        case let .workout(ids), let .swim(ids):
+            activities = Set(ids.prefix(1))
+        case .daily, .sleep:
+            activities = []
+        }
+        let context = clothingContext(
+            days: days,
+            style: style,
+            bag: bag,
+            laundry: laundry,
+            selectedActivityIDs: activities
+        )
+        return ClothingQuantityEngine.evaluate(policy, context: context).value
+    }
+
+    private func clothingContext(
+        days: Int,
+        style: PackingStyle = .balanced,
+        bag: BagType = .carryOn,
+        laundry: LaundryAccess = .none,
+        selectedActivityIDs: Set<String> = [],
+        datedActivityUses: [String: Int] = [:]
+    ) -> ClothingQuantityContext {
+        ClothingQuantityContext(
+            days: days,
+            style: style,
+            bag: bag,
+            laundry: laundry,
+            selectedActivityIDs: selectedActivityIDs,
+            datedActivityUses: datedActivityUses,
+            party: .solo()
+        )
     }
 
     // MARK: - Property 1: global non-decreasing
@@ -95,7 +128,7 @@ struct ClothingQuantityTests {
         let bags: [BagType] = [.personalItem, .carryOn, .checked]
 
         for policy in ClothingNeedPolicy.all {
-            if policy.laundrySensitivity != .none {
+            if policy.influences.contains(.laundry) {
                 let diverges = days.contains { d in
                     styles.contains { s in
                         bags.contains { b in
@@ -106,7 +139,7 @@ struct ClothingQuantityTests {
                 }
                 #expect(diverges, "\(policy.needID) declares laundry sensitivity but never diverges")
             }
-            if policy.styleSensitivity != .none {
+            if policy.influences.contains(.style) {
                 let diverges = days.contains { d in
                     bags.contains { b in
                         LaundryAccess.allCases.contains { l in
@@ -117,7 +150,7 @@ struct ClothingQuantityTests {
                 }
                 #expect(diverges, "\(policy.needID) declares style sensitivity but never diverges")
             }
-            if policy.bagSensitivity != .none {
+            if policy.influences.contains(.bag) {
                 let diverges = days.contains { d in
                     styles.contains { s in
                         LaundryAccess.allCases.contains { l in
@@ -255,7 +288,7 @@ struct ClothingQuantityTests {
         let days = [1, 3, 5, 8, 10, 15, 21, 30]
         let bags: [BagType] = [.personalItem, .carryOn, .checked]
 
-        for policy in ClothingNeedPolicy.all where policy.laundrySensitivity != .none {
+        for policy in ClothingNeedPolicy.all where policy.influences.contains(.laundry) {
             for d in days {
                 for style in PackingStyle.allCases {
                     for bag in bags {
@@ -405,10 +438,20 @@ struct ClothingQuantityTests {
         for policy in ClothingNeedPolicy.all where !policy.offsetByFormalTops {
             for d in [3, 5, 10] {
                 for style in PackingStyle.allCases {
-                    let withoutOffset = value(policy, days: d, style: style, bag: .checked, laundry: .none)
-                    let withOffset = ClothingQuantityEngine.compute(
-                        policy, days: d, style: style, bag: .checked, laundry: .none, formalTopUnits: 5
+                    let activities: Set<String>
+                    switch policy.usage {
+                    case let .workout(ids), let .swim(ids): activities = Set(ids.prefix(1))
+                    case .daily, .sleep: activities = []
+                    }
+                    let context = clothingContext(
+                        days: d,
+                        style: style,
+                        bag: .checked,
+                        laundry: .none,
+                        selectedActivityIDs: activities
                     )
+                    let withoutOffset = ClothingQuantityEngine.evaluate(policy, context: context).value
+                    let withOffset = ClothingQuantityEngine.evaluate(policy, context: context, appearanceUnits: 5).value
                     #expect(
                         withoutOffset == withOffset,
                         "\(policy.needID) \(d)d \(style): formalTopUnits changed a non-offset need"
@@ -469,5 +512,93 @@ struct ClothingQuantityTests {
         )
         let refreshed = engine.generate(context: context(weather: weather), existing: existing)
         #expect(refreshed.first { $0.canonicalItemID == "clothing.tshirt" }?.quantity == 3)
+    }
+
+    @Test func explicitWorkoutUsesDriveQuantityInsteadOfTripLength() throws {
+        let policy = try #require(ClothingNeedPolicy.byKind["workout_top"])
+        let fifteenDays = clothingContext(
+            days: 15,
+            laundry: .none,
+            selectedActivityIDs: ["running"],
+            datedActivityUses: ["running": 3]
+        )
+        let thirtyDays = clothingContext(
+            days: 30,
+            laundry: .none,
+            selectedActivityIDs: ["running"],
+            datedActivityUses: ["running": 3]
+        )
+
+        #expect(ClothingQuantityEngine.evaluate(policy, context: fifteenDays).value == 3)
+        #expect(ClothingQuantityEngine.evaluate(policy, context: thirtyDays).value == 3)
+    }
+
+    @Test func workoutLaundryReducesDenseScheduledUses() throws {
+        let policy = try #require(ClothingNeedPolicy.byKind["workout_top"])
+        let none = clothingContext(
+            days: 15,
+            laundry: .none,
+            selectedActivityIDs: ["running"],
+            datedActivityUses: ["running": 6]
+        )
+        var planned = none
+        planned.laundry = .planned
+        var possible = none
+        possible.laundry = .possible
+
+        let noneValue = ClothingQuantityEngine.evaluate(policy, context: none).value
+        let possibleValue = ClothingQuantityEngine.evaluate(policy, context: possible).value
+        let plannedValue = ClothingQuantityEngine.evaluate(policy, context: planned).value
+        #expect(plannedValue < noneValue)
+        #expect(plannedValue <= possibleValue)
+        #expect(possibleValue <= noneValue)
+    }
+
+    @Test func swimwearUsesDryingRotationInsteadOfOnePerDay() throws {
+        let policy = try #require(ClothingNeedPolicy.byKind["swimwear"])
+        let oneSwim = clothingContext(
+            days: 10,
+            selectedActivityIDs: ["swimming"],
+            datedActivityUses: ["swimming": 1]
+        )
+        let manySwims = clothingContext(
+            days: 30,
+            selectedActivityIDs: ["swimming"],
+            datedActivityUses: ["swimming": 8]
+        )
+
+        #expect(ClothingQuantityEngine.evaluate(policy, context: oneSwim).value == 1)
+        #expect(ClothingQuantityEngine.evaluate(policy, context: manySwims).value == 2)
+    }
+
+    @Test func policyResultCarriesStructuredQuantityEvidence() throws {
+        let policy = try #require(ClothingNeedPolicy.byKind["daily_top"])
+        let context = clothingContext(days: 15, style: .light, bag: .personalItem, laundry: .planned)
+
+        let result = ClothingQuantityEngine.evaluate(policy, context: context, appearanceUnits: 2, ageMultiplier: 1.15)
+
+        #expect(result.evidence.policyID == "clothing.daily_top")
+        #expect(result.evidence.basis == "dailyWear")
+        #expect(result.evidence.requiredUses == 13)
+        #expect(result.evidence.washIntervalDays == 7)
+        #expect(result.evidence.laundryPlan == .planned)
+        #expect(result.evidence.laundryReduced)
+        #expect(result.evidence.appearanceOffsetUses == 2)
+        #expect(result.evidence.ageMultiplier == 1.15)
+        #expect(result.evidence.quantity == result.value)
+    }
+
+    @Test func packingItemDraftDefaultsToNoQuantityEvidence() {
+        let item = PackingItemDraft(
+            canonicalItemID: "essentials.wallet",
+            displayName: "Wallet",
+            category: .essentials,
+            quantity: 1,
+            importance: .critical,
+            sourceSignals: [],
+            reason: ""
+        )
+
+        #expect(item.quantityEvidence == nil)
     }
 }

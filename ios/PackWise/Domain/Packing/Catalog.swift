@@ -372,6 +372,9 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
     var reasonCode: String
     var reasonArguments: [String: String]
     var quantityReason: String
+    /// Engine-only structured facts behind a clothing quantity. Persistence
+    /// and product presentation are deliberately deferred to Phase 8.
+    var quantityEvidence: ClothingQuantityEvidence?
     var isUserAdded: Bool
     var isUserModified: Bool
     var ownershipType: PackingOwnership
@@ -404,6 +407,7 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
         reasonCode: String = "",
         reasonArguments: [String: String] = [:],
         quantityReason: String = "",
+        quantityEvidence: ClothingQuantityEvidence? = nil,
         isUserAdded: Bool = false,
         isUserModified: Bool = false,
         ownershipType: PackingOwnership = .personal,
@@ -423,6 +427,7 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
         self.reasonCode = reasonCode
         self.reasonArguments = reasonArguments
         self.quantityReason = quantityReason
+        self.quantityEvidence = quantityEvidence
         self.isUserAdded = isUserAdded
         self.isUserModified = isUserModified
         self.ownershipType = ownershipType
