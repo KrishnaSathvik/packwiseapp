@@ -66,7 +66,32 @@ struct TripContextSnapshot: Hashable, Sendable {
     /// there's an unknown free-text activity ID.
     var packingStyle: PackingStyle
 
+    /// The three-way laundry state with legacy signals folded in — exactly
+    /// `TripContext.laundryPlan` (`TripTypes.swift:415`), never
+    /// reimplemented independently. Diverging from that property even
+    /// slightly would misclassify real trips, so this is a pass-through of
+    /// the existing, already-trusted computation.
+    var laundryPlan: LaundryAccess
+    /// Structural forecast coverage classification, independent of
+    /// staleness/refresh timing — the same precedence
+    /// `TripWeatherContext.state()` (`WeatherDomain.swift:169`) already
+    /// establishes for seasonal/none/partial-vs-complete, exposed as a pure
+    /// value with no `now`/refresh-state parameters.
+    var weatherQuality: WeatherQuality
+
     var diagnostics: [ContextDiagnostic]
+}
+
+/// Structural forecast coverage for a trip, independent of staleness or
+/// refresh timing. Mirrors `TripWeatherContext.state()`'s precedence for
+/// seasonal/missing/partial-vs-complete without the `now`/refresh-state
+/// inputs that method needs for UI copy — the snapshot only cares about
+/// what forecast data structurally exists.
+enum WeatherQuality: Hashable, Sendable {
+    case missing
+    case seasonalOnly
+    case partial(coveredDays: Int, tripDays: Int)
+    case complete
 }
 
 enum TripContextCompiler {
@@ -77,6 +102,13 @@ enum TripContextCompiler {
 
         let (known, unknown, activityDiagnostics) = normalizedActivities(context, rules: rules)
         diagnostics.append(contentsOf: activityDiagnostics)
+
+        let laundry = context.laundryPlan // TripContext already owns this normalization — reuse it verbatim
+        if laundry != context.laundryAccess {
+            diagnostics.append(ContextDiagnostic(field: "laundry", outcome: .normalized(reason: "legacy chip/notes signal folded into laundryPlan")))
+        }
+
+        let weatherQuality = normalizedWeatherQuality(context.weather, tripDays: days)
 
         return TripContextSnapshot(
             destination: context.destination,
@@ -90,8 +122,39 @@ enum TripContextCompiler {
             bagType: context.bagType,
             appliesBagConstraint: context.bagType.appliesBagConstraint,
             packingStyle: context.packingStyle,
+            laundryPlan: laundry,
+            weatherQuality: weatherQuality,
             diagnostics: diagnostics
         )
+    }
+
+    /// Mirrors `TripWeatherContext.state()`'s precedence: `.seasonal` and
+    /// `.none` sources are classified first regardless of any forecast
+    /// data; otherwise (`.weatherKit`/`.fixture`/`.cache` — a cached
+    /// forecast is structurally the same data as a live one, just tagged
+    /// stale, which this value deliberately doesn't track) whole-trip
+    /// coverage wins over partial, and an empty forecast with neither flag
+    /// set falls back to seasonal-only, exactly as `state()`'s final two
+    /// branches do.
+    private static func normalizedWeatherQuality(_ weather: TripWeatherContext?, tripDays: Int) -> WeatherQuality {
+        guard let weather else { return .missing }
+        switch weather.source {
+        case .seasonal:
+            return .seasonalOnly
+        case .none:
+            return .missing
+        case .weatherKit, .fixture, .cache:
+            if weather.forecastAvailableForWholeTrip {
+                return .complete
+            }
+            if weather.forecastAvailableForPartialTrip {
+                return .partial(coveredDays: weather.dailyForecast.count, tripDays: tripDays)
+            }
+            if weather.dailyForecast.isEmpty {
+                return .seasonalOnly
+            }
+            return .partial(coveredDays: weather.dailyForecast.count, tripDays: tripDays)
+        }
     }
 
     private static func normalizedActivities(

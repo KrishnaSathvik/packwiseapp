@@ -128,4 +128,65 @@ struct TripContextSnapshotTests {
         let snapshot = TripContextCompiler.compile(context, rules: try rules())
         #expect(snapshot.packingStyle == .prepared)
     }
+
+    @Test func laundryPlanMatchesExistingTripContextEquivalenceForEveryLegacyPath() throws {
+        let r = try rules()
+        var explicit = baseContext(); explicit.laundryAccess = .planned
+        var chip = baseContext(); chip.contextChips = [.laundryAvailable]
+        var notes = baseContext(); notes.userNotes = "I'll do laundry halfway through"
+        let none = baseContext()
+        for context in [explicit, chip, notes, none] {
+            let snapshot = TripContextCompiler.compile(context, rules: r)
+            #expect(snapshot.laundryPlan == context.laundryPlan, "snapshot must never diverge from TripContext.laundryPlan")
+        }
+    }
+
+    @Test func legacyLaundrySignalIsNormalizedNotJustPassedThrough() throws {
+        var context = baseContext()
+        context.contextChips = [.laundryAvailable] // legacy chip, no explicit laundryAccess
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.laundryPlan == .possible)
+        #expect(snapshot.diagnostics.contains { $0.field == "laundry" && $0.outcome.isNormalized })
+    }
+
+    @Test func missingWeatherIsClassifiedMissing() throws {
+        var context = baseContext(); context.weather = nil
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.weatherQuality == .missing)
+    }
+
+    @Test func seasonalWeatherIsClassifiedSeasonalOnly() throws {
+        var context = baseContext(); context.weather = .seasonal()
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.weatherQuality == .seasonalOnly)
+    }
+
+    @Test func partialForecastDoesNotClaimWholeTripCoverage() throws {
+        var context = baseContext(days: 30)
+        var weather = TripWeatherContext.seasonal()
+        weather.source = .fixture
+        weather.isPreciseForecast = true
+        weather.dailyForecast = (0..<10).map { i in
+            DailyForecast(date: Calendar.current.date(byAdding: .day, value: i, to: context.startDate)!, symbol: "sun.max", highF: 70, lowF: 50, rainProbability: 0, uvIndex: 3, windMph: 5, snowExpected: false, summary: "")
+        }
+        weather.forecastAvailableForPartialTrip = true
+        weather.forecastAvailableForWholeTrip = false
+        context.weather = weather
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.weatherQuality == .partial(coveredDays: 10, tripDays: 30))
+    }
+
+    @Test func wholeTripForecastIsClassifiedComplete() throws {
+        var context = baseContext(days: 5)
+        var weather = TripWeatherContext.seasonal()
+        weather.source = .fixture
+        weather.isPreciseForecast = true
+        weather.dailyForecast = (0..<5).map { i in
+            DailyForecast(date: Calendar.current.date(byAdding: .day, value: i, to: context.startDate)!, symbol: "sun.max", highF: 70, lowF: 50, rainProbability: 0, uvIndex: 3, windMph: 5, snowExpected: false, summary: "")
+        }
+        weather.forecastAvailableForWholeTrip = true
+        context.weather = weather
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        #expect(snapshot.weatherQuality == .complete)
+    }
 }
