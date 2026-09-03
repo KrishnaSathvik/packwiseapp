@@ -152,6 +152,170 @@ struct ConstraintTests {
         #expect(ruling.keep)
     }
 
+    // MARK: - Task 4: authority — removed canonical item
+
+    /// A rule-suggested (not just a companion) canonical item stays out once
+    /// removed — the same explicit-state authority as `removedCompanionStaysRemoved`,
+    /// exercised on a base essential the up-front rules emit directly.
+    @Test func removedBaseEssentialStaysRemovedAcrossRegeneration() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+        let overrides = [RecommendationOverrideDraft(canonicalItemID: "toiletries.toothbrush", action: "removed")]
+        let first = engine.generate(context: context(destination: dest), overrides: overrides)
+        #expect(!first.contains { $0.canonicalItemID == "toiletries.toothbrush" })
+
+        // Regenerating with a materially different context (longer trip,
+        // more activities) must not resurrect it — the override is
+        // context-independent explicit state, not a one-time suppression.
+        let second = engine.generate(
+            context: context(destination: dest, days: 10, activities: ["sightseeing", "walking", "museum"]),
+            existing: first,
+            overrides: overrides
+        )
+        #expect(!second.contains { $0.canonicalItemID == "toiletries.toothbrush" })
+    }
+
+    // MARK: - Task 4: authority — manual quantity
+
+    /// A hand-edited quantity on a non-clothing base essential survives
+    /// regeneration under a changed context — `manualQuantitySurvivesWeatherRefresh`
+    /// in ClothingQuantityTests covers the clothing/weather path; this is
+    /// the same guarantee for the legacy `QuantityEngine` family.
+    @Test func manualQuantitySurvivesRegenerationWithChangedContext() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+        var first = engine.generate(context: context(destination: dest, days: 5))
+        guard let index = first.firstIndex(where: { $0.canonicalItemID == "toiletries.toothbrush" }) else {
+            Issue.record("Expected toiletries.toothbrush in the base list")
+            return
+        }
+        first[index].quantity = 4
+        first[index].isUserModified = true
+
+        let second = engine.generate(
+            context: context(destination: dest, days: 12, activities: ["sightseeing", "walking", "museum"]),
+            existing: first
+        )
+        let toothbrush = second.first { $0.canonicalItemID == "toiletries.toothbrush" }
+        #expect(toothbrush?.quantity == 4, "the manual edit must survive an unrelated context change")
+        #expect(toothbrush?.isUserModified == true)
+    }
+
+    // MARK: - Task 4: authority — user-added canonical and custom items
+
+    /// A user-added canonical item and a fully custom item (no canonical ID
+    /// at all) both pass through regeneration untouched — the up-front
+    /// rules never own them, and neither can be silently dropped or renamed.
+    @Test func userAddedCanonicalAndCustomItemsSurviveRegeneration() throws {
+        let canonical = PackingItemDraft(
+            canonicalItemID: "electronics.camera",
+            displayName: "Camera",
+            category: .electronics,
+            quantity: 1,
+            importance: .normal,
+            sourceSignals: [.userPreference],
+            reason: "Added by you",
+            isUserAdded: true
+        )
+        let custom = PackingItemDraft(
+            canonicalItemID: nil,
+            displayName: "Lucky travel charm",
+            category: .travelComfort,
+            quantity: 2,
+            importance: .optional,
+            sourceSignals: [.userPreference],
+            reason: "Added by you",
+            isUserAdded: true
+        )
+        let engine = try makeEngine()
+        let items = engine.generate(
+            context: context(destination: try destination("Chicago")),
+            existing: [canonical, custom]
+        )
+        let keptCanonical = items.first { $0.id == canonical.id }
+        let keptCustom = items.first { $0.id == custom.id }
+        #expect(keptCanonical?.canonicalItemID == "electronics.camera")
+        #expect(keptCanonical?.quantity == 1)
+        #expect(keptCustom?.displayName == "Lucky travel charm")
+        #expect(keptCustom?.canonicalItemID == nil)
+        #expect(keptCustom?.quantity == 2)
+    }
+
+    // MARK: - Task 4: authority — packed state
+
+    /// Packed state is derived (`packedQuantity >= quantity`), not a sticky
+    /// flag: it survives regeneration when the recommended quantity does
+    /// not change.
+    @Test func packedStateSurvivesRegenerationWhenQuantityIsUnchanged() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+        var first = engine.generate(context: context(destination: dest, days: 5))
+        guard let index = first.firstIndex(where: { $0.canonicalItemID == "toiletries.toothbrush" }) else {
+            Issue.record("Expected toiletries.toothbrush in the base list")
+            return
+        }
+        first[index].packedQuantity = first[index].quantity
+        #expect(first[index].isPacked)
+
+        let second = engine.generate(context: context(destination: dest, days: 5), existing: first)
+        let toothbrush = try #require(second.first { $0.canonicalItemID == "toiletries.toothbrush" })
+        #expect(toothbrush.isPacked, "packed state should survive a no-op regeneration")
+    }
+
+    // MARK: - Task 4: authority — owner and carrier
+
+    /// A party member's owned item keeps that traveler as its owner across
+    /// two generations of the same party context — ownership is resolved
+    /// per traveler, never guessed or swapped.
+    @Test func ownerStaysWithTheSameTravelerAcrossRegeneration() throws {
+        var partner = Traveler(name: "Sam", role: .partner, ageGroup: .adult)
+        partner.chips = [.wearContacts]
+        let party = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), partner])
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+        let first = engine.generate(context: context(destination: dest, days: 5, bag: .checked, party: party))
+        let solution = try #require(first.first { $0.canonicalItemID == "toiletries.contacts_solution" })
+        #expect(solution.travelerID == partner.id)
+
+        let second = engine.generate(
+            context: context(destination: dest, days: 8, bag: .checked, party: party),
+            existing: first
+        )
+        let solutionAgain = try #require(second.first { $0.canonicalItemID == "toiletries.contacts_solution" })
+        #expect(solutionAgain.travelerID == partner.id, "owner must not drift to a different traveler on regeneration")
+    }
+
+    /// A manually reassigned carrier (`assignedTravelerID`, set from the UI
+    /// without marking the item user-modified) survives regeneration —
+    /// distinct from the owner, and `resolve` only fills a carrier in when
+    /// none was chosen.
+    @Test func manuallyReassignedCarrierSurvivesRegeneration() throws {
+        var partner = Traveler(name: "Sam", role: .partner, ageGroup: .adult)
+        partner.chips = [.wearContacts]
+        let party = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), partner])
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+        var first = engine.generate(context: context(destination: dest, days: 5, bag: .checked, party: party))
+        guard let index = first.firstIndex(where: { $0.canonicalItemID == "toiletries.contacts_solution" }) else {
+            Issue.record("Expected toiletries.contacts_solution for the partner")
+            return
+        }
+        #expect(first[index].assignedTravelerID == partner.id, "carrier defaults to the owner")
+        // The UI can reassign a carrier without marking the item user-modified.
+        first[index].assignedTravelerID = party.primary.id
+
+        let second = engine.generate(
+            context: context(destination: dest, days: 8, bag: .checked, party: party),
+            existing: first
+        )
+        let solution = try #require(second.first { $0.canonicalItemID == "toiletries.contacts_solution" })
+        #expect(
+            solution.assignedTravelerID == party.primary.id,
+            "an explicit carrier reassignment must survive regeneration even without isUserModified"
+        )
+        #expect(solution.travelerID == partner.id, "the owner is unchanged by a carrier reassignment")
+    }
+
     // MARK: - Family sharing (fixture 12 is the risk, not the gate)
 
     /// Sunscreen shared across the party is right; medication never is; a

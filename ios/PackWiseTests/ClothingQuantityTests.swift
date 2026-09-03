@@ -209,6 +209,170 @@ struct ClothingQuantityTests {
         )
     }
 
+    // MARK: - Task 4: laundry ordering
+
+    /// The three `LaundryAccess` states must never invert: `planned` (wash
+    /// regularly) is never heavier than `possible` (wash sometimes), which
+    /// is never heavier than `none` (no laundry, pack for the whole trip).
+    /// Scoped to policies that declare laundry sensitivity — a `.none`
+    /// policy is free to hold the three states equal.
+    @Test func laundryOrderingNeverInvertsForSensitivePolicies() {
+        let days = [1, 3, 5, 8, 10, 15, 21, 30]
+        let bags: [BagType] = [.personalItem, .carryOn, .checked]
+
+        for policy in ClothingNeedPolicy.all where policy.laundrySensitivity != .none {
+            for d in days {
+                for style in PackingStyle.allCases {
+                    for bag in bags {
+                        let planned = value(policy, days: d, style: style, bag: bag, laundry: .planned)
+                        let possible = value(policy, days: d, style: style, bag: bag, laundry: .possible)
+                        let none = value(policy, days: d, style: style, bag: bag, laundry: .none)
+                        #expect(
+                            planned <= possible,
+                            "\(policy.needID) \(d)d \(style)/\(bag): planned=\(planned) > possible=\(possible)"
+                        )
+                        #expect(
+                            possible <= none,
+                            "\(policy.needID) \(d)d \(style)/\(bag): possible=\(possible) > none=\(none)"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Task 4: style and bag ordering
+
+    /// Style loosens from `.light` to `.prepared` — reuse assumptions ease
+    /// and buffers grow, so quantity never drops as style relaxes.
+    @Test func styleOrderingNeverInverts() {
+        let days = [1, 3, 5, 8, 10, 15, 21, 30]
+        let bags: [BagType] = [.personalItem, .carryOn, .checked]
+
+        for policy in ClothingNeedPolicy.all {
+            for d in days {
+                for bag in bags {
+                    for laundry in LaundryAccess.allCases {
+                        let light = value(policy, days: d, style: .light, bag: bag, laundry: laundry)
+                        let balanced = value(policy, days: d, style: .balanced, bag: bag, laundry: laundry)
+                        let prepared = value(policy, days: d, style: .prepared, bag: bag, laundry: laundry)
+                        #expect(light <= balanced, "\(policy.needID) \(d)d \(bag)/\(laundry): light=\(light) > balanced=\(balanced)")
+                        #expect(balanced <= prepared, "\(policy.needID) \(d)d \(bag)/\(laundry): balanced=\(balanced) > prepared=\(prepared)")
+                    }
+                }
+            }
+        }
+    }
+
+    /// Bag space only ever loosens a cap, never tightens it, as the bag
+    /// goes from a personal item to a constrained bag to an unconstrained
+    /// one — by construction of `resolve`'s `min(buffered, cap)`.
+    @Test func bagOrderingNeverInverts() {
+        let days = [1, 3, 5, 8, 10, 15, 21, 30]
+
+        for policy in ClothingNeedPolicy.all {
+            for d in days {
+                for style in PackingStyle.allCases {
+                    for laundry in LaundryAccess.allCases {
+                        let personal = value(policy, days: d, style: style, bag: .personalItem, laundry: laundry)
+                        let carryOn = value(policy, days: d, style: style, bag: .carryOn, laundry: laundry)
+                        let checked = value(policy, days: d, style: style, bag: .checked, laundry: laundry)
+                        #expect(personal <= carryOn, "\(policy.needID) \(d)d \(style)/\(laundry): personalItem=\(personal) > carryOn=\(carryOn)")
+                        #expect(carryOn <= checked, "\(policy.needID) \(d)d \(style)/\(laundry): carryOn=\(carryOn) > checked=\(checked)")
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Task 4: declared minimum and resolved maximum
+
+    /// The style/bag cap actually enforced by `resolve` — the plan's
+    /// `resolvedMaximum`. Mirrors the private capping logic in
+    /// `ClothingQuantityEngine.resolve` so the bound is a real contextual
+    /// ceiling, not a restated global constant.
+    private func resolvedMaximum(_ policy: ClothingNeedPolicy, style: PackingStyle, bag: BagType) -> Int {
+        var cap = policy.styleMaximum[style] ?? Int.max
+        if bag == .personalItem {
+            cap = min(cap, policy.personalItemMaximum)
+        } else if bag.isSpaceConstrained {
+            cap = min(cap, policy.constrainedBagMaximum)
+        }
+        return cap
+    }
+
+    /// Every computed quantity sits between the policy's declared floor and
+    /// its context-resolved ceiling — never below the minimum a traveler
+    /// needs, never above what the style/bag combination allows.
+    @Test func everyPolicyStaysWithinItsDeclaredMinimumAndResolvedMaximum() {
+        let bags: [BagType] = [.personalItem, .carryOn, .backpack, .checked, .roadTripLuggage]
+
+        for policy in ClothingNeedPolicy.all {
+            for d in Self.dayGrid {
+                for style in PackingStyle.allCases {
+                    for bag in bags {
+                        for laundry in LaundryAccess.allCases {
+                            let result = value(policy, days: d, style: style, bag: bag, laundry: laundry)
+                            #expect(result >= policy.minimum, "\(policy.needID) \(d)d \(style)/\(bag)/\(laundry): \(result) below minimum \(policy.minimum)")
+                            let ceiling = resolvedMaximum(policy, style: style, bag: bag)
+                            #expect(result <= ceiling, "\(policy.needID) \(d)d \(style)/\(bag)/\(laundry): \(result) above resolved maximum \(ceiling)")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Task 4: 15d/30d plateau across every laundry state
+
+    /// Property 3 above pins the plateau under planned laundry. The same
+    /// shape holds under `.possible` and `.none` too: the style/bag cap
+    /// forces convergence well before 30 days even when nothing is ever
+    /// washed.
+    @Test func plateauHoldsAcrossEveryLaundryState() {
+        for policy in ClothingNeedPolicy.all {
+            for style in PackingStyle.allCases {
+                for bag in [BagType.carryOn, .checked] {
+                    for laundry in LaundryAccess.allCases {
+                        let fifteen = value(policy, days: 15, style: style, bag: bag, laundry: laundry)
+                        let thirty = value(policy, days: 30, style: style, bag: bag, laundry: laundry)
+                        #expect(
+                            abs(thirty - fifteen) <= 1,
+                            "\(policy.needID) \(style)/\(bag)/\(laundry): 15d=\(fifteen) vs 30d=\(thirty)"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Task 4: formal-top offset is scoped to daily_top
+
+    /// `offsetByFormalTops` is declared true for exactly one need. Every
+    /// other policy must be inert to `formalTopUnits` — the parameter is
+    /// plumbed through every clothing need's `compute` call, so scope must
+    /// come from the declaration, not from the caller only ever passing it
+    /// to the daily-top need.
+    @Test func formalTopOffsetIsInertOutsideDailyTop() {
+        let scoped = ClothingNeedPolicy.all.filter(\.offsetByFormalTops)
+        #expect(scoped.map(\.needID) == ["clothing.daily_top"])
+
+        for policy in ClothingNeedPolicy.all where !policy.offsetByFormalTops {
+            for d in [3, 5, 10] {
+                for style in PackingStyle.allCases {
+                    let withoutOffset = value(policy, days: d, style: style, bag: .checked, laundry: .none)
+                    let withOffset = ClothingQuantityEngine.compute(
+                        policy, days: d, style: style, bag: .checked, laundry: .none, formalTopUnits: 5
+                    )
+                    #expect(
+                        withoutOffset == withOffset,
+                        "\(policy.needID) \(d)d \(style): formalTopUnits changed a non-offset need"
+                    )
+                }
+            }
+        }
+    }
+
     // MARK: - Property 5: preservation
 
     /// A manual quantity edit survives regeneration with fresh weather. The
