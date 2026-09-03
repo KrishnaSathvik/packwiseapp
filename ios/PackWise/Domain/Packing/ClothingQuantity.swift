@@ -1,5 +1,28 @@
 import Foundation
 
+/// The normalized context surface the clothing family is allowed to read.
+/// Other engine families remain on `TripContext` until their own hardening
+/// phase; this projection keeps Phase 3's migration intentionally narrow.
+struct ClothingQuantityContext: Hashable, Sendable {
+    var days: Int
+    var style: PackingStyle
+    var bag: BagType
+    var laundry: LaundryAccess
+    var selectedActivityIDs: Set<String>
+    var datedActivityUses: [String: Int]
+    var party: TripParty
+
+    init(snapshot: TripContextSnapshot) {
+        days = snapshot.durationDays
+        style = snapshot.packingStyle
+        bag = snapshot.bagType
+        laundry = snapshot.laundryPlan
+        selectedActivityIDs = Set(snapshot.knownActivityIDs)
+        datedActivityUses = snapshot.knownDatedActivityUses
+        party = snapshot.party
+    }
+}
+
 /// How strongly a clothing need's quantity claims to respond to an input.
 ///
 /// Declarations, not implementation details: the property tests require every

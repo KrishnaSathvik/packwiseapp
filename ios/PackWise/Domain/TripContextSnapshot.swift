@@ -49,6 +49,10 @@ struct TripContextSnapshot: Hashable, Sendable {
     /// matching entry in `rules.activities` — the engine's real activity
     /// vocabulary.
     var knownActivityIDs: [String]
+    /// Explicit dated occurrences for known activities, counted once per
+    /// calendar day. Undated selections do not invent a frequency, and dates
+    /// outside the normalized trip interval do not contribute a use.
+    var knownDatedActivityUses: [String: Int]
     /// Activity IDs (post `ActivityVocabulary.normalize`) with no entry in
     /// `rules.activities`. Preserved verbatim, never dropped — an
     /// unrecognized ID (including `camping`, which the engine's rules file
@@ -111,6 +115,12 @@ enum TripContextCompiler {
 
         let (known, unknown, activityDiagnostics) = normalizedActivities(context, rules: rules)
         diagnostics.append(contentsOf: activityDiagnostics)
+        let datedUses = normalizedDatedActivityUses(
+            context,
+            knownActivityIDs: Set(known),
+            startDate: context.startDate,
+            endDate: context.endDate
+        )
 
         let laundry = context.laundryPlan // TripContext already owns this normalization — reuse it verbatim
         if laundry != context.laundryAccess {
@@ -130,6 +140,7 @@ enum TripContextCompiler {
             durationNights: nights,
             tripType: context.tripType,
             knownActivityIDs: known,
+            knownDatedActivityUses: datedUses,
             unknownActivityIDs: unknown,
             bagType: context.bagType,
             appliesBagConstraint: context.bagType.appliesBagConstraint,
@@ -215,6 +226,26 @@ enum TripContextCompiler {
             ContextDiagnostic(field: "activities", outcome: .unsupportedButSafe(reason: "\(id): no rule in the engine's activity vocabulary"))
         }
         return (known, unknown, diagnostics)
+    }
+
+    private static func normalizedDatedActivityUses(
+        _ context: TripContext,
+        knownActivityIDs: Set<String>,
+        startDate: Date,
+        endDate: Date,
+        calendar: Calendar = .current
+    ) -> [String: Int] {
+        let startDay = calendar.startOfDay(for: min(startDate, endDate))
+        let endDay = calendar.startOfDay(for: max(startDate, endDate))
+        var datesByActivity: [String: Set<Date>] = [:]
+        for datedActivity in context.datedActivities {
+            let activityID = ActivityVocabulary.normalize(datedActivity.activityID)
+            guard knownActivityIDs.contains(activityID), let date = datedActivity.date else { continue }
+            let day = calendar.startOfDay(for: date)
+            guard day >= startDay, day <= endDay else { continue }
+            datesByActivity[activityID, default: []].insert(day)
+        }
+        return datesByActivity.mapValues(\.count)
     }
 
     private static func normalizedDates(_ context: TripContext) -> (days: Int, nights: Int, diagnostic: ContextDiagnostic?) {

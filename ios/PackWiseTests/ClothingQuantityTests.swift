@@ -19,6 +19,41 @@ struct ClothingQuantityTests {
 
     private static let dayGrid = [1, 2, 3, 5, 8, 10, 15, 21, 30]
 
+    @Test func clothingContextProjectsOnlyNormalizedSnapshotFields() throws {
+        let destination = try #require(try SharedLibrary.testDestinations().first)
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let end = Calendar.current.date(byAdding: .day, value: 4, to: start)!
+        var raw = TripContext(
+            destination: destination,
+            startDate: start,
+            endDate: end,
+            durationDays: 999,
+            durationNights: 998,
+            tripType: .cityBreak,
+            activities: ["running"],
+            datedActivities: [DatedActivity(activityID: "running", date: start)],
+            bagType: .carryOn,
+            packingStyle: .light,
+            transportation: .unknown,
+            laundryAccess: .none,
+            travelerCount: 1,
+            userNotes: "Laundry may be available",
+            contextChips: [],
+            weather: nil,
+            preferences: .deviceDefaults()
+        )
+        raw.party = .solo()
+        let snapshot = TripContextCompiler.compile(raw, rules: try SharedLibrary.rules())
+
+        let clothing = ClothingQuantityContext(snapshot: snapshot)
+
+        #expect(clothing.days == 5)
+        #expect(clothing.laundry == .possible)
+        #expect(clothing.selectedActivityIDs == ["running"])
+        #expect(clothing.datedActivityUses == ["running": 1])
+        #expect(clothing.party == snapshot.party)
+    }
+
     private func value(
         _ policy: ClothingNeedPolicy,
         days: Int,

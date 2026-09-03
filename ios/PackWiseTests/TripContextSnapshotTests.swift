@@ -85,6 +85,48 @@ struct TripContextSnapshotTests {
         #expect(!snapshot.diagnostics.contains { $0.field == "activities" })
     }
 
+    @Test func knownDatedActivitiesCountDistinctTripDates() throws {
+        var context = baseContext()
+        let secondDate = Calendar.current.date(byAdding: .day, value: 2, to: context.startDate)!
+        context.activities = ["running"]
+        context.datedActivities = [
+            DatedActivity(activityID: "running", date: context.startDate),
+            DatedActivity(activityID: "running", date: context.startDate),
+            DatedActivity(activityID: "running", date: secondDate)
+        ]
+
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+
+        #expect(snapshot.knownDatedActivityUses["running"] == 2)
+    }
+
+    @Test func undatedAndOutOfTripActivitiesDoNotManufactureUses() throws {
+        var context = baseContext()
+        let outsideTrip = Calendar.current.date(byAdding: .day, value: 10, to: context.startDate)!
+        context.activities = ["running"]
+        context.datedActivities = [
+            DatedActivity(activityID: "running", date: nil),
+            DatedActivity(activityID: "running", date: outsideTrip)
+        ]
+
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+
+        #expect(snapshot.knownDatedActivityUses["running"] == nil)
+    }
+
+    @Test func unknownDatedActivityNeverEntersKnownUseCounts() throws {
+        var context = baseContext()
+        context.activities = ["cosplayConvention"]
+        context.datedActivities = [
+            DatedActivity(activityID: "cosplayConvention", date: context.startDate)
+        ]
+
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+
+        #expect(snapshot.knownDatedActivityUses["cosplayConvention"] == nil)
+        #expect(snapshot.unknownActivityIDs == ["cosplayConvention"])
+    }
+
     @Test func unrecognizedActivityIsPreservedAndFlaggedUnsupportedButSafe() throws {
         var context = baseContext()
         context.activities = ["sightseeing", "cosplayConvention"]
