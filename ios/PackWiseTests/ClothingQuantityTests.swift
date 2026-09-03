@@ -304,6 +304,16 @@ struct ClothingQuantityTests {
     /// Every computed quantity sits between the policy's declared floor and
     /// its context-resolved ceiling — never below the minimum a traveler
     /// needs, never above what the style/bag combination allows.
+    ///
+    /// Caveat for `.sleep`: `ClothingQuantityEngine.compute()`'s `.sleep`
+    /// branch returns a hardcoded `days >= 6 && style != .light ? 2 : 1`
+    /// directly and never calls `resolve()`, so it never reads
+    /// `styleMaximum`/`personalItemMaximum`/`constrainedBagMaximum` at all.
+    /// The upper-bound assertion below passes for sleepwear only because
+    /// that hardcoded output (1 or 2) happens to fit under the declared
+    /// caps — not because those caps are actually enforced. Tracked as
+    /// dead code for Task 6; do not read a green run here as proof that
+    /// sleepwear's caps are wired up.
     @Test func everyPolicyStaysWithinItsDeclaredMinimumAndResolvedMaximum() {
         let bags: [BagType] = [.personalItem, .carryOn, .backpack, .checked, .roadTripLuggage]
 
