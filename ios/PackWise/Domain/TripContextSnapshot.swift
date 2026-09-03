@@ -9,6 +9,11 @@ import Foundation
 /// given, and the snapshot fell back to a documented, non-invented safe
 /// default rather than guessing at the user's intent.
 enum ContextOutcome: Hashable, Sendable {
+    /// A field with no corresponding entry in `diagnostics` is valid by
+    /// omission — that's the convention `TripContextCompiler.compile`
+    /// actually follows today. This case exists for completeness/future use
+    /// (e.g. a caller that wants an explicit per-field outcome list rather
+    /// than a sparse diagnostics array); no compiler code constructs it yet.
     case valid
     case normalized(reason: String)
     case unsupportedButSafe(reason: String)
