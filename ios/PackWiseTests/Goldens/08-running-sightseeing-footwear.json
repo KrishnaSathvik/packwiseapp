@@ -16,6 +16,7 @@
   "items" : [
     {
       "canonicalItemID" : "activities.daypack",
+      "carrier" : "primary",
       "category" : "activities",
       "displayName" : "Daypack",
       "importance" : "important",
@@ -23,6 +24,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "You'll have sightseeing days in Chicago.",
+      "reasonArguments" : {
+        "destination" : "Chicago"
+      },
       "reasonCode" : "activity.sightseeing",
       "signals" : [
         "activity",
@@ -31,6 +35,7 @@
     },
     {
       "canonicalItemID" : "clothing.light_sweater",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Light sweater",
       "importance" : "normal",
@@ -38,6 +43,10 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Rain is expected on 1 of your 5 travel days.",
+      "reasonArguments" : {
+        "rainDays" : "1",
+        "tripDays" : "5"
+      },
       "reasonCode" : "weather.rain_days",
       "signals" : [
         "weather"
@@ -45,6 +54,7 @@
     },
     {
       "canonicalItemID" : "clothing.pants",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Pants",
       "importance" : "normal",
@@ -52,6 +62,9 @@
       "quantity" : 2,
       "quantityReason" : "2 based on a 5-day trip.",
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
@@ -59,6 +72,7 @@
     },
     {
       "canonicalItemID" : "clothing.rain_jacket",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Rain jacket",
       "importance" : "important",
@@ -66,6 +80,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Rain is expected Tuesday.",
+      "reasonArguments" : {
+        "weekday" : "Tuesday"
+      },
       "reasonCode" : "weather.rain_weekday",
       "signals" : [
         "weather"
@@ -73,6 +90,7 @@
     },
     {
       "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Sleepwear",
       "importance" : "normal",
@@ -80,6 +98,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
@@ -87,6 +108,7 @@
     },
     {
       "canonicalItemID" : "clothing.socks",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Socks",
       "importance" : "normal",
@@ -94,6 +116,9 @@
       "quantity" : 5,
       "quantityReason" : "5 based on a 5-day trip.",
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
@@ -101,6 +126,7 @@
     },
     {
       "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "T-shirts",
       "importance" : "normal",
@@ -108,6 +134,9 @@
       "quantity" : 4,
       "quantityReason" : "Why 4 t-shirts? You're traveling for 5 days, packing light.",
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
@@ -115,6 +144,7 @@
     },
     {
       "canonicalItemID" : "clothing.underwear",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Underwear",
       "importance" : "normal",
@@ -122,6 +152,9 @@
       "quantity" : 5,
       "quantityReason" : "5 based on a 5-day trip.",
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
       "signals" : [
         "baseEssential"
@@ -129,6 +162,7 @@
     },
     {
       "canonicalItemID" : "clothing.workout_bottom",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Workout bottoms",
       "importance" : "normal",
@@ -136,6 +170,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "You plan to run.",
+      "reasonArguments" : {
+        "destination" : "Chicago"
+      },
       "reasonCode" : "activity.running",
       "signals" : [
         "activity"
@@ -143,6 +180,7 @@
     },
     {
       "canonicalItemID" : "clothing.workout_top",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Workout tops",
       "importance" : "normal",
@@ -150,6 +188,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "You plan to run.",
+      "reasonArguments" : {
+        "destination" : "Chicago"
+      },
       "reasonCode" : "activity.running",
       "signals" : [
         "activity"
@@ -157,6 +198,7 @@
     },
     {
       "canonicalItemID" : "documents.id",
+      "carrier" : "primary",
       "category" : "documents",
       "displayName" : "Photo ID",
       "importance" : "critical",
@@ -164,6 +206,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Easy to forget, hard to replace.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.documents",
       "signals" : [
         "baseEssential"
@@ -171,6 +216,7 @@
     },
     {
       "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "primary",
       "category" : "electronics",
       "displayName" : "Phone charger",
       "importance" : "important",
@@ -178,6 +224,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.electronics",
       "signals" : [
         "baseEssential"
@@ -185,6 +234,7 @@
     },
     {
       "canonicalItemID" : "electronics.power_bank",
+      "carrier" : "primary",
       "category" : "electronics",
       "displayName" : "Portable charger",
       "importance" : "important",
@@ -192,6 +242,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "You'll have sightseeing days in Chicago.",
+      "reasonArguments" : {
+        "destination" : "Chicago"
+      },
       "reasonCode" : "activity.sightseeing",
       "signals" : [
         "activity"
@@ -199,6 +252,7 @@
     },
     {
       "canonicalItemID" : "essentials.keys",
+      "carrier" : "primary",
       "category" : "essentials",
       "displayName" : "Keys",
       "importance" : "critical",
@@ -206,6 +260,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.essentials",
       "signals" : [
         "baseEssential"
@@ -213,6 +270,7 @@
     },
     {
       "canonicalItemID" : "essentials.phone",
+      "carrier" : "primary",
       "category" : "essentials",
       "displayName" : "Phone",
       "importance" : "critical",
@@ -220,6 +278,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.essentials",
       "signals" : [
         "baseEssential"
@@ -227,6 +288,7 @@
     },
     {
       "canonicalItemID" : "essentials.sunglasses",
+      "carrier" : "primary",
       "category" : "essentials",
       "displayName" : "Sunglasses",
       "importance" : "normal",
@@ -234,6 +296,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Suggested for a city break trip.",
+      "reasonArguments" : {
+        "tripType" : "city break"
+      },
       "reasonCode" : "trip_type.generic",
       "signals" : [
         "tripType"
@@ -241,6 +306,7 @@
     },
     {
       "canonicalItemID" : "essentials.umbrella_compact",
+      "carrier" : "primary",
       "category" : "essentials",
       "displayName" : "Compact umbrella",
       "importance" : "normal",
@@ -248,6 +314,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Rain is expected Tuesday.",
+      "reasonArguments" : {
+        "weekday" : "Tuesday"
+      },
       "reasonCode" : "weather.rain_weekday",
       "signals" : [
         "weather"
@@ -255,6 +324,7 @@
     },
     {
       "canonicalItemID" : "essentials.wallet",
+      "carrier" : "primary",
       "category" : "essentials",
       "displayName" : "Wallet",
       "importance" : "critical",
@@ -262,6 +332,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.essentials",
       "signals" : [
         "baseEssential"
@@ -269,6 +342,7 @@
     },
     {
       "canonicalItemID" : "footwear.running_shoes",
+      "carrier" : "primary",
       "category" : "footwear",
       "displayName" : "Running shoes",
       "importance" : "normal",
@@ -276,6 +350,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Running shoes can also cover your walking and sightseeing days.",
+      "reasonArguments" : {
+        "destination" : "Chicago"
+      },
       "reasonCode" : "substitution.running_covers_walking",
       "signals" : [
         "activity"
@@ -283,6 +360,7 @@
     },
     {
       "canonicalItemID" : "health.blister_pads",
+      "carrier" : "primary",
       "category" : "health",
       "displayName" : "Blister pads",
       "importance" : "normal",
@@ -290,6 +368,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "You'll have sightseeing days in Chicago.",
+      "reasonArguments" : {
+        "destination" : "Chicago"
+      },
       "reasonCode" : "activity.sightseeing",
       "signals" : [
         "activity"
@@ -297,6 +378,7 @@
     },
     {
       "canonicalItemID" : "health.pain_reliever",
+      "carrier" : "primary",
       "category" : "health",
       "displayName" : "Pain reliever",
       "importance" : "normal",
@@ -304,6 +386,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Better to have and not need.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.health",
       "signals" : [
         "baseEssential"
@@ -311,6 +396,7 @@
     },
     {
       "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Body wash",
       "importance" : "normal",
@@ -318,6 +404,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
@@ -325,6 +414,7 @@
     },
     {
       "canonicalItemID" : "toiletries.deodorant",
+      "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Deodorant",
       "importance" : "important",
@@ -332,6 +422,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
@@ -339,6 +432,7 @@
     },
     {
       "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Shampoo",
       "importance" : "normal",
@@ -346,6 +440,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
@@ -353,6 +450,7 @@
     },
     {
       "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Toothbrush",
       "importance" : "important",
@@ -360,6 +458,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
@@ -367,6 +468,7 @@
     },
     {
       "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Toothpaste",
       "importance" : "important",
@@ -374,6 +476,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
@@ -381,6 +486,7 @@
     },
     {
       "canonicalItemID" : "travel_comfort.compression_packing",
+      "carrier" : "primary",
       "category" : "travel_comfort",
       "displayName" : "Packing cubes",
       "importance" : "normal",
@@ -388,6 +494,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.travel_comfort",
       "signals" : [
         "baseEssential"
@@ -395,6 +504,7 @@
     },
     {
       "canonicalItemID" : "travel_comfort.empty_security_bottle",
+      "carrier" : "primary",
       "category" : "travel_comfort",
       "displayName" : "Empty security bottle",
       "importance" : "normal",
@@ -402,6 +512,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Useful after airport security.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "flight.empty_bottle",
       "signals" : [
         "tripType"
@@ -409,6 +522,7 @@
     },
     {
       "canonicalItemID" : "travel_comfort.laundry_bag",
+      "carrier" : "primary",
       "category" : "travel_comfort",
       "displayName" : "Laundry bag",
       "importance" : "normal",
@@ -416,6 +530,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.travel_comfort",
       "signals" : [
         "baseEssential"
@@ -423,6 +540,7 @@
     },
     {
       "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "carrier" : "primary",
       "category" : "travel_comfort",
       "displayName" : "Toiletry bag",
       "importance" : "important",
@@ -430,6 +548,9 @@
       "quantity" : 1,
       "quantityReason" : "",
       "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.travel_comfort",
       "signals" : [
         "baseEssential"

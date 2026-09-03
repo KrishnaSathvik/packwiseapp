@@ -74,7 +74,16 @@ struct GoldenEngineTests {
             GoldenFixtureFile.self,
             from: Data(contentsOf: Self.fixturesFile)
         )
-        #expect(file.fixtures.count == 17)
+        let manifestIDs = Set(file.fixtures.map(\.id))
+        let goldenIDs = Set(
+            try FileManager.default.contentsOfDirectory(at: Self.goldensDirectory, includingPropertiesForKeys: nil)
+                .filter { $0.pathExtension == "json" }
+                .map { $0.deletingPathExtension().lastPathComponent }
+        )
+        #expect(
+            manifestIDs == goldenIDs,
+            "Fixture manifest and golden files must match 1:1. Manifest-only: \(manifestIDs.subtracting(goldenIDs)); golden-only: \(goldenIDs.subtracting(manifestIDs))."
+        )
         let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
         let destinations = try SharedLibrary.testDestinations()
         let weatherFixtures = try SharedLibrary.weatherFixtures()
@@ -111,6 +120,38 @@ struct GoldenEngineTests {
         if Self.isRecording {
             Issue.record("Goldens recorded to \(Self.goldensDirectory.path). Review the diff, commit, and re-run without TEST_RUNNER_PACKWISE_RECORD_GOLDENS.")
         }
+    }
+
+    /// The schema carries stable evidence beyond the rendered reason string:
+    /// who is on the hook to carry an item (distinct from who owns it), and
+    /// the structured arguments the reason template was filled with.
+    @Test func goldenSchemaCapturesCarrierAndReasonArguments() throws {
+        let output = try renderFixture(id: "11-couple-5d-rain")
+        #expect(output.items.first { $0.owner != "shared" }?.carrier.isEmpty == false)
+        #expect(output.items.contains { !$0.reasonArguments.isEmpty })
+    }
+
+    /// Renders one fixture by ID, decoded back into the golden schema — for
+    /// schema-focused tests that don't need the full matrix comparison.
+    private func renderFixture(id: String) throws -> GoldenOutput {
+        let file = try JSONDecoder().decode(
+            GoldenFixtureFile.self,
+            from: Data(contentsOf: Self.fixturesFile)
+        )
+        guard let fixture = file.fixtures.first(where: { $0.id == id }) else {
+            throw ResourceError.missing("fixture \(id)")
+        }
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let destinations = try SharedLibrary.testDestinations()
+        let weatherFixtures = try SharedLibrary.weatherFixtures()
+        let json = try render(
+            fixture: fixture,
+            engineVersion: file.engineVersion,
+            engine: engine,
+            destinations: destinations,
+            weatherFixtures: weatherFixtures
+        )
+        return try JSONDecoder().decode(GoldenOutput.self, from: Data(json.utf8))
     }
 
     // MARK: - Context construction
@@ -226,6 +267,10 @@ struct GoldenEngineTests {
     /// them in dictionary-iteration order.
     private struct GoldenItem: Codable {
         var owner: String
+        /// Who is responsible for bringing the item — distinct from `owner`,
+        /// which is whose item it is. "unassigned" when the engine leaves it
+        /// unset (e.g. shared items); never a raw UUID.
+        var carrier: String
         var canonicalItemID: String
         var displayName: String
         var category: String
@@ -233,6 +278,9 @@ struct GoldenEngineTests {
         var importance: String
         var signals: [String]
         var reasonCode: String
+        /// The structured values the reason template was filled with (e.g.
+        /// rain day counts). Empty when the reason carries no arguments.
+        var reasonArguments: [String: String]
         var reason: String
         var quantityReason: String
         var userModified: Bool?
@@ -286,6 +334,11 @@ struct GoldenEngineTests {
             return slugs[id] ?? "unknown"
         }
 
+        func carrier(_ item: PackingItemDraft) -> String {
+            guard let id = item.assignedTravelerID else { return "unassigned" }
+            return slugs[id] ?? "unassigned"
+        }
+
         let golden = GoldenOutput(
             fixture: fixtureID,
             engineVersion: engineVersion,
@@ -293,6 +346,7 @@ struct GoldenEngineTests {
                 .map { item in
                     GoldenItem(
                         owner: owner(item),
+                        carrier: carrier(item),
                         canonicalItemID: item.canonicalItemID ?? "custom:\(item.displayName)",
                         displayName: item.displayName,
                         category: item.category.rawValue,
@@ -300,6 +354,7 @@ struct GoldenEngineTests {
                         importance: item.importance.rawValue,
                         signals: item.sourceSignals.map(\.rawValue).sorted(),
                         reasonCode: item.reasonCode,
+                        reasonArguments: item.reasonArguments,
                         reason: item.reason,
                         quantityReason: item.quantityReason,
                         userModified: item.isUserModified ? true : nil

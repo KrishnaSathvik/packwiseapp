@@ -11,9 +11,12 @@ import Testing
 /// so the ban is enforced against every fixture, and erosion shows up as a
 /// test failure rather than a slow drift.
 struct ReasonQualityTests {
-    private static let goldensDirectory = URL(fileURLWithPath: #filePath)
-        .deletingLastPathComponent()
-        .appendingPathComponent("Goldens")
+    private static let testsDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+    private static let goldensDirectory = testsDirectory.appendingPathComponent("Goldens")
+    private static let fixturesFile = testsDirectory
+        .deletingLastPathComponent()  // ios/PackWiseTests -> ios
+        .deletingLastPathComponent()  // ios -> repo root
+        .appendingPathComponent("shared/fixtures/golden/golden-fixtures.json")
 
     /// The strings the round-2 review called out, banned from any item that
     /// carries a weather or activity signal.
@@ -37,12 +40,26 @@ struct ReasonQualityTests {
         var items: [Item]
     }
 
+    /// Just enough of the fixture manifest to check ID coverage — not the
+    /// full schema `GoldenEngineTests` decodes to render fixtures.
+    private struct ManifestFile: Codable {
+        struct Fixture: Codable { var id: String }
+        var fixtures: [Fixture]
+    }
+
     private func goldenFiles() throws -> [GoldenFile] {
         let urls = try FileManager.default.contentsOfDirectory(
             at: Self.goldensDirectory,
             includingPropertiesForKeys: nil
         ).filter { $0.pathExtension == "json" }
-        #expect(urls.count == 17)
+        let goldenIDs = Set(urls.map { $0.deletingPathExtension().lastPathComponent })
+        let manifestIDs = Set(
+            try JSONDecoder().decode(ManifestFile.self, from: Data(contentsOf: Self.fixturesFile)).fixtures.map(\.id)
+        )
+        #expect(
+            manifestIDs == goldenIDs,
+            "Fixture manifest and golden files must match 1:1. Manifest-only: \(manifestIDs.subtracting(goldenIDs)); golden-only: \(goldenIDs.subtracting(manifestIDs))."
+        )
         return try urls.map { try JSONDecoder().decode(GoldenFile.self, from: Data(contentsOf: $0)) }
     }
 
