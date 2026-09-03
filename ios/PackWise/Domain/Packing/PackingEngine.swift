@@ -8,6 +8,11 @@ struct EngineGeneration: Sendable {
     var items: [PackingItemDraft]
     var coverageSuppressions: [CoverageSuppression]
     var constraintDecisions: [ConstraintDecision]
+    /// Diagnostics from compiling a `TripContextSnapshot` for this
+    /// generation — validation/observability only. No decision logic in this
+    /// file reads from the snapshot; it is compiled purely to attach these
+    /// diagnostics to the return value. Not serialized into golden JSON.
+    var contextDiagnostics: [ContextDiagnostic]
 }
 
 /// Raw constraint drops collected during resolution, aggregated into
@@ -31,6 +36,12 @@ struct PackingEngine: Sendable {
         existing: [PackingItemDraft] = [],
         overrides: [RecommendationOverrideDraft] = []
     ) -> EngineGeneration {
+        // Compiled once, purely for validation/diagnostics — no decision
+        // logic below this line reads from the snapshot. See the Phase 2
+        // plan's migration rule: nothing inside generateSimple/
+        // generateForParty/resolve may reference TripContextSnapshot in
+        // this phase.
+        let snapshot = TripContextCompiler.compile(context, rules: rules)
         let party = context.effectiveParty
         let generated = party.usesSimpleList
             ? generateSimple(context: context, existing: existing, overrides: overrides)
@@ -38,7 +49,8 @@ struct PackingEngine: Sendable {
         return EngineGeneration(
             items: generated.items.map { PartyInvariants.normalize($0, in: party) },
             coverageSuppressions: generated.suppressions,
-            constraintDecisions: ConstraintResolver.decisions(from: generated.drops)
+            constraintDecisions: ConstraintResolver.decisions(from: generated.drops),
+            contextDiagnostics: snapshot.diagnostics
         )
     }
 

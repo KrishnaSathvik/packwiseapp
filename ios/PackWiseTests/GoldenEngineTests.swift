@@ -138,6 +138,34 @@ struct GoldenEngineTests {
         #expect(output.items.contains { !$0.reasonArguments.isEmpty })
     }
 
+    /// Full-ledger proof that `TripContextCompiler` compiles every real,
+    /// fixture-derived trip in the golden ledger deterministically and
+    /// without crashing. Every one of the 27 fixtures is a real, well-formed
+    /// trip, so none should produce an "unsupportedButSafe" `dates` or
+    /// `party` diagnostic. Fixtures 18 and 25 (camping, cosplayConvention)
+    /// are EXPECTED to carry an "activities" diagnostic — that's the honest,
+    /// already-published Phase 1 finding (see
+    /// docs/engine-audits/2026-09-03-engine-findings.md), not a defect this
+    /// test introduces.
+    @Test func everyGoldenFixtureCompilesToADeterministicSnapshot() throws {
+        let file = try JSONDecoder().decode(
+            GoldenFixtureFile.self,
+            from: Data(contentsOf: Self.fixturesFile)
+        )
+        let rules = try SharedLibrary.rules()
+        let destinations = try SharedLibrary.testDestinations()
+        let weatherFixtures = try SharedLibrary.weatherFixtures()
+
+        for fixture in file.fixtures {
+            let context = try buildContext(fixture: fixture, destinations: destinations, weatherFixtures: weatherFixtures)
+            let first = TripContextCompiler.compile(context, rules: rules)
+            let second = TripContextCompiler.compile(context, rules: rules)
+            #expect(first == second, "\(fixture.id): compilation must be deterministic")
+            let unexpectedDiagnostics = first.diagnostics.filter { $0.field != "activities" }
+            #expect(unexpectedDiagnostics.isEmpty, "\(fixture.id): unexpected diagnostic \(unexpectedDiagnostics)")
+        }
+    }
+
     /// Renders one fixture by ID, decoded back into the golden schema — for
     /// schema-focused tests that don't need the full matrix comparison.
     private func renderFixture(id: String) throws -> GoldenOutput {
@@ -163,13 +191,15 @@ struct GoldenEngineTests {
 
     // MARK: - Context construction
 
-    private func render(
+    /// Builds the `TripContext` a given fixture describes — the same
+    /// construction `render` feeds into `engine.generateDetailed`, factored
+    /// out so other tests (e.g. the full-ledger snapshot-compilation test)
+    /// can reuse it without duplicating destination/weather/party resolution.
+    private func buildContext(
         fixture: GoldenFixture,
-        engineVersion: String,
-        engine: PackingEngine,
         destinations: [Destination],
         weatherFixtures: [String: WeatherFixture]
-    ) throws -> String {
+    ) throws -> TripContext {
         guard let destination = destinations.first(where: { $0.city == fixture.destination }) else {
             throw ResourceError.missing("destination \(fixture.destination)")
         }
@@ -190,7 +220,7 @@ struct GoldenEngineTests {
         prefs.homeCountrySource = .userConfirmed
 
         let party = Self.party(from: fixture.party)
-        let context = TripContext(
+        return TripContext(
             destination: destination,
             startDate: start,
             endDate: end,
@@ -210,6 +240,16 @@ struct GoldenEngineTests {
             preferences: prefs,
             party: party ?? .solo()
         )
+    }
+
+    private func render(
+        fixture: GoldenFixture,
+        engineVersion: String,
+        engine: PackingEngine,
+        destinations: [Destination],
+        weatherFixtures: [String: WeatherFixture]
+    ) throws -> String {
+        let context = try buildContext(fixture: fixture, destinations: destinations, weatherFixtures: weatherFixtures)
 
         let existing = (fixture.existing ?? []).map { row in
             PackingItemDraft(
