@@ -127,7 +127,14 @@ struct GoldenEngineTests {
     /// the structured arguments the reason template was filled with.
     @Test func goldenSchemaCapturesCarrierAndReasonArguments() throws {
         let output = try renderFixture(id: "11-couple-5d-rain")
-        #expect(output.items.first { $0.owner != "shared" }?.carrier.isEmpty == false)
+        // Fixture 11 is a couple trip where every personal item is
+        // self-carried; sorted-first non-shared item is the partner's
+        // daypack, so the golden slug must resolve to "partner" exactly —
+        // not merely "non-empty", which a hardcoded "unassigned" would
+        // also satisfy.
+        let firstOwned = try #require(output.items.first { $0.owner != "shared" })
+        #expect(firstOwned.owner == "partner")
+        #expect(firstOwned.carrier == "partner")
         #expect(output.items.contains { !$0.reasonArguments.isEmpty })
     }
 
@@ -268,8 +275,11 @@ struct GoldenEngineTests {
     private struct GoldenItem: Codable {
         var owner: String
         /// Who is responsible for bringing the item — distinct from `owner`,
-        /// which is whose item it is. "unassigned" when the engine leaves it
-        /// unset (e.g. shared items); never a raw UUID.
+        /// which is whose item it is. "unassigned" when no traveler is
+        /// assigned (e.g. shared items); "unknown" if a traveler is
+        /// assigned but the ID doesn't resolve to a slug — a dangling
+        /// reference that should surface in the diff, not be silently
+        /// folded into "unassigned". Never a raw UUID.
         var carrier: String
         var canonicalItemID: String
         var displayName: String
@@ -336,7 +346,7 @@ struct GoldenEngineTests {
 
         func carrier(_ item: PackingItemDraft) -> String {
             guard let id = item.assignedTravelerID else { return "unassigned" }
-            return slugs[id] ?? "unassigned"
+            return slugs[id] ?? "unknown"
         }
 
         let golden = GoldenOutput(
