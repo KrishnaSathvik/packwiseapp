@@ -924,9 +924,10 @@ struct PackingEngine: Sendable {
                         )
                         copy.quantityReasonArguments = ["quantity": "\(quantity)", "rainDays": "\(weather.rainDays)"]
                     } else {
+                        let quantityPhrase = quantity == 1 ? "One" : "\(quantity)"
                         copy.quantityReason = render(
                             "party.shared",
-                            ["quantity": "\(quantity)", "partySize": "\(party.travelers.count)"],
+                            ["quantityPhrase": quantityPhrase],
                             fallback: fallback
                         )
                         copy.quantityReasonArguments = ["quantity": "\(quantity)", "travelerCount": "\(party.travelers.count)"]

@@ -682,6 +682,43 @@ struct ConstraintTests {
         #expect(sunscreen.quantity == 2, "ceil(5/3) = 2")
     }
 
+    // MARK: - Phase 8, Task 4: party.shared pluralization (routed finding)
+
+    /// Scenario 12 (Phase 8 required scenarios): a shared quantity greater
+    /// than one must not render "One for the group" — the routed finding
+    /// from Phase 7's closure. Sunscreen for a family of 4 (`scaleByParty`,
+    /// `per: 3`) resolves to quantity 2; the reason text must say "2", not
+    /// "One". Reproduces fixture 37's live bug directly.
+    @Test func sharedQuantityGreaterThanOneIsNotDescribedAsOneForTheGroup() throws {
+        let engine = try makeEngine()
+        let party = TripParty(travelMode: .family, travelers: [
+            Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult),
+            Traveler(name: "Jo", role: .child, ageGroup: .child),
+            Traveler(name: "Em", role: .child, ageGroup: .toddler)
+        ])
+        let items = engine.generate(context: try sunnyContext(party: party))
+        let sunscreen = try #require(items.first { $0.canonicalItemID == "toiletries.sunscreen" })
+        #expect(sunscreen.quantity == 2, "ceil(4/3) = 2 — unchanged by this fix")
+        #expect(sunscreen.quantityReason == "2 for the group — not one per person.")
+        #expect(!sunscreen.quantityReason.localizedCaseInsensitiveContains("one for the group"))
+        #expect(sunscreen.quantityReasonArguments["quantity"] == "2")
+        #expect(sunscreen.quantityReasonArguments["travelerCount"] == "4")
+    }
+
+    /// The quantity==1 case must still read "One", not "1" — the wording
+    /// this fix must not regress. `health.first_aid` is `singlePerParty`
+    /// (always quantity 1 regardless of party size), so a couple still
+    /// exercises the shared path at quantity 1.
+    @Test func sharedQuantityOfOneStillReadsAsOneForTheGroup() throws {
+        let engine = try makeEngine()
+        let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+        let items = engine.generate(context: context(destination: try destination("Chicago"), type: .outdoor, party: couple))
+        let firstAid = try #require(items.first { $0.canonicalItemID == "health.first_aid" })
+        #expect(firstAid.ownershipType == .shared)
+        #expect(firstAid.quantity == 1)
+        #expect(firstAid.quantityReason == "One for the group — not one per person.")
+    }
+
     /// `scaleByDevices` (travel adapter) scales by adult/teen count, not full
     /// party size — a toddler doesn't carry a device. Uses an explicit
     /// `travelingInternationally` chip rather than a `.international` trip

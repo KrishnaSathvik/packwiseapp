@@ -2633,7 +2633,7 @@
       "importance" : "important",
       "owner" : "shared",
       "quantity" : 2,
-      "quantityReason" : "One for the group — not one per person.",
+      "quantityReason" : "2 for the group — not one per person.",
       "quantityReasonArguments" : {
         "quantity" : "2",
         "travelerCount" : "4"
