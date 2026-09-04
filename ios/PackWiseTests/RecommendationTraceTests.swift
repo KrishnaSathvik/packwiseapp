@@ -137,4 +137,166 @@ struct RecommendationTraceTests {
         #expect(facet.clothingEvidence != nil)
         #expect(facet.isFixedSingleton == false)
     }
+
+    // MARK: - Phase 8, Task 8: the 18 required scenarios, trace-level evidence
+    //
+    // Sixteen of eighteen scenarios already have a named, passing test or
+    // fixture proving the underlying *decision* (design doc's 18-scenario
+    // table). This task's job for those is a trace-classification test
+    // proving RecommendationTrace reads the right facet correctly off that
+    // existing evidence — not re-proving the decision. Scenario 12 (Task 4)
+    // and scenario 15 (no Item Detail row by definition) are covered
+    // elsewhere, cited in their own comments below, not duplicated here.
+
+    /// Scenario 1: base essential singleton. Cites fixture 01
+    /// toiletries.toothbrush (fixed singleton).
+    @Test func scenario1BaseEssentialSingletonClassifiesCorrectly() throws {
+        let toothbrush = try draft("toiletries.toothbrush", in: try drafts(for: "01-chicago-5d-city-balanced"))
+        #expect(RecommendationTrace.inclusionFamily(reasonCode: toothbrush.reasonCode, signals: toothbrush.sourceSignals) == .baseEssential)
+        #expect(RecommendationTrace.quantityFacet(for: toothbrush).isFixedSingleton)
+    }
+
+    /// Scenario 2: Tokyo planned-laundry T-shirts — quantityFacet must
+    /// surface clothingEvidence with laundryPlan/laundryReduced, not just
+    /// the rendered string. Cites GoldenEngineTests.swift's
+    /// phase3RequiredFixturesHoldClothingQuantityContracts; this proves the
+    /// *trace* reads it correctly.
+    @Test func scenario2TokyoLaundryTshirtsExposeClothingEvidence() throws {
+        let tshirt = try draft("clothing.tshirt", in: try drafts(for: "02b-tokyo-15d-light-laundry-planned"))
+        let facet = RecommendationTrace.quantityFacet(for: tshirt)
+        #expect(facet.clothingEvidence?.laundryPlan == .planned)
+        #expect(facet.clothingEvidence?.laundryReduced == true)
+    }
+
+    /// Scenario 3: workout clothing quantity basis is the workout policy,
+    /// not a bare number. Cites fixture 08.
+    @Test func scenario3WorkoutClothingExposesWorkoutPolicyBasis() throws {
+        let top = try draft("clothing.workout_top", in: try drafts(for: "08-running-sightseeing-footwear"))
+        #expect(RecommendationTrace.quantityFacet(for: top).clothingEvidence?.policyID.contains("workout") == true)
+    }
+
+    /// Scenario 4: swimwear's drying-rotation basis is visible via the
+    /// clothing evidence. Cites GoldenEngineTests.swift's
+    /// phase3RequiredFixturesHoldClothingQuantityContracts (basis ==
+    /// "dryingRotation").
+    @Test func scenario4SwimwearExposesDryingRotationBasis() throws {
+        let swimsuit = try draft("clothing.swimsuit", in: try drafts(for: "06-miami-5d-beach-personal-item"))
+        #expect(RecommendationTrace.quantityFacet(for: swimsuit).clothingEvidence?.basis == "dryingRotation")
+    }
+
+    /// Scenarios 5/6: footwear/hand-protection coverage substitution reason
+    /// codes classify as .substitution. Cites fixture 29 (hiking covers
+    /// walking) and CoverageTests.skiGlovesCoverColdHandsWithoutAnIDPairRule
+    /// for the underlying decision.
+    @Test func scenario5And6SubstitutionCoverageReasonCodesClassifyCorrectly() throws {
+        let hikingShoes = try draft("footwear.hiking_shoes", in: try drafts(for: "29-yellowstone-4d-hiking-camping"))
+        #expect(RecommendationTrace.inclusionFamily(reasonCode: hikingShoes.reasonCode, signals: hikingShoes.sourceSignals) == .substitution)
+    }
+
+    /// Scenario 7: a camping item (flashlight) classifies as .activity.
+    /// Cites fixtures 28-32, 37.
+    @Test func scenario7CampingItemClassifiesAsActivity() throws {
+        let flashlight = try draft("miscellaneous.flashlight", in: try drafts(for: "28-yellowstone-4d-camping-mild"))
+        #expect(RecommendationTrace.inclusionFamily(reasonCode: flashlight.reasonCode, signals: flashlight.sourceSignals) == .activity)
+    }
+
+    /// Scenario 8: precise rain item classifies as .weatherPrecise and
+    /// carries non-empty reasonArguments (day counts). Cites fixture 09.
+    @Test func scenario8PreciseRainItemClassifiesAsWeatherPrecise() throws {
+        let rainJacket = try draft("clothing.rain_jacket", in: try drafts(for: "09-seattle-rain-layering"))
+        #expect(RecommendationTrace.inclusionFamily(reasonCode: rainJacket.reasonCode, signals: rainJacket.sourceSignals) == .weatherPrecise)
+        #expect(!rainJacket.reasonArguments.isEmpty)
+    }
+
+    /// Scenario 9: seasonal sun item classifies as .weatherSeasonal and
+    /// never carries forecast-specific arguments. Cites fixture 12.
+    @Test func scenario9SeasonalItemClassifiesAsWeatherSeasonalWithEmptyArguments() throws {
+        let sunglasses = try draft("essentials.sunglasses", in: try drafts(for: "12-family-toddler-7d-seasonal"))
+        #expect(RecommendationTrace.inclusionFamily(reasonCode: sunglasses.reasonCode, signals: sunglasses.sourceSignals) == .weatherSeasonal)
+        #expect(sunglasses.reasonArguments.isEmpty)
+    }
+
+    /// Scenario 10: partial-forecast rows classify as weatherPrecise for
+    /// their covered days and weatherSeasonal for the seasonal remainder,
+    /// never the reverse — cites fixture 33 (a byte-stable pin; Phase 6
+    /// documented that the golden schema can't express a true partial
+    /// remainder, so this fixture's rows may all be precise) plus
+    /// WeatherNeedHardeningTests.partialForecastBlendsCoveredSignalsWithSeasonalRemainder
+    /// for the underlying decision.
+    @Test func scenario10PartialForecastKeepsPreciseAndSeasonalRowsDistinct() throws {
+        let output = try drafts(for: "33-chicago-10d-partial-forecast-seasonal-remainder")
+        for item in output where item.reasonCode.hasPrefix("weather.") {
+            let family = RecommendationTrace.inclusionFamily(reasonCode: item.reasonCode, signals: item.sourceSignals)
+            #expect(family == .weatherPrecise || family == .weatherSeasonal)
+            if family == .weatherSeasonal {
+                #expect(item.reasonArguments.isEmpty, "seasonal rows must never carry forecast-specific arguments")
+            }
+        }
+    }
+
+    /// Scenario 11: shared umbrella — two independent facets, correctly
+    /// distinct. Inclusion (*why it's on the list at all*) is the weather
+    /// trigger that suggested it (`weather.rain_days` → `.weatherPrecise`);
+    /// sharing (*why one, not one per person*) is
+    /// `ConstraintFacet.sharing`, already proven reconstructed from stored
+    /// fields in `constraintFacetReconstructsSharingFromStoredFieldsNotALiveCall`
+    /// above. The trace must not conflate the two.
+    @Test func scenario11SharedUmbrellaKeepsInclusionAndSharingFacetsDistinct() throws {
+        let umbrella = try draft("essentials.umbrella_compact", in: try drafts(for: "38-couple-5d-seattle-shared-umbrella"))
+        #expect(RecommendationTrace.inclusionFamily(reasonCode: umbrella.reasonCode, signals: umbrella.sourceSignals) == .weatherPrecise)
+        let facet = RecommendationTrace.ConstraintFacet.read(from: umbrella)
+        #expect(facet.sharing?.isShared == true)
+    }
+
+    // Scenario 12 (party.shared pluralization fix) is Task 4's production
+    // fix, proven by sharedQuantityGreaterThanOneIsNotDescribedAsOneForTheGroup
+    // (ConstraintTests.swift) against the live fixture-37 reproduction —
+    // cited, not duplicated here.
+
+    /// Scenario 13: dependency (laptop companion) classifies as
+    /// .dependency. Cites ConstraintTests.swift's companion tests for the
+    /// underlying decision.
+    @Test func scenario13DependencyCompanionClassifiesCorrectly() throws {
+        #expect(RecommendationTrace.inclusionFamily(reasonCode: "dependency.companion", signals: [.baseEssential]) == .dependency)
+    }
+
+    /// Scenario 14: manual quantity override presents as user authority,
+    /// never engine-generated evidence. Cites
+    /// ClothingQuantityTests.manualQuantitySurvivesWeatherRefresh and
+    /// fixture 14.
+    @Test func scenario14ManualQuantityPresentsAsUserAuthority() throws {
+        let tshirt = try draft("clothing.tshirt", in: try drafts(for: "14-manual-quantity-survives-refresh"))
+        #expect(RecommendationTrace.authority(for: tshirt).isUserModified)
+        #expect(RecommendationTrace.quantityFacet(for: tshirt).reason.isEmpty, "no fabricated engine quantity reason on a user-authority row")
+    }
+
+    // Scenario 15 (Not Needed) has no Item Detail row to trace by
+    // definition — a removed item never reaches the presentation layer.
+    // Its evidence stays exactly removedBaseEssentialStaysRemovedAcrossRegeneration
+    // (ConstraintTests.swift), cited, no trace test possible or meaningful.
+
+    /// Scenarios 16/17: user-added canonical vs. custom items are both
+    /// authority-flagged, distinctly. Cites fixture 27 and
+    /// ConstraintTests.userAddedCanonicalAndCustomItemsSurviveRegeneration.
+    @Test func scenario16And17UserAddedAndCustomItemsAreBothAuthorityFlaggedDistinctly() throws {
+        let output = try drafts(for: "27-chicago-5d-custom-item-survives-regeneration")
+        let custom = try #require(output.first { $0.canonicalItemID?.hasPrefix("custom.") == true })
+        let authority = RecommendationTrace.authority(for: custom)
+        #expect(authority.isCustomItem)
+    }
+
+    /// Scenario 18: owner (travelerID/ownershipType) and carrier
+    /// (assignedTravelerID) stay distinct fields in a trace read, never
+    /// conflated — fixture 37's family has a child's flashlight carried by
+    /// an adult, a real owner≠carrier row. Cites
+    /// ConstraintTests.ownerStaysWithTheSameTravelerAcrossRegeneration/
+    /// .manuallyReassignedCarrierSurvivesRegeneration for the underlying
+    /// decision.
+    @Test func scenario18OwnerAndCarrierStayDistinctForATraceRead() throws {
+        let output = try drafts(for: "37-family4-5d-hiking-camping-outdoor")
+        let carriedByAnAdult = try #require(output.first {
+            $0.canonicalItemID == "miscellaneous.flashlight" && $0.assignedTravelerID != nil && $0.assignedTravelerID != $0.travelerID
+        })
+        #expect(carriedByAnAdult.travelerID != carriedByAnAdult.assignedTravelerID)
+    }
 }

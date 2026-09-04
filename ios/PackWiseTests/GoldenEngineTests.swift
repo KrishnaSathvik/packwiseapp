@@ -446,7 +446,9 @@ struct GoldenEngineTests {
     /// `RecommendationTrace` facet tests, which read `PackingItemDraft`
     /// fields directly and have no use for the JSON-flattened `GoldenItem`
     /// schema `renderFixture` produces. Reuses the same `buildContext`
-    /// construction, never a second rendering path.
+    /// construction and the same `existing`/`overrides` replay `render`
+    /// does, never a second rendering path — several fixtures (14, 27) are
+    /// only meaningful with their `existing`/`overrides` rows applied.
     func engineDrafts(for id: String) throws -> [PackingItemDraft] {
         let file = try JSONDecoder().decode(
             GoldenFixtureFile.self,
@@ -459,7 +461,23 @@ struct GoldenEngineTests {
         let destinations = try SharedLibrary.testDestinations()
         let weatherFixtures = try SharedLibrary.weatherFixtures()
         let context = try buildContext(fixture: fixture, destinations: destinations, weatherFixtures: weatherFixtures)
-        return engine.generate(context: context)
+        let existing = (fixture.existing ?? []).map { row in
+            PackingItemDraft(
+                canonicalItemID: row.canonicalItemID,
+                displayName: row.displayName,
+                category: PackingCategory(rawValue: row.category) ?? .miscellaneous,
+                quantity: row.quantity,
+                importance: .normal,
+                sourceSignals: [],
+                reason: "",
+                isUserAdded: row.isUserAdded ?? false,
+                isUserModified: row.isUserModified
+            )
+        }
+        let overrides = (fixture.overrides ?? []).map {
+            RecommendationOverrideDraft(canonicalItemID: $0.canonicalItemID, action: $0.action)
+        }
+        return engine.generate(context: context, existing: existing, overrides: overrides)
     }
 
     // MARK: - Context construction
