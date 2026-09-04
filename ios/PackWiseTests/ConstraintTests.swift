@@ -577,4 +577,80 @@ struct ConstraintTests {
         let shared = generation.items.filter { $0.ownershipType == .shared }.compactMap(\.canonicalItemID)
         #expect(!shared.contains("health.daily_medication"))
     }
+
+    // MARK: - Task 4: sharing policy scenarios (gates 3, 4, 12)
+
+    private func rainyContext(party: TripParty) throws -> TripContext {
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let rainy = forecast(start: start, days: 5, high: 65, low: 55, rain: 0.7)
+        return context(destination: try destination("Chicago"), party: party, weather: rainy)
+    }
+
+    private func sunnyContext(party: TripParty) throws -> TripContext {
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let sunny = forecast(start: start, days: 5, high: 95, low: 75, rain: 0.1, uv: 8)
+        return context(destination: try destination("Chicago"), party: party, weather: sunny)
+    }
+
+    /// A couple with rain in the forecast gets one shared umbrella
+    /// (`scaleByParty`, `per: 2`, `min: 1`) — the exact case the task names.
+    @Test func coupleWithRainSharesOneUmbrellaNotOnePerPerson() throws {
+        let engine = try makeEngine()
+        let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+        let items = engine.generate(context: try rainyContext(party: couple))
+        let umbrellas = items.filter { $0.canonicalItemID == "essentials.umbrella_compact" }
+        #expect(umbrellas.count == 1)
+        #expect(umbrellas.first?.ownershipType == .shared)
+        #expect(umbrellas.first?.quantity == 1, "per:2 with a 2-person party rounds up to 1")
+        #expect(umbrellas.first?.quantityReason.localizedCaseInsensitiveContains("group") == true)
+    }
+
+    /// A family of 5 scales sunscreen (`scaleByParty`, `per: 3`, `min: 1`) —
+    /// one bottle per three travelers, rounded up, never one per person.
+    @Test func familyOfFiveScalesSharedSunscreenByPartySize() throws {
+        let engine = try makeEngine()
+        let party = TripParty(travelMode: .family, travelers: [
+            Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult),
+            Traveler(name: "Jo", role: .child, ageGroup: .teen),
+            Traveler(name: "Ali", role: .child, ageGroup: .child),
+            Traveler(name: "Em", role: .child, ageGroup: .toddler)
+        ])
+        let items = engine.generate(context: try sunnyContext(party: party))
+        let sunscreen = try #require(items.first { $0.canonicalItemID == "toiletries.sunscreen" })
+        #expect(sunscreen.ownershipType == .shared)
+        #expect(sunscreen.quantity == 2, "ceil(5/3) = 2")
+    }
+
+    /// `scaleByDevices` (travel adapter) scales by adult/teen count, not full
+    /// party size — a toddler doesn't carry a device. Uses an explicit
+    /// `travelingInternationally` chip rather than a `.international` trip
+    /// type (no such `TripType` case exists) to make the adapter a candidate.
+    @Test func travelAdapterScalesByDeviceCarryingTravelersOnly() throws {
+        let engine = try makeEngine()
+        let party = TripParty(travelMode: .family, travelers: [
+            Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult),
+            Traveler(name: "Em", role: .child, ageGroup: .toddler)
+        ])
+        let items = engine.generate(context: context(destination: try destination("Chicago"), chips: [.travelingInternationally], party: party))
+        let adapter = try #require(items.first { $0.canonicalItemID == "electronics.travel_adapter" })
+        #expect(adapter.quantity == 1, "ceil(2 adults / 2 per) = 1, the toddler does not count")
+    }
+
+    /// An explicit party item with no chosen traveler stays unassigned rather
+    /// than being guessed onto the primary — `PackingEngine`'s fail-safe,
+    /// exercised generically (Task 3's F-5 test exercises the same path
+    /// specifically for the flashlight).
+    @Test func ambiguousExplicitPersonalItemStaysUnassignedInAPartyList() throws {
+        let engine = try makeEngine()
+        let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+        let extra = PackingItemDraft(
+            canonicalItemID: nil, displayName: "Shared travel journal", category: .travelComfort,
+            quantity: 1, importance: .optional, sourceSignals: [.userPreference], reason: "Added by you",
+            isUserAdded: true, ownershipType: .personal, travelerID: nil
+        )
+        let generation = engine.generateDetailed(context: context(destination: try destination("Chicago"), party: couple), existing: [extra])
+        let unassigned = try #require(generation.items.first { $0.id == extra.id })
+        #expect(unassigned.travelerID == nil)
+        #expect(unassigned.ownershipType == .personal, "stays personal-but-unowned, not silently promoted to shared")
+    }
 }
