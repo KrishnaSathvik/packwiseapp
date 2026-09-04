@@ -68,7 +68,13 @@ struct PackingEngine: Sendable {
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
     ) -> RecommendationDiff {
-        let generated = generate(context: context, existing: [], overrides: overrides)
+        // Merge-aware baseline (Phase 8, Task 3): reuses resolve()'s
+        // already-correct existing-item merge branch instead of diffing
+        // against a from-scratch generation that discards it. This is not
+        // new decision logic — every other caller of generate() already
+        // passes real existing drafts; recommendationDiff was the one place
+        // that wasn't.
+        let generated = generate(context: context, existing: existing, overrides: overrides)
         if context.effectiveParty.usesSimpleList {
             return simpleDiff(generated: generated, existing: existing)
         }
@@ -81,8 +87,8 @@ struct PackingEngine: Sendable {
         for item in existing where !item.isUserAdded && !item.isUserModified {
             if !generatedKeys.contains(item.recommendationKey) {
                 removeCandidates.append(item)
-            } else if let fresh = generatedByKey[item.recommendationKey], fresh.quantity != item.quantity {
-                quantityChanges.append(QuantityChangeSuggestion(item: item, suggestedQuantity: fresh.quantity))
+            } else if let fresh = generatedByKey[item.recommendationKey], item.causallyDiffers(from: fresh) {
+                quantityChanges.append(QuantityChangeSuggestion(existing: item, fresh: fresh))
             }
         }
         return RecommendationDiff(add: add, removeCandidates: removeCandidates, quantityChanges: quantityChanges)
@@ -109,8 +115,8 @@ struct PackingEngine: Sendable {
             guard let id = item.canonicalItemID else { continue }
             if !generatedIDs.contains(id) {
                 removeCandidates.append(item)
-            } else if let fresh = generatedByID[id], fresh.quantity != item.quantity {
-                quantityChanges.append(QuantityChangeSuggestion(item: item, suggestedQuantity: fresh.quantity))
+            } else if let fresh = generatedByID[id], item.causallyDiffers(from: fresh) {
+                quantityChanges.append(QuantityChangeSuggestion(existing: item, fresh: fresh))
             }
         }
         return RecommendationDiff(add: add, removeCandidates: removeCandidates, quantityChanges: quantityChanges)

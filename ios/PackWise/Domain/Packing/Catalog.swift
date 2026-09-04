@@ -461,6 +461,26 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
     }
 }
 
+extension PackingItemDraft {
+    /// True when any causal fact behind this item differs from a freshly
+    /// regenerated version of it — not just quantity. Phase 8, Task 3:
+    /// `PackingEngine.recommendationDiff`'s per-item comparison and
+    /// `WeatherChangeReconciler.prune`'s re-validation both need the
+    /// identical predicate (two real call sites), so it lives here rather
+    /// than duplicated privately in each, which would let them silently
+    /// drift apart the next time either is edited.
+    func causallyDiffers(from fresh: PackingItemDraft) -> Bool {
+        quantity != fresh.quantity
+            || reasonCode != fresh.reasonCode
+            || reasonArguments != fresh.reasonArguments
+            || sourceSignals != fresh.sourceSignals
+            || quantityReason != fresh.quantityReason
+            || quantityReasonArguments != fresh.quantityReasonArguments
+            || satisfiedCapabilities != fresh.satisfiedCapabilities
+            || bagStyleConstraintFact != fresh.bagStyleConstraintFact
+    }
+}
+
 struct BagStyleConstraintFact: Hashable, Codable, Sendable {
     /// True when the item survived only because it carries an
     /// essentialOptionalTags tag (base/rain/cold/medication) — without that
@@ -473,9 +493,15 @@ struct BagStyleConstraintFact: Hashable, Codable, Sendable {
     var wouldTrimUnderKey: String?
 }
 
+/// A regeneration-time change to an already-existing item, widened (Phase 8,
+/// Task 3) from quantity-only to the full merged draft: `fresh` is the
+/// already-correctly-merged draft `PackingEngine.resolve`/`applyQuantities`
+/// produced (preserving `id`/`packedQuantity`/explicit `assignedTravelerID`),
+/// safe to apply wholesale via `PackingItemRecord.apply(_:)`.
 struct QuantityChangeSuggestion: Hashable, Codable, Sendable {
-    var item: PackingItemDraft
-    var suggestedQuantity: Int
+    var existing: PackingItemDraft
+    var fresh: PackingItemDraft
+    var suggestedQuantity: Int { fresh.quantity }
 }
 
 struct RecommendationDiff: Hashable, Identifiable, Codable, Sendable {

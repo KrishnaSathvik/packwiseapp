@@ -242,13 +242,18 @@ final class TripRepository {
             }
             addItem(draft, to: trip, syncWeatherChange: false)
         }
-        for change in diff.quantityChanges where quantityIDs.contains(change.item.id) {
-            if let record = trip.items.first(where: { $0.id == change.item.id }) {
-                record.quantity = change.suggestedQuantity
+        for change in diff.quantityChanges where quantityIDs.contains(change.existing.id) {
+            if let record = trip.items.first(where: { $0.id == change.existing.id }) {
+                // apply(_:) refreshes the full causal unit (reason,
+                // reasonCode, sourceSignals, quantity, quantityReason, the
+                // Phase 8 trace fields) from the already-correctly-merged
+                // `fresh` draft — never packedQuantity, which stays this
+                // call site's own responsibility (the downward safety clamp
+                // below, unchanged from before this task).
+                record.apply(change.fresh)
                 if record.packedQuantity > record.quantity {
                     record.packedQuantity = record.quantity
                 }
-                record.updatedAt = .now
             }
         }
         for candidate in diff.removeCandidates where removeIDs.contains(candidate.id) {

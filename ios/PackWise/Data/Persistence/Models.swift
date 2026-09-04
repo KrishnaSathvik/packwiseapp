@@ -314,11 +314,41 @@ final class PackingItemRecord {
         )
     }
 
+    /// Refreshes the full causal unit a regeneration produces — reason,
+    /// reasonCode, sourceSignals, quantity, quantityReason, and every Phase
+    /// 8 trace field — from an already-correctly-merged draft (Phase 8,
+    /// Task 3). `TripRepository.applyDiff` is this method's real caller,
+    /// supplying `QuantityChangeSuggestion.fresh`.
+    ///
+    /// Deliberately never touched by this method: `packedQuantity` (explicit
+    /// user state — the merge-aware baseline already preserves the draft's
+    /// own packedQuantity, but this method does not additionally clamp or
+    /// reset it; the downward safety clamp when quantity decreases stays
+    /// `applyDiff`'s own responsibility, applied after this call).
+    /// `isUserAdded` never changes for a re-merged existing item.
+    /// `assignedTravelerID` is copied through as the already-correctly
+    /// preserved-or-defaulted value `resolve()` computed upstream, not
+    /// independently decided here. `bagID` is copied through unchanged; no
+    /// bag-reassignment logic exists in this phase.
     func apply(_ draft: PackingItemDraft) {
         quantity = draft.quantity
-        packedQuantity = draft.packedQuantity
         reason = draft.reason
+        reasonCode = draft.reasonCode
+        reasonArgumentsRaw = draft.reasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        sourceSignalsRaw = draft.sourceSignals.map(\.rawValue).joined(separator: ",")
         quantityReason = draft.quantityReason
+        if let evidence = draft.quantityEvidence, let data = try? JSONEncoder().encode(evidence) {
+            quantityEvidenceRaw = String(decoding: data, as: UTF8.self)
+        } else {
+            quantityEvidenceRaw = ""
+        }
+        quantityReasonArgumentsRaw = draft.quantityReasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        satisfiedCapabilitiesRaw = draft.satisfiedCapabilities.joined(separator: ",")
+        if let fact = draft.bagStyleConstraintFact {
+            bagStyleConstraintFactRaw = "survivedByEssentialTagProtection=\(fact.survivedByEssentialTagProtection)|wouldTrimUnderKey=\(fact.wouldTrimUnderKey ?? "")"
+        } else {
+            bagStyleConstraintFactRaw = ""
+        }
         isUserModified = draft.isUserModified
         ownershipTypeRaw = draft.ownershipType.rawValue
         travelerID = draft.travelerID

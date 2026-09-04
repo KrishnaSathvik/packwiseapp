@@ -401,10 +401,12 @@ final class DebugTripSeed {
             item("essentials.sunglasses", "Sunglasses", .essentials, reason: "Little sun expected", signals: [.weather]).draft
         ],
         quantityChanges: [
-            QuantityChangeSuggestion(
-                item: item("clothing.tshirts", "T-shirts", .clothing, quantity: 4).draft,
-                suggestedQuantity: 5
-            )
+            {
+                let existing = item("clothing.tshirts", "T-shirts", .clothing, quantity: 4).draft
+                var fresh = existing
+                fresh.quantity = 5
+                return QuantityChangeSuggestion(existing: existing, fresh: fresh)
+            }()
         ]
     )
 

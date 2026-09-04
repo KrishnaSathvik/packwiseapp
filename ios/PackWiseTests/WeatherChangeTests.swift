@@ -225,7 +225,7 @@ struct WeatherChangeTests {
             return
         }
         #expect(!proposal.diff.removeCandidates.contains { $0.displayName == "Portable fan" })
-        #expect(!proposal.diff.quantityChanges.contains { $0.item.canonicalItemID == "clothing.pants" })
+        #expect(!proposal.diff.quantityChanges.contains { $0.existing.canonicalItemID == "clothing.pants" })
         #expect(existing.contains { $0.canonicalItemID == "clothing.tshirt" && $0.isPacked })
     }
 

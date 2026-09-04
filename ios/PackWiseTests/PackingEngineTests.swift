@@ -649,7 +649,7 @@ struct PackingEngineTests {
         let diff = engine.recommendationDiff(context: hiking, existing: existing, overrides: [])
         #expect(diff.add.contains { $0.canonicalItemID == "footwear.hiking_shoes" })
         #expect(!diff.removeCandidates.contains { $0.displayName == "Portable fan" })
-        #expect(!diff.quantityChanges.contains { $0.item.canonicalItemID == "clothing.pants" })
+        #expect(!diff.quantityChanges.contains { $0.existing.canonicalItemID == "clothing.pants" })
         #expect(existing.contains { $0.canonicalItemID == "clothing.tshirt" && $0.isPacked })
     }
 
@@ -709,7 +709,7 @@ struct PackingEngineTests {
         let existing = engine.generate(context: before)
         let after = context(destination: dest, days: 15, bag: .carryOn, style: .balanced, chips: [.laundryAvailable], laundry: .planned)
         let diff = engine.recommendationDiff(context: after, existing: existing, overrides: [])
-        let tshirt = diff.quantityChanges.first { $0.item.canonicalItemID == "clothing.tshirt" }
+        let tshirt = diff.quantityChanges.first { $0.existing.canonicalItemID == "clothing.tshirt" }
         #expect(tshirt?.suggestedQuantity == 7)
     }
 
