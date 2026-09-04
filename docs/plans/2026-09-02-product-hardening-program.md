@@ -1,7 +1,7 @@
 # PackWise Product Hardening Program
 
 **Date:** 2026-09-02  
-**Status:** active; Phases 1–4 closed 2026-09-03; Phase 5 not started
+**Status:** active; Phases 1–4 closed 2026-09-03; Phase 5 closed 2026-09-04; Phase 6 not started
 **Source of truth:** this program orders the user-approved Final UI Refinement & Freeze Plan and Product Hardening + Engine V2 Plan against the repository as it exists today.
 
 ## Goal
@@ -154,6 +154,48 @@ tests are green.
 The newly observed cold-without-snow glove-generation question and existing
 seasonal/weather findings remain routed to Phase 6. Presentation stays frozen,
 physical-device verification stays deferred, and M3B/M3C remain blocked.
+
+## Phase 5 closure — 2026-09-04
+
+Phase 5 (activity coverage) is complete. `ActivityContracts` is the one typed
+activity authority: every surfaced activity maps to a closed
+`Set<ActivityNeed>` (eight cases, count-pinned), needs resolve to candidate
+item IDs and — where they overlap Phase 4's model — to `PackingCapability`
+values, and needs flow into the same collector the JSON rows use, so
+composition and de-duplication are structural. Only Camping and Hiking were
+migrated off their `activity-rules.json` rows; the other fifteen are untouched.
+No capability was added and no weather signal or threshold changed.
+
+Camping is now a real personal-travel packing signal: portable light, water,
+insect repellent, sun protection, and cold-gated sleep warmth. It adds no
+campsite logistics, honoring rather than superseding the "Deferred and
+excluded" entry below. It also deliberately claims no trail footwear — car
+camping, campgrounds, festivals and cabins do not universally require trail
+shoes — so Hiking remains the sole claimant of `PackingCapability.hiking` and
+`Hiking + Camping` composes into one outdoor trip with one water bottle and one
+pair of trail shoes.
+
+Exit evidence is
+`docs/engine-audits/2026-09-03-phase-5-activity-contracts.md`: the semantic
+review contains three intended activity additions in fixture 18 and five new
+hand-reviewed Camping fixtures, with zero unexpected additions, removals,
+quantities, traces, coverage, constraints, or ownership/carrier changes.
+Emptying hiking's JSON row produced a zero-row diff. The surfaced-input DEAD
+bucket is empty for the first time: `activity/camping` is deterministic with
+fixture and test evidence, and `tripType/other` earned `contextOnly` through
+three explicit checks. The six-step engine audit, 255 iOS tests across 17
+suites, 202-item shared validation, and 106 API tests are green.
+
+`shared/rules/party.json` is unchanged. The possible flashlight over-count for
+large camping parties is routed to Phase 7 as finding F-5 rather than decided
+inside an activity phase.
+
+**Phase 6 (weather needs) has not started.** The cold-without-snow
+glove-generation question and the existing seasonal/weather findings remain
+routed there, untouched. The 14 remaining UNTESTED ledger rows (nine context
+chips, two bag types, three trip types) are all pre-existing and unowned;
+they stay reported. Presentation stays frozen, physical-device verification
+stays deferred, and M3B/M3C remain blocked.
 
 ## Program order
 
