@@ -108,6 +108,15 @@ struct ReasonQualityTests {
                 "activity '\(activity)' has no reason template"
             )
         }
+        // Camping and hiking carry their behavior in their typed contract, so
+        // their JSON rows are empty. Walking the contract table too means an
+        // emptied row can never hide a missing template.
+        for activityID in ActivityContracts.all.keys {
+            #expect(
+                rules.reasons.templates["activity.\(activityID)"] != nil,
+                "activity '\(activityID)' has no reason template"
+            )
+        }
         for chip in ContextChip.allCases {
             #expect(
                 rules.reasons.templates["preference.\(chip.rawValue)"] != nil,

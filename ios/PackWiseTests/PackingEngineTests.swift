@@ -756,6 +756,11 @@ struct PackingEngineTests {
         var exposed: Bool
         var engineContract: String
         var fixtureIDs: [String]
+        /// File-qualified `<SwiftFile>::<testFunctionName>` references. A
+        /// deterministic input needs at least one fixture *or* one named test;
+        /// `scripts/audit_engine_inputs.py` verifies each function exists in
+        /// the file named here, so the reference cannot be fabricated.
+        var testIDs: [String]?
         var iconContract: String
         var ownerScope: String
         var note: String?
@@ -798,13 +803,11 @@ struct PackingEngineTests {
         #expect(ids(kind: "contextChip") == Set(ContextChip.allCases.map(\.rawValue)))
     }
 
-    /// The engine's activity vocabulary is `rules.activities`' keys — every id
-    /// `PackingEngine.ruleSuggestions(for:)` actually looks up — plus
-    /// `camping`, which has full presentation styling and a golden fixture
-    /// but deliberately no rule entry (that absence is what this ledger
-    /// exists to record). `TripType.suggestedActivityIDs` is a subset of
-    /// `rules.activities`' keys, so covering the rule vocabulary covers
-    /// every suggested-chip activity too.
+    /// The engine's activity vocabulary is `rules.activities`' keys — the
+    /// surfaced vocabulary every id resolves against. Since Phase 5, camping
+    /// is a real key like any other, so no id needs adding by hand here.
+    /// `TripType.suggestedActivityIDs` is a subset of those keys, so covering
+    /// the rule vocabulary covers every suggested-chip activity too.
     @Test func surfacedInputContractCoversEverySuggestedActivity() throws {
         let records = try loadSurfacedInputContracts()
         let rules = try SharedLibrary.rules()
@@ -817,9 +820,8 @@ struct PackingEngineTests {
             "A suggested-activity chip references an id with no rule entry: \(unmatched)"
         )
 
-        let expectedActivityIDs = engineActivityVocabulary.union(["camping"])
         let contractActivityIDs = Set(records.filter { $0.kind == "activity" }.map(\.id))
-        #expect(contractActivityIDs == expectedActivityIDs)
+        #expect(contractActivityIDs == engineActivityVocabulary)
     }
 
     @Test func surfacedInputContractHasNoDuplicatesAndOnlyLegalContracts() throws {
@@ -836,15 +838,32 @@ struct PackingEngineTests {
         }
     }
 
-    /// The known Phase 1 finding this task exists to preserve: camping is
-    /// presentation-complete (tent icon) and exercised by golden fixture 18,
-    /// but has no deterministic engine effect. The contract must say so, not
-    /// be relabelled `contextOnly` to make the report read clean.
-    @Test func campingIsRecordedMissingAndPointsAtFixture18() throws {
+    /// Phase 5 closed the Phase 1 finding by giving camping a real contract,
+    /// not by relabelling the row. The ledger must now record a deterministic
+    /// effect backed by fixtures that actually exercise it.
+    @Test func campingIsRecordedDeterministicWithFixtureEvidence() throws {
         let records = try loadSurfacedInputContracts()
         let camping = try #require(records.first { $0.kind == "activity" && $0.id == "camping" })
-        #expect(camping.engineContract == "missing")
+        #expect(camping.engineContract == "deterministic")
+        #expect(camping.fixtureIDs.contains("28-yellowstone-4d-camping-mild"))
         #expect(camping.fixtureIDs.contains("18-reykjavik-64d-roadtrip-camping-seasonal"))
         #expect(camping.iconContract == "tent")
+    }
+
+    /// `other` is a declared identity, not a failed lookup — the one earned
+    /// `contextOnly` relabel in the ledger, evidenced by named tests.
+    @Test func otherIsRecordedContextOnlyWithTestEvidence() throws {
+        let records = try loadSurfacedInputContracts()
+        let other = try #require(records.first { $0.kind == "tripType" && $0.id == "other" })
+        #expect(other.engineContract == "contextOnly")
+        #expect(other.testIDs?.contains("ActivityContractTests.swift::otherIsADeclaredIdentityTripType") == true)
+    }
+
+    /// From Phase 5 on the DEAD bucket is expected to be empty. A row
+    /// reappearing here is a regression, not a finding to file away.
+    @Test func noSurfacedInputRemainsMissing() throws {
+        let records = try loadSurfacedInputContracts()
+        let dead = records.filter { $0.engineContract == "missing" }.map { "\($0.kind)/\($0.id)" }
+        #expect(dead.isEmpty, "surfaced inputs still doing nothing: \(dead)")
     }
 }

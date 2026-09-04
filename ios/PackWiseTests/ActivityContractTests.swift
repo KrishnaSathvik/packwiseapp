@@ -481,4 +481,50 @@ struct ActivityContractTests {
             #expect(item.reasonCode == "activity.hiking")
         }
     }
+
+    // MARK: - Task 4: `other` and the unknown-activity contract
+
+    /// `Other` means "no additional trip-type-specific needs; activities,
+    /// preferences, and context carry the meaning." That is a declared empty
+    /// rule, not a failed lookup — and it must stay the only one.
+    @Test func otherIsADeclaredIdentityTripType() throws {
+        let tripTypes = try rules().tripTypes
+        let other = try #require(tripTypes["other"])
+        #expect(other.add.isEmpty)
+        #expect(other.preferActivities?.isEmpty ?? true)
+
+        let emptyRules = tripTypes.filter { $0.value.add.isEmpty }.keys.sorted()
+        #expect(emptyRules == ["other"], "a trip type silently lost its rule: \(emptyRules)")
+        #expect(Set(tripTypes.keys) == Set(TripType.allCases.map(\.rawValue)))
+    }
+
+    /// An `Other` trip still produces a complete, coherent list, and every row
+    /// is explained by base essentials, activities, weather, or party — never
+    /// by an invented `other` recommendation.
+    @Test func otherTripsAreCarriedEntirelyByActivitiesAndContext() throws {
+        let engine = try makeEngine()
+        let other = try campingContext(activities: ["sightseeing", "walking"], type: .other)
+        let items = engine.generateDetailed(context: other).items
+        #expect(items.count > 10)
+        #expect(!items.contains { $0.reasonCode == "trip_type.generic" })
+        for item in items {
+            #expect(item.sourceSignals.contains { $0 != .tripType })
+        }
+    }
+
+    @Test func anUnknownActivityChangesNothingAtAll() throws {
+        let engine = try makeEngine()
+        func rows(_ activities: [String]) throws -> [String] {
+            engine.generate(context: try campingContext(activities: activities))
+                .compactMap(\.canonicalItemID).sorted()
+        }
+        #expect(try rows(["sightseeing", "walking"]) == rows(["sightseeing", "walking", "cosplayConvention"]))
+
+        let generation = engine.generateDetailed(
+            context: try campingContext(activities: ["sightseeing", "walking", "cosplayConvention"])
+        )
+        #expect(generation.contextDiagnostics.contains {
+            $0.field == "activities" && $0.outcome.isUnsupportedButSafe
+        })
+    }
 }
