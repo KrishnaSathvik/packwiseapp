@@ -70,6 +70,11 @@ struct TripContextSnapshot: Hashable, Sendable {
     /// there's an unknown free-text activity ID.
     var packingStyle: PackingStyle
 
+    /// Closed, typed user context used by capability coverage. Passed
+    /// through without interpretation; individual families decide which
+    /// chips they support.
+    var contextChips: Set<ContextChip>
+
     /// The three-way laundry state with legacy signals folded in — exactly
     /// `TripContext.laundryPlan` (`TripTypes.swift:415`), never
     /// reimplemented independently. Diverging from that property even
@@ -82,6 +87,10 @@ struct TripContextSnapshot: Hashable, Sendable {
     /// establishes for seasonal/none/partial-vs-complete, exposed as a pure
     /// value with no `now`/refresh-state parameters.
     var weatherQuality: WeatherQuality
+    /// The existing trip-scoped weather input. Coverage projects the same
+    /// signals from it that the pre-snapshot resolver used; the compiler does
+    /// not add or reinterpret weather semantics.
+    var weather: TripWeatherContext?
 
     /// `context.effectiveParty` (already folds an empty `travelers` array to
     /// `.solo()`) with any structurally invalid `guardianTravelerID`
@@ -145,8 +154,10 @@ enum TripContextCompiler {
             bagType: context.bagType,
             appliesBagConstraint: context.bagType.appliesBagConstraint,
             packingStyle: context.packingStyle,
+            contextChips: context.contextChips,
             laundryPlan: laundry,
             weatherQuality: weatherQuality,
+            weather: context.weather,
             party: party,
             diagnostics: diagnostics
         )

@@ -123,7 +123,7 @@ struct PackingEngine: Sendable {
             assignedTravelerID: context.effectiveParty.primary.id,
             drops: &drops
         )
-        let (covered, suppressions) = applyCoverage(resolved, context: context)
+        let (covered, suppressions) = applyCoverage(resolved, snapshot: snapshot)
         let completed = addCompanions(covered, context: context, overrides: overrides)
         return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops)
     }
@@ -184,7 +184,7 @@ struct PackingEngine: Sendable {
 
         var seen = Set<UUID>()
         result = result.filter { seen.insert($0.id).inserted }
-        let (covered, suppressions) = applyCoverage(result, context: context)
+        let (covered, suppressions) = applyCoverage(result, snapshot: snapshot)
         let completed = addCompanions(covered, context: context, overrides: overrides)
         return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops)
     }
@@ -764,17 +764,18 @@ struct PackingEngine: Sendable {
     /// suppression is recorded rather than silently dropped.
     private func applyCoverage(
         _ items: [PackingItemDraft],
-        context: TripContext
+        snapshot: TripContextSnapshot
     ) -> ([PackingItemDraft], [CoverageSuppression]) {
-        let needs = CoverageResolver.needs(context: context, thresholds: rules.weather.thresholds)
+        let context = CoverageContext(snapshot: snapshot, thresholds: rules.weather.thresholds)
+        let needs = CoverageResolver.needs(context: context)
         // A solo list has one owner, so user-added items (nil travelerID)
         // fold into the primary's group and can claim coverage. In a party
         // list an unassigned item stays its own group — guessing whose it is
         // would be inference, and ambiguous inference resolves to don't.
-        let primaryID = context.effectiveParty.primary.id
+        let primaryID = context.party.primary.id
         let groups = Dictionary(grouping: items) { (item: PackingItemDraft) -> String in
             if item.ownershipType == .shared { return "shared" }
-            let owner = item.travelerID ?? (context.effectiveParty.usesSimpleList ? primaryID : nil)
+            let owner = item.travelerID ?? (context.party.usesSimpleList ? primaryID : nil)
             return "personal:\(owner?.uuidString ?? "unassigned")"
         }
         var keptAll: [PackingItemDraft] = []

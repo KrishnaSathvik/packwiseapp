@@ -22,6 +22,50 @@ enum PackingCapability: String, CaseIterable, Sendable {
     case warmthHeavy = "outerwear.warmth_heavy"
 }
 
+/// The normalized context surface capability coverage is allowed to read.
+/// Weather signals and the seasonal fallback deliberately reproduce the
+/// pre-Phase-4 resolver semantics; Phase 6 owns weather interpretation.
+struct CoverageContext: Hashable, Sendable {
+    var tripType: TripType
+    var activityIDs: Set<String>
+    var contextChips: Set<ContextChip>
+    var weatherSignals: Set<WeatherSignal>
+    var hasForecastWeather: Bool
+    var usesColdMinimumHeavyWarmth: Bool
+    var usesSeasonalWarmthFallback: Bool
+    var party: TripParty
+
+    init(snapshot: TripContextSnapshot, thresholds: WeatherThresholds) {
+        tripType = snapshot.tripType
+        activityIDs = Set(snapshot.knownActivityIDs)
+        contextChips = snapshot.contextChips
+        party = snapshot.party
+
+        let outdoor = !activityIDs.isDisjoint(with: ["hiking", "sightseeing", "walking", "running", "beachDays"])
+        if let weather = snapshot.weather,
+           weather.isPreciseForecast || !weather.dailyForecast.isEmpty {
+            weatherSignals = WeatherSignalExtractor.extract(
+                weather: weather,
+                thresholds: thresholds,
+                outdoorActivities: outdoor,
+                tripDays: snapshot.durationDays
+            ).signals
+            hasForecastWeather = true
+            usesColdMinimumHeavyWarmth = weather.minTemperatureF <= thresholds.coldMaxF
+            usesSeasonalWarmthFallback = false
+        } else {
+            weatherSignals = []
+            hasForecastWeather = false
+            usesColdMinimumHeavyWarmth = false
+            let month = Calendar.current.component(.month, from: snapshot.startDate)
+            let latitude = snapshot.destination.latitude
+            let northWinter = latitude >= 0 && [12, 1, 2].contains(month)
+            let southWinter = latitude < 0 && [6, 7, 8].contains(month)
+            usesSeasonalWarmthFallback = (northWinter || southWinter) && abs(latitude) > 30
+        }
+    }
+}
+
 /// One suppression decision, recorded from the start so the ledger says which
 /// need an item was covering and what covered it instead — evidence the
 /// resolver reasoned, not that a rule stopped firing.
@@ -78,9 +122,9 @@ enum CoverageResolver {
     /// Needs derive from trip signals, never from which items happened to be
     /// emitted — deriving them from item capabilities would let a versatile
     /// item manufacture the need that justifies itself.
-    static func needs(context: TripContext, thresholds: WeatherThresholds) -> Set<PackingCapability> {
+    static func needs(context: CoverageContext) -> Set<PackingCapability> {
         var needs: Set<PackingCapability> = [.everydayWalking]
-        let activities = Set(context.activities)
+        let activities = context.activityIDs
 
         if activities.contains("running") || context.contextChips.contains(.runWhileTraveling) {
             needs.insert(.running)
@@ -98,46 +142,33 @@ enum CoverageResolver {
             needs.insert(.formal)
         }
 
-        if let weather = context.weather, weather.isPreciseForecast || !weather.dailyForecast.isEmpty {
-            let conditions = WeatherSignalExtractor.extract(
-                weather: weather,
-                thresholds: thresholds,
-                outdoorActivities: context.outdoorActivities,
-                tripDays: context.durationDays
-            )
-            let rain = !conditions.signals.isDisjoint(with: [.meaningfulRain, .persistentRain, .coldRain])
-            let hot = conditions.signals.contains(.hotOutdoorExposure)
-            let coldRain = conditions.signals.contains(.coldRain)
+        if context.hasForecastWeather {
+            let rain = !context.weatherSignals.isDisjoint(with: [.meaningfulRain, .persistentRain, .coldRain])
+            let hot = context.weatherSignals.contains(.hotOutdoorExposure)
+            let coldRain = context.weatherSignals.contains(.coldRain)
             // Warm rain is umbrella weather, not shell weather: nobody wears
             // a rain jacket at 90°F, so the wearable-shell need only exists
             // when the rain isn't hot (or is cold outright).
             if rain && (!hot || coldRain) {
                 needs.insert(.rainShell)
             }
-            if conditions.signals.contains(.coldEvenings)
-                || conditions.signals.contains(.largeTemperatureSwing)
+            if context.weatherSignals.contains(.coldEvenings)
+                || context.weatherSignals.contains(.largeTemperatureSwing)
                 || coldRain {
                 needs.insert(.warmthLight)
             }
-            if conditions.signals.contains(.snowExposure)
-                || weather.minTemperatureF <= thresholds.coldMaxF {
+            if context.weatherSignals.contains(.snowExposure)
+                || context.usesColdMinimumHeavyWarmth {
                 needs.insert(.warmthHeavy)
             }
-            if conditions.signals.contains(.highWindExposure) {
+            if context.weatherSignals.contains(.highWindExposure) {
                 needs.insert(.windShell)
             }
-            if conditions.signals.contains(.snowExposure) {
+            if context.weatherSignals.contains(.snowExposure) {
                 needs.insert(.coldFootwear)
             }
-        } else {
-            // Mirror the seasonal fallback: winter at meaningful latitude
-            // suggests a warm layer even without a forecast.
-            let month = Calendar.current.component(.month, from: context.startDate)
-            let lat = context.destination.latitude
-            let winter = lat >= 0 ? [12, 1, 2].contains(month) : [6, 7, 8].contains(month)
-            if winter && abs(lat) > 30 {
-                needs.insert(.warmthLight)
-            }
+        } else if context.usesSeasonalWarmthFallback {
+            needs.insert(.warmthLight)
         }
         return needs
     }

@@ -76,6 +76,25 @@ struct TripContextSnapshotTests {
         #expect(first == second)
     }
 
+    @Test func coverageInputsPassThroughWithoutWeatherReinterpretation() throws {
+        var context = baseContext()
+        context.contextChips = [.runWhileTraveling, .needFormalOutfit]
+        let weatherFixture = try #require(try SharedLibrary.weatherFixtures()["ChicagoRainyFall"])
+        context.weather = MockWeatherService.context(
+            from: weatherFixture,
+            start: context.startDate,
+            end: context.endDate,
+            fixtureID: weatherFixture.id
+        )
+
+        let first = TripContextCompiler.compile(context, rules: try rules())
+        let second = TripContextCompiler.compile(context, rules: try rules())
+
+        #expect(first.contextChips == context.contextChips)
+        #expect(first.weather == context.weather)
+        #expect(first == second)
+    }
+
     @Test func knownActivitiesAreClassifiedKnown() throws {
         var context = baseContext()
         context.activities = ["sightseeing", "hiking"]

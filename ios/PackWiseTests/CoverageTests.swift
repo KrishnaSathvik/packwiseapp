@@ -79,6 +79,25 @@ struct CoverageTests {
         )
     }
 
+    @Test func snapshotProjectionPreservesExistingCoverageNeeds() throws {
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let rainAndWind = weather(days: 5, start: start, highF: 55, lowF: 45, rain: 0.6, wind: 26)
+        var raw = context(
+            destination: try destination("Chicago"),
+            type: .business,
+            activities: ["running", "walking"],
+            weather: rainAndWind
+        )
+        raw.contextChips = [.needFormalOutfit]
+        let rules = try SharedLibrary.rules()
+        let snapshot = TripContextCompiler.compile(raw, rules: rules)
+        let projected = CoverageContext(snapshot: snapshot, thresholds: rules.weather.thresholds)
+
+        #expect(CoverageResolver.needs(context: projected) == [
+            .everydayWalking, .running, .formal, .rainShell, .windShell, .warmthLight, .warmthHeavy
+        ])
+    }
+
     /// The budget the vocabulary must not silently drift past: two families
     /// use ten capabilities. Growing this number is a design decision — make
     /// it deliberately, then update this test in the same commit.
