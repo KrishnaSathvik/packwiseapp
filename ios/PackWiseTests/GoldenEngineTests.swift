@@ -402,7 +402,7 @@ struct GoldenEngineTests {
 
     /// Renders one fixture by ID, decoded back into the golden schema — for
     /// schema-focused tests that don't need the full matrix comparison.
-    private func renderFixture(id: String) throws -> GoldenOutput {
+    func renderFixture(id: String) throws -> GoldenOutput {
         let file = try JSONDecoder().decode(
             GoldenFixtureFile.self,
             from: Data(contentsOf: Self.fixturesFile)
@@ -426,7 +426,7 @@ struct GoldenEngineTests {
     /// Renders every fixture in the manifest — the Swift-side equivalent of
     /// `scripts/audit_recommendation_traces.py`'s own fixture sweep, scoped
     /// to invariants a single Swift test wants to check across all 38.
-    private func allGoldenFixtures() throws -> [GoldenOutput] {
+    func allGoldenFixtures() throws -> [GoldenOutput] {
         let file = try JSONDecoder().decode(
             GoldenFixtureFile.self,
             from: Data(contentsOf: Self.fixturesFile)
@@ -438,8 +438,28 @@ struct GoldenEngineTests {
     /// fixture — the same shape `phase3RequiredFixturesHoldClothingQuantityContracts`
     /// already defines locally; kept here too so file-scope tests can reuse
     /// it without duplicating the lookup.
-    private func item(_ id: String, owner: String = "primary", in output: GoldenOutput) throws -> GoldenItem {
+    func item(_ id: String, owner: String = "primary", in output: GoldenOutput) throws -> GoldenItem {
         try #require(output.items.first { $0.owner == owner && $0.canonicalItemID == id })
+    }
+
+    /// Renders one fixture by ID into real `PackingItemDraft` values — for
+    /// `RecommendationTrace` facet tests, which read `PackingItemDraft`
+    /// fields directly and have no use for the JSON-flattened `GoldenItem`
+    /// schema `renderFixture` produces. Reuses the same `buildContext`
+    /// construction, never a second rendering path.
+    func engineDrafts(for id: String) throws -> [PackingItemDraft] {
+        let file = try JSONDecoder().decode(
+            GoldenFixtureFile.self,
+            from: Data(contentsOf: Self.fixturesFile)
+        )
+        guard let fixture = file.fixtures.first(where: { $0.id == id }) else {
+            throw ResourceError.missing("fixture \(id)")
+        }
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let destinations = try SharedLibrary.testDestinations()
+        let weatherFixtures = try SharedLibrary.weatherFixtures()
+        let context = try buildContext(fixture: fixture, destinations: destinations, weatherFixtures: weatherFixtures)
+        return engine.generate(context: context)
     }
 
     // MARK: - Context construction
@@ -566,7 +586,7 @@ struct GoldenEngineTests {
     /// Everything the diff should see, nothing volatile. UUIDs become stable
     /// role-derived owner slugs; signals are sorted because the engine builds
     /// them in dictionary-iteration order.
-    private struct GoldenItem: Codable {
+    struct GoldenItem: Codable {
         var owner: String
         /// Who is responsible for bringing the item — distinct from `owner`,
         /// which is whose item it is. "unassigned" when no traveler is
@@ -607,7 +627,7 @@ struct GoldenEngineTests {
 
     /// One coverage suppression: the needs the item would have covered and
     /// what covered them instead (empty `coveredBy` = the need was absent).
-    private struct GoldenCoverageEntry: Codable {
+    struct GoldenCoverageEntry: Codable {
         var owner: String
         var suppressed: String
         var capabilities: [String]
@@ -618,14 +638,14 @@ struct GoldenEngineTests {
 
     /// One recorded constraint resolution: the machine key, the one-sentence
     /// user-terms summary, and the canonical IDs it removed.
-    private struct GoldenConstraintEntry: Codable {
+    struct GoldenConstraintEntry: Codable {
         var owner: String
         var constraint: String
         var summary: String
         var items: [String]
     }
 
-    private struct GoldenOutput: Codable {
+    struct GoldenOutput: Codable {
         var fixture: String
         var engineVersion: String
         var items: [GoldenItem]

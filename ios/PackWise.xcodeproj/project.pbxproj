@@ -97,6 +97,7 @@
 		9109079EE95FD679E7E55979 /* 13-override-survives-regeneration.json in Resources */ = {isa = PBXBuildFile; fileRef = 21FBBB0B2886E794175C914A /* 13-override-survives-regeneration.json */; };
 		913B8CD7F5D17F62B7F74EE6 /* documents.json in Resources */ = {isa = PBXBuildFile; fileRef = FD7167A22C009DDA79027D79 /* documents.json */; };
 		922308D269F415AF8770BE88 /* PackWiseTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D796C0F649C03F89E2E01F2 /* PackWiseTokens.swift */; };
+		93043F6FC73758EA617A8E08 /* RecommendationTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDBE4C852764448F3A0E779F /* RecommendationTrace.swift */; };
 		97AAB3482B02A10C51B0BFFE /* PackingImpactTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9237E072B633D8169D5D161 /* PackingImpactTests.swift */; };
 		97D615B4D3EB1F143F217E6D /* TripContextSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF18A6EE3693ADFC33265B8 /* TripContextSnapshot.swift */; };
 		981F172215C15C44E6DED6ED /* IntelligenceHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A600B358ADD3A342D928DCFE /* IntelligenceHTTPClient.swift */; };
@@ -126,6 +127,7 @@
 		C2300A742E1CD13CE4DD1817 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = E888E86C4D266D4C4AD14ECA /* Models.swift */; };
 		C5AD4119C3EBE734CB5B7F99 /* ContextIntelligenceGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FC1FE12B8EBB60922B35CC /* ContextIntelligenceGate.swift */; };
 		C5FDD0FCCCE0D268AEF509B1 /* DebugAttestProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86E1F072718D3C623D2C52D /* DebugAttestProbe.swift */; };
+		C76063AB34134AAD372D7B70 /* RecommendationTraceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 611A5A91D78751058A020B39 /* RecommendationTraceTests.swift */; };
 		CE41B2A0B05B0C312E57C154 /* CoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76504170E4729881CEE47E44 /* CoverageTests.swift */; };
 		CED45D53779C19E6874BC000 /* PackingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC7020262230D765C5188A /* PackingEngine.swift */; };
 		D595B518D1CC16AC13E5DBA3 /* TripSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05D676F0AD83BC11FAB9D6B7 /* TripSetupView.swift */; };
@@ -202,6 +204,7 @@
 		5F253BDD57B50ABFCD7261FD /* essentials.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = essentials.json; sourceTree = "<group>"; };
 		5F7EBEEDD753F11A4987873D /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
 		601CEC4F1966DC6849FD3A22 /* PackingImpact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingImpact.swift; sourceTree = "<group>"; };
+		611A5A91D78751058A020B39 /* RecommendationTraceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecommendationTraceTests.swift; sourceTree = "<group>"; };
 		63408A623EF270AD74F1373F /* PackWiseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackWiseApp.swift; sourceTree = "<group>"; };
 		63A581C16BDF559C7FD7820B /* DestinationVisualService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationVisualService.swift; sourceTree = "<group>"; };
 		675FE700374B6F4591B9560E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
@@ -268,6 +271,7 @@
 		DA8D4A6D62927D0C704F9A5F /* WeatherDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDetailView.swift; sourceTree = "<group>"; };
 		DB488AD7F24BDF1D3D7A0BA4 /* AppIntegrityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntegrityProvider.swift; sourceTree = "<group>"; };
 		DC009A7A04A110F08355DAF6 /* activities.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = activities.json; sourceTree = "<group>"; };
+		DDBE4C852764448F3A0E779F /* RecommendationTrace.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecommendationTrace.swift; sourceTree = "<group>"; };
 		DDF5BE8B1B28103EBA3C62FB /* 01-chicago-5d-city-balanced.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "01-chicago-5d-city-balanced.json"; sourceTree = "<group>"; };
 		E12AE4C98BF2CF36DF163BC2 /* PersistenceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
 		E47C039C1E11EB46C84B8841 /* electronics.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = electronics.json; sourceTree = "<group>"; };
@@ -483,6 +487,7 @@
 				1FAC7020262230D765C5188A /* PackingEngine.swift */,
 				763DDDC34F0A7FB605AD983C /* PackingMemory.swift */,
 				D25C4D9DBB9CA201CE9AFE19 /* QuantityEngine.swift */,
+				DDBE4C852764448F3A0E779F /* RecommendationTrace.swift */,
 			);
 			path = Packing;
 			sourceTree = "<group>";
@@ -537,6 +542,7 @@
 				0E86FA48F852F85AF4C6FA1B /* Goldens */,
 				E12AE4C98BF2CF36DF163BC2 /* PersistenceTests.swift */,
 				A85925D60D7FFD2CC010CD4C /* RegenerationProvenanceTests.swift */,
+				611A5A91D78751058A020B39 /* RecommendationTraceTests.swift */,
 			);
 			path = PackWiseTests;
 			sourceTree = "<group>";
@@ -938,6 +944,7 @@
 				0DE3A765C66D87C6FFC1E05A /* WeatherNormalization.swift in Sources */,
 				81943414D47043E6BC3CBD79 /* WeatherSignalDiff.swift in Sources */,
 				785B6092331BB3DC000BAD98 /* WeatherStripView.swift in Sources */,
+				93043F6FC73758EA617A8E08 /* RecommendationTrace.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -965,6 +972,7 @@
 				FB8B022B55B17DC9794CBF48 /* WeatherNeedHardeningTests.swift in Sources */,
 				00B574A133745BFDCB655D0D /* PersistenceTests.swift in Sources */,
 				59345A5D6C41D44828CB7675 /* RegenerationProvenanceTests.swift in Sources */,
+				C76063AB34134AAD372D7B70 /* RecommendationTraceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
