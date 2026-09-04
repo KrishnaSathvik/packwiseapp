@@ -69,7 +69,7 @@ python3 scripts/audit_engine_inputs.py \
 step "6/6  Recommendation-trace audit (scripts/audit_recommendation_traces.py)"
 python3 scripts/audit_recommendation_traces.py \
     --goldens ios/PackWiseTests/Goldens \
-    --format markdown
+    --format markdown --strict
 
 echo ""
 echo "All engine audit steps passed."

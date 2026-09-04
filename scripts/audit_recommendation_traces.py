@@ -115,6 +115,16 @@ POLICY_SENSITIVE_QUANTITY_KINDS: FrozenSet[str] = frozenset(
 
 BASE_ESSENTIAL_PREFIX = "base.essential."
 GENERIC_REASON_SUFFIX = ".generic"
+SEASONAL_REASON_PREFIX = "weather.seasonal"
+
+# quantityReasonArguments' closed key vocabulary (Phase 8, Task 1) — grounded
+# in the three real call sites that populate it (care, warm-layer rotation,
+# party sharing). Any key outside this set means an unreviewed fourth call
+# site started writing this field, the same drift ActivityNeed/
+# PackingCapability/WeatherSignal already guard against.
+CLOSED_QUANTITY_REASON_ARGUMENT_KEYS: FrozenSet[str] = frozenset(
+    {"quantity", "days", "rate", "name", "travelerCount", "rainDays"}
+)
 
 
 @dataclass(frozen=True)
@@ -127,7 +137,9 @@ class TraceItem:
     reason_code: str
     reason: str
     signals: Tuple[str, ...]
+    reason_arguments: Tuple[Tuple[str, str], ...]
     quantity_reason: str
+    quantity_reason_arguments: Tuple[Tuple[str, str], ...]
     user_modified: object
 
     @property
@@ -149,7 +161,9 @@ class TraceItem:
             reason_code=raw.get("reasonCode", ""),
             reason=raw.get("reason", ""),
             signals=tuple(raw.get("signals", [])),
+            reason_arguments=tuple(sorted(raw.get("reasonArguments", {}).items())),
             quantity_reason=raw.get("quantityReason", ""),
+            quantity_reason_arguments=tuple(sorted(raw.get("quantityReasonArguments", {}).items())),
             user_modified=raw.get("userModified"),
         )
 
@@ -251,6 +265,33 @@ def classify_quantity(item: TraceItem, policy_sensitive_ids: FrozenSet[str]) -> 
     return "evidence_present" if item.quantity_reason else "evidence_missing"
 
 
+def is_invalid_seasonal_provenance(item: TraceItem) -> bool:
+    """A seasonal-fallback row must never carry the day-count/forecast
+    arguments only a precise-forecast reason renders — that would mean
+    seasonal copy is claiming forecast-derived specifics it doesn't have.
+    Both current seasonal codes (weather.seasonal_sun, weather.seasonal_layer,
+    PackingEngine.swift) are always rendered with empty arguments; this is a
+    regression guard on that invariant, not a currently-failing check."""
+    return item.reason_code.startswith(SEASONAL_REASON_PREFIX) and bool(item.reason_arguments)
+
+
+def is_fabricated_user_authority_provenance(item: TraceItem) -> bool:
+    """A user-authority row (userModified or custom.* id) must carry an
+    empty reasonCode/reason/signals — the engine must never invent inclusion
+    provenance for the user's own decision. Regression guard; 0 violations
+    confirmed at eadc345."""
+    return item.is_user_authority and bool(item.reason_code or item.reason or item.signals)
+
+
+def has_invalid_quantity_reason_argument_keys(item: TraceItem) -> bool:
+    """quantityReasonArguments is a closed vocabulary (Task 1) — any key
+    outside it means an unreviewed fourth call site started writing this
+    field, the same drift ActivityNeed/PackingCapability/WeatherSignal
+    already guard against."""
+    keys = {k for k, _ in item.quantity_reason_arguments}
+    return not keys.issubset(CLOSED_QUANTITY_REASON_ARGUMENT_KEYS)
+
+
 # ---------------------------------------------------------------------------
 # Report
 # ---------------------------------------------------------------------------
@@ -262,6 +303,13 @@ class Report:
     inclusion: Dict[str, List[TraceItem]] = field(default_factory=dict)
     quantity: Dict[str, List[TraceItem]] = field(default_factory=dict)
     catalog_warning: Optional[str] = None
+    # Phase 8, Task 7: two new structural checks plus the closed-vocabulary
+    # guard, each a list of the offending rows (not a bucket dict — these
+    # are cross-cutting, not mutually exclusive with the inclusion/quantity
+    # classification).
+    invalid_seasonal_provenance: List[TraceItem] = field(default_factory=list)
+    fabricated_user_authority_provenance: List[TraceItem] = field(default_factory=list)
+    invalid_quantity_reason_argument_keys: List[TraceItem] = field(default_factory=list)
 
     @property
     def total_items(self) -> int:
@@ -298,16 +346,39 @@ class Report:
 
     @property
     def is_clean(self) -> bool:
-        return self.inclusion_defect_count == 0 and len(self.quantity.get("evidence_missing", [])) == 0
+        return (
+            self.inclusion_defect_count == 0
+            and len(self.quantity.get("evidence_missing", [])) == 0
+            and len(self.invalid_seasonal_provenance) == 0
+            and len(self.fabricated_user_authority_provenance) == 0
+            and len(self.invalid_quantity_reason_argument_keys) == 0
+        )
 
 
 def build_report(items: List[TraceItem], policy_sensitive_ids: FrozenSet[str], catalog_warning: Optional[str]) -> Report:
     inclusion: Dict[str, List[TraceItem]] = {b: [] for b in INCLUSION_BUCKETS}
     quantity: Dict[str, List[TraceItem]] = {b: [] for b in QUANTITY_BUCKETS}
+    invalid_seasonal_provenance: List[TraceItem] = []
+    fabricated_user_authority_provenance: List[TraceItem] = []
+    invalid_quantity_reason_argument_keys: List[TraceItem] = []
     for item in items:
         inclusion[classify_inclusion(item)].append(item)
         quantity[classify_quantity(item, policy_sensitive_ids)].append(item)
-    return Report(items=items, inclusion=inclusion, quantity=quantity, catalog_warning=catalog_warning)
+        if is_invalid_seasonal_provenance(item):
+            invalid_seasonal_provenance.append(item)
+        if is_fabricated_user_authority_provenance(item):
+            fabricated_user_authority_provenance.append(item)
+        if has_invalid_quantity_reason_argument_keys(item):
+            invalid_quantity_reason_argument_keys.append(item)
+    return Report(
+        items=items,
+        inclusion=inclusion,
+        quantity=quantity,
+        catalog_warning=catalog_warning,
+        invalid_seasonal_provenance=invalid_seasonal_provenance,
+        fabricated_user_authority_provenance=fabricated_user_authority_provenance,
+        invalid_quantity_reason_argument_keys=invalid_quantity_reason_argument_keys,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -337,9 +408,13 @@ def render_text(report: Report) -> str:
         f"({_fmt_pct(report.inclusion_completeness_pct)})"
         f"  [base-essential: {len(report.inclusion['base_essential'])}, specific: {len(report.inclusion['specific'])}]"
     )
-    lines.append(f"  generic-only (weak, informational): {len(report.inclusion['generic_only'])}")
+    lines.append(f"  generic-only (weak, informational, not folded into the pass/fail metric below): {len(report.inclusion['generic_only'])}")
     lines.append(f"  DEFECTS — missing reason code: {len(report.inclusion['missing_reason_code'])}")
     lines.append(f"  DEFECTS — missing causal signal: {len(report.inclusion['missing_signal'])}")
+    lines.append(
+        f"  recommendations lacking causal structured provenance: {report.inclusion_defect_count} "
+        "(= missing reason code + missing causal signal; refined exit metric, Phase 8)"
+    )
 
     if report.inclusion["missing_reason_code"] or report.inclusion["missing_signal"]:
         lines.append("")
@@ -383,6 +458,23 @@ def render_text(report: Report) -> str:
         lines.append("  (none)")
 
     lines.append("")
+    lines.append("Structural checks (Phase 8, Task 7)")
+    lines.append("------------------------------------")
+    lines.append(f"  DEFECTS — invalid seasonal provenance: {len(report.invalid_seasonal_provenance)}")
+    if report.invalid_seasonal_provenance:
+        for item in report.invalid_seasonal_provenance:
+            lines.append(f"    - {item.label} (reasonCode={item.reason_code!r}, reasonArguments={dict(item.reason_arguments)})")
+    lines.append(f"  DEFECTS — fabricated user-authority provenance: {len(report.fabricated_user_authority_provenance)}")
+    if report.fabricated_user_authority_provenance:
+        for item in report.fabricated_user_authority_provenance:
+            lines.append(f"    - {item.label} (reasonCode={item.reason_code!r}, reason={item.reason!r}, signals={list(item.signals)})")
+    lines.append(f"  DEFECTS — quantityReasonArguments keys outside the closed vocabulary: {len(report.invalid_quantity_reason_argument_keys)}")
+    if report.invalid_quantity_reason_argument_keys:
+        for item in report.invalid_quantity_reason_argument_keys:
+            keys = sorted({k for k, _ in item.quantity_reason_arguments} - CLOSED_QUANTITY_REASON_ARGUMENT_KEYS)
+            lines.append(f"    - {item.label} (unlisted keys: {keys})")
+
+    lines.append("")
     lines.append("CLEAN" if report.is_clean else "DEFECTS FOUND")
 
     return "\n".join(lines)
@@ -410,9 +502,12 @@ def render_markdown(report: Report) -> str:
     lines.append(
         f"| **complete total** | **{report.inclusion_complete_count}** | **{_fmt_pct(report.inclusion_completeness_pct)}** |"
     )
-    lines.append(f"| generic-only (informational) | {len(report.inclusion['generic_only'])} | |")
+    lines.append(f"| generic-only (informational, not folded into the pass/fail metric) | {len(report.inclusion['generic_only'])} | |")
     lines.append(f"| defect — missing reason code | {len(report.inclusion['missing_reason_code'])} | |")
     lines.append(f"| defect — missing causal signal | {len(report.inclusion['missing_signal'])} | |")
+    lines.append(
+        f"| **recommendations lacking causal structured provenance (refined exit metric)** | **{report.inclusion_defect_count}** | |"
+    )
 
     if report.inclusion["missing_reason_code"] or report.inclusion["missing_signal"]:
         lines.append("")
@@ -457,6 +552,37 @@ def render_markdown(report: Report) -> str:
             lines.append(f"- `{item.label}` (userModified={item.user_modified}, quantity={item.quantity})")
     else:
         lines.append("_none_")
+
+    lines.append("")
+    lines.append("## Structural checks (Phase 8, Task 7)")
+    lines.append("")
+    lines.append("| check | count |")
+    lines.append("| --- | --- |")
+    lines.append(f"| defect — invalid seasonal provenance | {len(report.invalid_seasonal_provenance)} |")
+    lines.append(f"| defect — fabricated user-authority provenance | {len(report.fabricated_user_authority_provenance)} |")
+    lines.append(f"| defect — quantityReasonArguments keys outside the closed vocabulary | {len(report.invalid_quantity_reason_argument_keys)} |")
+
+    if report.invalid_seasonal_provenance:
+        lines.append("")
+        lines.append("**Invalid seasonal provenance rows**")
+        lines.append("")
+        for item in report.invalid_seasonal_provenance:
+            lines.append(f"- `{item.label}` (reasonCode=`{item.reason_code}`, reasonArguments={dict(item.reason_arguments)})")
+
+    if report.fabricated_user_authority_provenance:
+        lines.append("")
+        lines.append("**Fabricated user-authority provenance rows**")
+        lines.append("")
+        for item in report.fabricated_user_authority_provenance:
+            lines.append(f"- `{item.label}` (reasonCode=`{item.reason_code}`, reason={item.reason!r}, signals={list(item.signals)})")
+
+    if report.invalid_quantity_reason_argument_keys:
+        lines.append("")
+        lines.append("**Rows with a quantityReasonArguments key outside the closed vocabulary**")
+        lines.append("")
+        for item in report.invalid_quantity_reason_argument_keys:
+            keys = sorted({k for k, _ in item.quantity_reason_arguments} - CLOSED_QUANTITY_REASON_ARGUMENT_KEYS)
+            lines.append(f"- `{item.label}` (unlisted keys: {keys})")
 
     lines.append("")
     lines.append("**CLEAN**" if report.is_clean else "**DEFECTS FOUND**")

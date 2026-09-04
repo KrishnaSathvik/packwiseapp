@@ -59,6 +59,36 @@ def golden(fixture="fixture", items=None):
     return {"fixture": fixture, "engineVersion": "v2", "items": items or []}
 
 
+def make_item(**overrides):
+    """Builds a `TraceItem` directly from its dataclass field names (not the
+    JSON dict `item(...)` builds) — for tests exercising the seasonal/
+    fabricated-authority/closed-vocabulary checks, which read `reason_code`,
+    `reason_arguments`, `quantity_reason_arguments`, `user_modified` fields
+    that don't need a full JSON round-trip to test. Dict/list literals are
+    normalized to the same hashable tuple shapes `TraceItem.from_json` uses."""
+    defaults = dict(
+        fixture="test",
+        owner="primary",
+        canonical_item_id="test.item",
+        category="misc",
+        quantity=1,
+        reason_code="weather.rain_days",
+        reason="because",
+        signals=("weather",),
+        reason_arguments=(),
+        quantity_reason="",
+        quantity_reason_arguments=(),
+        user_modified=None,
+    )
+    defaults.update(overrides)
+    for key in ("reason_arguments", "quantity_reason_arguments"):
+        if isinstance(defaults[key], dict):
+            defaults[key] = tuple(sorted(defaults[key].items()))
+    if isinstance(defaults["signals"], list):
+        defaults["signals"] = tuple(defaults["signals"])
+    return TraceItem(**defaults)
+
+
 def write_goldens(tmp_path: Path, *goldens: dict) -> Path:
     goldens_dir = tmp_path / "goldens"
     goldens_dir.mkdir()
@@ -423,6 +453,78 @@ class RenderTests(unittest.TestCase):
         report = build_report(items, frozenset(), "catalog missing")
         self.assertIn("catalog missing", render_text(report))
         self.assertIn("catalog missing", render_markdown(report))
+
+
+# ---------------------------------------------------------------------------
+# Phase 8, Task 7: seasonal provenance, fabricated user-authority provenance,
+# and the closed quantityReasonArguments key vocabulary
+# ---------------------------------------------------------------------------
+
+
+class NewDefectChecksTests(unittest.TestCase):
+    def test_seasonal_reason_code_with_nonempty_arguments_is_a_defect(self):
+        i = make_item(reason_code="weather.seasonal_sun", reason_arguments={"days": "3"})
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertEqual(len(report.invalid_seasonal_provenance), 1)
+
+    def test_seasonal_reason_code_with_empty_arguments_is_clean(self):
+        i = make_item(reason_code="weather.seasonal_sun", reason_arguments={})
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertEqual(len(report.invalid_seasonal_provenance), 0)
+
+    def test_precise_weather_reason_code_with_arguments_is_unaffected(self):
+        i = make_item(reason_code="weather.rain_days", reason_arguments={"rainDays": "2", "tripDays": "5"})
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertEqual(len(report.invalid_seasonal_provenance), 0)
+
+    def test_user_authority_row_with_a_reason_code_is_fabricated_provenance(self):
+        i = make_item(user_modified=True, reason_code="base.essential.clothing", signals=("baseEssential",))
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertEqual(len(report.fabricated_user_authority_provenance), 1)
+
+    def test_user_authority_row_with_empty_trace_is_clean(self):
+        i = make_item(user_modified=True, reason_code="", reason="", signals=())
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertEqual(len(report.fabricated_user_authority_provenance), 0)
+
+    def test_custom_item_row_with_a_reason_is_fabricated_provenance(self):
+        i = make_item(canonical_item_id="custom.lucky_journal", reason="Suggested for your trip", reason_code="trip_type.generic")
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertEqual(len(report.fabricated_user_authority_provenance), 1)
+
+    def test_quantity_reason_argument_key_outside_the_closed_vocabulary_is_a_defect(self):
+        i = make_item(quantity_reason_arguments={"washCycleDays": "3"})
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertEqual(len(report.invalid_quantity_reason_argument_keys), 1)
+
+    def test_quantity_reason_argument_keys_from_the_closed_vocabulary_are_clean(self):
+        i = make_item(quantity_reason_arguments={"quantity": "2", "travelerCount": "4"})
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertEqual(len(report.invalid_quantity_reason_argument_keys), 0)
+
+    def test_all_six_closed_vocabulary_keys_are_individually_clean(self):
+        for key in ("quantity", "days", "rate", "name", "travelerCount", "rainDays"):
+            i = make_item(quantity_reason_arguments={key: "x"})
+            report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+            self.assertEqual(len(report.invalid_quantity_reason_argument_keys), 0, f"key {key!r} should be closed-vocabulary clean")
+
+    def test_new_checks_fold_into_is_clean(self):
+        i = make_item(reason_code="weather.seasonal_sun", reason_arguments={"days": "3"})
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertFalse(report.is_clean)
+
+    def test_new_checks_render_in_text_and_markdown(self):
+        i = make_item(reason_code="weather.seasonal_sun", reason_arguments={"days": "3"})
+        report = build_report([i], policy_sensitive_ids=frozenset(), catalog_warning=None)
+        self.assertIn("seasonal", render_text(report).lower())
+        self.assertIn("seasonal", render_markdown(report).lower())
+
+    def test_from_json_threads_quantity_reason_arguments_through(self):
+        t = TraceItem.from_json(
+            "f",
+            item("toiletries.sunscreen", owner="shared", quantity=2, quantityReasonArguments={"quantity": "2", "travelerCount": "4"}),
+        )
+        self.assertEqual(dict(t.quantity_reason_arguments), {"quantity": "2", "travelerCount": "4"})
 
 
 # ---------------------------------------------------------------------------
