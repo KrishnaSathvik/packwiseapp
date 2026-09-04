@@ -612,6 +612,14 @@ struct PackingEngine: Sendable {
                 fallback: "Temperatures may drop more than \(conditions.swing)° between afternoon and evening."
             )
         }
+
+        // Task 2: a partial forecast's uncovered remainder gets the same
+        // conservative seasonal check a fully-unforecast trip already gets.
+        // Safe by construction — addSeasonal only fills `collected[id] == nil`
+        // gaps, so it can never overwrite or duplicate a precise-day item.
+        if case .partial = snapshot.weatherQuality {
+            addSeasonal(context: context, into: &collected)
+        }
     }
 
     private func addSeasonal(context: TripContext, into collected: inout [String: RuleSuggestion]) {

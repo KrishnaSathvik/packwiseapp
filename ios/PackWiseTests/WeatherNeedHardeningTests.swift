@@ -128,6 +128,19 @@ struct WeatherNeedHardeningTests {
     /// trip's genuinely unforecast remainder, gets the same conservative
     /// seasonal check a fully-unforecast trip already gets — never zero,
     /// never invented day-level precision for days nobody forecast.
+    ///
+    /// Deviation from the plan's literal snippet, recorded in the Phase 6
+    /// exit report: the plan's default trip type (`.cityBreak`, this test
+    /// file's `context()` default) already adds `essentials.sunglasses` via
+    /// `trip-types.json`'s own generic add list, so by the time `addSeasonal`
+    /// runs the item is already `collected` with a `trip_type.generic`
+    /// reason — `addSeasonal`'s `collected[id] == nil` guard correctly
+    /// leaves it alone (working exactly as designed: never overwrite),
+    /// which means the item's presence no longer demonstrates the
+    /// seasonal-remainder mechanism at all. `.vacation` (also golden fixture
+    /// 33's trip type) adds neither `essentials.sunglasses` nor
+    /// `toiletries.sunscreen` generically, so both items' presence and
+    /// reason code genuinely exercise the new seasonal-remainder path.
     @Test func partialForecastBlendsCoveredSignalsWithSeasonalRemainder() throws {
         let dest = try destination("Chicago")
         let start = Calendar.current.date(from: DateComponents(year: 2027, month: 7, day: 5))!
@@ -135,7 +148,7 @@ struct WeatherNeedHardeningTests {
         // The trip's own start must land in the same July window as the
         // weather data above — addSeasonal's summer check reads
         // `context.startDate`, not the weather object's dates.
-        let snapshot = TripContextCompiler.compile(context(destination: dest, days: 10, weather: rainy, start: start), rules: try rules())
+        let snapshot = TripContextCompiler.compile(context(destination: dest, days: 10, type: .vacation, weather: rainy, start: start), rules: try rules())
         guard case .partial(let covered, let total) = snapshot.weatherQuality else {
             Issue.record("expected partial coverage, got \(snapshot.weatherQuality)")
             return
@@ -143,7 +156,7 @@ struct WeatherNeedHardeningTests {
         #expect(covered == 5)
         #expect(total == 10)
 
-        let generation = try makeEngine().generateDetailed(context: context(destination: dest, days: 10, weather: rainy, start: start))
+        let generation = try makeEngine().generateDetailed(context: context(destination: dest, days: 10, type: .vacation, weather: rainy, start: start))
         let ids = Set(generation.items.compactMap(\.canonicalItemID))
         // The covered days' exact rain signal, unchanged from today.
         #expect(ids.contains("clothing.rain_jacket"))
@@ -174,7 +187,7 @@ struct WeatherNeedHardeningTests {
         let dest = try destination("Chicago")
         let start = Calendar.current.date(from: DateComponents(year: 2027, month: 7, day: 5))!
         let rainy = try weather(fixture: "ChicagoRainyFall", start: start, days: 10)
-        let generation = try makeEngine().generateDetailed(context: context(destination: dest, days: 10, weather: rainy, start: start))
+        let generation = try makeEngine().generateDetailed(context: context(destination: dest, days: 10, type: .vacation, weather: rainy, start: start))
         let rainJacket = try #require(generation.items.first { $0.canonicalItemID == "clothing.rain_jacket" })
         #expect(rainJacket.reasonCode.hasPrefix("weather."))
         #expect(rainJacket.reasonCode != "weather.seasonal_layer")

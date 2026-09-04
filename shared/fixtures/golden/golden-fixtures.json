@@ -511,6 +511,20 @@
       "style": "prepared",
       "laundry": "none",
       "homeCountryCode": "US"
+    },
+    {
+      "id": "33-chicago-10d-partial-forecast-seasonal-remainder",
+      "proves": "Byte-stable regression pin of a 10-day Chicago vacation against ChicagoRainyFall. Deviation recorded in the Phase 6 exit report: GoldenEngineTests.buildContext builds weather via MockWeatherService.context(from:start:end:fixtureID:), which tiles a named fixture's days cyclically to fill the full requested span and always reports forecastAvailableForWholeTrip: true — so this fixture resolves to .complete WeatherQuality, not .partial, and does not itself exercise the partial-forecast/seasonal-remainder blend. The blend is proven directly by WeatherNeedHardeningTests.partialForecastBlendsCoveredSignalsWithSeasonalRemainder and .seasonalRemainderNeverDowngradesAPreciseDayItem, which build a genuinely partial TripWeatherContext via WeatherForecastNormalizer.context. Extending the golden fixture schema/pipeline to express a weather fixture shorter than trip days is routed as a follow-up, not in Task 2's authorized file list",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2027-07-05",
+      "days": 10,
+      "tripType": "vacation",
+      "activities": ["walking", "sightseeing"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
     }
   ]
 }

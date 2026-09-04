@@ -67,9 +67,10 @@ struct CoverageContext: Hashable, Sendable {
             ).signals
             hasForecastWeather = true
             usesColdMinimumHeavyWarmth = forecast.minTemperatureF <= thresholds.coldMaxF
-            // Task 1: identical to today — a complete forecast never falls back.
-            // Task 2 widens this to true for `.partial`.
-            usesSeasonalWarmthFallback = false
+            usesSeasonalWarmthFallback = {
+                if case .partial = snapshot.weatherQuality { return seasonalWarmthEligible }
+                return false  // .complete never falls back
+            }()
         case .seasonalOnly, .missing:
             weatherSignals = []
             hasForecastWeather = false
