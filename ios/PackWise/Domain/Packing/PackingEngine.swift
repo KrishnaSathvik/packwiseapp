@@ -785,7 +785,9 @@ struct PackingEngine: Sendable {
             // The versatile shoe that absorbed the walking need keeps V1's
             // substitution copy until Step 4's trace-driven reasons land.
             for suppression in suppressions where suppression.canonicalItemID == "footwear.walking_shoes" {
-                guard let coverer = suppression.coveredBy.first,
+                guard let coverer = suppression.covered.first(where: {
+                    $0.capability == .everydayWalking
+                })?.coveringItemID,
                       let index = kept.firstIndex(where: { $0.canonicalItemID == coverer })
                 else { continue }
                 let code = coverer == "footwear.hiking_shoes"

@@ -4,6 +4,21 @@ import Testing
 
 /// Coverage resolver tests — Engine V2 plan, Step 3 (footwear + outerwear).
 struct CoverageTests {
+    private func candidate(
+        _ canonicalItemID: String,
+        sourceSignals: [RecommendationSignal] = [.tripType]
+    ) -> PackingItemDraft {
+        PackingItemDraft(
+            canonicalItemID: canonicalItemID,
+            displayName: canonicalItemID,
+            category: canonicalItemID.hasPrefix("footwear.") ? .footwear : .clothing,
+            quantity: 1,
+            importance: .normal,
+            sourceSignals: sourceSignals,
+            reason: "Test"
+        )
+    }
+
     private func makeEngine() throws -> PackingEngine {
         PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
     }
@@ -96,6 +111,64 @@ struct CoverageTests {
         #expect(CoverageResolver.needs(context: projected) == [
             .everydayWalking, .running, .formal, .rainShell, .windShell, .warmthLight, .warmthHeavy
         ])
+    }
+
+    @Test func suppressionPairsEachCapabilityWithItsCoverer() {
+        let (kept, suppressions) = CoverageResolver.resolve(
+            items: [candidate("footwear.running_shoes"), candidate("footwear.walking_shoes")],
+            needs: [.running, .everydayWalking]
+        )
+
+        #expect(kept.compactMap(\.canonicalItemID) == ["footwear.running_shoes"])
+        #expect(suppressions == [CoverageSuppression(
+            travelerID: nil,
+            canonicalItemID: "footwear.walking_shoes",
+            covered: [CapabilityCoverage(
+                capability: .everydayWalking,
+                coveringItemID: "footwear.running_shoes"
+            )],
+            refutedCapabilities: []
+        )])
+    }
+
+    @Test func refutedSuppressionHasCapabilitiesButNoCoverer() {
+        let (_, suppressions) = CoverageResolver.resolve(
+            items: [candidate("clothing.rain_jacket", sourceSignals: [.weather])],
+            needs: [.everydayWalking]
+        )
+
+        #expect(suppressions == [CoverageSuppression(
+            travelerID: nil,
+            canonicalItemID: "clothing.rain_jacket",
+            covered: [],
+            refutedCapabilities: [.rainShell, .windShell]
+        )])
+    }
+
+    @Test func evidenceIsStableWhenCandidateInputIsReversed() {
+        let candidates = [candidate("footwear.running_shoes"), candidate("footwear.walking_shoes")]
+        let forward = CoverageResolver.resolve(items: candidates, needs: [.running, .everydayWalking])
+        let reverse = CoverageResolver.resolve(items: Array(candidates.reversed()), needs: [.running, .everydayWalking])
+
+        #expect(forward.kept.compactMap(\.canonicalItemID) == reverse.kept.compactMap(\.canonicalItemID))
+        #expect(forward.suppressions == reverse.suppressions)
+    }
+
+    @Test func partiallyUsefulCandidateStaysAndDoesNotReplaceExistingCoverer() {
+        let (kept, suppressions) = CoverageResolver.resolve(
+            items: [
+                candidate("footwear.hiking_shoes"),
+                candidate("footwear.running_shoes"),
+                candidate("footwear.walking_shoes")
+            ],
+            needs: [.hiking, .running, .everydayWalking]
+        )
+
+        #expect(kept.compactMap(\.canonicalItemID) == ["footwear.running_shoes", "footwear.hiking_shoes"])
+        #expect(suppressions.first?.covered == [CapabilityCoverage(
+            capability: .everydayWalking,
+            coveringItemID: "footwear.running_shoes"
+        )])
     }
 
     /// The budget the vocabulary must not silently drift past: two families

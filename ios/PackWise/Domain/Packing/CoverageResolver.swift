@@ -66,17 +66,30 @@ struct CoverageContext: Hashable, Sendable {
     }
 }
 
+/// One capability-to-item fact behind a suppression decision.
+struct CapabilityCoverage: Hashable, Sendable {
+    var capability: PackingCapability
+    var coveringItemID: String
+}
+
 /// One suppression decision, recorded from the start so the ledger says which
 /// need an item was covering and what covered it instead — evidence the
 /// resolver reasoned, not that a rule stopped firing.
 struct CoverageSuppression: Hashable, Sendable {
     var travelerID: UUID?
     var canonicalItemID: String
-    /// The capabilities the item would have contributed, as raw values.
-    var capabilities: [String]
-    /// Items already covering those needs. Empty means the need itself was
-    /// absent (e.g. a rain shell on a hot trip).
-    var coveredBy: [String]
+    var covered: [CapabilityCoverage]
+    var refutedCapabilities: [PackingCapability]
+
+    /// Stable compatibility views retained while the golden schema migrates.
+    var capabilities: [String] {
+        Set(covered.map(\.capability)).union(refutedCapabilities)
+            .map(\.rawValue).sorted()
+    }
+
+    var coveredBy: [String] {
+        Set(covered.map(\.coveringItemID)).sorted()
+    }
 }
 
 /// Greedy coverage for footwear and outerwear. Set cover is NP-hard in
@@ -214,8 +227,8 @@ enum CoverageResolver {
                     suppressions.append(CoverageSuppression(
                         travelerID: item.travelerID,
                         canonicalItemID: canonical,
-                        capabilities: capabilities.map(\.rawValue).sorted(),
-                        coveredBy: []
+                        covered: [],
+                        refutedCapabilities: capabilities.sorted { $0.rawValue < $1.rawValue }
                     ))
                 } else {
                     kept.append(item)
@@ -223,12 +236,20 @@ enum CoverageResolver {
                 continue
             }
             if needed.allSatisfy({ covered[$0] != nil }) {
-                let coverers = Set(needed.compactMap { covered[$0] })
+                let coverage = needed.compactMap { capability -> CapabilityCoverage? in
+                    guard let coveringItemID = covered[capability] else { return nil }
+                    return CapabilityCoverage(capability: capability, coveringItemID: coveringItemID)
+                }.sorted {
+                    if $0.capability.rawValue != $1.capability.rawValue {
+                        return $0.capability.rawValue < $1.capability.rawValue
+                    }
+                    return $0.coveringItemID < $1.coveringItemID
+                }
                 suppressions.append(CoverageSuppression(
                     travelerID: item.travelerID,
                     canonicalItemID: canonical,
-                    capabilities: needed.map(\.rawValue).sorted(),
-                    coveredBy: coverers.sorted()
+                    covered: coverage,
+                    refutedCapabilities: []
                 ))
                 continue
             }
