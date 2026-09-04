@@ -441,6 +441,76 @@
           "isUserAdded": true
         }
       ]
+    },
+    {
+      "id": "28-yellowstone-4d-camping-mild",
+      "proves": "Camping's V1 contract in isolation on the no-signal weather path: no forecast, and an August start at 44.4N so no seasonal warmth fallback, which leaves the gated overnightWarmth need unresolved. Camping declares no trail-footwear need, so ordinary walking shoes survive and no hiking shoes appear. The outdoor trip type already supplies water and repellent and the seasonal-sun path already supplies sunscreen, so the Camping-attributable new row here is the flashlight and the rest is de-duplication",
+      "destination": "Yellowstone",
+      "weatherFixture": null,
+      "startDate": "2027-08-15",
+      "days": 4,
+      "tripType": "outdoor",
+      "activities": ["camping"],
+      "bag": "roadTripLuggage",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "29-yellowstone-4d-hiking-camping",
+      "proves": "Hiking and Camping compose into one trip rather than two concatenated checklists: the hydration need both contracts declare yields exactly one water bottle. Identical to fixture 28 plus hiking, so the diff between them is exactly Hiking's contribution — the trail footwear and the walking-shoe suppression included, proving that footwear is Hiking's doing and never Camping's",
+      "destination": "Yellowstone",
+      "weatherFixture": null,
+      "startDate": "2027-08-15",
+      "days": 4,
+      "tripType": "outdoor",
+      "activities": ["hiking", "camping"],
+      "bag": "roadTripLuggage",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "30-seattle-5d-camping-rain",
+      "proves": "Camping never manufactures weather: a rain shell on a camping trip comes from the existing rain signals exactly as it does on any other trip, producing exactly one shell and no camping-specific rain item",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripType": "outdoor",
+      "activities": ["camping"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "31-phoenix-5d-camping-hot",
+      "proves": "Camping on a hot, sunny trip: sun protection resolves to one row even though Camping's sunProtection need and the hot/UV weather path both want it, and the cold-gated overnightWarmth need stays unresolved",
+      "destination": "Phoenix",
+      "weatherFixture": "PhoenixHotDry",
+      "startDate": "2026-07-13",
+      "days": 5,
+      "tripType": "outdoor",
+      "activities": ["camping"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "32-denver-5d-camping-cold",
+      "proves": "The one weather-gated need, resolving: a cold signal is already present in the forecast, so overnightWarmth produces a thermal top. Camping made the need relevant; it did not invent the cold. Hiking is also selected, so the trail footwear here is attributable to Hiking as in fixture 29",
+      "destination": "Denver",
+      "weatherFixture": "DenverColdOutdoor",
+      "startDate": "2026-11-09",
+      "days": 5,
+      "tripType": "outdoor",
+      "activities": ["hiking", "camping"],
+      "bag": "checked",
+      "style": "prepared",
+      "laundry": "none",
+      "homeCountryCode": "US"
     }
   ]
 }

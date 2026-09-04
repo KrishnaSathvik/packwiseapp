@@ -51,10 +51,16 @@
       "id": "outdoor",
       "exposed": true,
       "engineContract": "deterministic",
-      "fixtureIDs": [],
+      "fixtureIDs": [
+        "28-yellowstone-4d-camping-mild",
+        "29-yellowstone-4d-hiking-camping",
+        "30-seattle-5d-camping-rain",
+        "31-phoenix-5d-camping-hot",
+        "32-denver-5d-camping-cold"
+      ],
       "iconContract": "mountain.2",
       "ownerScope": "trip",
-      "note": "shared/rules/trip-types.json adds 5 outdoor items (daypack, water bottle, insect repellent, blister pads, first aid) but no golden fixture sets tripType=outdoor; deterministic and currently untested."
+      "note": "rules.tripTypes['outdoor'] adds a daypack, water bottle, insect repellent, blister pads and a first-aid kit, and CoverageContext treats its activities as outdoor for weather-signal extraction. No golden fixture selected it until Phase 5: the five Camping fixtures (28-32) all use tripType=outdoor, so the row is now exercised. Note this is why fixture 28's Camping delta is small -- the trip type already supplies water and repellent, and the de-duplication is the contract working."
     },
     {
       "kind": "tripType",

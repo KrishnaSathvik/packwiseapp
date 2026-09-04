@@ -236,15 +236,86 @@ struct GoldenEngineTests {
         #expect(!ids(existingShell).contains("clothing.windbreaker"))
     }
 
+    private func ids(_ output: GoldenOutput) -> Set<String> {
+        Set(output.items.map(\.canonicalItemID))
+    }
+
+    /// The five Camping fixtures, read against the Camping V1 boundary.
+    @Test func campingFixturesProveTheV1Contract() throws {
+        let mild = try renderFixture(id: "28-yellowstone-4d-camping-mild")
+        let mildIDs = ids(mild)
+        #expect(mildIDs.isSuperset(of: [
+            "hydration.water_bottle", "miscellaneous.flashlight",
+            "toiletries.insect_repellent", "toiletries.sunscreen"
+        ]))
+        // Camping declares no trail-footwear need: the baseline walking shoes
+        // stay and no hiking shoes appear on a camping-only trip.
+        #expect(mildIDs.contains("footwear.walking_shoes"))
+        #expect(!mildIDs.contains("footwear.hiking_shoes"))
+        #expect(!mildIDs.contains("clothing.rain_jacket"))
+        #expect(!mildIDs.contains("clothing.thermal_top"))
+        #expect(mildIDs.isDisjoint(with: [
+            "activities.tent", "activities.sleeping_bag", "activities.sleeping_pad",
+            "activities.camp_stove", "activities.camp_fuel", "activities.cookware",
+            "activities.food_storage", "activities.camp_chair"
+        ]))
+
+        // Fixtures 28 and 29 differ by exactly one activity, so the difference
+        // between them is exactly Hiking's contribution — trail footwear
+        // included. That attribution is the point of the pair.
+        let composed = try renderFixture(id: "29-yellowstone-4d-hiking-camping")
+        let composedIDs = ids(composed)
+        #expect(composed.items.filter { $0.canonicalItemID == "hydration.water_bottle" }.count == 1)
+        #expect(composed.items.filter { $0.canonicalItemID == "footwear.hiking_shoes" }.count == 1)
+        #expect(composedIDs.subtracting(mildIDs).contains("footwear.hiking_shoes"))
+        #expect(!composedIDs.contains("footwear.walking_shoes"))
+
+        let rain = try renderFixture(id: "30-seattle-5d-camping-rain")
+        #expect(rain.items.filter { $0.canonicalItemID == "clothing.rain_jacket" }.count == 1)
+
+        let hot = try renderFixture(id: "31-phoenix-5d-camping-hot")
+        #expect(hot.items.filter { $0.canonicalItemID == "toiletries.sunscreen" }.count == 1)
+        #expect(!ids(hot).contains("clothing.thermal_top"))
+
+        let cold = try renderFixture(id: "32-denver-5d-camping-cold")
+        #expect(ids(cold).contains("clothing.thermal_top"))
+    }
+
+    /// The long trip must improve because Camping has a general contract —
+    /// not because Reykjavik or 64 days is special-cased. Its footwear is
+    /// Hiking's doing, exactly as at the Phase 4 baseline.
+    @Test func theLongRoadTripImprovesThroughTheGeneralCampingContract() throws {
+        let long = try renderFixture(id: "18-reykjavik-64d-roadtrip-camping-seasonal")
+        let longIDs = ids(long)
+        #expect(longIDs.isSuperset(of: [
+            "miscellaneous.flashlight", "toiletries.insect_repellent", "toiletries.sunscreen"
+        ]))
+        #expect(long.items.filter { $0.canonicalItemID == "hydration.water_bottle" }.count == 1)
+        #expect(!longIDs.contains("clothing.thermal_top"))   // August: no cold signal
+
+        // Fixture 18 is roadTrip + hiking + camping. Its trail footwear comes
+        // from Hiking and must be unchanged from the Phase 4 baseline — if
+        // this fixture's footwear moves at all, Camping has overreached.
+        #expect(long.items.filter { $0.canonicalItemID == "footwear.hiking_shoes" }.count == 1)
+        for row in long.items where row.canonicalItemID == "footwear.hiking_shoes" {
+            // Whichever of the two hiking-attributed codes the baseline
+            // recorded (`applyCoverage` rewrites the coverer to the
+            // substitution copy when it absorbs the walking need), Camping
+            // must never own this row.
+            #expect(row.reasonCode != "activity.camping")
+            #expect(["activity.hiking", "substitution.hiking_covers_walking"].contains(row.reasonCode))
+        }
+    }
+
     /// Full-ledger proof that `TripContextCompiler` compiles every real,
     /// fixture-derived trip in the golden ledger deterministically and
-    /// without crashing. Every one of the 27 fixtures is a real, well-formed
+    /// without crashing. Every one of the 32 fixtures is a real, well-formed
     /// trip, so none should produce an "unsupportedButSafe" `dates` or
-    /// `party` diagnostic. Fixtures 18 and 25 (camping, cosplayConvention)
-    /// are EXPECTED to carry an "activities" diagnostic — that's the honest,
-    /// already-published Phase 1 finding (see
-    /// docs/engine-audits/2026-09-03-engine-findings.md), not a defect this
-    /// test introduces.
+    /// `party` diagnostic. Fixture 25 (cosplayConvention) is EXPECTED to
+    /// carry an "activities" diagnostic — an unknown id must stay inert
+    /// rather than be mapped onto a known activity. Fixture 18 no longer
+    /// does: Phase 5 closed the camping finding by giving camping a real
+    /// contract, so it is now a known activity like any other.
     @Test func everyGoldenFixtureCompilesToADeterministicSnapshot() throws {
         let file = try JSONDecoder().decode(
             GoldenFixtureFile.self,
