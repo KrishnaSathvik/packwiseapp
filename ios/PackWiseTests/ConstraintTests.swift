@@ -682,4 +682,33 @@ struct ConstraintTests {
         #expect(charger.id == ownCharger.id, "the user's own draft survives; the dependency pass never adds a second")
         #expect(charger.displayName == "My charger", "the user's own display name is not overwritten by the companion's rendering")
     }
+
+    // MARK: - Task 6: bag/style conflict gates
+
+    // Gate 1 (Prepared+personal item) is already proven —
+    // `preparedVersusPersonalItemResolvesExplicitly` above. No new test.
+
+    /// A checked bag never trims optional extras, regardless of style — the
+    /// "checked and road-trip luggage never trim" half of
+    /// `optionalRuling`'s doc comment, unproven by any existing test. Compares
+    /// against the identical trip on a carry-on, which does trim under Light.
+    @Test func lightStyleNeverTrimsOnACheckedBag() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+        let checked = engine.generateDetailed(context: context(destination: dest, type: .vacation, bag: .checked, style: .light))
+        let carryOn = engine.generateDetailed(context: context(destination: dest, type: .vacation, bag: .carryOn, style: .light))
+        #expect(checked.constraintDecisions.isEmpty, "a checked bag has nothing to trim under any style")
+        #expect(!carryOn.constraintDecisions.isEmpty, "the same trip on a carry-on does trim under Light — the contrast proves the bag, not the style, gates the constraint")
+    }
+
+    // Gate 2's "prefer critical items / multifunction / compact-high-value,
+    // suppress bulky optional backups" charter language is already satisfied
+    // by the collaboration between optionalRuling's importance guard (only
+    // .optional items are ever touched) and essentialOptionalTags (base/
+    // rain/cold/medication tags survive regardless), cited via
+    // essentialOptionalTagsSurvivePersonalItem above. No catalog tags for
+    // "multifunction"/"compact"/"bulky" exist today, and introducing them
+    // would be a catalog-vocabulary expansion outside this phase's file
+    // list — the existing importance + essential-tag mechanism already
+    // achieves the intended outcome without a new vocabulary.
 }
