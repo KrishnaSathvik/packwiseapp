@@ -105,6 +105,30 @@ struct RecommendationTraceTests {
         #expect(!authority.isUserAdded)
     }
 
+    // MARK: - Task 6: PackingTracePresentation.authorityLine
+
+    @Test func authorityLineIsNilForAnOrdinaryEngineGeneratedRow() throws {
+        let ordinary = PackingItemDraft(canonicalItemID: "toiletries.toothbrush", displayName: "Toothbrush", category: .toiletries, quantity: 1, importance: .critical, sourceSignals: [.baseEssential], reason: "Base essential.")
+        #expect(PackingTracePresentation.authorityLine(RecommendationTrace.authority(for: ordinary)) == nil)
+    }
+
+    @Test func authorityLineNamesAUserModifiedRow() throws {
+        var modified = PackingItemDraft(canonicalItemID: "clothing.tshirt", displayName: "T-Shirts", category: .clothing, quantity: 3, importance: .normal, sourceSignals: [], reason: "")
+        modified.isUserModified = true
+        #expect(PackingTracePresentation.authorityLine(RecommendationTrace.authority(for: modified)) == "You changed this.")
+    }
+
+    @Test func authorityLineNamesAUserAddedRow() throws {
+        var added = PackingItemDraft(canonicalItemID: "clothing.tshirt", displayName: "T-Shirts", category: .clothing, quantity: 3, importance: .normal, sourceSignals: [], reason: "Added by you", isUserAdded: true)
+        added.isUserAdded = true
+        #expect(PackingTracePresentation.authorityLine(RecommendationTrace.authority(for: added)) == "Added by you.")
+    }
+
+    @Test func authorityLineNamesACustomItemEvenWithoutTheUserAddedFlag() throws {
+        let custom = PackingItemDraft(canonicalItemID: "custom.lucky_travel_journal", displayName: "Lucky travel journal", category: .miscellaneous, quantity: 1, importance: .optional, sourceSignals: [], reason: "")
+        #expect(PackingTracePresentation.authorityLine(RecommendationTrace.authority(for: custom)) == "Added by you.")
+    }
+
     // MARK: - QuantityFacet
 
     @Test func clothingQuantityFacetPrefersStructuredEvidenceOverBareReasonText() throws {
