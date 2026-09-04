@@ -1,7 +1,7 @@
 # PackWise Product Hardening Program
 
 **Date:** 2026-09-02  
-**Status:** active; Phases 1–3 closed 2026-09-03; Phase 4 not started
+**Status:** active; Phases 1–4 closed 2026-09-03; Phase 5 not started
 **Source of truth:** this program orders the user-approved Final UI Refinement & Freeze Plan and Product Hardening + Engine V2 Plan against the repository as it exists today.
 
 ## Goal
@@ -130,10 +130,30 @@ iOS tests across 16 suites green, 202 shared items valid, and 106 API tests
 green. User quantities, Not Needed, user-added items, packed state, owner, and
 carrier remain authoritative.
 
-**Phase 4 (footwear and outerwear coverage) has not started.** Existing
-footwear/outerwear findings remain routed there; Camping and weather findings
-remain routed to Phases 5 and 6. Presentation stays frozen, physical-device
-verification stays deferred, and M3B/M3C remain blocked.
+## Phase 4 closure — 2026-09-03
+
+Phase 4 (footwear and outerwear coverage) is complete. The existing
+`CoverageResolver` remains the one closed typed authority and now reads a
+narrow `CoverageContext` derived from `TripContextSnapshot`. Exact structured
+facts map every suppressed capability to its deterministic covering item, with
+separate evidence for refuted needs. Two approved hand-protection capabilities
+resolve the ski-glove/ordinary-glove overlap generically; no shared-JSON
+migration or ID-pair exception was added.
+
+Exit evidence is
+`docs/engine-audits/2026-09-03-phase-4-footwear-outerwear-coverage.md`: the
+27-fixture semantic review contains 20 intended coverage-evidence changes and
+one intended duplicate-glove removal, with zero unexpected additions,
+quantities, traces, constraints, ownership/carrier, or unrelated behavior
+changes. The seven-case overlap matrix, explicit-user and ambiguous-party
+authority, and repeated-run determinism are executable. The six-step engine
+audit, 218 iOS tests across 16 suites, 202-item shared validation, and 106 API
+tests are green.
+
+**Phase 5 (activity coverage) has not started.** Camping remains routed there.
+The newly observed cold-without-snow glove-generation question and existing
+seasonal/weather findings remain routed to Phase 6. Presentation stays frozen,
+physical-device verification stays deferred, and M3B/M3C remain blocked.
 
 ## Program order
 
