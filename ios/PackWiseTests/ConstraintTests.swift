@@ -653,4 +653,33 @@ struct ConstraintTests {
         #expect(unassigned.travelerID == nil)
         #expect(unassigned.ownershipType == .personal, "stays personal-but-unowned, not silently promoted to shared")
     }
+
+    // MARK: - Task 5: dependency authority — user-added equivalent pre-empts the auto-companion
+
+    /// A user who hand-adds the laptop charger themselves (not via the
+    /// dependency mechanism, not via an override) pre-empts the automatic
+    /// companion — the same de-duplication `companionNotDuplicatedWhenRulesAlreadyEmitIt`
+    /// proves for a rules-suggested charger, exercised here for a
+    /// user-added one, which is the case the task calls out specifically:
+    /// "must respect user-added equivalents."
+    @Test func userAddedChargerPreemptsTheAutomaticLaptopCompanion() throws {
+        let laptop = PackingItemDraft(
+            canonicalItemID: "electronics.laptop", displayName: "Laptop", category: .electronics,
+            quantity: 1, importance: .normal, sourceSignals: [.userPreference], reason: "Added by you",
+            isUserAdded: true
+        )
+        let ownCharger = PackingItemDraft(
+            canonicalItemID: "electronics.laptop_charger", displayName: "My charger", category: .electronics,
+            quantity: 1, importance: .normal, sourceSignals: [.userPreference], reason: "Added by you",
+            isUserAdded: true
+        )
+        let items = try makeEngine().generate(
+            context: context(destination: try destination("Chicago")),
+            existing: [laptop, ownCharger]
+        )
+        #expect(items.filter { $0.canonicalItemID == "electronics.laptop_charger" }.count == 1)
+        let charger = try #require(items.first { $0.canonicalItemID == "electronics.laptop_charger" })
+        #expect(charger.id == ownCharger.id, "the user's own draft survives; the dependency pass never adds a second")
+        #expect(charger.displayName == "My charger", "the user's own display name is not overwritten by the companion's rendering")
+    }
 }
