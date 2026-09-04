@@ -507,6 +507,38 @@ struct WeatherChangeTests {
         #expect(!items.contains { $0.canonicalItemID == "clothing.rain_jacket" }, "no forecast means no rain signal to react to")
     }
 
+    // MARK: - Phase 6: cached/failed weather generation-equivalence
+
+    /// A cached forecast is structurally the same data as a live one, just
+    /// tagged stale (`WeatherDomain.swift:163`) — generation must not depend on
+    /// `source`, only on the daily data and coverage flags it already reads.
+    @Test func cachedForecastGeneratesIdenticallyToTheSameDataFresh() throws {
+        let fresh = forecast(start: date(2026, 10, 5), days: 5, high: 57, low: 48, rain: 0.6)
+        let cached = fresh.markingAsCache()
+        #expect(cached.source == .cache)
+
+        let freshItems = try engine().generate(context: try context(weather: fresh, days: 5))
+        let cachedItems = try engine().generate(context: try context(weather: cached, days: 5))
+        #expect(Set(freshItems.compactMap(\.canonicalItemID)) == Set(cachedItems.compactMap(\.canonicalItemID)))
+    }
+
+    /// A failed fetch with no usable cache falls back to `.unavailable` in
+    /// `TripWeatherResolver`, which the engine already treats as no weather at
+    /// all (`noWeatherStillGenerates`). This test exercises that path through
+    /// the resolver directly rather than re-deriving the assumption.
+    @Test func failedFetchWithNoCacheDegradesToNoWeatherGeneration() async throws {
+        let failing = MockWeatherService(fixtures: [:], forceUnavailable: true)
+        let resolved = await TripWeatherResolver.resolve(
+            using: failing, destination: try destination("Seattle"),
+            start: date(2026, 10, 5), end: date(2026, 10, 9), cached: nil
+        )
+        #expect(resolved.state == .unavailable)
+        #expect(resolved.engineWeather == nil)
+        let items = try engine().generate(context: try context(weather: resolved.engineWeather, days: 5))
+        #expect(!items.contains { $0.canonicalItemID == "clothing.rain_jacket" })
+        #expect(!items.isEmpty)
+    }
+
     /// A forecast that only covers part of a 30-day trip is flagged as
     /// partial, not silently treated as whole-trip coverage — the ~10-day
     /// provider horizon genuinely leaves the back half of a long trip
