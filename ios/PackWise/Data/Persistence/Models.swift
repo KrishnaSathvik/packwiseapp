@@ -197,6 +197,16 @@ final class PackingItemRecord {
     var reasonCode: String = ""
     var reasonArgumentsRaw: String = ""
     var quantityReason: String
+    /// JSON-encoded ClothingQuantityEvidence — the one Phase 8 field whose
+    /// shape (typed numerics, an optional Int, a LaundryAccess enum) doesn't
+    /// fit the pipe/equals flattening the string-keyed fields use below.
+    /// ClothingQuantityEvidence is already Codable; this is that encoding,
+    /// not a new serialization scheme. Closes the gap the Catalog.swift
+    /// quantityEvidence doc comment named as deferred to Phase 8.
+    var quantityEvidenceRaw: String = ""
+    var quantityReasonArgumentsRaw: String = ""
+    var satisfiedCapabilitiesRaw: String = ""
+    var bagStyleConstraintFactRaw: String = ""
     var isUserAdded: Bool
     var isUserModified: Bool
     var ownershipTypeRaw: String = "personal"
@@ -220,6 +230,14 @@ final class PackingItemRecord {
         self.reasonCode = draft.reasonCode
         self.reasonArgumentsRaw = draft.reasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
         self.quantityReason = draft.quantityReason
+        if let evidence = draft.quantityEvidence, let data = try? JSONEncoder().encode(evidence) {
+            self.quantityEvidenceRaw = String(decoding: data, as: UTF8.self)
+        }
+        self.quantityReasonArgumentsRaw = draft.quantityReasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        self.satisfiedCapabilitiesRaw = draft.satisfiedCapabilities.joined(separator: ",")
+        if let fact = draft.bagStyleConstraintFact {
+            self.bagStyleConstraintFactRaw = "survivedByEssentialTagProtection=\(fact.survivedByEssentialTagProtection)|wouldTrimUnderKey=\(fact.wouldTrimUnderKey ?? "")"
+        }
         self.isUserAdded = draft.isUserAdded
         self.isUserModified = draft.isUserModified
         self.ownershipTypeRaw = draft.ownershipType.rawValue
@@ -237,6 +255,32 @@ final class PackingItemRecord {
     var isPacked: Bool { packedQuantity >= max(1, quantity) }
     var sourceSignals: [RecommendationSignal] {
         sourceSignalsRaw.split(separator: ",").compactMap { RecommendationSignal(rawValue: String($0)) }
+    }
+    var quantityEvidence: ClothingQuantityEvidence? {
+        guard !quantityEvidenceRaw.isEmpty else { return nil }
+        return try? JSONDecoder().decode(ClothingQuantityEvidence.self, from: Data(quantityEvidenceRaw.utf8))
+    }
+    var quantityReasonArguments: [String: String] {
+        Dictionary(uniqueKeysWithValues: quantityReasonArgumentsRaw.split(separator: "|").compactMap { pair in
+            let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2 else { return nil }
+            return (parts[0], parts[1])
+        })
+    }
+    var satisfiedCapabilities: [String] {
+        satisfiedCapabilitiesRaw.isEmpty ? [] : satisfiedCapabilitiesRaw.split(separator: ",").map(String.init)
+    }
+    var bagStyleConstraintFact: BagStyleConstraintFact? {
+        guard !bagStyleConstraintFactRaw.isEmpty else { return nil }
+        var protected = false
+        var wouldTrim: String?
+        for pair in bagStyleConstraintFactRaw.split(separator: "|") {
+            let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2 else { continue }
+            if parts[0] == "survivedByEssentialTagProtection" { protected = parts[1] == "true" }
+            if parts[0] == "wouldTrimUnderKey" { wouldTrim = parts[1].isEmpty ? nil : parts[1] }
+        }
+        return BagStyleConstraintFact(survivedByEssentialTagProtection: protected, wouldTrimUnderKey: wouldTrim)
     }
 
     var draft: PackingItemDraft {
@@ -257,6 +301,10 @@ final class PackingItemRecord {
                 return (parts[0], parts[1])
             }),
             quantityReason: quantityReason,
+            quantityEvidence: quantityEvidence,
+            quantityReasonArguments: quantityReasonArguments,
+            satisfiedCapabilities: satisfiedCapabilities,
+            bagStyleConstraintFact: bagStyleConstraintFact,
             isUserAdded: isUserAdded,
             isUserModified: isUserModified,
             ownershipType: ownershipType,
