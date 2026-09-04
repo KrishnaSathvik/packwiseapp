@@ -65,6 +65,7 @@ _TRACE_FIELDS = (
     "reason_arguments",
     "reason",
     "quantity_reason",
+    "quantity_evidence",
     "user_modified",
 )
 
@@ -78,6 +79,7 @@ _TRACE_FIELD_JSON_NAMES = {
     "reason_arguments": "reasonArguments",
     "reason": "reason",
     "quantity_reason": "quantityReason",
+    "quantity_evidence": "quantityEvidence",
     "user_modified": "userModified",
 }
 
@@ -96,6 +98,7 @@ class GoldenItem:
     reason_arguments: Tuple[Tuple[str, str], ...]
     reason: str
     quantity_reason: str
+    quantity_evidence: Optional[str]
     user_modified: object
 
     @property
@@ -117,6 +120,11 @@ class GoldenItem:
             reason_arguments=tuple(sorted((raw.get("reasonArguments") or {}).items())),
             reason=raw.get("reason", ""),
             quantity_reason=raw.get("quantityReason", ""),
+            quantity_evidence=(
+                json.dumps(raw["quantityEvidence"], sort_keys=True, separators=(",", ":"))
+                if raw.get("quantityEvidence") is not None
+                else None
+            ),
             user_modified=raw.get("userModified"),
         )
 

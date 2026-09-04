@@ -119,6 +119,29 @@ class QuantityChangeTests(unittest.TestCase):
 
 
 class TraceChangeTests(unittest.TestCase):
+    def test_quantity_evidence_change_alone_is_a_trace_change(self):
+        baseline_evidence = {
+            "policyID": "daily",
+            "basis": "tripDays",
+            "requiredUses": 15,
+            "quantity": 7,
+        }
+        candidate_evidence = {
+            "policyID": "daily",
+            "basis": "washCycle",
+            "requiredUses": 15,
+            "washIntervalDays": 6,
+            "laundryReduced": True,
+            "quantity": 7,
+        }
+        report = compare_fixture(
+            golden(items=[item("clothing.tshirt", 7, quantityEvidence=baseline_evidence)]),
+            golden(items=[item("clothing.tshirt", 7, quantityEvidence=candidate_evidence)]),
+        )
+        self.assertEqual(len(report.trace_changes), 1)
+        self.assertIn("quantityEvidence", report.trace_changes[0].changed_fields)
+        self.assertEqual(report.quantity_changes, [])
+
     def test_reason_code_change_alone_is_a_trace_change_not_quantity(self):
         report = compare_fixture(
             golden(items=[item("clothing.tshirt", 5, reasonCode="base.essential.clothing")]),
