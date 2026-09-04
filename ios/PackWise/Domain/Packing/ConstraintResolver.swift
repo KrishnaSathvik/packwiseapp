@@ -184,3 +184,30 @@ extension ConstraintResolver {
             : "\(quantity) for the group — not one per person."
     }
 }
+
+extension ConstraintResolver {
+    /// True when a draft carries explicit current-trip user state no
+    /// lower-priority layer may override: a manual quantity edit or a
+    /// hand-added item. Replaces the identical `isUserAdded || isUserModified`
+    /// check written independently in `resolve()` and `applyQuantities()`.
+    static func hasUserAuthority(_ item: PackingItemDraft) -> Bool {
+        item.isUserAdded || item.isUserModified
+    }
+
+    /// True when an explicit "Not Needed" override exists for this
+    /// candidate, scoped to ownership and traveler. Moved verbatim from
+    /// `PackingEngine.isRemoved` — same scoping, same behavior.
+    static func isExplicitlyRemoved(
+        _ canonicalItemID: String,
+        ownership: PackingOwnership,
+        travelerID: UUID?,
+        overrides: [RecommendationOverrideDraft]
+    ) -> Bool {
+        overrides.contains { override in
+            guard override.action == "removed", override.canonicalItemID == canonicalItemID else { return false }
+            if let overrideTraveler = override.travelerID, overrideTraveler != travelerID { return false }
+            if let overrideOwnership = override.ownershipType, overrideOwnership != ownership { return false }
+            return true
+        }
+    }
+}

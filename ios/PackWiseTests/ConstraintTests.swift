@@ -194,6 +194,90 @@ struct ConstraintTests {
         #expect(result == .personal)
     }
 
+    // MARK: - Explicit authority gate
+
+    @Test func hasUserAuthorityIsTrueForAddedOrModifiedOnly() {
+        let plain = PackingItemDraft(canonicalItemID: "clothing.tshirt", displayName: "T-Shirt", category: .clothing, quantity: 1, importance: .normal, sourceSignals: [], reason: "")
+        var added = plain; added.isUserAdded = true
+        var modified = plain; modified.isUserModified = true
+        #expect(!ConstraintResolver.hasUserAuthority(plain))
+        #expect(ConstraintResolver.hasUserAuthority(added))
+        #expect(ConstraintResolver.hasUserAuthority(modified))
+    }
+
+    @Test func isExplicitlyRemovedMatchesTravelerAndOwnershipScoping() {
+        let travelerA = UUID()
+        let travelerB = UUID()
+        let overrides = [RecommendationOverrideDraft(canonicalItemID: "clothing.hat_sun", action: "removed", travelerID: travelerA, ownershipType: .personal)]
+        #expect(ConstraintResolver.isExplicitlyRemoved("clothing.hat_sun", ownership: .personal, travelerID: travelerA, overrides: overrides))
+        #expect(!ConstraintResolver.isExplicitlyRemoved("clothing.hat_sun", ownership: .personal, travelerID: travelerB, overrides: overrides))
+        #expect(!ConstraintResolver.isExplicitlyRemoved("clothing.hat_sun", ownership: .shared, travelerID: nil, overrides: overrides))
+    }
+
+    // MARK: - Priority hierarchy proof (task requirement: provable, not asserted)
+
+    /// Explicit user state must survive a regeneration that simultaneously
+    /// changes weather, activities, and duration — three independent
+    /// current-trip-constraint recomputations at once, not one at a time as
+    /// each single-fact test above exercises. This is the multi-dimensional
+    /// conflict the priority hierarchy names: rung 1/2 (explicit decisions)
+    /// must never lose to rung 3 (current trip constraints) no matter how
+    /// many rung-3 facts move together.
+    @Test func explicitUserStateSurvivesASimultaneousMultiDimensionalRefresh() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+        var partner = Traveler(name: "Sam", role: .partner, ageGroup: .adult)
+        // wearContacts gives the partner toiletries.contacts_solution, which
+        // this test's carrier-reassignment fact (rung 1/2 fact 4) needs.
+        partner.chips = [.wearContacts]
+        let party = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), partner])
+
+        var first = engine.generate(context: context(destination: dest, days: 5, activities: ["sightseeing", "walking"], bag: .checked, party: party))
+
+        // Rung 1/2 fact 1: manual quantity edit ("T-shirts 7 → 3" shape).
+        guard let tshirtIndex = first.firstIndex(where: { $0.canonicalItemID == "clothing.tshirt" && $0.travelerID == party.primary.id }) else {
+            Issue.record("Expected a primary t-shirt row")
+            return
+        }
+        first[tshirtIndex].quantity = 3
+        first[tshirtIndex].isUserModified = true
+
+        // Rung 1/2 fact 2: Not Needed override (rain jacket, "must not silently return" shape).
+        let overrides = [RecommendationOverrideDraft(canonicalItemID: "clothing.rain_jacket", action: "removed")]
+
+        // Rung 1/2 fact 3: user-added custom item.
+        first.append(PackingItemDraft(
+            canonicalItemID: nil, displayName: "Travel journal", category: .travelComfort,
+            quantity: 1, importance: .optional, sourceSignals: [.userPreference], reason: "Added by you",
+            isUserAdded: true, ownershipType: .personal, travelerID: party.primary.id
+        ))
+
+        // Rung 1/2 fact 4: explicit carrier reassignment (owner unchanged, carrier moved).
+        if let contactsIndex = first.firstIndex(where: { $0.canonicalItemID == "toiletries.contacts_solution" }) {
+            first[contactsIndex].assignedTravelerID = party.primary.id
+        }
+
+        // Three rung-3 dimensions move together: longer trip, new activity,
+        // and rain weather that would otherwise re-suggest the rain jacket.
+        let rainy = forecast(
+            start: Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!,
+            days: 8, high: 62, low: 50, rain: 0.7
+        )
+        let second = engine.generate(
+            context: context(destination: dest, days: 8, activities: ["sightseeing", "walking", "museum"], bag: .checked, party: party, weather: rainy),
+            existing: first,
+            overrides: overrides
+        )
+
+        let tshirt = try #require(second.first { $0.canonicalItemID == "clothing.tshirt" && $0.travelerID == party.primary.id })
+        #expect(tshirt.quantity == 3, "manual quantity must survive weather + activity + duration change together")
+        #expect(!second.contains { $0.canonicalItemID == "clothing.rain_jacket" }, "Not Needed must not silently return even with fresh rain weather")
+        #expect(second.contains { $0.displayName == "Travel journal" && $0.isUserAdded })
+        let contactsSolution = try #require(second.first { $0.canonicalItemID == "toiletries.contacts_solution" })
+        #expect(contactsSolution.assignedTravelerID == party.primary.id, "carrier reassignment must survive")
+        #expect(contactsSolution.travelerID == partner.id, "owner must remain the partner despite the carrier move")
+    }
+
     // MARK: - Dependencies
 
     /// Adding a camera by hand pulls in its charger — a different trust

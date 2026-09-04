@@ -680,13 +680,13 @@ struct PackingEngine: Sendable {
         }
 
         for suggestion in suggestions {
-            if isRemoved(suggestion.canonicalItemID, ownership: ownership, travelerID: travelerID, overrides: overrides) {
+            if ConstraintResolver.isExplicitlyRemoved(suggestion.canonicalItemID, ownership: ownership, travelerID: travelerID, overrides: overrides) {
                 continue
             }
             let key = recommendationKey(canonical: suggestion.canonicalItemID, ownership: ownership, travelerID: travelerID)
             let existingItem = existingByKey[key] ?? existingByKey["canonical:\(suggestion.canonicalItemID)"]
             if let existingItem {
-                if existingItem.isUserModified || existingItem.isUserAdded {
+                if ConstraintResolver.hasUserAuthority(existingItem) {
                     if !result.contains(where: { $0.id == existingItem.id }) {
                         result.append(existingItem)
                     }
@@ -753,20 +753,6 @@ struct PackingEngine: Sendable {
         }
     }
 
-    private func isRemoved(
-        _ canonicalItemID: String,
-        ownership: PackingOwnership,
-        travelerID: UUID?,
-        overrides: [RecommendationOverrideDraft]
-    ) -> Bool {
-        overrides.contains { override in
-            guard override.action == "removed", override.canonicalItemID == canonicalItemID else { return false }
-            if let overrideTraveler = override.travelerID, overrideTraveler != travelerID { return false }
-            if let overrideOwnership = override.ownershipType, overrideOwnership != ownership { return false }
-            return true
-        }
-    }
-
     /// Companions are first-class dependencies: an item on the list pulls in
     /// what it can't work without (laptop → charger, contact solution → case),
     /// including for user-added triggers — with a reason naming the trigger,
@@ -798,7 +784,7 @@ struct PackingEngine: Sendable {
                 if presentShared.contains(companionID) || presentByGroup[group]?.contains(companionID) == true {
                     continue
                 }
-                if isRemoved(companionID, ownership: ownership, travelerID: travelerID, overrides: overrides) {
+                if ConstraintResolver.isExplicitlyRemoved(companionID, ownership: ownership, travelerID: travelerID, overrides: overrides) {
                     continue
                 }
                 let arguments = ["item": item.displayName.lowercased()]
@@ -910,7 +896,7 @@ struct PackingEngine: Sendable {
             guard let canonical = item.canonicalItemID, let catalogItem = catalog.item(id: canonical) else {
                 return copy
             }
-            if item.isUserModified || item.isUserAdded { return copy }
+            if ConstraintResolver.hasUserAuthority(item) { return copy }
 
             if item.ownershipType == .shared {
                 let resolution = ConstraintResolver.sharingResolution(for: canonical, rules: rules.party, context: context, party: party)
