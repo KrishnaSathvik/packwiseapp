@@ -24,7 +24,7 @@ Packing preferences
 Packing habits
 Saved items
 Default packing style
-Default bag
+Default bags
 Units
 Notifications
 iCloud
@@ -72,7 +72,7 @@ CTA: **Get Started**
 
 Visual: large suitcase mark, scenic destination photography behind the headline. See [design/ui-flow-overview.png](../design/ui-flow-overview.png).
 
-### Screen 2 — Built around your trip
+### Screen 2 — One trip can be many things
 
 Example visual:
 
@@ -89,11 +89,13 @@ Walking shoes
 5-day quantities
 ```
 
-Show that input (place, duration, weather) becomes a specific list with reasons.
+Show that beach, city, business, activities, and luggage compose into one specific list rather than separate templates.
 
-### Screen 3 — It gets more personal
+### Screen 3 — Your choices stay yours
 
-> PackWise remembers what you bring, skip and actually use so future trips fit you better.
+> Change quantities, skip items and add your own without losing your decisions.
+
+All three screens share one logo/wordmark position, typography hierarchy, margins, visual frame, CTA position, and pagination position. Do not advertise memory-driven personalization until the post-trip memory product ships.
 
 CTA: **Create My First Trip**
 

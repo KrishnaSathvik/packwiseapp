@@ -9,13 +9,13 @@ Onboarding
 
 Trips Home
 
-Trip Setup
+Trip Setup — Product Experience V2
 - destination
 - dates
 - who's traveling (solo / couple / family)
-- type
+- trip types (multi-select)
 - activities
-- bag
+- bags (multi-select physical bags)
 - packing style
 - optional context
 
@@ -54,7 +54,7 @@ Local SwiftData persistence
 
 That is already a real product.
 
-MVP still includes the internal GPT layer and explanations. It does not include a visible chatbot, post-trip memory loop, or V2 surfaces.
+MVP still includes the internal GPT layer and explanations. It does not include a visible chatbot or post-trip memory loop. “Product Experience V2” is the active correction to the MVP experience, not the later feature bucket below.
 
 ## Do not put these in MVP
 
@@ -140,20 +140,27 @@ Frozen in [implementation-decisions.md](implementation-decisions.md).
 
 ```text
 M1 ✅ Core packing loop
-M2 ✅ Weather lifecycle
-    ⏳ Physical-device WeatherKit verification (M2-owned; runs in the
-       same device session as M3A but does not gate M3A)
+M2 ✅ Weather lifecycle code
+    ❌ Current-trip physical-device WeatherKit behavior (M2-owned fix,
+       now part of the Product Experience V2 gate)
 M3
     M3A Intelligence API foundation
         M3A-1 ✅ contract + plumbing, FakeModelAdapter (frozen)
         M3A-2 ✅ implementation — Responses API, production App Attest,
                durable state, Vercel packaging
-    M3A external verification ← CURRENT
+    M3A external verification
         ✅ OpenAI, live eval 18/18, real Redis, Vercel Production
-        ⏳ physical-device App Attest (development) + full device UI/UX pass
+        ✅ physical-device App Attest (development)
+        ❌ first full device UI/UX pass exposed Product Experience V2 blockers
         ⏸ TestFlight production App Attest — deferred to distribution
-    M3B 🔒 do not start
-    M3C 🔒 do not start
+Product Experience V2 ← CURRENT, documentation under review
+    true multi-trip-type + multi-bag context
+    family eligibility/sharing + grouped All view
+    coherent setup/onboarding/destination/list UX
+    current-trip WeatherKit device repair
+    full simulator + physical-device exit gate
+    M3B 🔒 do not start until V2 is green
+    M3C 🔒 do not start until V2 is green
     M3B Trip-context enrichment
     M3C Packing-gap detection
 M4  Share, notifications, Final Check
@@ -163,10 +170,10 @@ M4  Share, notifications, Final Check
 - **M2A (closed):** WeatherKit foundation — real `WeatherKitWeatherService`, normalize into `TripWeatherContext`, persist `WeatherSnapshot` coverage/cache metadata, `TripWeatherState`, Apple Weather attribution infrastructure. Fixtures stay for tests/previews.
 - **M2B (closed):** Packing Impact card on Trip Detail, driven by existing recommendation provenance. Restrained read-only weather detail.
 - **M2C (closed):** weather refresh vs recommendation refresh, packing-signal diff, user-reviewed `WeatherChangeProposal` (reuse `recommendationDiff()`). One pending proposal per trip; stale proposals invalidate; snapshot save is independent of packing acceptance; dismiss ≠ Not Needed. No M4 notifications. Do not reopen M2 architecture unless device WeatherKit verification exposes a genuine defect.
-- **M3 (now):** Context Intelligence. GPT-5.6 enriches PackWise's existing engine; it does not replace it.
+- **M3 (frozen during Product Experience V2):** Context Intelligence. GPT-5.6 enriches PackWise's existing engine; it does not replace it.
   - **M3A:** Intelligence API foundation — `RemoteContextIntelligenceService`, Structured Outputs, schema/canonical validation, prompt versioning, `store: false`, `safety_identifier`, rate limits, App integrity boundary. Typed endpoints: `/v1/trip/interpret`, `/v1/packing/gaps`, `/v1/packing/optimize`. No big new UX.
     - **M3A-1 (closed):** every contract real before any model behaviour is real. Generated request/response and model-output schemas, canonical + reason-code validation, request IDs, prompt/schema versioning, per-capability rate limits, `AppIntegrityProvider` with the development provider, Swift HTTP client and `RemoteContextIntelligenceService`, `FakeModelAdapter`, and the nine evaluation fixtures with `note` / `mustInfer` / `mustNotInfer` / `allowedSuggestions`. No OpenAI key required.
-    - **M3A-2 (implementation complete, verification pending):** live infrastructure, not product behavior. `OpenAIResponsesModelAdapter` using the generated strict schema, real prompt templates, `store: false`, HMAC'd install-scoped `safety_identifier`, conservative timeout/retry, production App Attest with durable challenge/key/counter state, Redis-backed rate limiting, `shared/` vocabulary as a build artifact rather than a runtime path, Vercel deployment, live evaluation smoke suite. The normal generation flow still behaves exactly as it did — wiring happens in M3B and M3C. Acceptance criteria are tracked in three states (proven offline / implemented, verification pending / hard external verification) in [implementation-decisions.md](implementation-decisions.md). The external pass and its exit gate are in [m3a2-verification-runbook.md](m3a2-verification-runbook.md); capture evidence per step, not just a checkbox. M3A closes on its own six items — the outstanding M2 WeatherKit device pass shares the session but belongs to M2. TestFlight production App Attest is deferred to actual App Store distribution and does not gate M3B; a locally signed build cannot exercise Apple's production environment.
+    - **M3A-2 (implementation and development App Attest verified):** live infrastructure, not product behavior. `OpenAIResponsesModelAdapter` using the generated strict schema, real prompt templates, `store: false`, HMAC'd install-scoped `safety_identifier`, conservative timeout/retry, production App Attest with durable challenge/key/counter state, Redis-backed rate limiting, `shared/` vocabulary as a build artifact rather than a runtime path, Vercel deployment, and live evaluation smoke suite are green for the recorded development scope. The normal generation flow still behaves exactly as it did — wiring remains frozen until M3B/M3C. TestFlight production App Attest is deferred to actual distribution. Product Experience V2 now owns the pre-M3B product, WeatherKit, and regression gate.
   - **M3B:** Trip-note interpretation merges into `TripContext`. GPT does not insert packing items.
   - **M3C:** Packing-gap candidates through the Recommendation Resolver as optional suggestions. No dedicated “What am I forgetting?” UI.
   - Optimize is backend-only in M3. Ask PackWise UI and Pack lighter UI are V1+.

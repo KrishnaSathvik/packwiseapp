@@ -7,9 +7,9 @@ alwaysApply: true
 
 Build the current milestone unless the user expands scope. Frozen decisions: `docs/implementation-decisions.md`.
 
-**Now: M3A external verification** — implementation is complete; the live Redis, OpenAI, Vercel, device, and TestFlight passes are outstanding. M3B and M3C do not start until the exit gate in `docs/m3a2-verification-runbook.md` is green: physical-device App Attest (Apple development environment) and a full device UI/UX pass, per `docs/device-pass-checklist.md`. TestFlight production App Attest is deferred to distribution and does not gate M3B. The outstanding M2 WeatherKit device pass shares that session but is M2-owned and does not gate M3A. GPT-5.6 enriches PackWise's existing engine; it does not replace it.
+**Now: Product Experience V2 documentation review** — development App Attest is green, but the first physical-device UI/UX pass and current-trip WeatherKit behavior exposed blockers. Do not implement V2 until `docs/plans/2026-09-04-product-experience-v2-design.md` and `docs/superpowers/plans/2026-09-04-product-experience-v2.md` are reviewed. M3B and M3C remain frozen until the complete V2 simulator and physical-device gate is green. TestFlight production App Attest remains deferred to distribution.
 
-Slices: **M3A** API foundation (no big UX) → **M3B** trip-note enrichment into `TripContext` → **M3C** resolver-filtered packing gaps. `/v1/packing/optimize` is backend-only. Ask PackWise / Pack lighter UI are V1+.
+Sequence: **M3A** API foundation → **Product Experience V2** → **M3B** accepted trip-note enrichment → **M3C** resolver-filtered packing gaps. `/v1/packing/optimize` is backend-only. Ask PackWise / Pack lighter UI are V1+.
 
 **M3A-1 is frozen:** contracts, generated schemas, canonical validation, rate limits, integrity boundary, Swift client, `FakeModelAdapter`, nine eval fixtures. **M3A-2** added the live `OpenAIResponsesModelAdapter`, production App Attest with durable challenge/key/counter state, Redis-backed rate limiting, `api/generated/` as the deployment artifact, and Vercel packaging. It changes what runs, not what PackWise does. Never record a deployment or a live model call as verified until it has actually run.
 

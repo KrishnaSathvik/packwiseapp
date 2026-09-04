@@ -262,7 +262,7 @@ Possible settings:
 
 ```text
 Default packing style
-Preferred bag
+Preferred bags
 Temperature units
 Weight units
 Usually work out while traveling

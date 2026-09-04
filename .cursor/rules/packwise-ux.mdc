@@ -14,8 +14,10 @@ Two tabs only: **Trips** and **Me**. Do not add Weather, Assistant, Explore, Dis
 Value in seconds. No signup, no notification permission, no location permission, no subscription wall.
 
 1. Welcome — “Pack what this trip actually needs.” CTA **Get Started**
-2. Built around your trip — Chicago example with reasons
-3. It gets more personal — CTA **Create My First Trip**
+2. One trip can be many things — composable trip types, activities, and bags
+3. Your choices stay yours — CTA **Create My First Trip**
+
+All three pages share one shell. Do not claim memory-driven personalization before that product ships.
 
 ## Trips home
 
@@ -27,11 +29,15 @@ Progressive steps, not one form. V1: one primary destination.
 
 1. Destination — MapKit search, store displayName/city/region/country/coords/timeZone
 2. Dates — native range; persist **days and nights**
-3. Type — Vacation, City Break, Beach, Business, Outdoor, Road Trip, Wedding/Event, Ski/Snow, Festival, Visiting Family, Other. Type is one signal, not the whole list
-4. Activities — type-based chips + **+ Add something** free text
-5. Bag — Personal item / Carry-on / Checked / Backpack / Road-trip / Not sure. Explain impact
-6. Style — Light / **Balanced (default)** / Prepared
-7. Optional — chips + free note (medication, laptop, laundry, etc.)
+3. Travelers — single party mode: Just me / Me + partner / Family / Group
+4. Trip types — **multi-select** Vacation, City Break, Beach, Business, Outdoor, Road Trip, Wedding/Event, Ski/Snow, Festival, Visiting Family, Other. No primary type
+5. Activities — multi-select type-based chips + **+ Add something** free text
+6. Bags — **multi-select** Personal item / Carry-on / Checked / Backpack. Empty means Not sure/no constraint. Road Trip is not a bag
+7. Style + laundry — both separate single-select policies; Light / **Balanced (default)** / Prepared and No laundry / If needed / Planned
+8. About you — multi-select chips + free note
+9. Review
+
+Every step uses native Back/cancel, progress, title/helper/content, and a sticky bottom primary action. Do not put Next at top-right.
 
 Review → **Build My Packing List**. Short real wait copy only. Never “AI is generating”.
 
@@ -55,7 +61,7 @@ Item sheet: why + Recommended by (Forecast, Activities — never AI/GPT/Algorith
 
 Always show quantities. Explain on tap. Deduplicate overlapping footwear/layers internally.
 
-Filters: All / Left to pack / Packed / Important. Optional hide packed. No 12-filter system.
+Solo filters: To pack / Packed / Important. Party lists add a compact People scope (All / stable traveler labels / Shared). In party All, group identical canonical personal items for presentation; traveler filters show real records.
 
 Progress: `31 of 42 packed` + items left. Near departure: `4 essentials still unpacked`.
 

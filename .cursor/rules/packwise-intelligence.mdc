@@ -28,8 +28,8 @@ Repeated removals feed `PackingMemory`. Eventually stop recommending unless cont
 ## Scoring
 
 ```text
-base + trip type + activity + weather + destination + preference + history + contextual
-- bag constraint - repeated rejection
+base + trip-type needs + activity needs + weather needs + traveler needs + preference needs + history + contextual
+- normalized luggage constraint - repeated rejection
 ```
 
 Map to Required / Recommended / Helpful / Optional / Do not show. **Never show numeric scores.**
@@ -50,7 +50,7 @@ Tiny backend. No giant `/chat`.
 
 Also referred to as `/interpret-trip`, `/recommend-context`, `/check-gaps`, `/pack-lighter`, `/ask`.
 
-Minimize context. Gap check sends destination, dates, type, activities, weather summary, style, bag, current item IDs, relevant preferences, a small memory slice — not the user's whole history.
+Minimize context. Gap check sends destination, dates, stable tripTypes, activities, weather summary, style, stable bagTypes, current item IDs, relevant preferences, a small memory slice — not the user's whole history.
 
 GPT responses must be structured (`canonicalItemID`, `action`, `reasonCode`, `reasonArguments`, numeric `confidence` 0...1, `signals`, optional fallback `reason` prose). camelCase throughout. `reasonCode` + `reasonArguments` is the durable identifier PackWise renders from a localized template; `reason` is never a stable key. Confidence is internal — ranking and suppression only, never rendered. Validate before resolve.
 

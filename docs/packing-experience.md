@@ -99,6 +99,15 @@ All | You | Partner | Arjun | Shared
 
 Shared items can ask **Who is bringing it?** That is the carrier (`assignedTravelerID`), not the owner. See [travelers-and-parties.md](travelers-and-parties.md).
 
+Product Experience V2 labels the two compact scopes explicitly:
+
+```text
+People: All | You | Adult 1 | Adult 2 | Child 1 | Shared
+Status: To pack 81 | Packed 0 | Important
+```
+
+Solo hides People. Party All groups identical canonical personal rows and shows traveler completion/quantity detail; tapping reveals the real records. Traveler and Shared filters always show real rows. This is presentation aggregation, not ownership collapse.
+
 ## Packing item UX
 
 Basic row:
@@ -250,7 +259,7 @@ Internally every recommendation may have:
 weather
 duration
 activity
-tripType
+trip types
 destination
 baseEssential
 userPreference

@@ -24,6 +24,8 @@ Agents: start with [AGENTS.md](../AGENTS.md) and the always-applied PackWise rul
 | [implementation-decisions.md](implementation-decisions.md) | Frozen repo, weather, GPT, catalog, and milestone answers |
 | [m3a2-verification-runbook.md](m3a2-verification-runbook.md) | The App Attest environment rule, and the ordered external verification pass gating M3B |
 | [future-features.md](future-features.md) | Outfits, bags, airline limits, group packing, widgets, Siri |
+| [plans/2026-09-04-product-experience-v2-design.md](plans/2026-09-04-product-experience-v2-design.md) | Active Product Experience V2 product, model, engine, migration, UX, and exit-gate specification |
+| [superpowers/plans/2026-09-04-product-experience-v2.md](superpowers/plans/2026-09-04-product-experience-v2.md) | Review-gated task-level Product Experience V2 implementation plan |
 
 ## Design mocks
 

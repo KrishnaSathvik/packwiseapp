@@ -124,7 +124,7 @@ New activities
 +
 Current weather
 +
-Current bag
+Current bags
 +
 Current packing style
 ```

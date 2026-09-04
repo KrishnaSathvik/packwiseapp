@@ -214,9 +214,9 @@ id
 destination
 startDate
 endDate
-tripType
+tripTypes[]
 activities
-bagType
+bagTypes[]
 packingStyle
 
 status
@@ -238,7 +238,7 @@ archived
 
 ## Trip context
 
-SwiftData versions are `PackWiseSchemaV1` and `PackWiseSchemaV2` with `PackWiseMigrationPlan`. Add a new schema version when stored models change.
+The shipped model is `PackWiseSchemaV3`. Product Experience V2 plans an explicit `PackWiseSchemaV4` migration for set-valued trip types, preferred bags, memory fingerprints, and structured provenance. Add a new schema version for every stored-model change; never delete the store to conceal migration failure.
 
 `Trip` is persistent user data. `TripContext` is what the intelligence system evaluates.
 
@@ -253,11 +253,12 @@ tripDates
 durationDays
 durationNights
 
-tripType
+tripTypes[]
 
 activities
 
-bagType
+bagTypes[]
+normalized luggage context
 packingStyle
 
 userNotes

@@ -1,19 +1,13 @@
 # M3A-2 Verification Runbook
 
-M3A-2 implementation is complete. What remains is proving it against the real
-services. Everything below needs credentials or hardware; nothing below is
-implementation work.
+M3A-2 implementation and development App Attest verification are complete. The first physical-device product pass exposed Product Experience V2 blockers, including current-trip WeatherKit and the UI/UX/model changes specified in `docs/plans/2026-09-04-product-experience-v2-design.md`.
 
 Run the steps in order. Each one removes a class of failure from the next, so
 a problem found in step 4 is genuinely an App Attest problem rather than a
 Redis or deployment problem wearing a disguise. `scripts/live-smoke.ts` prints
 the evidence for step 1.
 
-Do not start M3B until the six M3A items below are green. The live adapter can
-now cross the most sensitive boundary in PackWise; that boundary should be proven
-against real services before model output is allowed to enrich actual trip
-context. Step 6 is M2-owned and shares the device session but does not gate M3A
-or M3B — see the exit gate at the end.
+Do not start M3B until the complete Product Experience V2 exit gate is green. This runbook remains the evidence record for the M3A service boundary; Product V2 owns the new product and WeatherKit rerun.
 
 ---
 
@@ -382,22 +376,20 @@ logs already follow.
 
 ---
 
-## M3A exit gate
+## M3A evidence and Product V2 gate
 
-M3A closes when its six items are verified. The sixth was TestFlight; it is now
-a full physical-device product pass, because that is what a locally signed build
-can actually prove.
+The live M3A service boundary and development App Attest are green. The first full physical-device product pass did not pass, so Product Experience V2 now owns the UI/UX rerun and the pre-M3B exit decision.
 
 ```text
 [x] Live OpenAI Structured Outputs verified   2026-08-30
 [x] Live eval smoke reviewed                 2026-08-30, 18/18 green
 [x] Real Redis verified                      2026-08-30
 [x] Production Vercel deployment verified    2026-08-30
-[ ] Physical-device App Attest — development environment
+[x] Physical-device App Attest — development environment (physical-device pass, 2026-09-04)
 [ ] Full physical-device UI/UX pass
 ```
 
-Both remaining items run as one session on a real iPhone against
+The remaining UI/UX item reruns as part of Product Experience V2 on a real iPhone against
 `packwiseapp-dev.vercel.app`. The checklist is
 [device-pass-checklist.md](device-pass-checklist.md).
 
@@ -407,15 +399,10 @@ Store always use production regardless of the entitlement. That path is real and
 unverified, but it is *distribution* verification, so it is tracked as future
 work rather than a gate — it does not block M3B.
 
-The M2 WeatherKit device pass is **not** on that list. It belongs to M2, and
-conflating the two would misattribute ownership. Run it in the same device
-session — the runbook keeps it in step 6 for exactly that reason — but track it
-separately, so if it is the only unchecked item the project can accurately say:
-
-> M3A verified. M2 device verification still pending.
+The WeatherKit defect originated in the M2 path, but current-trip WeatherKit is now an explicit Product Experience V2 blocker and therefore gates M3B alongside the product rerun.
 
 ```text
-[ ] M2 WeatherKit physical-device pass verified   (M2-owned)
+[ ] Current-trip WeatherKit physical-device pass verified   (V2 gate; M2 implementation owner)
 ```
 
 ---
@@ -423,19 +410,13 @@ separately, so if it is the only unchecked item the project can accurately say:
 ## When the pass is green
 
 ```text
-M3A-2 implementation ✅
+M3A-2 implementation + development App Attest ✅
         ↓
-external verification ✅
-        ↓
-M3A closed
+Product Experience V2 simulator + device gate
         ↓
 M3B trip-context enrichment
 ```
 
-M3B should be small: the dangerous plumbing — validation, canonical rejection,
-the resolver boundary, integrity, rate limits, fallback — is already built and
-proven. M3B wires interpretation into `TripContext`; M3C wires gap candidates
-into suggestions.
+M3B remains a later, deliberate change. It wires accepted interpretation into the V2 set-valued `TripContext`; M3C wires gap candidates into suggestions.
 
-If any step fails, fix it inside M3A rather than carrying it forward. That is
-what "do not start M3B yet" is protecting.
+If an App Attest regression appears, fix that M3A defect. Product or WeatherKit failures stay in their V2/M2-owned stages. Do not carry any red gate into M3B.

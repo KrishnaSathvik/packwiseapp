@@ -4,6 +4,8 @@ Do not use one giant form.
 
 Use a progressive setup. The user should feel like they are describing their trip, not filling in a database record.
 
+Product Experience V2 uses one shared shell on every step: native Back/cancel, compact progress, title and helper, scrollable content, and a sticky bottom primary action. `Next` does not live at top-right.
+
 V1 supports **one primary destination**. Multi-destination comes later.
 
 ## Step 1 — Destination
@@ -83,9 +85,11 @@ Group
 
 Shared trip context (destination, dates, weather, activities, bag, style) is not re-asked per person.
 
-## Step 4 — Trip type
+## Step 4 — Trip types
 
-Headline: **What kind of trip is it?**
+Headline: **What describes this trip?**
+
+Helper: **Choose everything that applies.**
 
 Initial types:
 
@@ -103,13 +107,13 @@ Visiting Family
 Other
 ```
 
-Trip type is one signal. It must not directly determine the entire packing list.
+Trip types are multi-select. At least one known type is required. Every selected known type contributes deterministic typed needs into one composition pipeline; there is no primary type and no per-type checklist. `Other` remains inert context unless a deterministic contract is approved.
 
 ## Step 5 — Activities
 
 Headline: **What will you be doing?**
 
-Suggested chips are based partly on trip type.
+Suggested chips are the stable union from all selected trip types. Changing trip types never silently removes an activity the user selected.
 
 For beach:
 
@@ -138,33 +142,34 @@ Work
 
 Always include **+ Add something**.
 
-Free text is required. Example: `Sunrise wildlife photography`.
+Free text is supported. Example: `Sunrise wildlife photography`.
 
 PackWise interprets free-text activities internally. Do not require every activity to be a manually built enum.
 
 Selected activities appear in a **Your activities** list.
 
-## Step 6 — Bag and packing style
+## Step 6 — Bags
 
-One screen, two questions, as the reference board draws it. The draft still
-records bag and style separately; only the presentation is merged.
+Headline: **What bags are you bringing?**
 
-Headline: **How are you traveling?**
+Helper: **Choose all that apply.**
 
 Options:
 
 ```text
-Personal item only
+Personal item
 Carry-on
 Checked bag
 Backpack
-Road-trip luggage
-Not sure yet
 ```
 
-Visually explain the implication. Example for **Carry-on**:
+These are multi-select physical bags. An empty selection displays **Not sure yet** and applies no luggage constraint. Road Trip is trip context, not luggage. If any checked bag is selected, carry-on-only trimming does not apply.
+
+Visually explain the normalized implication. Example for **Carry-on**:
 
 > PackWise will favor versatile items and fewer backups.
+
+## Step 7 — Packing style and laundry
 
 ### How do you prefer to pack?
 
@@ -182,7 +187,7 @@ The second half of the same screen. This is a signature PackWise setting.
 
 > Bring a little extra for the unexpected.
 
-Default: **Balanced**, or the Me tab default if the traveler has set one. Setup prefills bag and packing style from Me. The traveler can still change them for this trip.
+Default: **Balanced**, or the Me tab default if the traveler has set one. Setup prefills bags and packing style from Me. The traveler can still change them for this trip.
 
 Internally this changes:
 
@@ -193,7 +198,9 @@ Internally this changes:
 - backup clothing
 - weather-risk tolerance
 
-## Step 8 — Anything else?
+Laundry is a separate single-select policy on the same screen: **No laundry**, **Laundry if I need it**, or **Planning to do laundry**.
+
+## Step 8 — About you / trip preferences
 
 Optional.
 
@@ -216,7 +223,11 @@ Then: **Add a note**
 
 Example: `I'll probably do laundry halfway through.`
 
-That note is useful context. GPT-5.6 interprets it internally. Do not dump the raw note into customer-facing “AI” copy.
+That note is stored as explicit context. Interpretation remains gated off during Product Experience V2; M3B may later propose accepted enrichment with traveler-attribution guards. Do not dump the raw note into customer-facing “AI” copy.
+
+## Step 9 — Review
+
+Review separately summarizes trip types, travelers, activities, bags, packing style, laundry, and preferences with wrapping text. Empty bags show **Not sure yet**. Family counts distinguish the current user from **Other adults**.
 
 ## Natural language shortcut
 

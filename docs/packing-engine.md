@@ -245,7 +245,7 @@ Final Relevance
 =
 base rule strength
 
-+ trip type relevance
++ composed trip-type need relevance
 + activity relevance
 + weather relevance
 + destination relevance
@@ -253,7 +253,7 @@ base rule strength
 + historical behavior relevance
 + contextual reasoning relevance
 
-- bag constraint penalty
+- normalized luggage constraint penalty
 - repeated rejection penalty
 ```
 

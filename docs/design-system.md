@@ -40,7 +40,7 @@ large touch targets
 subtle materials
 ```
 
-- Trip setup uses a top **Back** / **Next** header, not a custom wizard chrome
+- Trip setup uses native Back/cancel, a compact progress indicator, and a sticky bottom primary action in one shared shell. Do not place Next at top-right.
 - Main app uses a 2-tab bar: **Trips** and **Me**
 - Packing rows are Reminders-style, not cards
 - Cards are reserved for trip summaries, weather, weather-changed, final check, and packing suggestions

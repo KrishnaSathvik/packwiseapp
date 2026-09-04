@@ -1,5 +1,7 @@
 # PackWise Device Pass
 
+> **Product Experience V2 ruling (2026-09-04):** the first real-device pass proved development App Attest and left the product UI/UX gate red. This checklist now feeds the V2 exit gate in `docs/plans/2026-09-04-product-experience-v2-design.md`. Current-trip WeatherKit is also a V2 blocker. M3B/M3C remain frozen until the complete V2 rerun is green.
+
 One comprehensive pass on a real iPhone, covering both halves of what is still
 unproven: the App Attest path against Apple's development environment, and the
 product itself under a real finger on real hardware.
@@ -307,7 +309,7 @@ Force-close and reopen between each stage.
 ```text
 [ ] home country
 [ ] units
-[ ] default bag
+[ ] default bags multi-select
 [ ] default style
 [ ] habits
 [ ] a new trip actually prefills from these defaults
@@ -420,7 +422,7 @@ substitute for any physical-device checkbox above.
 [x] Reference-board comparison reviewed
 [x] Focused recapture after accessibility corrections
 [ ] Physical-device UI/UX pass
-[ ] Physical-device App Attest — development
+[x] Physical-device App Attest — development (green on physical hardware, 2026-09-04)
 ```
 
 Evidence locations for this run:
@@ -441,7 +443,7 @@ Final simulator observations:
 - Selected and custom activities share one chip flow.
 - Maui uses a designed graphical fallback rather than a generic location tile.
 - Zero-packed lists read "Packing list ready" without an empty progress track.
-- Trip Detail shows precise and seasonal weather states and five category rows.
+- Trip Detail shows precise and seasonal weather states and every non-empty category row.
 - Both Trip Detail hero controls remain visible at accessibility size.
 - Packing List rows remain below opaque pinned chrome in top and scrolled states.
 - Item Detail renders as medium/large sheets with truthful quantity evidence.
@@ -472,7 +474,7 @@ than a release gate.
 [x] Live eval — 18/18                        2026-08-30
 [x] Real Redis                               2026-08-30
 [x] Production Vercel deployment             2026-08-30
-[ ] Physical-device App Attest — development
+[x] Physical-device App Attest — development (green on physical hardware, 2026-09-04)
 [ ] Full physical-device UI/UX pass
 
 TestFlight production App Attest
@@ -480,5 +482,4 @@ TestFlight production App Attest
   → does not block M3B
 ```
 
-When the two device items are green: **M3A verified for the current development
-scope**, and M3B unlocks.
+Development App Attest is green. The UI/UX item remains red and has expanded into Product Experience V2. M3B unlocks only after the complete V2 simulator and physical-device exit gate is green.

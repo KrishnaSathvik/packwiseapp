@@ -2,6 +2,20 @@
 
 Frozen answers for the first build. Update this file if a decision changes.
 
+## Product Experience V2 gate (2026-09-04)
+
+The first meaningful physical-device product pass left the UI/UX gate red even though development App Attest passed. Product Experience V2 is now the active pre-M3B program. Its source of truth is [plans/2026-09-04-product-experience-v2-design.md](plans/2026-09-04-product-experience-v2-design.md), and its review-gated execution plan is [superpowers/plans/2026-09-04-product-experience-v2.md](superpowers/plans/2026-09-04-product-experience-v2.md).
+
+Frozen V2 decisions:
+
+- `tripTypes` is a stable, true set; no primary trip type controls the engine.
+- `bagTypes` is a stable set of physical bags. Empty means not sure/no constraint; Road Trip is never a bag.
+- Trip types contribute typed needs into the existing coverage/quantity/constraint/trace pipeline, not independent item templates.
+- Traveler eligibility becomes explicit and conservative; sharing remains separate from owner/carrier.
+- Family All is presentation aggregation over real traveler records.
+- SwiftData V4 migration preserves existing data, and container failure never deletes a store.
+- M3B/M3C remain frozen until the complete V2 simulator and physical-device gate is green.
+
 ## Repo
 
 ```text
@@ -100,7 +114,7 @@ sharingPolicy: singlePerParty | scaleByParty | scaleByDevices | scaleByDurationA
 
 Kid age groups make items eligible. Clothes and backup outfits can be automatic. Diapers, formula, strollers, and similar needs require a setup chip or a stronger signal.
 
-SwiftData: `PackWiseSchemaV1` → `PackWiseSchemaV2` via `PackWiseMigrationPlan`. Stores created before versioning have no version hash; the container recovers those once, then later changes must add a new schema version.
+SwiftData currently ships `PackWiseSchemaV3` through `PackWiseMigrationPlan`. Product Experience V2 adds an explicit V4 migration for trip-type sets, preferred-bag sets, bag relationships, memory fingerprints, and structured provenance. Later stored changes require later schema versions. A container/migration error must fail without deleting the store.
 
 **Frozen for V1 architecture.** Domain invariants live in `PartyInvariants`. `sharingPolicy` stays in `shared/rules/party.json`; packing items store the resolved quantity and reason only.
 
@@ -374,37 +388,26 @@ saying so is the point.
 19. GPT failure leaves iOS core packing unaffected
 ```
 
-**🟡 Implemented, external verification pending** — written and unit-tested,
-never exercised against the real thing:
+**✅ Externally verified** — exercised against the named real boundary:
 
 ```text
-10. Real attestation can be registered      (verified against synthetic chain)
-11. Assertions verify on intelligence routes (verified against synthetic chain)
-16. Rate limiting is durable across instances (verified against FakeRedisClient)
-17. shared vocabulary deploys reliably       (api/generated built and checked)
+10. Real development attestation registered on physical hardware
+11. Assertions verified on intelligence routes on physical hardware
+16. Rate limiting durable across real Redis instances
+17. shared vocabulary deployed through the verified Vercel artifact
+18. Production Vercel deployment answered routes
+20. Live eval smoke suite passed 18/18 with Structured Outputs
 ```
 
-**⏳ Hard external verification** — needs credentials or hardware:
+**⏳ Product Experience V2 external verification:**
 
 ```text
-18. Production Vercel deployment answers all routes
-20. Live eval smoke suite runs successfully
-    OpenAI Structured Outputs request compatibility
-    Real Redis backend
-    Physical-device App Attest
-    Physical-device WeatherKit (outstanding from M2)
+Physical-device UI/UX rerun
+Physical-device current-trip WeatherKit
+Development App Attest regression remains green
 ```
 
-Do not record 18 or 20 as done until they have actually run. The honest
-checkpoint is: **M3A-2 implementation complete; external verification pending
-OpenAI, Redis, Vercel, and signed-device credentials.**
-
-Do not start M3B before that verification pass. M3B is where model behavior
-first reaches real trip context. The ordered steps — live OpenAI, then
-real Redis, then Vercel, then physical-device App Attest, then TestFlight, then
-the outstanding M2 WeatherKit pass — are in
-[m3a2-verification-runbook.md](m3a2-verification-runbook.md), along with the
-per-build App Attest environment table.
+The honest checkpoint is: **M3A-2 live services and development App Attest are green; Product Experience V2 is the active gate.** Do not start M3B before the V2 pass. M3B is where model behavior first reaches real trip context. The original ordered service evidence remains in [m3a2-verification-runbook.md](m3a2-verification-runbook.md); the V2 product, WeatherKit, and regression matrix is in the active design and implementation plan.
 
 ### M3B open contract issue: interpretation is not traveler-scoped
 

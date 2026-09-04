@@ -46,11 +46,11 @@ Cursor rules in `.cursor/rules/` repeat the hard constraints. Keep rules and doc
 
 ## Frozen implementation decisions
 
-See `docs/implementation-decisions.md`. **M3A-2 implementation is complete; external verification is pending** OpenAI, Redis, Vercel, and signed-device credentials. M1, M2, M3A-1, and M3A-2 code are closed — do not reopen their architecture unless a device or live-integration pass exposes a genuine defect.
+See `docs/implementation-decisions.md`. **M3A-2 implementation is complete and its development App Attest path is green. Product Experience V2 is now the active gate.** The first physical-device product pass left the UI/UX and current-trip WeatherKit gates red. M1, M2, M3A-1, and M3A-2 architecture remains closed except for a genuine defect exposed by V2 verification.
 
-Be precise about what is verified: fixture-backed cryptographic verification is not Apple-service verification, and a green test suite is not a deployment. Acceptance criteria are tracked in three states, and each external step retains evidence rather than a checkbox. Do not start M3B or M3C before the M3A exit gate in `docs/m3a2-verification-runbook.md` is green — its last two items are a physical-device App Attest pass in Apple's development environment and a full device UI/UX pass. TestFlight production App Attest is deferred to distribution and does not gate M3B. The outstanding M2 WeatherKit device pass runs in the same session but is M2-owned and does not gate M3A.
+Be precise about what is verified: fixture-backed cryptographic verification is not Apple-service verification, and a green test suite is not a deployment. Acceptance criteria retain evidence rather than a checkbox. Do not start M3B or M3C before the Product Experience V2 exit gate in `docs/plans/2026-09-04-product-experience-v2-design.md` is green. Development App Attest must remain green; TestFlight production App Attest is deferred to distribution. Current-trip WeatherKit on physical hardware is part of the V2 gate.
 
-The next code should be either a fix the external pass discovers, or — once the gate is green — the first deliberate M3B context-enrichment change. Not more infrastructure.
+The next code is the reviewed Product Experience V2 implementation plan in `docs/superpowers/plans/2026-09-04-product-experience-v2.md`. Do not begin it until product review approves the documentation. Once the V2 gate is green, reconsider the first deliberate M3B context-enrichment change. Not more infrastructure.
 
 `PACKWISE_APP_ATTEST_ENVIRONMENT` is stated per deployment, never inferred: TestFlight and App Store builds always use `production` regardless of the local entitlement. An unset value is a boot failure, not a default.
 
@@ -61,7 +61,9 @@ M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `Tri
 - Deterministic engine first; GPT protocol exists from day one
 - Real WeatherKit in M2A (closed); mock fixtures remain for tests/previews
 - Home country preference; international = destination ≠ home
-- Bag “Not sure yet” applies no bag constraint
+- Trip types are a true multi-select set; no hidden primary trip type controls behavior
+- Bags are a true multi-select set of personal item / carry-on / checked bag / backpack; an empty set means “Not sure yet” and applies no bag constraint
+- Road Trip is trip context, never a luggage type
 - Units follow locale
 - Catalog source of truth: `shared/catalog/`
 - Destinations: MapKit in production; `shared/fixtures/test-destinations.json` is test/preview/weather-fixture matching only

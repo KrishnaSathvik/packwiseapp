@@ -102,6 +102,8 @@ Policies live in `shared/rules/party.json` as **rule metadata**. Do not copy `sh
 
 **Status: frozen for V1 architecture.** Do not expand this model until the packing engine and trip-setup UI prove the flows.
 
+**Product Experience V2 ruling:** owner/carrier and underlying per-traveler records remain frozen, but eligibility and sharing metadata now receive the catalog-wide hardening specified in `docs/plans/2026-09-04-product-experience-v2-design.md`.
+
 ## Invariants
 
 Enforced in the domain layer (`PartyInvariants`).
@@ -146,9 +148,11 @@ Toddler
 - **Family** — adult count, child count, each child's age group, and only the child needs that apply.
 - **Group** — adult count. One device manages the list.
 
+Family input counts **Other adults**, not total adults including the current user. Empty names derive stable distinct labels in party order: You, Adult 1, Adult 2, Child 1, Child 2, Shared.
+
 ## Engine
 
-Weather and trip-wide signals run **once**.
+Weather and trip-wide signals run **once**. Traveler eligibility runs before quantity and sharing. Age alone never assigns a young child a device, charger, headphones, deodorant, medication, or child equipment; explicit child needs remain authoritative.
 
 ```text
 Trip-wide context
@@ -172,7 +176,7 @@ Rain becomes a personal rain layer per traveler who needs one, and a shared umbr
 
 ## UI
 
-Tabs are generated from the party, not hardcoded.
+People filters are generated from the party, not hardcoded.
 
 ```text
 Krishna + Maya          All | Krishna | Maya | Shared
@@ -182,9 +186,11 @@ You + Partner + Arjun   All | You | Partner | Arjun | Shared
 
 Shared rows can ask **Who is bringing it?** That writes `assignedTravelerID`.
 
+In All scope, identical canonical personal records aggregate into one presentation row with traveler progress and quantities. Traveler and Shared scopes continue to show real records. Aggregation never collapses persistence or ownership.
+
 ## Persistence
 
-`PackWiseSchemaV1` → `PackWiseSchemaV2` with a lightweight `SchemaMigrationPlan`. Do not treat delete-and-reinstall as the migration strategy.
+The shipped model is `PackWiseSchemaV3`; Product Experience V2 adds an explicit V4 migration. Do not treat delete-and-reinstall as the migration strategy.
 
 ## Memory
 

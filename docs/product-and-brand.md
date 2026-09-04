@@ -10,7 +10,7 @@ The user tells PackWise:
 - when they're going
 - what kind of trip it is
 - what they'll be doing
-- what bag they're taking
+- what bags they're taking
 - how they prefer to pack
 
 PackWise combines that with:
