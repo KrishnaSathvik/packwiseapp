@@ -567,6 +567,50 @@
       "style": "balanced",
       "laundry": "none",
       "homeCountryCode": "US"
+    },
+    {
+      "id": "37-family4-5d-hiking-camping-outdoor",
+      "proves": "F-5: flashlight stays personal-per-traveler for a family (four rows, not one shared); sunscreen and insect repellent scale by sharingPolicies; owner and carrier remain distinct for the toddler's items",
+      "destination": "Yellowstone",
+      "weatherFixture": null,
+      "startDate": "2027-08-15",
+      "days": 5,
+      "tripType": "outdoor",
+      "activities": ["hiking", "camping"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "party": {
+        "travelMode": "family",
+        "travelers": [
+          {"role": "self", "ageGroup": "adult"},
+          {"role": "partner", "ageGroup": "adult"},
+          {"role": "child", "ageGroup": "child"},
+          {"role": "child", "ageGroup": "toddler"}
+        ]
+      }
+    },
+    {
+      "id": "38-couple-5d-seattle-shared-umbrella",
+      "proves": "A couple with rain in the forecast shares one umbrella (scaleByParty, per:2) rather than one each; personal rain jackets remain per-traveler",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripType": "vacation",
+      "activities": ["walking", "sightseeing"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "party": {
+        "travelMode": "couple",
+        "travelers": [
+          {"role": "self", "ageGroup": "adult"},
+          {"role": "partner", "ageGroup": "adult"}
+        ]
+      }
     }
   ]
 }

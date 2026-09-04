@@ -711,4 +711,41 @@ struct ConstraintTests {
     // would be a catalog-vocabulary expansion outside this phase's file
     // list — the existing importance + essential-tag mechanism already
     // achieves the intended outcome without a new vocabulary.
+
+    // MARK: - Task 7: party/sharing determinism (gate 13)
+
+    /// Two consecutive generations of the same family/camping/sharing-heavy
+    /// context produce byte-identical ownership, carrier, and shared-quantity
+    /// output — the party-sharing surface Task 1/2 moved is new territory for
+    /// a determinism claim; the Phase 1 baseline's whole-ledger determinism
+    /// evidence (`docs/engine-audits/2026-09-03-phase-1-baseline.md`) is cited,
+    /// not re-derived, for everything else.
+    @Test func repeatedGenerationOnASharingHeavyPartyContextIsByteIdentical() throws {
+        let party = TripParty(travelMode: .family, travelers: [
+            Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult),
+            Traveler(name: "Jo", role: .child, ageGroup: .child)
+        ])
+        let ctx = context(destination: try destination("Chicago"), days: 5, activities: ["hiking", "camping"], bag: .checked, party: party)
+        let first = try makeEngine().generateDetailed(context: ctx)
+        let second = try makeEngine().generateDetailed(context: ctx)
+        // `PackingItemDraft.id` is a fresh `UUID()` per created draft, not
+        // part of the determinism claim (ownership, carrier, and
+        // shared-quantity output are) — normalized away before comparing,
+        // the same way the golden harness excludes UUIDs from its
+        // serialized comparison (see this file's header doc comment).
+        // travelerID/assignedTravelerID are not normalized: they come from
+        // `party`, which is the same value on both calls, so their
+        // equality is itself part of what this test proves.
+        func normalized(_ items: [PackingItemDraft]) -> [PackingItemDraft] {
+            let zeroID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+            return items.map { item in
+                var copy = item
+                copy.id = zeroID
+                return copy
+            }
+        }
+        #expect(normalized(first.items) == normalized(second.items))
+        #expect(first.constraintDecisions == second.constraintDecisions)
+        #expect(first.coverageSuppressions == second.coverageSuppressions)
+    }
 }
