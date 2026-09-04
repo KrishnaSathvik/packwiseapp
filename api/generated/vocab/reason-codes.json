@@ -226,7 +226,9 @@
       "ageGroup",
       "name"
     ],
-    "party.shared": [],
+    "party.shared": [
+      "quantityPhrase"
+    ],
     "party.shared_umbrella": [
       "rainDaysPhrase",
       "umbrellaPhrase"
