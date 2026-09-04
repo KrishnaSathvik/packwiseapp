@@ -65,7 +65,8 @@ struct CoverageTests {
         activities: [String] = ["sightseeing", "walking"],
         bag: BagType = .carryOn,
         style: PackingStyle = .balanced,
-        weather: TripWeatherContext? = nil
+        weather: TripWeatherContext? = nil,
+        party: TripParty? = nil
     ) -> TripContext {
         let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
         let end = Calendar.current.date(byAdding: .day, value: days - 1, to: start)!
@@ -86,11 +87,12 @@ struct CoverageTests {
             packingStyle: style,
             transportation: .unknown,
             laundryAccess: .none,
-            travelerCount: 1,
+            travelerCount: party?.travelers.count ?? 1,
             userNotes: "",
             contextChips: [],
             weather: weather,
-            preferences: prefs
+            preferences: prefs,
+            party: party ?? .solo()
         )
     }
 
@@ -343,5 +345,176 @@ struct CoverageTests {
         let ids = generation.items.compactMap(\.canonicalItemID)
         #expect(ids.contains("footwear.running_shoes"))
         #expect(!ids.contains("footwear.walking_shoes"))
+    }
+
+    @Test func requiredOverlapMatrixProducesMinimalFocusedSetsDeterministically() throws {
+        struct CoverageCase {
+            var name: String
+            var context: TripContext
+            var kept: Set<String>
+            var suppressed: Set<String>
+        }
+
+        let dest = try destination("Denver")
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let rainWind = weather(days: 5, start: start, highF: 55, lowF: 45, rain: 0.6, wind: 26)
+        let winter = weather(days: 5, start: start, highF: 30, lowF: 14, snow: true)
+        let cases = [
+            CoverageCase(
+                name: "running + walking",
+                context: context(destination: dest, activities: ["running", "walking"]),
+                kept: ["footwear.running_shoes"],
+                suppressed: ["footwear.walking_shoes"]
+            ),
+            CoverageCase(
+                name: "hiking + walking",
+                context: context(destination: dest, type: .outdoor, activities: ["hiking", "walking"]),
+                kept: ["footwear.hiking_shoes"],
+                suppressed: ["footwear.walking_shoes"]
+            ),
+            CoverageCase(
+                name: "running + hiking + walking",
+                context: context(destination: dest, type: .outdoor, activities: ["running", "hiking", "walking"]),
+                kept: ["footwear.running_shoes", "footwear.hiking_shoes"],
+                suppressed: ["footwear.walking_shoes"]
+            ),
+            CoverageCase(
+                name: "formal business",
+                context: context(destination: dest, type: .business, activities: ["work"]),
+                kept: ["footwear.dress_shoes", "footwear.walking_shoes"],
+                suppressed: []
+            ),
+            CoverageCase(
+                name: "rain + wind",
+                context: context(destination: dest, weather: rainWind),
+                kept: ["clothing.rain_jacket", "clothing.light_sweater"],
+                suppressed: ["clothing.windbreaker"]
+            ),
+            CoverageCase(
+                name: "winter layering",
+                context: context(destination: dest, type: .outdoor, weather: winter),
+                kept: ["clothing.winter_coat", "clothing.light_sweater", "footwear.boots"],
+                suppressed: []
+            ),
+            CoverageCase(
+                name: "ski hands",
+                context: context(destination: dest, type: .skiSnow, weather: winter),
+                kept: ["activities.ski_gloves"],
+                suppressed: ["clothing.gloves"]
+            )
+        ]
+        let engine = try makeEngine()
+
+        for testCase in cases {
+            let first = engine.generateDetailed(context: testCase.context)
+            let second = engine.generateDetailed(context: testCase.context)
+            let focus = testCase.kept.union(testCase.suppressed)
+            let firstIDs = Set(first.items.compactMap(\.canonicalItemID))
+            let firstSuppressed = Set(first.coverageSuppressions.map(\.canonicalItemID))
+
+            #expect(firstIDs.intersection(focus) == testCase.kept, "\(testCase.name): kept set")
+            #expect(firstSuppressed.intersection(focus) == testCase.suppressed, "\(testCase.name): suppressed set")
+            #expect(first.items.compactMap(\.canonicalItemID).sorted() == second.items.compactMap(\.canonicalItemID).sorted(), "\(testCase.name): item determinism")
+            #expect(sortedSuppressions(first.coverageSuppressions) == sortedSuppressions(second.coverageSuppressions), "\(testCase.name): evidence determinism")
+        }
+    }
+
+    @Test func explicitMultifunctionItemsRemainAuthoritativeAndClaimCoverage() throws {
+        let primary = Traveler(id: UUID(), role: .self, ageGroup: .adult)
+        let party = TripParty(travelMode: .solo, travelers: [primary])
+        let runners = PackingItemDraft(
+            canonicalItemID: "footwear.running_shoes",
+            displayName: "My broken-in runners",
+            category: .footwear,
+            quantity: 2,
+            packedQuantity: 1,
+            importance: .important,
+            sourceSignals: [.userPreference],
+            reason: "Added by you",
+            isUserAdded: true,
+            ownershipType: .personal,
+            travelerID: primary.id,
+            assignedTravelerID: primary.id
+        )
+        let runnerGeneration = try makeEngine().generateDetailed(
+            context: context(destination: try destination("Chicago"), party: party),
+            existing: [runners]
+        )
+        let keptRunners = try #require(runnerGeneration.items.first { $0.id == runners.id })
+        #expect(keptRunners.quantity == 2)
+        #expect(keptRunners.packedQuantity == 1)
+        #expect(keptRunners.travelerID == primary.id)
+        #expect(keptRunners.assignedTravelerID == primary.id)
+        #expect(keptRunners.isUserAdded)
+        #expect(!runnerGeneration.items.contains { $0.canonicalItemID == "footwear.walking_shoes" })
+
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let rainWind = weather(days: 5, start: start, highF: 55, lowF: 45, rain: 0.6, wind: 26)
+        let shell = PackingItemDraft(
+            canonicalItemID: "clothing.rain_jacket",
+            displayName: "My shell",
+            category: .clothing,
+            quantity: 2,
+            packedQuantity: 1,
+            importance: .important,
+            sourceSignals: [.userPreference],
+            reason: "Edited by you",
+            isUserModified: true,
+            ownershipType: .personal,
+            travelerID: primary.id,
+            assignedTravelerID: primary.id
+        )
+        let shellGeneration = try makeEngine().generateDetailed(
+            context: context(destination: try destination("Seattle"), weather: rainWind, party: party),
+            existing: [shell]
+        )
+        let keptShell = try #require(shellGeneration.items.first { $0.id == shell.id })
+        #expect(keptShell.quantity == 2)
+        #expect(keptShell.packedQuantity == 1)
+        #expect(keptShell.travelerID == primary.id)
+        #expect(keptShell.assignedTravelerID == primary.id)
+        #expect(keptShell.isUserModified)
+        #expect(!shellGeneration.items.contains { $0.canonicalItemID == "clothing.windbreaker" })
+    }
+
+    @Test func coverageIsOwnerScopedAndUnassignedPartyItemsInferNothing() throws {
+        let primary = Traveler(id: UUID(), role: .self, ageGroup: .adult)
+        let partner = Traveler(id: UUID(), role: .partner, ageGroup: .adult)
+        let party = TripParty(travelMode: .couple, travelers: [primary, partner])
+        func runners(owner: UUID?) -> PackingItemDraft {
+            PackingItemDraft(
+                canonicalItemID: "footwear.running_shoes",
+                displayName: "Running shoes",
+                category: .footwear,
+                quantity: 1,
+                importance: .normal,
+                sourceSignals: [.userPreference],
+                reason: "Added by you",
+                isUserAdded: true,
+                ownershipType: .personal,
+                travelerID: owner,
+                assignedTravelerID: owner
+            )
+        }
+        let trip = context(destination: try destination("Chicago"), party: party)
+        let explicit = try makeEngine().generateDetailed(context: trip, existing: [runners(owner: primary.id)])
+        #expect(!explicit.items.contains { $0.travelerID == primary.id && $0.canonicalItemID == "footwear.walking_shoes" })
+        #expect(explicit.items.contains { $0.travelerID == partner.id && $0.canonicalItemID == "footwear.walking_shoes" })
+
+        let unassignedRunner = runners(owner: nil)
+        let ambiguous = try makeEngine().generateDetailed(context: trip, existing: [unassignedRunner])
+        #expect(ambiguous.items.contains { $0.travelerID == primary.id && $0.canonicalItemID == "footwear.walking_shoes" })
+        #expect(ambiguous.items.contains { $0.travelerID == partner.id && $0.canonicalItemID == "footwear.walking_shoes" })
+        let retained = try #require(ambiguous.items.first { $0.id == unassignedRunner.id })
+        #expect(retained.travelerID == nil)
+        #expect(retained.assignedTravelerID == nil)
+    }
+
+    private func sortedSuppressions(_ values: [CoverageSuppression]) -> [CoverageSuppression] {
+        values.sorted {
+            let lhs = "\($0.travelerID?.uuidString ?? ""):\($0.canonicalItemID)"
+            let rhs = "\($1.travelerID?.uuidString ?? ""):\($1.canonicalItemID)"
+            return lhs < rhs
+        }
     }
 }

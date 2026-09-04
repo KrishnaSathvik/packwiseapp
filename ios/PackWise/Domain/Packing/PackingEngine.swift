@@ -45,7 +45,18 @@ struct PackingEngine: Sendable {
             ? generateSimple(context: context, snapshot: snapshot, existing: existing, overrides: overrides)
             : generateForParty(context: context, snapshot: snapshot, existing: existing, overrides: overrides)
         return EngineGeneration(
-            items: generated.items.map { PartyInvariants.normalize($0, in: party) },
+            items: generated.items.map { item in
+                // Ambiguous explicit party items stay unassigned. Coverage
+                // has already isolated them from every traveler group; do
+                // not undo that fail-safe by guessing the primary here.
+                if !party.usesSimpleList,
+                   item.ownershipType == .personal,
+                   item.travelerID == nil,
+                   (item.isUserAdded || item.isUserModified) {
+                    return item
+                }
+                return PartyInvariants.normalize(item, in: party)
+            },
             coverageSuppressions: generated.suppressions,
             constraintDecisions: ConstraintResolver.decisions(from: generated.drops),
             contextDiagnostics: snapshot.diagnostics
@@ -835,7 +846,7 @@ struct PackingEngine: Sendable {
             guard let canonical = item.canonicalItemID, let catalogItem = catalog.item(id: canonical) else {
                 return copy
             }
-            if item.isUserModified { return copy }
+            if item.isUserModified || item.isUserAdded { return copy }
 
             if item.ownershipType == .shared {
                 let policy = rules.party.sharingPolicies[canonical]

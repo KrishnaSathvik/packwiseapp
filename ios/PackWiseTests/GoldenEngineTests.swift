@@ -191,6 +191,51 @@ struct GoldenEngineTests {
         #expect(manualTop.quantityEvidence == nil)
     }
 
+    @Test func phase4RequiredFixturesHoldCoverageContracts() throws {
+        func ids(_ output: GoldenOutput) -> Set<String> {
+            Set(output.items.map(\.canonicalItemID))
+        }
+        func coverage(_ suppressed: String, in output: GoldenOutput) throws -> GoldenCoverageEntry {
+            try #require(output.coverage?.first { $0.suppressed == suppressed })
+        }
+
+        let running = try renderFixture(id: "08-running-sightseeing-footwear")
+        #expect(ids(running).contains("footwear.running_shoes"))
+        #expect(!ids(running).contains("footwear.walking_shoes"))
+        #expect(try coverage("footwear.walking_shoes", in: running).coveredCapabilities == [
+            PackingCapability.everydayWalking.rawValue: "footwear.running_shoes"
+        ])
+
+        let hiking = try renderFixture(id: "18-reykjavik-64d-roadtrip-camping-seasonal")
+        #expect(ids(hiking).contains("footwear.hiking_shoes"))
+        #expect(!ids(hiking).contains("footwear.walking_shoes"))
+        #expect(try coverage("footwear.walking_shoes", in: hiking).coveredCapabilities == [
+            PackingCapability.everydayWalking.rawValue: "footwear.hiking_shoes"
+        ])
+
+        let business = try renderFixture(id: "07-chicago-5d-business-checked")
+        #expect(ids(business).isSuperset(of: ["footwear.dress_shoes", "footwear.walking_shoes"]))
+
+        let rain = try renderFixture(id: "09-seattle-rain-layering")
+        #expect(ids(rain).isSuperset(of: ["clothing.rain_jacket", "clothing.light_sweater"]))
+        #expect(ids(rain).isDisjoint(with: ["clothing.windbreaker", "clothing.light_jacket"]))
+
+        let ski = try renderFixture(id: "21-aspen-5d-skisnow-checked-prepared-snow")
+        #expect(ids(ski).isSuperset(of: [
+            "activities.ski_gloves", "clothing.winter_coat", "clothing.light_sweater", "footwear.boots"
+        ]))
+        #expect(!ids(ski).contains("clothing.gloves"))
+        #expect(try coverage("clothing.gloves", in: ski).coveredCapabilities == [
+            PackingCapability.coldHands.rawValue: "activities.ski_gloves"
+        ])
+
+        let existingShell = try renderFixture(id: "26-seattle-5d-existing-rain-shell")
+        let shellRows = existingShell.items.filter { $0.canonicalItemID == "clothing.rain_jacket" }
+        #expect(shellRows.count == 1)
+        #expect(shellRows.first?.userModified == true)
+        #expect(!ids(existingShell).contains("clothing.windbreaker"))
+    }
+
     /// Full-ledger proof that `TripContextCompiler` compiles every real,
     /// fixture-derived trip in the golden ledger deterministically and
     /// without crashing. Every one of the 27 fixtures is a real, well-formed
