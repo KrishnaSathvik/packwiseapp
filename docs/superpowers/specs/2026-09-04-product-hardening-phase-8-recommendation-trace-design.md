@@ -98,6 +98,56 @@ the same way `reasonArguments` already is for `RuleSuggestion`. This is an
 additive field capturing facts the engine already computes and currently
 throws away — not a new computation.
 
+**Required guard: a closed key vocabulary, not an open one.** An unbounded
+`[String: String]` would let three unrelated call sites each invent their
+own key names over time — exactly the open-vocabulary drift
+`PackingCapability`/`ActivityNeed`/`WeatherSignal` were each closed to
+prevent. The key set below is not invented; it is read directly off what
+each of the three real call sites already computes, and nothing else:
+
+- `CareQuantityEngine.Result.arguments` (`CareQuantity.swift:44,64`) builds
+  exactly `["quantity", "rate", "name", "days"]` for diapers and
+  `["quantity", "name"]` for extra outfits — a subset of the same four
+  keys, never a fifth.
+- `WarmLayerQuantities.quantity`'s arguments (`ClothingQuantity.swift:265`)
+  build exactly `["quantity", "days"]`.
+- `ConstraintResolver.sharingResolution`'s call site
+  (`PackingEngine.swift:901-921`) has `quantity` (the resolved shared
+  count, `SharingResolution.shared(quantity:reason:)`) and, for the one
+  `essentials.umbrella_compact` special case, `weather.rainDays`
+  (`:905-906`) already in scope; `party.travelers.count` is available at
+  the call site (already read as `party.travelers.count` at `:916` in
+  today's code, there named `partySize`) for the `scaleByParty`/
+  `scaleByDevices`/`scaleByDurationAndParty` policies where party size is
+  the reason the number is what it is.
+
+**The closed set — six keys, every one traced to a real call site above:**
+
+```text
+"quantity"      — every family; the resolved count itself
+"days"          — care (both items), warm-layer rotation
+"rate"          — care/diapers only (the per-day rate the count derives from)
+"name"          — care only (the traveler's display name)
+"travelerCount" — sharing only, when the policy is party-size-driven
+"rainDays"      — sharing only, the umbrella special case
+```
+
+Two deliberate departures from the illustrative key names named when this
+guard was requested, both because the real call sites don't back them:
+`washCycleDays`/`requiredUses`/`packingStyle`/`bag` are not in this set —
+those are `ClothingQuantityEvidence`'s facts (`ClothingQuantity.swift`), and
+the clothing family is explicitly excluded from `quantityReasonArguments`
+(above) precisely so its evidence has exactly one home, not two. And
+`sharedQuantity` is not a separate key from plain `quantity` — care and
+warm-layer both already self-reference their own resolved count as
+`"quantity"`, and giving the sharing family a same-meaning key under a
+different name would be the vocabulary drift this guard exists to prevent,
+not a justified exception.
+
+A test (or audit-script check, Task 6 below) enforces this list is closed:
+any key written to `quantityReasonArguments` outside this set fails the
+same way an unlisted `ActivityNeed`/`PackingCapability` raw string would.
+
 **Verified live, not assumed stale:** `scripts/audit_recommendation_traces.py
 --goldens ios/PackWiseTests/Goldens` at `eadc345` reports **0** rows missing
 required quantity evidence (309/309, 100%) — the Phase 1 baseline's "25
@@ -106,7 +156,7 @@ landed the clothing evidence and populated `quantityReason` even at the
 policy floor (`fixture 01`'s sleepwear: `quantity=1`, `quantityReason: "1
 sleep set with repeat wear."`). The trace-coverage doc's own numbers
 (`docs/engine-audits/2026-09-03-trace-coverage.md`) are from before Phase 3
-and must not be cited as current in Phase 8's closure — Task 8's exit
+and must not be cited as current in Phase 8's closure — Task 9's exit
 report regenerates this file fresh.
 
 ### `signals` — `sourceSignals`, unchanged, already exposed in Item Detail
@@ -115,7 +165,7 @@ report regenerates this file fresh.
 `item.sourceSignals` as capsule chips via `.customerLabel`. Nothing to add;
 Phase 8 reads this list, does not replace it.
 
-### `needs`/`capabilities` and `coverage` — the survivor's side is missing
+### `needs`/`capabilities` and `coverage` — the survivor's side is missing, and how it's populated is a required amendment
 
 `PackingCapability` (`CoverageResolver.swift:12-25`, 12 closed cases) and
 `CoverageSuppression` (`:92-107`) are Phase 4's authority. `CoverageSuppression`
@@ -126,11 +176,57 @@ does this *surviving* item cover?" from the surviving item's own record —
 that fact only exists by scanning every `CoverageSuppression.covered` entry
 in the same `EngineGeneration` for a `coveringItemID` match, and
 `EngineGeneration` is a transient return value, never persisted.
-**Genuinely missing:** a `coveredCapabilities: [String]` field (raw
-`PackingCapability` values) on `PackingItemDraft`, populated once, after
-coverage resolution, by inverting `coverageSuppressions` — a pure
-derivation from data the engine already computed in the same call, not a
-second coverage decision.
+**Genuinely missing:** a field on `PackingItemDraft` naming what a
+surviving item satisfies.
+
+**Required amendment: this is not "invert the suppressions," because
+inverting only sees a capability that some *other, suppressed* candidate
+also wanted.** The counterexample that overrides the original design: a
+rain jacket (`clothing.rain_jacket`, `itemCapabilities`:
+`[.rainShell, .windShell]`, `CoverageResolver.swift:145`) genuinely
+satisfies `windProtection` even on a trip where no windbreaker candidate
+was ever generated in the first place — there is no
+`CoverageSuppression` to invert, because nothing was suppressed, and the
+original inversion design would silently omit `windShell` from the rain
+jacket's trace even though the rain jacket is exactly why the trip's wind
+need is met. The correct concept is not "what did this item make
+redundant" (that is `CoverageSuppression`, unchanged, see below) but:
+
+```text
+kept candidate's own capabilities  ∩  active required needs
+  = capabilities genuinely satisfied by this item
+```
+
+**Read `CoverageResolver.resolve(items:needs:)` closely
+(`CoverageResolver.swift:222-290`): this intersection is already computed,
+by name, inside the resolution loop itself, every single time.** For each
+item in priority order, `let needed = capabilities.intersection(needs)`
+(`:245`) is exactly `itemCapabilities[canonical] ∩ needs` — and every path
+that keeps an item (the user-added/modified branch, `:246-252`; the
+plain-pass-through branch for items outside the vocabulary, `:240-244`; the
+"kept because it genuinely covers an uncovered need" branch, `:284-287`)
+already has `needed` in scope at the moment it appends to `kept`. The
+"suppressed because already covered" branch (`:266-283`) is the only one
+that does *not* keep the item — correctly, since a suppressed item never
+gets a trace to populate.
+
+**The fix: attach `needed` to the item at the exact point `resolve` decides
+to keep it, inside `CoverageResolver` itself — not a second pass in
+`PackingEngine` over `coverageSuppressions` afterward.** This is the same
+"capture as byproduct of the real decision" discipline Amendment 1 (below)
+applies to constraints — `CoverageResolver.resolve` already computes the
+fact; it should return it, not have `PackingEngine` re-derive a lossy
+approximation of it from a different, structurally incomplete data source.
+No second coverage evaluator, no change to `needs(context:)` or
+`itemCapabilities` themselves — `resolve`'s signature and its per-item loop
+are the only things that change (Architecture, below).
+
+`suppressedAlternatives`-type evidence — "what this item made redundant,"
+i.e. today's `CoverageSuppression.covered` read from the *suppressed* side
+— stays a **distinct, still-valid** trace concept. The two questions ("what
+does this item satisfy" vs. "what did this item make unnecessary") are
+both real and both wanted; this amendment adds the first without touching
+the second.
 
 ### `suppressions` — already fully recorded, just not surfaced in Item Detail
 
@@ -139,44 +235,233 @@ item claimed but were refuted, not just covered-elsewhere) and `coveredBy`.
 This is unchanged, complete, Phase 4 evidence. It answers "why isn't item X
 on the list" for **removed** items — which have no Item Detail row today,
 since Item Detail only opens for items present on the list. Phase 8 does not
-need to change this; it is cited, not extended. (A "what did this survivor
-suppress" view is the `coveredCapabilities` field above, not a change to
-`CoverageSuppression` itself.)
+need to change this; it is cited, not extended. (A "what does this
+survivor satisfy" view is the `satisfiedCapabilities` field above, not a
+change to `CoverageSuppression` itself.)
 
-### `constraints` — answerable live, without a new persisted field
+### `constraints` — required amendment: captured at generation time, not re-derived live
 
-`ConstraintDecision.items` (`ConstraintResolver.swift:6-13`) lists the
-canonical IDs a decision **removed** — again the removed side, not the
-survivor's. For a *surviving* item, "did a bag/style/share/authority
-constraint affect it" is answerable without any new persistence, because
-the two functions that decide it are pure and already need only facts the
-item and its trip already carry:
+The original design for this facet read `ConstraintDecision.items`
+(`ConstraintResolver.swift:6-13`, the **removed** side only) and then
+argued that for a *surviving* item, "did a bag/style/share constraint
+affect it" could be answered by **re-calling**
+`ConstraintResolver.optionalRuling(importance:tags:bag:style:)` and
+`.sharingResolution(for:rules:context:party:)` live from presentation code
+— on the reasoning that both functions are pure, so calling them twice
+costs nothing and decides nothing new.
 
-- `ConstraintResolver.optionalRuling(importance:tags:bag:style:)`
-  (`:48-70`) — needs the item's `importance` (on the draft), the catalog's
-  `tags` for its `canonicalItemID` (static lookup, `catalog.item(id:)`,
-  `Catalog.swift:63`), and the trip's current `bagType`/`packingStyle`
-  (already on `TripRecord`). Re-calling this is not re-deciding inclusion —
-  it is the same one-line authority Phase 7 already made the single source
-  of truth, invoked again for its own already-computed-once answer.
-- `ConstraintResolver.sharingResolution(for:rules:context:party:)`
-  (`:127-147`) — the shared-vs-personal fact for this item is already
-  fully captured by whether `item.ownershipType == .shared` plus (once
-  Task 1 lands) `quantityReasonArguments`; no live re-call is even needed
-  for a stored item, only for a not-yet-generated preview.
+**The user overrides that reasoning, not merely refines it.** The house
+rule this phase must follow: the engine makes the decision once; the trace
+explains that exact decision; it does not re-derive it by calling the same
+function again from a different layer. Purity is not the test — a pure
+function re-called from Item Detail with the item's *current* stored
+fields plus a *fresh* catalog/trip lookup can silently answer a different
+question than the one the engine actually decided at generation time
+(the catalog's tags could change between app versions; the trip's
+`bagType`/`packingStyle` could be edited after generation without a
+regeneration in between — Item Detail would then show a live re-ruling for
+today's bag, not the ruling that actually produced this item). The
+generation-time call is the *only* one whose answer this specific
+`PackingItemDraft` is a consequence of; a second call several screens later
+is not that answer, even when it happens to compute the same value most of
+the time.
 
-**No new persisted field for constraints.** `authority` (below) already
-covers the fourth named case (share is covered by `ownershipType` +
-quantity evidence).
+**Read `PackingEngine.generateDetailed` end to end (`:34-64`) to find where
+each decision actually fires**, tracing into every place it calls
+`ConstraintResolver`:
 
-### `authority` — already fully expressible, unchanged
+- `resolve(suggestions:context:existing:overrides:ownership:travelerID:assignedTravelerID:drops:)`
+  (`:661-747`), called from both `generateSimple` (`:127-136`) and
+  `generateForParty` (`:178-187`, `:190-199`), is where
+  `ConstraintResolver.optionalRuling(...)` is actually called
+  (`:715-720`) — but **only when a suggestion has no existing draft to
+  merge into** (the `if let existingItem` branch at `:688-710` returns
+  before ever reaching the ruling call; an item already on the list from a
+  prior generation is never re-ruled by `resolve` itself). When
+  `ruling.keep == false` the item is dropped and recorded in `drops`
+  (`:721-726`) — it never becomes a draft, so it has no trace to capture.
+  When `ruling.keep == true`, the draft is constructed immediately after
+  (`:728-743`) — this is the byproduct-capture point: the same `ruling`
+  value already computed at `:715` is in scope right where the
+  `PackingItemDraft` it decided to keep is built.
+  `ConstraintResolver.optionalRuling`'s own guard (`:54-57`) makes the
+  ruling a no-op (`keep: true, conflictKey: nil`) whenever `importance !=
+  .optional` or the bag/style combination doesn't constrain space at all —
+  the overwhelming majority of items. Only when that guard is *false* (an
+  optional item on a space-constrained bag) did the ruling do real work;
+  that is the "materially affected" case worth capturing, not a
+  trivially-true ruling for every item on every trip.
+- `ConstraintResolver.sharingResolution(for:rules:context:party:)` is
+  called from **two** places, and they decide different things: once in
+  `generateForParty` (`:171`) to route a suggestion into the shared or
+  personal collection *before* any draft exists, and once in
+  `applyQuantities` (`:902`) to compute the *quantity* of an already-shared
+  draft (`:901-921`, the byproduct-capture point for sharing — the
+  `quantity`/`fallback` this exact call returns is what
+  `copy.quantity`/`copy.quantityReason` are set from two lines later). The
+  original design's own observation that "the shared-vs-personal fact is
+  already fully captured by `ownershipType == .shared` plus (Task 1's)
+  `quantityReasonArguments`" was correct and stays true — but the
+  `RecommendationTrace.ConstraintFacet` code sample built in the same
+  design *re-called* `sharingResolution` anyway (Architecture, original
+  draft), contradicting its own analysis. That contradiction is the actual
+  bug this amendment closes: `ConstraintFacet.sharing` must be
+  reconstructed from `item.ownershipType`/`item.quantity`/
+  `item.quantityReason`/`item.quantityReasonArguments` — fields already
+  populated as a byproduct of the one real `sharingResolution` call at
+  `:902` — never a second call.
+
+**The redesign, concretely.** `PackingItemDraft` gains one new field for
+the bag/style facet (the sharing facet needs no new field, per above):
+
+```text
+Generation (PackingEngine.resolve, :715-720)
+    ↓
+ConstraintResolver.optionalRuling(...) decides — real work only when
+importance == .optional AND the bag/style combination is space-constrained
+    ↓
+capture: was this item's survival contingent on essentialOptionalTags
+protection, or on a bag/style combination that doesn't trim optionals?
+    ↓
+PackingItemDraft.bagStyleConstraintFact (nil when the ruling never left
+its no-op guard — the common case)
+    ↓
+persist (Task 2)
+    ↓
+Item Detail reads the stored fact — never calls optionalRuling again
+```
+
+```swift
+/// Captured once, in PackingEngine.resolve, at the exact optionalRuling(...)
+/// call (:715-720) that already decides whether this item survives a
+/// space-constrained bag. Nil whenever the ruling never left its own
+/// no-op guard (importance != .optional, or the bag/style combination
+/// doesn't constrain space) — the common case, and correctly not "no
+/// constraint was ever evaluated" trace noise for every item on every trip.
+struct BagStyleConstraintFact: Hashable, Codable, Sendable {
+    /// True when the item survived only because it carries an
+    /// essentialOptionalTags tag (base/rain/cold/medication) — without
+    /// that protection, this exact bag/style combination would have
+    /// trimmed it (ConstraintResolver.swift:58-61).
+    var survivedByEssentialTagProtection: Bool
+    /// The conflictKey this bag/style combination would use for a
+    /// non-protected optional item. Nil only when this bag/style
+    /// combination doesn't trim optionals at all (a checked bag, or a
+    /// non-light style on a carry-on/backpack) — "your bag/style doesn't
+    /// trim, so this wasn't at risk" is itself a real, inspectable fact,
+    /// distinct from "a tag protected you from a trim that was live."
+    var wouldTrimUnderKey: String?
+}
+```
+
+`optionalRuling` (`ConstraintResolver.swift:48-70`) returns *before*
+computing which key would apply whenever the essential-tag check succeeds
+(`:59-61`, `return OptionalRuling(keep: true, conflictKey: nil)` — the
+`bag == .personalItem`/`style == .light` branches below it never run), so
+today's `keep`/`conflictKey` pair alone cannot answer "would this have
+trimmed the item absent tag protection." Closing that requires computing
+the would-be key *before* the tag check, not after — a behavior-preserving
+reorder, not a new decision (every `keep`/`conflictKey` output is
+byte-identical to today for every input). `OptionalRuling` widens to carry
+the two new facts alongside the two that already exist:
+
+```swift
+struct OptionalRuling {
+    var keep: Bool
+    var conflictKey: String?
+    /// False whenever this call's own no-op guard short-circuited
+    /// (importance != .optional, or the bag/style combination doesn't
+    /// constrain space) — every other field is trivial in that case.
+    var wasConstraintLive: Bool
+    /// True when keep == true only because an essentialOptionalTags tag
+    /// protected the item from a trim that was otherwise live.
+    var essentialTagProtected: Bool
+    /// The conflictKey this bag/style combination would use for a
+    /// non-protected optional item; nil when this combination doesn't
+    /// trim optionals at all.
+    var wouldTrimUnderKey: String?
+}
+
+static func optionalRuling(
+    importance: ItemImportance,
+    tags: [String],
+    bag: BagType,
+    style: PackingStyle
+) -> OptionalRuling {
+    guard importance == .optional,
+          bag.appliesBagConstraint, bag.isSpaceConstrained else {
+        return OptionalRuling(keep: true, conflictKey: nil, wasConstraintLive: false, essentialTagProtected: false, wouldTrimUnderKey: nil)
+    }
+    let wouldBeKey: String? = {
+        if bag == .personalItem {
+            return style == .prepared ? "style.prepared_vs_personal_item" : "bag.personal_item"
+        }
+        if style == .light { return "bag.space_constrained" }
+        return nil
+    }()
+    let isEssentialOptional = tags.contains { essentialOptionalTags.contains($0) }
+    if isEssentialOptional {
+        return OptionalRuling(keep: true, conflictKey: nil, wasConstraintLive: true, essentialTagProtected: true, wouldTrimUnderKey: wouldBeKey)
+    }
+    if let wouldBeKey {
+        return OptionalRuling(keep: false, conflictKey: wouldBeKey, wasConstraintLive: true, essentialTagProtected: false, wouldTrimUnderKey: wouldBeKey)
+    }
+    return OptionalRuling(keep: true, conflictKey: nil, wasConstraintLive: true, essentialTagProtected: false, wouldTrimUnderKey: nil)
+}
+```
+
+`PackingEngine.resolve` (`:715-743`) then reads `ruling.wasConstraintLive`
+to decide whether to populate `bagStyleConstraintFact` at all, and
+`ruling.essentialTagProtected`/`.wouldTrimUnderKey` directly for the
+struct's two fields — no branching logic re-implemented a second time in
+`PackingEngine`; every fact is a field read off the one call's now-richer
+return value.
+
+`ConstraintFacet` becomes a pure read, never a second call:
+
+```swift
+extension RecommendationTrace {
+    struct ConstraintFacet: Hashable, Sendable {
+        /// From PackingItemDraft.bagStyleConstraintFact — nil when the
+        /// bag/style ruling never left its no-op guard for this item.
+        var bagStyle: BagStyleConstraintFact?
+        /// Reconstructed from stored fields already populated as a
+        /// byproduct of PackingEngine.applyQuantities's one real
+        /// sharingResolution call (:902) — never a second call.
+        var sharing: ConstraintResolver.SharingResolution?
+
+        static func read(from item: PackingItemDraft) -> ConstraintFacet {
+            ConstraintFacet(
+                bagStyle: item.bagStyleConstraintFact,
+                sharing: item.ownershipType == .shared
+                    ? .shared(quantity: item.quantity, reason: item.quantityReason)
+                    : nil
+            )
+        }
+    }
+}
+```
+
+**No new persisted field for the sharing half of this facet** — only
+`bagStyleConstraintFact` is new; sharing is a read of fields Task 1 already
+persists.
+
+### `authority` — already fully expressible, unchanged, and the boundary this amendment strengthens
 
 `hasUserAuthority(_:)` (`ConstraintResolver.swift:193-195`) reads
 `isUserAdded`/`isUserModified`, both already on `PackingItemDraft` and
 `PackingItemRecord`. A `custom.*` canonical id (or nil canonical id) marks
 an off-catalog item — `scripts/audit_recommendation_traces.py`'s own
 `TraceItem.is_user_authority` property already encodes this exact test.
-Nothing new; `RecommendationTrace.authority` is a direct read.
+Nothing new; `RecommendationTrace.authority` is a direct field read, and
+was never proposed to re-call anything — Amendment 1 leaves this facet
+exactly as originally designed. What Amendment 1 changes is the standard
+every other facet in this file must now meet: **Item Detail reads persisted
+trace and never calls `PackingEngine`, `CoverageResolver`,
+`ConstraintResolver`, or `WeatherSignalExtractor` directly, for any facet,
+constraint or otherwise** — stated explicitly here because the original
+`ConstraintFacet` design was the one place this boundary was actually
+violated in code, not just under-stated in prose.
 
 ### Persistence — the real cross-cutting gap, and the precedent for closing it
 
@@ -186,8 +471,9 @@ persists `reasonCode`/`reasonArguments` (as `reasonArgumentsRaw`, a
 `quantityEvidence` — confirmed by reading `PackingItemRecord.init(from:)`
 end to end; no `quantityEvidence` line exists. The `Catalog.swift:377`
 comment already names this as Phase 8's to close. The same gap will apply
-to the two new fields above (`quantityReasonArguments`,
-`coveredCapabilities`) unless Phase 8 adds them. The existing
+to the three new fields above (`quantityReasonArguments`,
+`satisfiedCapabilities`, `bagStyleConstraintFact`) unless Phase 8 adds
+them. The existing
 `reasonArgumentsRaw`/`sourceSignalsRaw` pattern (pipe-joined key=value
 pairs; comma-joined raw values) is the precedent to follow — not a new
 serialization scheme, and not a `Codable` conformance added to
@@ -196,17 +482,181 @@ serialization scheme, and not a `Codable` conformance added to
 them — they are not what gets persisted; their *derived, flattened* facts
 are).
 
-**A second, narrower gap in the same file:** `PackingItemRecord.apply(_:)`
-(`:269-280`), called when a regenerated draft merges back into an existing
-persisted row, already refreshes `reason`/`quantityReason` on every
-merge but **not** `reasonCode`/`reasonArguments`/`sourceSignals` — a
-pre-existing asymmetry, not caused by this phase. Any new trace field this
-phase adds must be added to `apply(_:)`'s refresh set (peers of `reason`/
-`quantityReason`, which the user-visible trace must stay in sync with on
-regeneration) — named here explicitly so the implementing task does not
-silently copy the `reasonCode` non-refresh instead. Fixing the pre-existing
-`reasonCode`/`sourceSignals` staleness itself is out of scope — it predates
-Phase 8 and is not one of the eight named trace facets.
+**A second, narrower gap in the same file — required amendment, and the
+original framing of it was wrong, not just incomplete.** The original
+design stated `PackingItemRecord.apply(_:)` (`:269-280`) "already refreshes
+`reason`/`quantityReason` on every merge but not `reasonCode`/
+`reasonArguments`/`sourceSignals`," and treated closing that specific
+asymmetry for two new fields as out of scope. **Reproduced live, not
+assumed: `grep -rn "\.apply(" ios/PackWise --include="*.swift"` finds
+`PackingItemRecord.apply(_:)` has zero call sites anywhere in the app
+target.** The only `.apply(` calls in `Repositories.swift` are
+`TravelerRecord.apply` (`:75`) and `WeatherChangeProposalRecord.apply`
+(`:301,311,319,353,357`) — unrelated types. `PackingItemRecord.apply(_:)`
+is dead code: never invoked in production, never exercised by a test
+(`grep -rn "\.apply(" ios/PackWiseTests` finds no `PackingItemRecord`
+match either). The original design's premise — that this method is the
+live regeneration-merge mechanism, just missing two fields from its
+refresh set — does not describe the actual codebase. **The user overrides
+the original scoping call, and this correction is what makes the override
+necessary, not merely convenient:** Phase 8 must fix the real mechanism,
+because the real mechanism has a materially worse gap than "two fields
+non-refreshed" — for most kept items on a regeneration, *nothing* refreshes
+at all.
+
+**The real regeneration flow, traced end to end.** There are two paths a
+`PackingItemDraft` can reach a persisted `PackingItemRecord` through, and
+they behave completely differently:
+
+1. **Brand-new trip** (`TripSetupView.saveTrip()`, the `existingTrip ==
+   nil` branch, `:1104-1107`): `engine.generate(context:)` runs with no
+   `existing` argument, and `TripRepository.replaceItems(on:with:)`
+   (`Repositories.swift:49-62`) deletes every prior `PackingItemRecord` (if
+   any — there are none, this is a first save) and constructs entirely
+   fresh records from the drafts (`:54`). No staleness is possible here;
+   every field is freshly written. `PackingItemRecord.apply(_:)` plays no
+   role.
+2. **Existing trip, user edits and re-saves** (`TripSetupView.saveTrip()`,
+   the `existingTrip != nil` branch, `:1057-1071`) — the actual
+   "regenerate" the roadmap and this amendment mean. This calls
+   `engine.recommendationDiff(context:existing:overrides:)`
+   (`PackingEngine.swift:66-89`), which internally calls
+   `generate(context:existing:[],overrides:)` (`:71`) — **`existing: []`,
+   not the trip's real existing drafts** — purely to get a from-scratch
+   baseline to diff against, then compares that fresh baseline to the
+   *actual* existing drafts by `recommendationKey`, producing
+   `RecommendationDiff.add`/`.removeCandidates`/`.quantityChanges`
+   (`Catalog.swift:445-454`). The diff is shown to the user
+   (`RecommendationDiffSheet`), and only what the user approves is applied
+   via `TripRepository.applyDiff(_:addIDs:removeIDs:quantityIDs:on:)`
+   (`Repositories.swift:232-260`) — which **still never calls
+   `PackingItemRecord.apply(_:)`**: `diff.add` becomes new records via
+   `addItem` (`:243`); `diff.removeCandidates` become "Not Needed"
+   overrides via `markNotNeeded` (`:256`); and `diff.quantityChanges`
+   mutate `record.quantity` **directly**, inline, with a packed-quantity
+   clamp (`:247-250`) but with **no update to `reason`, `reasonCode`,
+   `reasonArguments`, `sourceSignals`, or `quantityReason` at all** — even
+   though the quantity just changed for a reason, and that reason's
+   structured facts were computed and then dropped on the floor a second
+   time. Worse: an item whose **quantity is unchanged but whose cause
+   changed** — the exact scenario this amendment must guard (Hiking
+   removed, a different activity independently keeps the same boots) —
+   isn't in *any* of the three diff buckets, because the diff loop's only
+   comparison is `fresh.quantity != item.quantity`
+   (`PackingEngine.swift:84,112`). That item's persisted record is never
+   touched at all. Its `reasonCode`, `sourceSignals`, and (once this phase
+   lands) `quantityReasonArguments`/`satisfiedCapabilities`/constraint
+   trace facts stay exactly as they were computed under the *old* activity
+   forever, or until the item happens to also get a quantity change for an
+   unrelated reason.
+
+**The fix has two parts, both grounded in machinery that already exists
+and already gets this right when given the chance:**
+
+1. **`recommendationDiff`'s internal baseline must be merge-aware, not
+   from-scratch.** Change `generate(context: context, existing: [],
+   overrides: overrides)` (`:71`) to `generate(context: context, existing:
+   existing, overrides: overrides)` — passing the *real* existing drafts,
+   not `[]`. This is not new decision logic: `resolve(...)`'s existing-item
+   branch (`:688-710`) already does exactly the right thing when given real
+   existing drafts — for a non-user-authority item, it refreshes `reason`/
+   `reasonCode`/`reasonArguments`/`sourceSignals`/`ownershipType`/
+   `travelerID` while preserving `id`/`packedQuantity` (neither field is
+   touched by that branch) and preserving an already-set
+   `assignedTravelerID` (`:702-704`, only defaulted when nil — the explicit
+   owner/carrier protection this amendment's non-touch list requires,
+   already built and already correct); for a user-authority item, the
+   branch returns the existing draft completely untouched (`:689-694`).
+   `applyQuantities` then recomputes quantity/quantityReason for every
+   non-user-authority item exactly as it already does today, on this now
+   correctly-merged draft instead of a from-scratch one. **This reuses
+   Phase 7's own priority-hierarchy machinery for the diff's baseline
+   instead of bypassing it** — the diff was the one place in the app that
+   *wasn't* asking the engine to merge, despite the engine already knowing
+   how.
+2. **The diff's own comparison, and what `applyDiff` does with an approved
+   item, must cover the full causal unit, not quantity alone.**
+   `PackingEngine.recommendationDiff`'s per-item comparison
+   (`:81-87`/`:108-114`) widens from `fresh.quantity != item.quantity` to
+   flag an item whenever *any* of its causal facts differ: `reasonCode`,
+   `reasonArguments`, `sourceSignals`, `quantity`, `quantityReason`,
+   `quantityReasonArguments`, `satisfiedCapabilities`, or the constraint/
+   authority trace facts (Amendment 1). `QuantityChangeSuggestion` widens
+   from `{item, suggestedQuantity}` to carry the full merged draft
+   (`{existing: PackingItemDraft, fresh: PackingItemDraft}` — the
+   `fresh` value is the already-correctly-merged draft from fix #1, safe to
+   apply wholesale because it already preserves `id`/`packedQuantity`/
+   explicit `assignedTravelerID`). `TripRepository.applyDiff` replaces its
+   ad hoc `record.quantity = change.suggestedQuantity` line with
+   `record.apply(change.fresh)` — **finally giving `PackingItemRecord
+   .apply(_:)` a real caller**, and closing the loop this amendment is
+   named for.
+
+**A second real caller of the same widened comparison, found by tracing
+the chain further, not assumed absent.**
+`WeatherChangeReconciler.prune(_:existing:overrides:)`
+(`WeatherChangeReconciler.swift:166-190`) re-validates a *pending*
+weather-triggered `RecommendationDiff` against the trip's current state
+before showing it to the user — and its own quantity-change filter
+(`:186-189`, `current.quantity != change.suggestedQuantity`) is exactly as
+narrow as the bug fix #2 closes. Left unwidened, `prune` would silently
+drop a causal-only (quantity-unchanged) refresh proposed through the
+weather-change path, even after fix #2 makes the direct-edit path correct
+— the same bug, reintroduced through a second entry point. `prune`'s
+filter widens to the same `causallyDiffers(from:)` predicate fix #2 adds,
+which is why that predicate is placed on `PackingItemDraft` itself
+(`Catalog.swift`) rather than as a private helper inside
+`PackingEngine.recommendationDiff` — two real call sites need the
+identical comparison, and duplicating it would let them silently drift
+apart the next time either one is edited.
+
+**`PackingItemRecord.apply(_:)`'s corrected refresh contract**, now that it
+has a real caller supplying a properly merge-aware draft:
+
+```text
+REFRESH TOGETHER (one coherent unit, every approved regeneration):
+  reason, reasonCode, reasonArgumentsRaw, sourceSignalsRaw
+  quantity, quantityReason, quantityReasonArgumentsRaw   (Task 1)
+  satisfiedCapabilitiesRaw                                (Task 1, Amendment 2)
+  bagStyleConstraintFact (raw)                             (Task 1, Amendment 1)
+  ownershipTypeRaw, travelerID
+
+NEVER TOUCHED BY THIS METHOD:
+  packedQuantity  — explicit user state; carried forward via the merge-
+                    aware draft's own preserved packedQuantity, but this
+                    method does not additionally clamp or reset it — that
+                    stays applyDiff's existing responsibility (:248-250),
+                    unchanged, applied before apply(_:) is called
+  isUserAdded      — never true for a re-merged existing item; unrelated
+  assignedTravelerID — already correctly preserved-or-defaulted upstream,
+                    by resolve()'s :702-704 guard, before the draft ever
+                    reaches apply(_:); apply(_:) copies whatever the
+                    already-correct merged draft says
+  bagID            — copied through unchanged; no bag-reassignment logic
+                    exists in this phase
+```
+
+The item never reaches `apply(_:)` at all when `hasUserAuthority` is true
+(`resolve`'s `:689-694` branch returns the existing draft unmodified, so
+its `recommendationKey`-matched entry in `generated` is byte-identical to
+`existing`, and the widened per-item comparison in fix #2 finds no causal
+fact differs — it is never flagged for the diff in the first place). This
+is the existing Phase 7 priority-hierarchy guarantee, reused rather than
+reimplemented, and is exactly how "explicit user authority always wins" is
+already enforced upstream of persistence — Phase 8 adds no new authority
+check.
+
+**Required regression test** (concrete task in the plan): a trip generates
+with Hiking selected (an item, e.g. `footwear.hiking_shoes`, carries
+`activity.hiking` sourced evidence); the user edits the trip to remove
+Hiking and add a different activity that independently keeps the same
+canonical item on the list under a different cause; regenerate; assert the
+persisted record's `reasonCode`/`sourceSignals`/`quantityReasonArguments`/
+`satisfiedCapabilities` reflect the *new* cause, not the stale one — while,
+in the same regeneration, a packed item's `packedQuantity`, a manually-set
+quantity, a "Not Needed" override, and an explicitly-assigned
+`assignedTravelerID` on *other* items are asserted byte-identical
+before/after.
 
 **Schema versioning:** `PackWiseSchemaV1`→`V2`→`V3`
 (`Models.swift:609-652`) exist and are bumped only for **new model types**
@@ -220,11 +670,18 @@ that same precedent: defaulted `String = ""` properties, no `PackWiseSchemaV4`.
 
 ## Architecture
 
-No second decision engine. Three additions, all pure derivations over data
-the engine already computed in the same `generateDetailed` call, plus one
-presentation-layer assembler that reads them.
+No second decision engine. Every fact this phase surfaces is captured at
+the exact moment `PackingEngine`/`CoverageResolver`/`ConstraintResolver`
+already decides it, as a byproduct of that one real call — never
+re-derived by a second, later call from presentation code, and never
+approximated by inverting a differently-shaped record after the fact. This
+is the house rule Amendments 1–3 exist to enforce, made explicit here
+because the original architecture violated it in two places
+(`ConstraintFacet`'s live re-call; `coveredCapabilities`'s suppression
+inversion) and left a third mechanism (regeneration persistence) entirely
+disconnected from the fields it was meant to refresh.
 
-### 1. Two new `PackingItemDraft` fields (Catalog.swift)
+### 1. New `PackingItemDraft` fields (Catalog.swift)
 
 ```swift
 struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
@@ -233,44 +690,121 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
     /// quantity families (care, warm-layer rotation, party sharing) — the
     /// same role reasonArguments already plays for the inclusion reason.
     /// Empty for fixed singletons and for the clothing family, which
-    /// already has quantityEvidence.
+    /// already has quantityEvidence. Closed key vocabulary — see "quantity"
+    /// above: {"quantity","days","rate","name","travelerCount","rainDays"}.
     var quantityReasonArguments: [String: String] = [:]
-    /// Raw PackingCapability values this item satisfies for another need —
-    /// the inverse of CoverageSuppression.covered, computed once after
-    /// coverage resolution. Empty when this item covers no capability
-    /// another candidate also wanted (most items).
-    var coveredCapabilities: [String] = []
+    /// itemCapabilities[canonicalItemID] ∩ activeNeeds, computed once
+    /// inside CoverageResolver.resolve's own resolution loop (Amendment 2)
+    /// — NOT an inversion of coverageSuppressions. Empty when this item's
+    /// own capabilities don't intersect any currently-active need (most
+    /// items, and every item outside the closed capability vocabulary).
+    var satisfiedCapabilities: [String] = []
+    /// Captured once, in PackingEngine.resolve, at the one optionalRuling
+    /// call that decides whether this item survives a space-constrained
+    /// bag (Amendment 1). Nil whenever that ruling never left its own
+    /// no-op guard for this item — the common case.
+    var bagStyleConstraintFact: BagStyleConstraintFact? = nil
+}
+
+struct BagStyleConstraintFact: Hashable, Codable, Sendable {
+    var survivedByEssentialTagProtection: Bool
+    var wouldTrimUnderKey: String?
 }
 ```
 
-### 2. Populate both in `PackingEngine`, from data already computed
+(`coveredCapabilities` from the original design is renamed
+`satisfiedCapabilities` here — the name change tracks the concept change:
+this is no longer "what a suppression said," it is "what this item's own
+capabilities satisfy," which is a different, more general fact.)
+
+### 2. Populate all three in `PackingEngine`/`CoverageResolver`, at the exact call that decides them
 
 - `quantityReasonArguments`: set alongside `quantityReason` at each of the
   three non-clothing call sites in `applyQuantities`
-  (`PackingEngine.swift:908-919` shared, `:929-931` care, `:937-944` warm
-  layer) — the `arguments`/`["quantity":…, "partySize":…]` dictionaries
-  already being built for `render(...)` are assigned to the field instead
-  of only feeding the render call.
-- `coveredCapabilities`: one pass in `generateDetailed`
-  (`PackingEngine.swift:34-64`), after `coverageSuppressions` is known,
-  inverting it: `Dictionary(grouping: suppressions.flatMap(\.covered), by:
-  \.coveringItemID)`, mapped to sorted raw capability values, applied to
-  the matching item by `canonicalItemID` (and `travelerID` for personal
-  items, mirroring `CoverageSuppression.travelerID`'s own scoping).
+  (`PackingEngine.swift:901-921` shared, `:929-931` care, `:937-944` warm
+  layer) — the `arguments` dictionaries each family already builds for
+  `render(...)` are assigned to the field, keyed only from the closed
+  vocabulary above, instead of only feeding the render call. Unchanged
+  from the original design; restated here because it is the one field of
+  the three that was already correctly scoped as "populate where the real
+  computation happens."
+- `satisfiedCapabilities` (**Amendment 2 — redesigned**): populated inside
+  `CoverageResolver.resolve(items:needs:)` itself
+  (`CoverageResolver.swift:222-290`), not by `PackingEngine` inverting
+  `coverageSuppressions` afterward. `resolve`'s signature changes to
+  return the fact it already computes:
 
-Both are additive, zero-diff for every existing field: no item is added,
-removed, requantified, or re-covered. `report_engine_goldens.py` must show
-the two new keys appear in every fixture output with zero change to any
-existing key — verified per-task, not assumed.
+  ```swift
+  static func resolve(
+      items: [PackingItemDraft],
+      needs: Set<PackingCapability>
+  ) -> (kept: [PackingItemDraft], suppressions: [CoverageSuppression]) {
+      // ... unchanged iteration/priority logic ...
+      for item in ordered {
+          guard let canonical = item.canonicalItemID,
+                let capabilities = itemCapabilities[canonical] else {
+              kept.append(item)   // outside the vocabulary — stays empty
+              continue
+          }
+          let needed = capabilities.intersection(needs)   // :245, already computed
+          if item.isUserAdded || item.isUserModified {
+              var copy = item
+              copy.satisfiedCapabilities = needed.map(\.rawValue).sorted()
+              kept.append(copy)
+              for capability in needed where covered[capability] == nil { covered[capability] = canonical }
+              continue
+          }
+          if needed.isEmpty {
+              // unchanged: suppress-as-refuted or kept-with-empty-satisfied
+          }
+          if needed.allSatisfy({ covered[$0] != nil }) {
+              // unchanged: suppressed, no trace to populate
+          }
+          var copy = item
+          copy.satisfiedCapabilities = needed.map(\.rawValue).sorted()
+          kept.append(copy)
+          for capability in needed where covered[capability] == nil { covered[capability] = canonical }
+      }
+      return (kept, suppressions)
+  }
+  ```
 
-### 3. `RecommendationTrace` — presentation-layer assembler, not a stored type
+  `PackingEngine.applyCoverage` (`:826-864`) needs no inversion pass at
+  all — it already receives `kept` from `CoverageResolver.resolve` and
+  feeds it forward; `satisfiedCapabilities` simply arrives already set.
+  `CoverageSuppression.covered`/`refutedCapabilities` are unchanged —
+  they remain the distinct "what this item made redundant" concept, read
+  from the suppressed side, exactly as before.
+- `bagStyleConstraintFact` (**Amendment 1 — new**): populated in
+  `PackingEngine.resolve` (`:661-747`), immediately after the
+  `ConstraintResolver.optionalRuling(...)` call at `:715-720`, only when
+  that call's own no-op guard (`importance == .optional &&
+  bag.appliesBagConstraint && bag.isSpaceConstrained`) was live for this
+  item — set on the `PackingItemDraft` constructed at `:728-743`. Requires
+  `OptionalRuling` (`ConstraintResolver.swift:35-39`) to surface the
+  `essentialOptionalTags` branch outcome it already computes internally
+  (`:58-61`) rather than only its final `keep`/`conflictKey` collapse, so
+  `PackingEngine` reads the fact off the one call instead of
+  re-implementing `optionalRuling`'s branching a second time to
+  reconstruct it.
+
+All three are additive, zero-diff for every existing field: no item is
+added, removed, requantified, or re-covered differently than today.
+`report_engine_goldens.py` must show the three new keys appear in every
+fixture output with zero change to any existing key — verified per-task,
+not assumed.
+
+### 3. `RecommendationTrace` — a read layer over generation-time facts, never a second call
 
 ```swift
-/// Assembled on demand from an item's own stored, structured facts plus
-/// (for the constraint facet only) a live, pure re-call of the same
-/// authority functions Phase 7 centralized. Never a second decision —
-/// every fact here was already decided once by PackingEngine/
-/// ConstraintResolver/CoverageResolver; this only reads it back.
+/// Assembled entirely from an item's own stored, structured facts —
+/// PackingItemDraft/PackingItemRecord fields populated once, at
+/// generation time, by PackingEngine/ConstraintResolver/CoverageResolver
+/// (see Architecture §1–2 above). No function in this type calls
+/// PackingEngine, ConstraintResolver, CoverageResolver, or
+/// WeatherSignalExtractor — every fact here is a field read, not a
+/// re-derivation. This is the boundary Amendment 1 made explicit after
+/// the original ConstraintFacet design violated it.
 enum RecommendationTrace {
     enum InclusionFamily: String, Hashable, Sendable {
         case baseEssential, tripType, activity, weatherPrecise, weatherSeasonal
@@ -279,7 +813,9 @@ enum RecommendationTrace {
     }
 
     /// Pure derivation over the closed reasonCode/signal vocabulary
-    /// already read above — no new stored field.
+    /// already read above — no new stored field. Unchanged by Amendments
+    /// 1–3; inclusion was never the part of this design that re-called
+    /// anything.
     static func inclusionFamily(reasonCode: String, signals: [RecommendationSignal]) -> InclusionFamily {
         if reasonCode.isEmpty { return .userAuthority }
         if reasonCode.hasPrefix("base.essential.") { return .baseEssential }
@@ -305,9 +841,25 @@ enum RecommendationTrace {
         var reasonArguments: [String: String]
     }
 
+    /// A field read, never a second call — see §"constraints", above.
     struct ConstraintFacet: Hashable, Sendable {
-        var bagStyleTrimEligible: Bool   // ConstraintResolver.optionalRuling(...).keep == false would apply if optional
-        var sharing: ConstraintResolver.SharingResolution
+        var bagStyle: BagStyleConstraintFact?
+        var sharing: ConstraintResolver.SharingResolution?
+
+        static func read(from item: PackingItemDraft) -> ConstraintFacet {
+            ConstraintFacet(
+                bagStyle: item.bagStyleConstraintFact,
+                sharing: item.ownershipType == .shared
+                    ? .shared(quantity: item.quantity, reason: item.quantityReason)
+                    : nil
+            )
+        }
+    }
+
+    /// itemCapabilities ∩ activeNeeds, read directly off the stored field
+    /// — see §"needs/capabilities and coverage", above.
+    struct CoverageFacet: Hashable, Sendable {
+        var satisfiedCapabilities: [String]
     }
 
     struct Authority: Hashable, Sendable {
@@ -318,27 +870,39 @@ enum RecommendationTrace {
 }
 ```
 
-Item Detail calls these directly from `item`'s already-loaded fields (plus,
-for `ConstraintFacet`, one `catalog.item(id:)` lookup and the trip's stored
-`bagType`/`packingStyle`/`effectiveParty` — all already available where
-`ItemDetailView` is presented). No new domain type touches
-`PackingEngine.generateDetailed`'s decision path.
+Item Detail reads all five facets directly from `item`'s already-persisted
+fields — `PackingItemRecord.draft` (Task 2). No facet function takes a
+`catalog`, `rules`, `context`, or `party` parameter; none of them need one,
+because nothing here re-derives anything the engine didn't already decide.
+This is a stronger, simpler contract than the original design's
+`constraintFacet(for:catalog:rules:context:party:)` signature, not a
+weaker one — it has fewer inputs because it does less (reads, not
+recomputes).
 
 ### What does NOT change
 
 - `PackingEngine`'s item selection, quantity arithmetic, coverage
   resolution, weather signal extraction, and `ConstraintResolver`'s
   decision functions are read, never altered in their decision logic —
-  only their already-computed byproducts gain a wider audience.
+  only their already-computed byproducts gain a wider audience and (Task 1
+  amendment) a wider capture point.
 - `CoverageSuppression`, `ConstraintDecision`, `CapabilityCoverage` stay
   `Hashable, Sendable`, not `Codable` — nothing persists them directly;
-  only flattened, derived facts (`coveredCapabilities: [String]`) do.
+  only flattened, derived facts (`satisfiedCapabilities: [String]`,
+  `bagStyleConstraintFact`) do.
 - `RecommendationSignal` gains no new case. The finer vocabulary the
   roadmap wants already lives in `reasonCode`.
 - Item Detail / `PackingRow`'s visual structure, spacing, and card layout
   are unchanged — new content fills existing sections
   (`ItemDetailView.reasons`) or adds one clearly-scoped subsection, never a
   new screen or navigation flow.
+- **Strengthened, not loosened, by Amendments 1–3:** Item Detail reads
+  persisted trace only. It never calls `PackingEngine`,
+  `CoverageResolver`, `ConstraintResolver`, or `WeatherSignalExtractor`
+  directly, for any facet. This was implicit in the original design and
+  is now the explicit, checked contract `RecommendationTrace`'s function
+  signatures enforce structurally (no facet function accepts `catalog`/
+  `rules`/`context`/`party`).
 
 ## Decision — the `party.shared` pluralization fix
 
@@ -424,36 +988,47 @@ not re-derive them.
 
 The other three need real script work:
 
-1. **"generic-only generated explanations = 0" — the roadmap's framing
-   conflicts with the codebase's own established finding, and that
-   conflict is named here rather than silently resolved.** 68 rows
-   currently carry `trip_type.generic`. Every one was already individually
-   examined by Phase 1's P2-4 finding (`docs/engine-audits/
-   2026-09-03-engine-findings.md`) and found to be the fallback ladder
-   working *correctly* — `essentials.sunglasses` gets `trip_type.generic`
-   only in fixtures with no `weather.hot`/`weather.uv` signal anywhere
-   else; `electronics.headphones`/`travel_comfort.book` have no
-   activity/weather rule that could ever give them a more specific code;
-   `clothing.blazer`/`dress_shirt`/`footwear.dress_shoes` are business-
-   trip-type items with no more specific rule; `activities.ski_gloves`/
-   `ski_goggles` fall back because ski/snow has no dedicated
-   `ActivityContract` (Phase 5 closed with only Hiking and Camping
-   migrated); Camping's `activities.daypack`/`health.blister_pads`/
-   `health.first_aid` fall back because `ActivityContracts["camping"]`
-   deliberately does not declare `.dayCarry`/`.blisterCare` needs (those
-   are Hiking's). **Driving this bucket to zero requires authoring new
-   rule content — new reasonCodes, new `signalAdds`/`ActivityContract`
-   entries, or new reasons.json templates for real items — which is
-   recommendation-content authorship, not trace productization, and is
-   explicitly out of this phase's golden boundary ("item inclusion/
-   removal... coverage decisions... activity behavior" must not change).**
-   Phase 8's call: report this bucket through the strengthened
-   `InclusionFamily` classification (every row still gets a real family —
-   `.tripType` — and a real, inspectable `reasonCode`, distinguishable from
-   a defect), but do not force the count to zero. This is stated
-   explicitly, per the task's own instruction to name a roadmap/reality
-   conflict rather than reconcile it silently, the same call every prior
-   phase's design doc had to make once.
+1. **Metric refined, per required review: "generic-only generated
+   explanations = 0" is replaced by "generated recommendations lacking
+   causal structured provenance = 0."** The original roadmap wording
+   conflated two different questions — "does this row have generic
+   *prose*" and "does this row have a real *cause* behind it at all" — and
+   Phase 1's own P2-4 finding already proved the first question's answer
+   (68 `.generic`-suffixed rows) is the fallback ladder working
+   *correctly*, not a defect. The refined metric asks only the second
+   question, and is checked, not assumed, against the real script:
+   `classify_inclusion` (`audit_recommendation_traces.py:227-238`) already
+   computes exactly this split — a row fails `missing_reason_code` or
+   `missing_signal` (empty `reasonCode` or empty `signals`, `:230-233`)
+   only when the engine produced an item with **no structured causal fact
+   behind it at all** (the "fabricated 'Suggested for your trip' with
+   nothing backing it" case the refined metric names); a row that clears
+   both checks — including every `trip_type.generic` row, which carries a
+   real `reasonCode`, a real `signals` list, and (confirmed by reading
+   `PackingEngine.swift:403-410`) a real `arguments: ["tripType": ...]`
+   driving its generic prose — has causal structured provenance regardless
+   of how generic its rendered copy reads. **The refined metric is
+   therefore exactly today's existing `missing_reason_code ∪
+   missing_signal` defect count** (`INCLUSION_DEFECT_BUCKETS`,
+   `:222`) — already 0, already computed, already the pass/fail gate
+   `classify_inclusion` enforces. No new script logic; the change is
+   entirely in what the exit-metrics table calls this number and what it
+   folds together. Run fresh, not cited stale:
+   `python3 scripts/audit_recommendation_traces.py --goldens
+   ios/PackWiseTests/Goldens` reports, live, at this amendment's HEAD:
+   `DEFECTS — missing reason code: 0`, `DEFECTS — missing causal signal:
+   0`, `generic-only (weak, informational): 68` — confirming the refined
+   metric (0) and the informational bucket (68) are independent numbers
+   today, exactly as the refined framing requires. The 68-row
+   `trip_type.generic` bucket is reported by the script under its own
+   label — **"generic rendered fallback copy," not folded into the
+   pass/fail metric, not forced toward zero, not dropped from the audit
+   output** — and Task 9's exit report must show both numbers side by
+   side, not one in place of the other. Driving that 68-row bucket toward
+   zero would still require authoring new rule content (new reasonCodes,
+   new `signalAdds`/`ActivityContract` entries, new reasons.json
+   templates), which stays recommendation-content authorship, out of this
+   phase's golden boundary, unaffected by the metric rename.
 2. **"invalid precise/seasonal provenance = 0" — new check, add it.**
    Structural, not text-matching: `weather.seasonal_sun`/
    `weather.seasonal_layer` rows must always carry empty
@@ -479,7 +1054,7 @@ The other three need real script work:
 
 `--strict` (already a flag on the script, unused by any CI step today)
 becomes the mechanism that turns "0 today" into "0 forever" for gates 2–3
-plus the two already-zero gates from before Phase 8 — Task 8 wires it into
+plus the two already-zero gates from before Phase 8 — Task 9 wires it into
 `scripts/run_engine_audit.sh`'s existing pass/fail semantics, the same
 "reportable finding vs. build-breaking" convention `audit_engine_inputs.py`
 already established.
@@ -516,20 +1091,46 @@ new fixture (Phase 6 already documented why the golden schema can't express
 a true partial-forecast fixture and routed that as its own follow-up,
 unowned by Phase 8 — cited, not re-litigated).
 
+**Re-classification review, required by Amendments 1–2: none of the
+eighteen citations above change.** Every "existing evidence" cell cites a
+test or fixture that proves the underlying **engine decision** (that
+hiking shoes cover walking, that ski gloves cover cold hands, that a
+sharing resolution produced a given quantity, that a Not Needed override
+survives regeneration) — none of them cite, or depend on, *how the trace
+assembler reads that decision back*. Amendments 1–2 change the second
+thing (`ConstraintFacet` stops live-recalling; `satisfiedCapabilities`
+stops inverting suppressions) without touching the first (the decisions
+themselves, and the tests that prove them, are Non-goals — untouched).
+Scenarios 5 and 6 (footwear/hand-protection coverage) were the two most
+likely candidates for re-classification, since Amendment 2 is exactly
+about coverage — checked directly: both cite `substitution.*` reasonCodes
+and `CoverageTests` assertions about which item survives, never
+`coveredCapabilities`/`satisfiedCapabilities` itself, so neither citation
+was built on the old inversion design and neither needs updating. No
+scenario's original plan (Task 4/Task 7, pre-amendment) exercised the old
+`ConstraintFacet.sharing`/`bagStyleTrimEligible` live-recall either — the
+function was defined but never called by a named scenario test — so
+Amendment 1 also requires no citation changes, only a redesign of the
+facet function itself (Architecture, above).
+
 ## Non-goals
 
 - Redesigning `PackingEngine`, `CoverageResolver`, `ConstraintResolver`, or
   `ActivityContracts` decision logic. Every function this phase calls
   already exists and is called for its existing, already-computed answer.
-- Forcing the 68-row generic-only bucket to zero (see Exit metrics, above)
-  — named as a roadmap/reality conflict, not silently done or silently
-  skipped.
+- Forcing the 68-row generic-only rendered-copy bucket to zero (see Exit
+  metrics, above) — that bucket is informational, distinct from the
+  refined pass/fail metric, and reducing it requires new rule content,
+  which is recommendation-content authorship, not trace productization.
 - A new `RecommendationSignal` case, a new `PackingCapability`, a new
   `ActivityNeed`, or any `shared/rules/*.json` change beyond the one
   `party.shared` template fix.
-- Fixing `PackingItemRecord.apply(_:)`'s pre-existing
-  `reasonCode`/`sourceSignals` non-refresh — named as a gap this phase's
-  new fields must not repeat, not a defect this phase repairs generally.
+- **No longer a non-goal (required amendment):** fixing
+  `PackingItemRecord.apply(_:)`'s refresh contract, and the regeneration
+  flow that was never actually calling it, is now in scope — see
+  "Persistence," above. The original framing of this as an out-of-scope
+  pre-existing gap was itself based on a mistaken premise about how
+  regeneration works; Phase 8 fixes the real mechanism.
 - Redesigning Item Detail's layout, navigation, or `PackingRow`'s row
   chrome. New content fills existing sections.
 - Persisting `CoverageSuppression`/`ConstraintDecision` themselves, or
@@ -542,20 +1143,37 @@ unowned by Phase 8 — cited, not re-litigated).
 
 ## Verification plan
 
-- Zero-diff gate for the two new `PackingItemDraft` fields:
-  `report_engine_goldens.py --baseline-ref eadc345` must show the two new
-  keys appended to every fixture's items with **zero** change to any
-  existing key, before either field's behavior-adjacent test is trusted.
+- Zero-diff gate for the three new `PackingItemDraft` fields
+  (`quantityReasonArguments`, `satisfiedCapabilities`,
+  `bagStyleConstraintFact`): `report_engine_goldens.py --baseline-ref
+  eadc345` must show the three new keys appended to every fixture's items
+  with **zero** change to any existing key, before any field's
+  behavior-adjacent test is trusted.
 - The `party.shared` fix is the one **approved, reviewed** golden diff:
   fixture 37's two shared-item rows change `quantityReason` text only;
   `quantity` values, every other fixture, and every non-`party.shared` row
   in fixture 37 must be byte-identical to `eadc345`.
+- The Amendment 3 regeneration-refresh fix is verified by its own named
+  regression test (Hiking removed / a different activity independently
+  keeps an overlapping item), asserting the persisted record's causal
+  fields reflect the new cause while packed state, manual quantity, Not
+  Needed, and explicit carrier assignment on other items in the same
+  regeneration are byte-identical before/after — not a golden-fixture
+  diff, since it exercises the persistence layer
+  (`TripRepository`/`PackingItemRecord`), not `PackingEngine` output
+  directly.
+- `quantityReasonArguments`'s closed key vocabulary is enforced by a test
+  (or audit-script check) that fails on any unlisted key, the same
+  discipline `ActivityNeed`/`PackingCapability`/`WeatherSignal` already
+  established.
 - `scripts/run_engine_audit.sh` clean after every task, `--strict` clean by
-  Task 8.
+  the phase's closing task.
 - Full `xcodebuild test`, `python3 scripts/validate_shared.py`, `npm
   --prefix api run preflight` at close.
 - All 18 required scenarios map to a named task and a named test (cited
-  existing test/fixture, or new trace test) in the implementation plan.
+  existing test/fixture, or new trace test) in the implementation plan —
+  re-checked against Amendments 1–2's redesign; no citation changed (see
+  "Re-classification review," above).
 
 ## Routed findings inherited, and their disposition
 
