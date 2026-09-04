@@ -171,11 +171,11 @@ struct CoverageTests {
         )])
     }
 
-    /// The budget the vocabulary must not silently drift past: two families
-    /// use ten capabilities. Growing this number is a design decision — make
+    /// The budget the vocabulary must not silently drift past: three families
+    /// use twelve capabilities. Growing this number is a design decision — make
     /// it deliberately, then update this test in the same commit.
     @Test func capabilityVocabularyStaysClosed() {
-        #expect(PackingCapability.allCases.count == 10)
+        #expect(PackingCapability.allCases.count == 12)
         for id in CoverageResolver.priority {
             #expect(CoverageResolver.itemCapabilities[id]?.isEmpty == false, "\(id) is prioritized but has no capabilities")
         }
@@ -242,6 +242,70 @@ struct CoverageTests {
         #expect(ids.contains("clothing.winter_coat"))
         #expect(ids.contains("clothing.light_sweater"))
         #expect(ids.contains("footwear.boots"))
+    }
+
+    @Test func skiGlovesCoverColdHandsWithoutAnIDPairRule() throws {
+        let dest = try destination("Denver")
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 12))!
+        let snowy = weather(days: 5, start: start, highF: 30, lowF: 14, rain: 0.1, wind: 18, snow: true)
+        let skiTrip = context(
+            destination: dest,
+            type: .skiSnow,
+            activities: ["sightseeing"],
+            bag: .checked,
+            style: .prepared,
+            weather: snowy
+        )
+        let generation = try makeEngine().generateDetailed(context: skiTrip)
+        let ids = Set(generation.items.compactMap(\.canonicalItemID))
+        #expect(ids.contains("activities.ski_gloves"))
+        #expect(!ids.contains("clothing.gloves"))
+        let suppression = try #require(generation.coverageSuppressions.first {
+            $0.canonicalItemID == "clothing.gloves"
+        })
+        #expect(suppression.covered == [
+            CapabilityCoverage(capability: .coldHands, coveringItemID: "activities.ski_gloves")
+        ])
+    }
+
+    @Test func coldNonSkiTripNeedsColdHandsButNotSnowSportHands() throws {
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 12))!
+        let cold = weather(days: 5, start: start, highF: 28, lowF: 12)
+        let raw = context(destination: try destination("Denver"), weather: cold)
+        let rules = try SharedLibrary.rules()
+        let projected = CoverageContext(
+            snapshot: TripContextCompiler.compile(raw, rules: rules),
+            thresholds: rules.weather.thresholds
+        )
+        let needs = CoverageResolver.needs(context: projected)
+        let resolution = CoverageResolver.resolve(
+            items: [candidate("clothing.gloves", sourceSignals: [.weather])],
+            needs: needs
+        )
+
+        #expect(needs.contains(.coldHands))
+        #expect(!needs.contains(.snowSportHands))
+        #expect(resolution.kept.compactMap(\.canonicalItemID) == ["clothing.gloves"])
+        #expect(resolution.suppressions.isEmpty)
+    }
+
+    @Test func skiIntentResolvesHandOverlapWithoutForecastWeather() throws {
+        let skiTrip = context(
+            destination: try destination("Denver"),
+            type: .skiSnow,
+            activities: ["sightseeing"],
+            bag: .checked,
+            style: .prepared
+        )
+        let generation = try makeEngine().generateDetailed(context: skiTrip)
+        let ids = Set(generation.items.compactMap(\.canonicalItemID))
+        let suppression = generation.coverageSuppressions.first { $0.canonicalItemID == "clothing.gloves" }
+
+        #expect(ids.contains("activities.ski_gloves"))
+        #expect(!ids.contains("clothing.gloves"))
+        #expect(suppression?.covered == [
+            CapabilityCoverage(capability: .coldHands, coveringItemID: "activities.ski_gloves")
+        ])
     }
 
     /// Running and hiking each keep their own shoe; the walking pair is the

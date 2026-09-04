@@ -20,6 +20,8 @@ enum PackingCapability: String, CaseIterable, Sendable {
     case windShell = "outerwear.wind_shell"
     case warmthLight = "outerwear.warmth_light"
     case warmthHeavy = "outerwear.warmth_heavy"
+    case coldHands = "hand_protection.cold"
+    case snowSportHands = "hand_protection.snow_sport"
 }
 
 /// The normalized context surface capability coverage is allowed to read.
@@ -111,7 +113,9 @@ enum CoverageResolver {
         "clothing.rain_jacket",
         "clothing.light_sweater",
         "clothing.light_jacket",
-        "clothing.windbreaker"
+        "clothing.windbreaker",
+        "activities.ski_gloves",
+        "clothing.gloves"
     ]
 
     /// A winter coat deliberately does not claim `warmthLight`: a coat is not
@@ -129,7 +133,9 @@ enum CoverageResolver {
         "clothing.rain_jacket": [.rainShell, .windShell],
         "clothing.light_sweater": [.warmthLight],
         "clothing.light_jacket": [.warmthLight, .windShell],
-        "clothing.windbreaker": [.windShell]
+        "clothing.windbreaker": [.windShell],
+        "activities.ski_gloves": [.snowSportHands, .coldHands],
+        "clothing.gloves": [.coldHands]
     ]
 
     /// Needs derive from trip signals, never from which items happened to be
@@ -153,6 +159,10 @@ enum CoverageResolver {
             || !activities.isDisjoint(with: ["work", "niceDinner"])
             || context.contextChips.contains(.needFormalOutfit) {
             needs.insert(.formal)
+        }
+        if context.tripType == .skiSnow {
+            needs.insert(.coldHands)
+            needs.insert(.snowSportHands)
         }
 
         if context.hasForecastWeather {
@@ -179,6 +189,9 @@ enum CoverageResolver {
             }
             if context.weatherSignals.contains(.snowExposure) {
                 needs.insert(.coldFootwear)
+            }
+            if !context.weatherSignals.isDisjoint(with: [.snowExposure, .sustainedCold, .freezingCold]) {
+                needs.insert(.coldHands)
             }
         } else if context.usesSeasonalWarmthFallback {
             needs.insert(.warmthLight)
