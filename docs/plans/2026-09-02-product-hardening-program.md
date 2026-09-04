@@ -1,7 +1,7 @@
 # PackWise Product Hardening Program
 
 **Date:** 2026-09-02  
-**Status:** active; Phases 1–4 closed 2026-09-03; Phase 5 closed 2026-09-04; Phase 6 not started
+**Status:** active; Phases 1–4 closed 2026-09-03; Phase 5 closed 2026-09-04; Phase 6 closed 2026-09-04; Phase 7 not started
 **Source of truth:** this program orders the user-approved Final UI Refinement & Freeze Plan and Product Hardening + Engine V2 Plan against the repository as it exists today.
 
 ## Goal
@@ -190,12 +190,75 @@ suites, 202-item shared validation, and 106 API tests are green.
 large camping parties is routed to Phase 7 as finding F-5 rather than decided
 inside an activity phase.
 
-**Phase 6 (weather needs) has not started.** The cold-without-snow
-glove-generation question and the existing seasonal/weather findings remain
-routed there, untouched. The 14 remaining UNTESTED ledger rows (nine context
-chips, two bag types, three trip types) are all pre-existing and unowned;
-they stay reported. Presentation stays frozen, physical-device verification
-stays deferred, and M3B/M3C remain blocked.
+Phase 6 closed this cold-without-snow routing the same day; see below. The 14
+remaining UNTESTED ledger rows (nine context chips, two bag types, three trip
+types) are all pre-existing and unowned; they stay reported. Presentation
+stays frozen, physical-device verification stays deferred, and M3B/M3C remain
+blocked.
+
+## Phase 6 closure — 2026-09-04
+
+Phase 6 (weather needs) is complete. Both `PackingEngine.addWeather` and
+`CoverageResolver.CoverageContext` now route through Phase 2's existing
+`TripContextSnapshot.weatherQuality` classification (`.missing`/
+`.seasonalOnly`/`.partial(coveredDays:tripDays:)`/`.complete`) instead of each
+re-deriving its own inline forecast check — a zero-diff refactor confirmed
+across all 32 pre-existing golden fixtures (1,165 unchanged rows) before any
+behavior change. A partial forecast keeps its exact covered-day signals and
+now also gets the same seasonal month/latitude fallback a fully-unforecast
+trip already receives for its genuinely uncovered remainder, relying solely
+on `addSeasonal`'s pre-existing `collected[id] == nil` guard — no second
+overwrite-prevention mechanism was added.
+
+The cold-without-snow glove question Phase 4 first noticed and Phase 5's
+closure routed here is decided: `shared/rules/weather.json`'s
+`signalAdds.sustainedCold` gains `clothing.gloves`, reusing
+`CoverageResolver`'s existing `.coldHands` capability and ski-glove priority
+ordering with no new capability, code path, or ID-pair rule.
+`snowExposure`'s own row and ski-glove suppression are unaffected;
+`coldEvenings` was deliberately rejected as the gate (too mild a signal).
+None of the 32 pre-existing golden fixtures gained a glove row from this
+change, confirmed by a full `engineOutputMatchesGoldens()` pass, not assumed.
+
+All eight named exit scenarios (hot+rain, cold+rain, wind+mild,
+heat+strong-sun, hot-day/cool-night, snow+business, rain+hiking, rain+couple)
+have execution evidence, five of them new this phase (three unit tests, two
+golden fixtures 35–36). Four golden fixtures were added total (33–36); zero
+unexpected changes landed on fixtures 1–32. `WeatherSignal` (11),
+`PackingCapability` (12), and `ActivityNeed` (8) are unchanged; no threshold
+in `weather.json` moved; `WeatherChangeReconciler`, `TripWeatherRefresh`,
+`TripWeatherResolver`, `WeatherRefreshPolicy`, and `MockWeatherService` are
+byte-unchanged since the `e958c07` baseline — Phase 11 still owns wiring V2
+needs/coverage through the reconciler as its own step.
+
+Exit evidence is
+`docs/engine-audits/2026-09-04-phase-6-weather-need-hardening.md`: the four
+review guards pinned in the plan's Global Constraints (seasonal fallback
+fills only the uncovered remainder; seasonal-remainder items never take on a
+precise-forecast reason code; precise and seasonal needs compose through one
+pipeline; cached weather is distinct from missing weather) were each
+re-confirmed against freshly re-run real generated output during closure, not
+only against the tests that assert them. The full six-step engine audit, the
+full 268-test/18-suite iOS run, 202-item shared validation, and 106 API tests
+are all green.
+
+One structural gap surfaced and is routed, not silently worked around: the
+golden fixture format (`GoldenEngineTests.buildContext` /
+`MockWeatherService.context`) always tiles a named weather fixture to the
+full requested trip length and reports it as a whole-trip forecast, so no
+golden fixture can itself demonstrate `.partial` `WeatherQuality` end to end.
+Fixture 33 is recorded as a byte-stable pin with a `proves` field that says so
+explicitly; the partial-forecast blend itself is proven at the unit level.
+Extending the golden schema to express a weather fixture shorter than trip
+days is unowned and routed as a follow-up.
+
+**Phase 7 (central constraints and user authority) has not started.** F-5
+(party flashlight sharing, routed by Phase 5) remains routed there, untouched
+by Phase 6. The `CoverageContext` double-construction efficiency note
+(`addActivityNeeds`'s `hasColdSignal` computation and `CoverageResolver.needs`
+each build their own instance) and the golden-fixture-schema gap above are
+both unowned follow-ups, noted but not blocking. Presentation stays frozen,
+physical-device verification stays deferred, and M3B/M3C remain blocked.
 
 ## Program order
 
@@ -207,7 +270,7 @@ stays deferred, and M3B/M3C remain blocked.
 | 3 | Clothing needs and quantities | Phase 2 green | ordering, plateau, bounds, and preservation properties |
 | 4 | Footwear and outerwear coverage | Phase 3 green | overlap fixtures with trace-backed suppression |
 | 5 | Activity coverage | Phase 4 green | every surfaced activity has behavior or an explicit context-only contract |
-| 6 | Weather needs | Phase 5 green | precise/partial/seasonal matrices without invented precision |
+| 6 | Weather needs | Phase 5 green | precise/partial/seasonal matrices without invented precision — closed 2026-09-04, `docs/engine-audits/2026-09-04-phase-6-weather-need-hardening.md` |
 | 7 | Central constraints and user authority | Phase 6 green | bag/style/share/dependency/override tests |
 | 8 | Recommendation trace productization | Phase 7 green | every generated item answers inclusion, quantity, and causal-signal questions |
 | 9 | Context intelligence | M3A exit gate green and deterministic engine strong | accepted, traveler-safe structured context only |
