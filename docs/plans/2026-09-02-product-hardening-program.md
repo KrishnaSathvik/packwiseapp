@@ -1,7 +1,7 @@
 # PackWise Product Hardening Program
 
 **Date:** 2026-09-02  
-**Status:** active; Phases 1–4 closed 2026-09-03; Phase 5 closed 2026-09-04; Phase 6 closed 2026-09-04; Phase 7 not started
+**Status:** active; Phases 1–4 closed 2026-09-03; Phase 5 closed 2026-09-04; Phase 6 closed 2026-09-04; Phase 7 closed 2026-09-04; Phase 8 not started
 **Source of truth:** this program orders the user-approved Final UI Refinement & Freeze Plan and Product Hardening + Engine V2 Plan against the repository as it exists today.
 
 ## Goal
@@ -252,13 +252,73 @@ explicitly; the partial-forecast blend itself is proven at the unit level.
 Extending the golden schema to express a weather fixture shorter than trip
 days is unowned and routed as a follow-up.
 
-**Phase 7 (central constraints and user authority) has not started.** F-5
-(party flashlight sharing, routed by Phase 5) remains routed there, untouched
-by Phase 6. The `CoverageContext` double-construction efficiency note
-(`addActivityNeeds`'s `hasColdSignal` computation and `CoverageResolver.needs`
-each build their own instance) and the golden-fixture-schema gap above are
-both unowned follow-ups, noted but not blocking. Presentation stays frozen,
-physical-device verification stays deferred, and M3B/M3C remain blocked.
+## Phase 7 closure — 2026-09-04
+
+Phase 7 (central constraints and user authority) is complete.
+`ConstraintResolver` is now the single typed authority for party sharing
+membership/quantity (`sharingResolution(for:rules:context:party:)`) and the
+explicit-user-authority gate (`hasUserAuthority(_:)`,
+`isExplicitlyRemoved(_:ownership:travelerID:overrides:)`), replacing two
+independently-computed `sharedByDefault` checks, a free-standing
+`sharedQuantity`/`sharedQuantityReason` pair, and four independently-written
+`isUserAdded || isUserModified` / removed-override checks — both moves
+confirmed zero-diff against the `c9cbb76` baseline (36 fixtures, 1,288
+unchanged rows) before any behavior-adjacent test was trusted. Bag/style
+conflicts and dependencies were confirmed already centralized (no roadmap
+"scattered" framing held there); ownership/carrier stays deliberately split
+between `resolve()` and `PartyInvariants`, the same two-closed-authorities
+relationship `CoverageResolver` has to `ActivityContracts`.
+
+The priority hierarchy is now provable, not asserted: one composite test
+(`explicitUserStateSurvivesASimultaneousMultiDimensionalRefresh`) proves a
+manual quantity edit, a Not Needed override, a user-added item, and a
+carrier reassignment all survive one regeneration that simultaneously
+changes weather, activities, and duration together — three rung-3
+dimensions moving at once, not tested one at a time.
+
+Finding F-5 (party flashlight sharing, routed by Phase 5) is decided:
+personal-per-traveler, deliberate, no behavior change — a flashlight fails
+every property (scarce, communal, physically-shared-for-a-child) that makes
+the rest of `sharedByDefault` shared. Six new scenario tests plus a rewritten
+decision comment on the existing pinned test close it; every scenario uses
+adult travelers or an explicitly-typed school-age child role, never an
+infant/toddler age group — F-5 decides sharing only, not traveler/age
+eligibility, which stays Phase 10's.
+
+A required amendment (decided during design review, before implementation)
+also landed this phase: `SharingPolicy.personalOnly`'s
+fallthrough-to-ownerless-shared-draft bug is fixed structurally inside
+`sharingResolution` — a `.personalOnly` item now never reaches the
+shared-draft path at all — and proven by four tests against a synthetic
+test-local policy row. `shared/rules/party.json` gained no new row.
+
+All 13 required test gates map to a named task and a named, currently
+passing test. Two new golden fixtures (37 — family-of-4 hiking+camping, F-5
+plus party scaling; 38 — couple rain trip, shared umbrella) add full-ledger
+evidence; zero unexpected changes landed on fixtures 1–36. No new
+`PackingCapability`, `ActivityNeed`, or `WeatherSignal` case; `party.json`,
+`PartyInvariants`, and `CatalogItem.companions` are byte-unchanged;
+`optionalRuling` gained only additive test coverage.
+
+Exit evidence is
+`docs/engine-audits/2026-09-04-phase-7-central-constraints-and-user-authority.md`.
+The full six-step engine audit, the full 289-test/18-suite iOS run, 202-item
+shared validation, and 106 API tests are all green.
+
+One finding is routed, not fixed, surfaced by golden fixture 37:
+`shared/rules/reasons.json`'s `party.shared` template is a static string
+with no quantity placeholder (unlike `party.shared_umbrella`, which
+pluralizes correctly), so a shared quantity greater than 1 still renders
+"One for the group" copy. Pre-existing, not introduced by this phase;
+`sharedQuantity`'s arithmetic itself is correct, only the reason copy
+under-pluralizes. Editing `reasons.json` copy is outside Task 7's file list
+and unowned by any phase yet.
+
+**Phase 8 (recommendation trace productization) has not started.** Presentation
+stays frozen, physical-device verification stays deferred, and M3B/M3C
+remain blocked. The `CoverageContext` double-construction efficiency note,
+the golden-fixture-schema gap (Phase 6), and the `reasons.json` pluralization
+gap above are all unowned follow-ups, noted but not blocking.
 
 ## Program order
 
@@ -271,7 +331,7 @@ physical-device verification stays deferred, and M3B/M3C remain blocked.
 | 4 | Footwear and outerwear coverage | Phase 3 green | overlap fixtures with trace-backed suppression |
 | 5 | Activity coverage | Phase 4 green | every surfaced activity has behavior or an explicit context-only contract |
 | 6 | Weather needs | Phase 5 green | precise/partial/seasonal matrices without invented precision — closed 2026-09-04, `docs/engine-audits/2026-09-04-phase-6-weather-need-hardening.md` |
-| 7 | Central constraints and user authority | Phase 6 green | bag/style/share/dependency/override tests |
+| 7 | Central constraints and user authority | Phase 6 green | bag/style/share/dependency/override tests — closed 2026-09-04, `docs/engine-audits/2026-09-04-phase-7-central-constraints-and-user-authority.md` |
 | 8 | Recommendation trace productization | Phase 7 green | every generated item answers inclusion, quantity, and causal-signal questions |
 | 9 | Context intelligence | M3A exit gate green and deterministic engine strong | accepted, traveler-safe structured context only |
 | 10 | Family hardening and memory events | Phase 9 green | conservative age behavior and durable event capture |
