@@ -4,6 +4,19 @@ M3A-2 implementation is complete. What remains is proving it against the real
 services. Everything below needs credentials or hardware; nothing below is
 implementation work.
 
+**Current-HEAD note (2026-09-04, `f92eda8`):** steps 1–3's PASS results below
+are dated 2026-08-30 but remain current — none of the App Attest, OpenAI
+adapter, Redis, or Vercel-packaging code they exercised has changed since,
+confirmed by git history on every file. Product Hardening Phases 1–8, closed
+at `f92eda8`, touched only the deterministic engine and presentation layers,
+not this infrastructure. Step 4 (physical iPhone App Attest) is still the
+open item; run it as part of
+[device-pass-checklist.md](device-pass-checklist.md), which now also covers
+Phase 8's Item Detail Recommendation Trace surface (its section 4a) — new
+since this runbook and that checklist were first written, and worth
+exercising in the same device session even though it sits outside App
+Attest.
+
 Run the steps in order. Each one removes a class of failure from the next, so
 a problem found in step 4 is genuinely an App Attest problem rather than a
 Redis or deployment problem wearing a disguise. `scripts/live-smoke.ts` prints

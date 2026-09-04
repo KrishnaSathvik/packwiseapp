@@ -10,6 +10,30 @@ environment). Production stays on `production` and is not touched.
 
 TestFlight is deferred — see the gate note at the end.
 
+### What this pass verifies
+
+This pass clears the pre-M3B physical-device gate against the app's current
+state at **`f92eda8`** ("docs: close product hardening phase 8
+recommendation trace productization") — Product Hardening Phases 1–8,
+closed. It does **not** rely on the connected-device audit recorded on
+2026-09-03 in the Gate section below: that audit found the paired device
+unavailable in Xcode and was superseded by a sequencing decision to proceed
+with the deterministic Phases 1–8 rather than by a passing device result.
+Nothing below should be marked done on the strength of that historical
+entry.
+
+The App Attest implementation itself — every file listed in section 1 and
+the Debug harness, both iOS and API — has not changed since the M3A-2 work
+landed (`2b36228`, `18d754d`) and was verified per
+[m3a2-verification-runbook.md](m3a2-verification-runbook.md) on 2026-08-30.
+That verification is still current; only the physical-device steps in that
+runbook and in this checklist remain open. What **has** changed since this
+checklist was last written (2026-09-03, before Phase 8) is the product
+surface: Phase 8 wired a new "Why it's on your list" authority line into
+Item Detail. Section 4a below covers it — it did not exist when this
+checklist's other sections were written and is the most likely genuine gap
+in this pass.
+
 ---
 
 ## 0. Prerequisites
@@ -82,6 +106,35 @@ DCAppAttestService.isSupported
 When something fails, the server's `message` names the exact reason —
 `environment_mismatch`, `app_id_mismatch`, `challenge_invalid_or_used`,
 `counter_replay`, `assertion_signature_invalid`. Read it before theorising.
+
+### Supported vs. unsupported App Attest device
+
+Every current-generation test device is expected to support App Attest, but
+the fallback path is part of the contract
+(`AppIntegrityProvider.swift`'s `UnavailableAppIntegrityProvider`,
+`IntelligenceHTTPClient.integrityProvider()`) and has never been exercised
+on real hardware. Confirm the happy path above on a supported device, then
+confirm the refusal behavior does not need real unsupported hardware to
+prove — it is deterministic given `requiresAttestation`:
+
+```text
+[ ] on the test device, AppAttestIntegrityProvider.isSupported == true
+    (Developer Tools already surfaces this — see the Debug harness section)
+[ ] if isSupported were false with attestation required, the client selects
+    UnavailableAppIntegrityProvider and every request fails closed to
+    IntelligenceError.unavailable — confirm by reading the selection logic
+    in IntelligenceHTTPClient.integrityProvider(), not by hunting for
+    unsupported hardware
+[ ] a refused/unavailable integrity request never becomes an unattested one
+    (no silent downgrade to DevelopmentAppIntegrityProvider on a build with
+    requiresAttestation == true)
+```
+
+This is a code-reading confirmation, not a new device requirement — PackWise
+has no unsupported-but-otherwise-current device to test against, and the
+production code path never falls back to development trust regardless of
+support. Record which device/iOS version was used and that
+`isSupported == true` on it.
 
 ---
 
@@ -176,6 +229,51 @@ broken:
 
 ---
 
+## 4a. Item Detail — Recommendation Trace (Phase 8)
+
+New since this checklist was last written. Phase 8 wired
+`RecommendationTrace` — a pure read over generation-time facts, never a live
+re-derivation — into Item Detail's "Why it's on your list" card
+(`ItemDetailView` in `PackingListView.swift`). No live simulator screenshot
+was taken for this change either (recorded in the Phase 8 exit doc,
+Finding 8); this is the first real look at it on any screen, simulator or
+device.
+
+Open Item Detail for one item of each of these four kinds, in the same
+trip, and confirm the authority line matches exactly — present only where
+the user, not the engine, made the decision:
+
+```text
+[ ] a plain engine-recommended item (never touched) — no authority line
+    above the main reason text
+[ ] an item whose quantity you changed by hand (the Stepper on this same
+    screen) — "You changed this."
+[ ] a user-added canonical item (added via Add Item, picked from the
+    catalog) — "Added by you."
+[ ] a custom item (added via Add Item, typed rather than picked) —
+    "Added by you."
+```
+
+Then confirm the rest of the card still renders correctly underneath the
+authority line — these fields are untouched by Phase 8 but share the same
+card and are worth reconfirming on real hardware and real font sizes:
+
+```text
+[ ] the main reason text is present and legible
+[ ] "Why this quantity" appears when the item has a quantity reason, and
+    reads correctly (not truncated, not a raw key)
+[ ] source-signal chips wrap correctly at default and accessibility Dynamic
+    Type sizes (PackWiseFlowLayout)
+[ ] the authority line, when present, sits above the main reason text and
+    does not crowd it at accessibility sizes
+```
+
+No engine or trace logic changes here — if something reads wrong, record it
+as a finding; do not edit `RecommendationTrace.swift`, `PackingEngine.swift`,
+or the reasons content to make it look better.
+
+---
+
 ## 5. Edit trip
 
 Set up a list that has something to lose:
@@ -203,6 +301,24 @@ Apply, then confirm nothing was trampled:
 [ ] manual quantity preserved
 [ ] Not Needed preserved
 [ ] traveler ownership preserved
+[ ] carrier assignment preserved (owner and carrier stay distinct — the
+    Phase 8 regression case: a shared item still assigned to the same
+    carrier, not silently reset)
+```
+
+This is Phase 7/8's user-authority guarantee — `causallyDiffers(from:)`
+refreshes only causal fields (reason, quantity reason, trace facts) on
+regeneration and never touches packed state, manual overrides, Not Needed,
+or ownership/carrier — proven in the unit/simulator suite
+(`RegenerationProvenanceTests`) but not yet on a real device or across a
+real process relaunch. Force-close and relaunch the app **between** editing
+the trip and re-checking the list above, not just after — a bug that only
+shows up after a fresh process launch (stale in-memory state masking a
+persistence gap) would not be caught by checking within the same session:
+
+```text
+[ ] force-close and relaunch after Apply, before re-checking the six items
+    above — all six still hold after the relaunch, not just before it
 ```
 
 ---
@@ -405,6 +521,37 @@ anything.
 
 ## Gate
 
+### Current-HEAD anchor — f92eda8, 2026-09-04
+
+Product Hardening Phases 1–8 are closed at `f92eda8`. Both open device
+checkboxes below (`Physical-device App Attest — development`,
+`Full physical-device UI/UX pass`) are evaluated against **this** commit,
+not the 2026-09-03 entry immediately below, which predates Phase 8's Item
+Detail trace change and was itself superseded by a sequencing decision
+rather than a device result (see that entry's own note). Concretely, this
+means:
+
+```text
+[ ] the physical-device pass includes section 4a (Item Detail
+    Recommendation Trace) — not present at the 2026-09-03 evidence date
+[ ] the physical-device pass includes the strengthened section 5 checks
+    (force-close/relaunch between edit and re-verification, explicit
+    carrier-assignment persistence)
+[ ] the physical-device pass includes the unsupported-device App Attest
+    confirmation in section 1
+[ ] App Attest infrastructure itself (iOS AppIntegrityProvider /
+    IntelligenceHTTPClient, API integrity + store layers) is unchanged
+    since the 2026-08-30 m3a2-verification-runbook.md evidence — confirmed
+    by git history on every file listed in that runbook's grounding —
+    so that evidence is not re-run, only the physical-device steps it left
+    open
+```
+
+Record the device, iOS version, and app build/commit hash actually
+installed for this run. If the installed build's commit differs from
+`f92eda8`, name the actual commit in the evidence and note the delta rather
+than silently treating it as equivalent.
+
 ### Simulator UI refinement evidence — 2026-09-03
 
 This evidence closes the simulator half of the UI refinement pass. It does not
@@ -480,5 +627,9 @@ TestFlight production App Attest
   → does not block M3B
 ```
 
-When the two device items are green: **M3A verified for the current development
-scope**, and M3B unlocks.
+When the two device items are green — evaluated against `f92eda8` per the
+Current-HEAD anchor above, including section 4a and the strengthened section
+5 checks — **M3A verified for the current development scope**, and M3B
+unlocks. Phase 9 and M3B/M3C stay explicitly blocked until then; this
+checklist prepares the steps and evidence format, it does not itself close
+the gate.
