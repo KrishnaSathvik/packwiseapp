@@ -539,6 +539,34 @@
       "style": "balanced",
       "laundry": "none",
       "homeCountryCode": "US"
+    },
+    {
+      "id": "35-denver-5d-business-snow",
+      "proves": "Snow and business trip-type needs compose without footwear conflict; cold-without-snow gloves, Task 3, also apply here",
+      "destination": "Denver",
+      "weatherFixture": "DenverColdOutdoor",
+      "startDate": "2026-01-12",
+      "days": 5,
+      "tripType": "business",
+      "activities": ["work"],
+      "bag": "checked",
+      "style": "prepared",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "36-seattle-5d-rain-hiking",
+      "proves": "Hiking's activity-contract needs and the weather rain shell compose without duplication; footwear suppression is unchanged from Phase 4/5's evidence",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripType": "outdoor",
+      "activities": ["hiking"],
+      "bag": "checked",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
     }
   ]
 }
