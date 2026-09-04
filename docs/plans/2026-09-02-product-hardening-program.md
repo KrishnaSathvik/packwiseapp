@@ -1,7 +1,7 @@
 # PackWise Product Hardening Program
 
 **Date:** 2026-09-02  
-**Status:** active; Phase 1 closed 2026-09-03 (see "Phase 1 closure" below); Phase 2 closed 2026-09-03 (see "Phase 2 closure" below); Phase 3 not yet started  
+**Status:** active; Phases 1–3 closed 2026-09-03; Phase 4 not started
 **Source of truth:** this program orders the user-approved Final UI Refinement & Freeze Plan and Product Hardening + Engine V2 Plan against the repository as it exists today.
 
 ## Goal
@@ -111,15 +111,29 @@ Exit evidence:
   fixtures that existed then are unchanged on every field that schema
   had, across the whole Phase 1 + Phase 2 arc.
 
-**Phase 3 (clothing needs and quantities) has not started.** No work under
-`ios/PackWise/Domain/Packing/ClothingQuantity.swift`,
-`CoverageResolver.swift`, `ConstraintResolver.swift`, `QuantityEngine.swift`,
-or weather/reconciliation logic happened in Phase 2 beyond reading
-`TripWeatherContext` structurally for `WeatherQuality` classification —
-those files stay exactly as Phase 1 left them, reserved for Phases 3–6.
-`ClothingQuantity.swift:268`'s `context.laundryPlan` read is the one
-identified candidate for migrating to the snapshot; that decision is left to
-Phase 3.
+## Phase 3 closure — 2026-09-03
+
+Phase 3 (clothing needs and quantities) is complete. Clothing alone now reads
+the normalized snapshot through `ClothingQuantityContext`; all unrelated
+engine families remain on their prior inputs. Explicit family policies cover
+daily essentials, high-reuse bottoms, low-sensitivity sleepwear, scheduled
+workouts, swim drying rotation, appearance overlap, and existing attributed
+age buffers. Each policy-sensitive result carries structured quantity
+evidence without a SwiftData or UI change.
+
+Exit evidence is
+`docs/engine-audits/2026-09-03-phase-3-clothing-quantities.md`: 27-fixture
+semantic review (3 intended clothing quantity changes, 189 clothing
+quantity-trace changes, zero unexpected behavior changes), all 221
+quantity-required trace rows evidenced, the six-step engine audit green, 205
+iOS tests across 16 suites green, 202 shared items valid, and 106 API tests
+green. User quantities, Not Needed, user-added items, packed state, owner, and
+carrier remain authoritative.
+
+**Phase 4 (footwear and outerwear coverage) has not started.** Existing
+footwear/outerwear findings remain routed there; Camping and weather findings
+remain routed to Phases 5 and 6. Presentation stays frozen, physical-device
+verification stays deferred, and M3B/M3C remain blocked.
 
 ## Program order
 
