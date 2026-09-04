@@ -1,7 +1,7 @@
 # PackWise Product Hardening Program
 
 **Date:** 2026-09-02  
-**Status:** active; Phases 1–4 closed 2026-09-03; Phase 5 closed 2026-09-04; Phase 6 closed 2026-09-04; Phase 7 closed 2026-09-04; Phase 8 not started
+**Status:** active; Phases 1–4 closed 2026-09-03; Phase 5 closed 2026-09-04; Phase 6 closed 2026-09-04; Phase 7 closed 2026-09-04; Phase 8 closed 2026-09-04; Phase 9 not started
 **Source of truth:** this program orders the user-approved Final UI Refinement & Freeze Plan and Product Hardening + Engine V2 Plan against the repository as it exists today.
 
 ## Goal
@@ -314,11 +314,90 @@ pluralizes correctly), so a shared quantity greater than 1 still renders
 under-pluralizes. Editing `reasons.json` copy is outside Task 7's file list
 and unowned by any phase yet.
 
-**Phase 8 (recommendation trace productization) has not started.** Presentation
-stays frozen, physical-device verification stays deferred, and M3B/M3C
-remain blocked. The `CoverageContext` double-construction efficiency note,
-the golden-fixture-schema gap (Phase 6), and the `reasons.json` pluralization
-gap above are all unowned follow-ups, noted but not blocking.
+## Phase 8 closure — 2026-09-04
+
+Phase 8 (recommendation trace productization) is complete. PackWise's
+existing provenance — `PackingItemDraft`'s
+`reasonCode`/`reasonArguments`/`sourceSignals`/`quantityReason`/
+`quantityEvidence`, `EngineGeneration`'s
+`coverageSuppressions`/`constraintDecisions`, and Phase 7's
+`ConstraintResolver.SharingResolution`/`hasUserAuthority`/
+`isExplicitlyRemoved` — is now one complete, queryable
+`RecommendationTrace` per item, wired into the already-frozen Item Detail
+sheet without any layout change. The engine still decides once; this phase
+made that decision legible.
+
+Three required architectural amendments (decided during design review,
+before implementation) landed as specified: constraint/authority trace
+facts are captured once, at generation time, inside
+`PackingEngine.resolve`'s one real `ConstraintResolver.optionalRuling` call
+site — never re-derived by a second, live call from Item Detail;
+`satisfiedCapabilities` is computed inside `CoverageResolver.resolve`'s own
+per-item loop as `itemCapabilities ∩ activeNeeds`, not by inverting
+`coverageSuppressions` afterward (closing a real gap the inversion design
+could never see — a rain jacket satisfies `windShell` even when no
+suppression for it exists); and `PackingItemRecord.apply(_:)` — found, on
+inspection, to have zero callers anywhere in the app — is fixed and wired
+into the real regeneration path (`recommendationDiff`'s baseline made
+merge-aware, its per-item comparison widened from quantity-only to the full
+causal unit, `TripRepository.applyDiff` and `WeatherChangeReconciler.prune`
+both updated), proven by a regression test asserting causal fields refresh
+while packed state, manual quantity, Not Needed, and explicit carrier
+assignment on other items in the same regeneration are byte-identical.
+
+The routed `party.shared` pluralization finding (Phase 7's closure, above)
+is fixed: a shared quantity greater than 1 now reads "N for the group," not
+"One for the group," derived from `SharingResolution`'s quantity exactly the
+way `party.shared_umbrella` already did. Fixture 37's two shared-item rows
+are the one reviewed golden diff this phase produced; every other row in
+every other fixture is byte-identical to the `eadc345` baseline.
+
+The exit metric "generic-only generated explanations = 0" is replaced with
+"recommendations lacking causal structured provenance = 0" — the roadmap's
+original wording conflated generic *prose* with missing *causal structure*;
+the refined metric is exactly today's `missing_reason_code ∪ missing_signal`
+defect count (0/1438), and the 68-row `trip_type.generic` bucket is reported
+separately, informationally, never folded in or forced toward zero.
+`scripts/audit_recommendation_traces.py` gained two new structural checks
+(invalid seasonal provenance, fabricated user-authority provenance) plus
+the `quantityReasonArguments` closed-six-key-vocabulary guard, all three now
+`--strict`-enforced in `run_engine_audit.sh`; all three report 0 against the
+current goldens.
+
+All 18 required scenarios map to a named test — sixteen citing existing
+decision-level evidence, one (party.shared) the production fix itself, one
+(Not Needed) explicitly has no Item Detail row to trace by definition.
+
+Exit evidence is
+`docs/engine-audits/2026-09-04-phase-8-recommendation-trace-productization.md`,
+including nine findings recorded explicitly (two design-doc illustrative
+scenarios that didn't hold against real rule data and were substituted with
+structurally-equivalent ones; the plan's env-var typo for golden re-recording;
+new-file Xcode-project-registration mechanics; a second real caller of the
+widened diff predicate found by tracing the chain; a collateral test-bug in
+a temporary RED reproduction; a stale-generated-artifact gap from the
+reasons.json edit, caught one task later and fixed; a deliberate
+`quantityEvidence`-persistence scope inclusion grounded in the design doc's
+own stated intent; no live simulator screenshot taken for the one-line
+Item Detail UI change; and no on-disk `PackWiseSchemaV3`-era store fixture
+to directly exercise the lightweight-migration claim). None required
+weakening a test or reverting an amendment. The full six-step engine audit
+(now `--strict`), the full 332-test/21-suite iOS run, 202-item shared
+validation, and 106 API tests are all green.
+
+**Phase 9 (context intelligence) has not started.** Presentation stays
+frozen — now with an explicit, checked contract: Item Detail and
+`RecommendationTrace` read persisted trace only, never call
+`PackingEngine`/`CoverageResolver`/`ConstraintResolver`/
+`WeatherSignalExtractor` directly, for any facet, enforced structurally by
+`RecommendationTrace`'s facet function signatures (none accepts
+`catalog`/`rules`/`context`/`party`). Physical-device verification stays
+deferred, M3B/M3C remain blocked. The `CoverageContext` double-construction
+efficiency note and the golden-fixture-schema gap for a true
+partial-forecast fixture (both Phase 6) remain unowned follow-ups, noted
+but not blocking. The 68-row `trip_type.generic` informational bucket is
+unowned by any phase yet — reducing it is recommendation-content
+authorship, not trace productization.
 
 ## Program order
 
@@ -332,7 +411,7 @@ gap above are all unowned follow-ups, noted but not blocking.
 | 5 | Activity coverage | Phase 4 green | every surfaced activity has behavior or an explicit context-only contract |
 | 6 | Weather needs | Phase 5 green | precise/partial/seasonal matrices without invented precision — closed 2026-09-04, `docs/engine-audits/2026-09-04-phase-6-weather-need-hardening.md` |
 | 7 | Central constraints and user authority | Phase 6 green | bag/style/share/dependency/override tests — closed 2026-09-04, `docs/engine-audits/2026-09-04-phase-7-central-constraints-and-user-authority.md` |
-| 8 | Recommendation trace productization | Phase 7 green | every generated item answers inclusion, quantity, and causal-signal questions |
+| 8 | Recommendation trace productization | Phase 7 green | every generated item answers inclusion, quantity, and causal-signal questions — closed 2026-09-04, `docs/engine-audits/2026-09-04-phase-8-recommendation-trace-productization.md` |
 | 9 | Context intelligence | M3A exit gate green and deterministic engine strong | accepted, traveler-safe structured context only |
 | 10 | Family hardening and memory events | Phase 9 green | conservative age behavior and durable event capture |
 | 11 | Weather-change V2 integration | Phase 10 green | proposal diffs use V2 coverage without silent mutation |
