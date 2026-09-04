@@ -406,6 +406,24 @@
       ]
     },
     {
+      "canonicalItemID" : "miscellaneous.flashlight",
+      "carrier" : "primary",
+      "category" : "miscellaneous",
+      "displayName" : "Small flashlight",
+      "importance" : "optional",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You're camping on this trip.",
+      "reasonArguments" : {
+        "destination" : "Reykjavik"
+      },
+      "reasonCode" : "activity.camping",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
       "canonicalItemID" : "toiletries.body_wash",
       "carrier" : "primary",
       "category" : "toiletries",
@@ -442,6 +460,24 @@
       ]
     },
     {
+      "canonicalItemID" : "toiletries.insect_repellent",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Insect repellent",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You're camping on this trip.",
+      "reasonArguments" : {
+        "destination" : "Reykjavik"
+      },
+      "reasonCode" : "activity.camping",
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
       "canonicalItemID" : "toiletries.shampoo",
       "carrier" : "primary",
       "category" : "toiletries",
@@ -457,6 +493,24 @@
       "reasonCode" : "base.essential.toiletries",
       "signals" : [
         "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.sunscreen",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Sunscreen",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "reason" : "You're camping on this trip.",
+      "reasonArguments" : {
+        "destination" : "Reykjavik"
+      },
+      "reasonCode" : "activity.camping",
+      "signals" : [
+        "activity"
       ]
     },
     {

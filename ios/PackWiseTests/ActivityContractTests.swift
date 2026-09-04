@@ -6,6 +6,146 @@ import Testing
 struct ActivityContractTests {
     private func rules() throws -> PackingRulesFile { try SharedLibrary.rules() }
 
+    // MARK: - Fixtures
+
+    private func makeEngine() throws -> PackingEngine {
+        PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+    }
+
+    private func destination(_ name: String) throws -> Destination {
+        try #require(try SharedLibrary.testDestinations().first { $0.city == name })
+    }
+
+    private static func frozenDate(_ year: Int, _ month: Int, _ day: Int) -> Date {
+        Calendar.current.date(from: DateComponents(year: year, month: month, day: day))!
+    }
+
+    private func weather(fixture name: String, start: Date, days: Int) throws -> TripWeatherContext {
+        let fixture = try #require(try SharedLibrary.weatherFixtures()[name])
+        let end = Calendar.current.date(byAdding: .day, value: days - 1, to: start)!
+        return MockWeatherService.context(from: fixture, start: start, end: end, fixtureID: fixture.id)
+    }
+
+    private func trip(
+        destination: Destination,
+        start: Date,
+        days: Int,
+        type: TripType,
+        activities: [String],
+        bag: BagType,
+        style: PackingStyle,
+        weather: TripWeatherContext? = nil,
+        party: TripParty? = nil
+    ) -> TripContext {
+        let end = Calendar.current.date(byAdding: .day, value: days - 1, to: start)!
+        let math = TripDateMath.daysAndNights(from: start, to: end)
+        var prefs = TravelerPreferences.deviceDefaults()
+        prefs.homeCountryCode = "US"
+        prefs.homeCountrySource = .userConfirmed
+        return TripContext(
+            destination: destination,
+            startDate: start,
+            endDate: end,
+            durationDays: math.days,
+            durationNights: math.nights,
+            tripType: type,
+            activities: activities,
+            datedActivities: activities.map { DatedActivity(activityID: $0, date: nil) },
+            bagType: bag,
+            packingStyle: style,
+            transportation: .unknown,
+            laundryAccess: .none,
+            travelerCount: party?.travelers.count ?? 1,
+            userNotes: "",
+            contextChips: [],
+            weather: weather,
+            preferences: prefs,
+            party: party ?? .solo()
+        )
+    }
+
+    /// Golden fixture 28's trip: Yellowstone, no forecast, August, four days,
+    /// `outdoor`, road-trip luggage, balanced. Mild by construction — no
+    /// weather signals and no seasonal warmth fallback.
+    private func campingContext(
+        activities: [String],
+        type: TripType = .outdoor,
+        bag: BagType = .roadTripLuggage,
+        style: PackingStyle = .balanced,
+        party: TripParty? = nil
+    ) throws -> TripContext {
+        trip(
+            destination: try destination("Yellowstone"),
+            start: Self.frozenDate(2027, 8, 15),
+            days: 4,
+            type: type,
+            activities: activities,
+            bag: bag,
+            style: style,
+            party: party
+        )
+    }
+
+    /// An ordinary August road trip to Seattle with no forecast. Nothing else
+    /// on this trip supplies Camping's candidates: `roadTrip` adds no water or
+    /// repellent the way `outdoor` does, and Seattle sits above the seasonal
+    /// sun path's 45° cutoff so no sunscreen arrives seasonally. That makes
+    /// Camping's whole contribution observable in one delta. It is a trip any
+    /// user can build, not a fixture tuned to flatter the contract.
+    private func roadTripCampingContext(activities: [String]) throws -> TripContext {
+        trip(
+            destination: try destination("Seattle"),
+            start: Self.frozenDate(2027, 8, 15),
+            days: 4,
+            type: .roadTrip,
+            activities: activities,
+            bag: .roadTripLuggage,
+            style: .balanced
+        )
+    }
+
+    /// A camping trip with a real cold forecast, so the gated
+    /// `overnightWarmth` need has an existing cold signal to resolve against.
+    private func coldCampingContext(activities: [String] = ["camping"]) throws -> TripContext {
+        let start = Self.frozenDate(2026, 11, 9)
+        return trip(
+            destination: try destination("Denver"),
+            start: start,
+            days: 5,
+            type: .outdoor,
+            activities: activities,
+            bag: .checked,
+            style: .prepared,
+            weather: try weather(fixture: "DenverColdOutdoor", start: start, days: 5)
+        )
+    }
+
+    private func rainyCampingContext(activities: [String] = ["camping"]) throws -> TripContext {
+        let start = Self.frozenDate(2026, 10, 5)
+        return trip(
+            destination: try destination("Seattle"),
+            start: start,
+            days: 5,
+            type: .outdoor,
+            activities: activities,
+            bag: .checked,
+            style: .balanced,
+            weather: try weather(fixture: "SeattleWetCity", start: start, days: 5)
+        )
+    }
+
+    private func family(of count: Int) -> TripParty {
+        var travelers = [Traveler(role: .self, ageGroup: .adult)]
+        for _ in 1..<count {
+            travelers.append(Traveler(role: .otherAdult, ageGroup: .adult))
+        }
+        return TripParty(travelMode: .family, travelers: travelers)
+    }
+
+    private func ids(_ items: [PackingItemDraft]) -> Set<String> {
+        Set(items.compactMap(\.canonicalItemID))
+    }
+
     /// Closed like `PackingCapability`. Growing this is a design decision.
     @Test func activityNeedVocabularyIsClosedAtEight() {
         #expect(ActivityNeed.allCases.count == 8)
@@ -86,5 +226,177 @@ struct ActivityContractTests {
         #expect(ActivityContracts.contract(for: "cosplayConvention") == nil)
         #expect(ActivityContracts.needs(for: ["cosplayConvention"]).isEmpty)
         #expect(ActivityContracts.candidates(for: ActivityContracts.needs(for: ["cosplayConvention"])).isEmpty)
+    }
+
+    // MARK: - Task 2: need resolution
+
+    /// On a road-trip camping trip nothing else supplies Camping's
+    /// candidates, so all four appear as new rows and none of them is
+    /// campsite logistics.
+    @Test func campingAloneAddsItsFourCandidatesAndNoCampsiteLogistics() throws {
+        let engine = try makeEngine()
+        let base = ids(engine.generate(context: try roadTripCampingContext(activities: ["sightseeing"])))
+        let camping = ids(engine.generate(context: try roadTripCampingContext(activities: ["sightseeing", "camping"])))
+
+        #expect(camping.subtracting(base) == [
+            "hydration.water_bottle",
+            "miscellaneous.flashlight",
+            "toiletries.insect_repellent",
+            "toiletries.sunscreen"
+        ])
+        // Camping declares no footwear need: nothing is added and, critically,
+        // nothing is taken away. Walking shoes survive a camping trip.
+        #expect(base.subtracting(camping).isEmpty)
+        #expect(camping.contains("footwear.walking_shoes"))
+        #expect(!camping.contains("footwear.hiking_shoes"))
+
+        let forbidden: Set<String> = [
+            "activities.tent", "activities.sleeping_bag", "activities.sleeping_pad",
+            "activities.camp_stove", "activities.camp_fuel", "activities.cookware",
+            "activities.food_storage", "activities.camp_chair"
+        ]
+        #expect(camping.isDisjoint(with: forbidden))
+    }
+
+    /// The same contract on an `outdoor` trip type adds only the flashlight,
+    /// because the trip type already supplies water and repellent and the
+    /// seasonal-sun path already supplies sunscreen. One shared candidate
+    /// yields one row — the collector's de-duplication, not a weaker
+    /// contract.
+    @Test func campingDeDuplicatesAgainstTheOutdoorTripTypeAndSeasonalSun() throws {
+        let engine = try makeEngine()
+        let baseItems = engine.generate(context: try campingContext(activities: ["sightseeing"]))
+        let campingItems = engine.generate(context: try campingContext(activities: ["sightseeing", "camping"]))
+        let base = ids(baseItems)
+        let camping = ids(campingItems)
+
+        #expect(camping.subtracting(base) == ["miscellaneous.flashlight"])
+        #expect(base.subtracting(camping).isEmpty)
+        for id in ["hydration.water_bottle", "toiletries.insect_repellent", "toiletries.sunscreen"] {
+            #expect(campingItems.filter { $0.canonicalItemID == id }.count == 1)
+        }
+        #expect(camping.contains("footwear.walking_shoes"))
+    }
+
+    @Test func campingNeverManufacturesRainOrWarmth() throws {
+        let engine = try makeEngine()
+        let mild = ids(engine.generate(context: try campingContext(activities: ["camping"])))
+        #expect(!mild.contains("clothing.rain_jacket"))
+        #expect(!mild.contains("essentials.umbrella_compact"))
+        #expect(!mild.contains("clothing.winter_coat"))
+        #expect(!mild.contains("clothing.light_sweater"))
+        #expect(!mild.contains("clothing.thermal_top"))   // overnightWarmth is gated
+    }
+
+    /// The gated need resolves only when the projection already carries a
+    /// cold signal — and never invents one. Three trips pin the whole rule.
+    @Test func overnightWarmthResolvesOnlyWithAnExistingColdSignal() throws {
+        let engine = try makeEngine()
+
+        // Mild: a cold signal does not exist, so the need resolves to nothing.
+        let mild = ids(engine.generate(context: try campingContext(activities: ["camping"])))
+        #expect(!mild.contains("clothing.thermal_top"))
+
+        // Cold but not freezing: the cold signal exists, so the need resolves.
+        // `clothing.thermal_top` is only in the `freezingCold` signalAdds row,
+        // so weather does not emit it here — the item is on the list because
+        // Camping asked for it against cold that was already forecast, and
+        // Camping therefore owns the reason.
+        let cold = engine.generateDetailed(context: try coldCampingContext())
+        #expect(ids(cold.items).contains("clothing.thermal_top"))
+        let campingRow = try #require(cold.items.first { $0.canonicalItemID == "clothing.thermal_top" })
+        #expect(campingRow.reasonCode == "activity.camping")
+        #expect(campingRow.sourceSignals.contains(.activity))
+
+        // Freezing: weather emits the same item itself, and its higher-tier
+        // reason outranks the activity's. Camping never displaces a weather
+        // explanation for a weather-driven row.
+        let start = Self.frozenDate(2026, 1, 12)
+        let freezing = engine.generateDetailed(context: trip(
+            destination: try destination("Minneapolis"),
+            start: start,
+            days: 5,
+            type: .outdoor,
+            activities: ["camping"],
+            bag: .checked,
+            style: .prepared,
+            weather: try weather(fixture: "MinneapolisDeepWinter", start: start, days: 5)
+        ))
+        let freezingRow = try #require(freezing.items.first { $0.canonicalItemID == "clothing.thermal_top" })
+        #expect(freezingRow.reasonCode.hasPrefix("weather."))
+    }
+
+    @Test func campingPlusRainProducesExactlyOneShellAndNoCampingRainItem() throws {
+        let engine = try makeEngine()
+        let items = engine.generate(context: try rainyCampingContext())
+        #expect(items.filter { $0.canonicalItemID == "clothing.rain_jacket" }.count == 1)
+        #expect(!items.contains { $0.canonicalItemID == "activities.rain_cover" })
+    }
+
+    /// Both orders produce one row; only the reason may differ.
+    @Test func sharedNeedsAttributeToTheFirstDeclaringActivity() throws {
+        let engine = try makeEngine()
+        func bottleReason(_ activities: [String]) throws -> String {
+            let items = engine.generate(context: try campingContext(activities: activities))
+            let bottles = items.filter { $0.canonicalItemID == "hydration.water_bottle" }
+            #expect(bottles.count == 1)
+            return try #require(bottles.first).reasonCode
+        }
+        #expect(try bottleReason(["hiking", "camping"]) == "activity.hiking")
+        #expect(try bottleReason(["camping", "hiking"]) == "activity.camping")
+    }
+
+    /// Phase 5 makes no party-sharing decision. `miscellaneous.flashlight` is
+    /// not in `party.sharedByDefault`, so it stays a personal-carry item: one
+    /// per traveler, owned personally. Whether a family should instead share
+    /// one is finding F-5, routed to Phase 7 — this test records the baseline
+    /// that decision will be made against, and must not be "corrected" here.
+    @Test func aPartyCampingTripKeepsFlashlightsPersonalPerTraveler() throws {
+        let engine = try makeEngine()
+        let party = family(of: 4)
+        let items = engine.generate(context: try campingContext(activities: ["camping"], party: party))
+        let lights = items.filter { $0.canonicalItemID == "miscellaneous.flashlight" }
+        #expect(lights.count == party.travelers.count)
+        #expect(lights.allSatisfy { $0.ownershipType == .personal })
+        #expect(Set(lights.compactMap(\.travelerID)) == Set(party.travelers.map(\.id)))
+        // The mechanism that would change this is untouched this phase.
+        #expect(!Set(try rules().party.sharedByDefault).contains("miscellaneous.flashlight"))
+        #expect(try rules().party.sharingPolicies["miscellaneous.flashlight"] == nil)
+    }
+
+    /// Camping must not blow past an existing bag constraint — the optional
+    /// flashlight is trimmed by the constraint that already exists.
+    @Test func campingRespectsLightPackingConstraints() throws {
+        let engine = try makeEngine()
+        let generation = engine.generateDetailed(
+            context: try campingContext(activities: ["camping"], bag: .carryOn, style: .light)
+        )
+        let generated = ids(generation.items)
+        #expect(!generated.contains("miscellaneous.flashlight"))
+        #expect(generated.contains("hydration.water_bottle"))
+        #expect(generation.constraintDecisions.contains {
+            $0.constraint == "bag.space_constrained" && $0.items.contains("miscellaneous.flashlight")
+        })
+    }
+
+    /// A user-added multifunction item that already satisfies a Camping need
+    /// must survive and prevent a duplicate.
+    @Test func aUserAddedBottleSatisfiesCampingHydrationWithoutDuplication() throws {
+        let engine = try makeEngine()
+        let existing = [PackingItemDraft(
+            canonicalItemID: "hydration.water_bottle",
+            displayName: "My filter bottle",
+            category: .essentials,
+            quantity: 1,
+            importance: .normal,
+            sourceSignals: [.activity],
+            reason: "Mine",
+            isUserAdded: true
+        )]
+        let items = engine.generate(context: try campingContext(activities: ["camping"]), existing: existing)
+        let bottles = items.filter { $0.canonicalItemID == "hydration.water_bottle" }
+        #expect(bottles.count == 1)
+        #expect(bottles.first?.isUserAdded == true)
+        #expect(bottles.first?.displayName == "My filter bottle")
     }
 }

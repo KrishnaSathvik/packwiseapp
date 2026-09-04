@@ -123,7 +123,7 @@ struct PackingEngine: Sendable {
         overrides: [RecommendationOverrideDraft]
     ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
         var drops: ConstraintDrops = []
-        let suggestions = ruleSuggestions(for: context)
+        let suggestions = ruleSuggestions(for: context, snapshot: snapshot)
         let resolved = resolve(
             suggestions: suggestions,
             context: context,
@@ -150,7 +150,13 @@ struct PackingEngine: Sendable {
         let sharedIDs = Set(rules.party.sharedByDefault)
         // Weather and trip-wide activity signals are computed once, then split
         // into personal vs shared effects so rain does not become 4 umbrellas.
-        let tripSuggestions = ruleSuggestions(for: tripWideContext(context))
+        // Activities are trip-scoped, so the trip-wide snapshot is compiled
+        // once here and never per traveler.
+        let tripContext = tripWideContext(context)
+        let tripSuggestions = ruleSuggestions(
+            for: tripContext,
+            snapshot: TripContextCompiler.compile(tripContext, rules: rules)
+        )
         var sharedCollected: [String: RuleSuggestion] = [:]
         var result: [PackingItemDraft] = existing.filter(\.isUserAdded)
 
@@ -370,7 +376,10 @@ struct PackingEngine: Sendable {
         ReasonRenderer.render(code: code, arguments: arguments, templates: rules.reasons.templates, category: category, fallback: fallback)
     }
 
-    private func ruleSuggestions(for context: TripContext) -> [RuleSuggestion] {
+    private func ruleSuggestions(
+        for context: TripContext,
+        snapshot: TripContextSnapshot
+    ) -> [RuleSuggestion] {
         var collected: [String: RuleSuggestion] = [:]
 
         func add(_ ids: [String], signal: RecommendationSignal, code: String, arguments: [String: String] = [:], fallback: String) {
@@ -416,6 +425,11 @@ struct PackingEngine: Sendable {
                 )
             }
         }
+
+        // Phase 5: typed activity contracts. Needs and the JSON `add` rows
+        // above flow into the same `collected` dictionary, so composition and
+        // de-duplication are structural rather than asserted afterwards.
+        addActivityNeeds(context: context, snapshot: snapshot, into: &collected)
 
         for chip in context.contextChips {
             if let ids = rules.contextChips[chip.rawValue] {
@@ -463,6 +477,42 @@ struct PackingEngine: Sendable {
         }
 
         return Array(collected.values)
+    }
+
+    /// Resolves the trip's composed `Set<ActivityNeed>` into candidate items.
+    ///
+    /// The weather boundary lives here: an activity may participate in
+    /// existing weather logic but may never manufacture weather, so a
+    /// weather-gated need resolves to nothing unless the projection already
+    /// carries a cold signal. Needs are emitted in sorted order so emission
+    /// never depends on set iteration.
+    private func addActivityNeeds(
+        context: TripContext,
+        snapshot: TripContextSnapshot,
+        into collected: inout [String: RuleSuggestion]
+    ) {
+        let ordered = snapshot.knownActivityIDs
+        let activityNeeds = ActivityContracts.needs(for: ordered)
+        guard !activityNeeds.isEmpty else { return }
+
+        let coverageContext = CoverageContext(snapshot: snapshot, thresholds: rules.weather.thresholds)
+        let coldSignals: Set<WeatherSignal> = [.snowExposure, .sustainedCold, .freezingCold, .coldEvenings]
+        let hasColdSignal = !coverageContext.weatherSignals.isDisjoint(with: coldSignals)
+
+        for need in activityNeeds.sorted(by: { $0.rawValue < $1.rawValue }) {
+            // The weather boundary: a gated need never creates its own weather.
+            if need.isWeatherGated && !hasColdSignal { continue }
+            guard let origin = ActivityContracts.originatingActivity(for: need, in: ordered) else { continue }
+            addIDs(
+                ActivityContracts.needCandidates[need] ?? [],
+                signal: .activity,
+                code: "activity.\(origin)",
+                arguments: ["destination": context.destination.displayName],
+                fallback: activityReason(origin, destination: context.destination.displayName),
+                context: context,
+                into: &collected
+            )
+        }
     }
 
     private func addWeather(context: TripContext, into collected: inout [String: RuleSuggestion]) {
@@ -980,6 +1030,7 @@ struct PackingEngine: Sendable {
     private func activityReason(_ activity: String, destination: String) -> String {
         switch activity {
         case "hiking": "Hiking is on your plans."
+        case "camping": "You're camping on this trip."
         case "running": "You plan to run."
         case "sightseeing": "You'll have sightseeing days in \(destination)."
         default: "Based on what you'll be doing."
