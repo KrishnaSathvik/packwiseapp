@@ -22,6 +22,7 @@ from scripts.audit_engine_inputs import (
     SourceExpectation,
     build_report,
     check_completeness,
+    check_test_references,
     load_contracts,
 )
 
@@ -247,6 +248,110 @@ class CompletenessCheckTests(unittest.TestCase):
             self.assertEqual(check_completeness(records, expected), [])
 
 
+class TestIDReferenceTests(unittest.TestCase):
+    """`testIDs` closes the "at least one fixture **or** test" requirement.
+
+    Every entry is file-qualified `<SwiftFile>::<testFunctionName>` and is
+    verified against that specific file, so the field cannot be used to type a
+    green audit — which is the whole reason it is allowed to satisfy the
+    UNTESTED bucket at all.
+    """
+
+    def setUp(self):
+        self.repo_root = Path(__file__).resolve().parents[2]
+
+    def _load(self, *records):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = write_contracts(Path(tmp), contracts(*records))
+            return load_contracts(path)
+
+    def test_a_named_test_satisfies_the_untested_bucket(self):
+        records, errors = self._load(
+            record(
+                kind="activity",
+                id_="yoga",
+                engineContract="deterministic",
+                fixtureIDs=[],
+                testIDs=["ActivityContractTests.swift::yogaAddsAMatAndWorkoutClothes"],
+            )
+        )
+        self.assertEqual(errors, [])
+        self.assertEqual(build_report(records).untested, [])
+
+    def test_a_record_with_neither_fixture_nor_test_is_still_untested(self):
+        records, errors = self._load(
+            record(kind="activity", id_="yoga", engineContract="deterministic", fixtureIDs=[])
+        )
+        self.assertEqual(errors, [])
+        self.assertEqual([r.id for r in build_report(records).untested], ["yoga"])
+
+    def test_a_nonexistent_named_test_is_a_schema_error(self):
+        records, errors = self._load(
+            record(
+                kind="activity",
+                id_="yoga",
+                engineContract="deterministic",
+                fixtureIDs=[],
+                testIDs=["ActivityContractTests.swift::thisTestDoesNotExist"],
+            )
+        )
+        errors.extend(check_test_references(records, self.repo_root))
+        self.assertTrue(
+            any("thisTestDoesNotExist" in e for e in errors), f"expected a missing-test error, got: {errors}"
+        )
+
+    def test_a_test_in_a_different_file_does_not_satisfy_the_reference(self):
+        # The function exists — in another suite. The ledger must point at
+        # where the evidence actually lives, so this is still an error.
+        records, errors = self._load(
+            record(
+                kind="activity",
+                id_="hiking",
+                engineContract="deterministic",
+                fixtureIDs=[],
+                testIDs=["GoldenEngineTests.swift::hikingOnlyBehaviorIsUnchangedByTheContractMigration"],
+            )
+        )
+        errors.extend(check_test_references(records, self.repo_root))
+        self.assertTrue(
+            any("GoldenEngineTests.swift" in e for e in errors), f"expected a wrong-file error, got: {errors}"
+        )
+
+    def test_an_unqualified_test_id_is_a_schema_error(self):
+        _records, errors = self._load(
+            record(
+                kind="activity",
+                id_="yoga",
+                engineContract="deterministic",
+                fixtureIDs=[],
+                testIDs=["yogaAddsAMatAndWorkoutClothes"],
+            )
+        )
+        self.assertTrue(
+            any("yogaAddsAMatAndWorkoutClothes" in e for e in errors),
+            f"expected an unqualified-testID error, got: {errors}",
+        )
+
+    def test_a_reference_to_a_missing_file_is_a_schema_error(self):
+        records, errors = self._load(
+            record(
+                kind="activity",
+                id_="yoga",
+                engineContract="deterministic",
+                fixtureIDs=[],
+                testIDs=["NoSuchTests.swift::yogaAddsAMatAndWorkoutClothes"],
+            )
+        )
+        errors.extend(check_test_references(records, self.repo_root))
+        self.assertTrue(
+            any("NoSuchTests.swift" in e for e in errors), f"expected a missing-file error, got: {errors}"
+        )
+
+    def test_test_ids_are_optional(self):
+        _records, errors = self._load(record())
+        self.assertEqual(errors, [])
+
+
 class RealContractsFileTests(unittest.TestCase):
     """Sanity check against the actual production file, so a future edit that
     breaks the schema (or drifts from the real enum/rule vocabulary) fails
@@ -266,14 +371,28 @@ class RealContractsFileTests(unittest.TestCase):
             completeness_errors, [], f"production contracts file drifted from source: {completeness_errors}"
         )
 
-    def test_camping_is_reported_missing_and_points_at_fixture_18(self):
+    def test_camping_is_reported_deterministic_with_fixture_evidence(self):
         repo_root = Path(__file__).resolve().parents[2]
         contracts_path = repo_root / "docs" / "engine-audits" / "surfaced-input-contracts.json"
         records, errors = load_contracts(contracts_path)
         self.assertEqual(errors, [])
-        report = build_report(records)
-        camping = next(r for r in report.dead if r.kind == "activity" and r.id == "camping")
+        camping = next(r for r in records if r.kind == "activity" and r.id == "camping")
+        self.assertEqual(camping.engine_contract, "deterministic")
         self.assertIn("18-reykjavik-64d-roadtrip-camping-seasonal", camping.fixture_ids)
+        self.assertIn("28-yellowstone-4d-camping-mild", camping.fixture_ids)
+
+    def test_no_record_remains_missing(self):
+        """From Phase 5 on the DEAD bucket is expected to be empty."""
+        repo_root = Path(__file__).resolve().parents[2]
+        contracts_path = repo_root / "docs" / "engine-audits" / "surfaced-input-contracts.json"
+        records, _errors = load_contracts(contracts_path)
+        self.assertEqual([f"{r.kind}/{r.id}" for r in build_report(records).dead], [])
+
+    def test_every_named_test_in_the_production_ledger_exists(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        contracts_path = repo_root / "docs" / "engine-audits" / "surfaced-input-contracts.json"
+        records, _errors = load_contracts(contracts_path)
+        self.assertEqual(check_test_references(records, repo_root), [])
 
 
 if __name__ == "__main__":

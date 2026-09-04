@@ -18,11 +18,21 @@ Each record has the shape:
       "kind": "activity",
       "id": "camping",
       "exposed": true,
-      "engineContract": "missing",
+      "engineContract": "deterministic",
       "fixtureIDs": ["18-reykjavik-64d-roadtrip-camping-seasonal"],
+      "testIDs": ["ActivityContractTests.swift::campingAloneAddsItsFourCandidatesAndNoCampsiteLogistics"],
       "iconContract": "tent",
       "ownerScope": "trip"
     }
+
+`testIDs` is optional and every entry is file-qualified as
+`<SwiftFile>::<testFunctionName>`. It exists because the real requirement is
+"at least one fixture **or** test": eight activities have real code paths that
+no golden fixture exercises, and a named, verified test is better evidence
+than fixture spam. To keep the field from becoming a way to type a green
+audit, each entry is verified against the file it names — a same-named
+function in another suite does not satisfy it, so a moved or renamed test
+breaks the audit loudly.
 
 `engineContract` is one of:
 
@@ -57,13 +67,15 @@ It then buckets every record that passed validation into a report:
 
     DEAD            engineContract == "missing" — offered to the user,
                      verified to do nothing. Every row here is a defect to
-                     route to a later phase.
+                     route to a later phase. Phase 5 emptied this bucket, and
+                     it is expected to stay empty: a row reappearing here is
+                     a regression, not a finding to file away.
     CONTEXT-ONLY    engineContract == "contextOnly" — surfaced, stored, but
-                     does not independently change engine output.
-    UNTESTED        engineContract == "deterministic" but fixtureIDs is
-                     empty — the code path is real, but nothing in the
-                     27-fixture golden ledger proves it, so a regression here
-                     would go unnoticed.
+                     does not independently change engine output. Still never
+                     a label to reach for when the real answer is `missing`.
+    UNTESTED        engineContract == "deterministic" but neither fixtureIDs
+                     nor testIDs is populated — the code path is real, but
+                     nothing proves it, so a regression would go unnoticed.
 
 CLI:
 
@@ -74,8 +86,8 @@ CLI:
 
 Exit code reflects schema validity only (0 clean, 1 validation errors); a
 non-empty DEAD/UNTESTED bucket is a reportable finding, not a validation
-failure — the contract for `camping`/`other`/etc. is expected to stay
-`missing`/untested until a later phase closes it.
+failure. Since Phase 5 the remaining UNTESTED rows are the context chips,
+which are reported rather than silenced because no phase owns them yet.
 """
 
 from __future__ import annotations
@@ -94,6 +106,12 @@ ALLOWED_KINDS = ("tripType", "bagType", "packingStyle", "laundryAccess", "activi
 
 _REQUIRED_STRING_FIELDS = ("kind", "id", "engineContract", "iconContract", "ownerScope")
 
+#: `testIDs` entries are file-qualified so a reference resolves to one place.
+_TEST_ID_PATTERN = re.compile(r"^(?P<file>[A-Za-z0-9_]+\.swift)::(?P<func>[A-Za-z_][A-Za-z0-9_]*)$")
+
+#: Where `testIDs` files are resolved from, relative to the repo root.
+_TESTS_DIR = ("ios", "PackWiseTests")
+
 
 # ---------------------------------------------------------------------------
 # Schema
@@ -110,6 +128,8 @@ class ContractRecord:
     icon_contract: str
     owner_scope: str
     note: Optional[str] = None
+    #: File-qualified `<SwiftFile>::<testFunctionName>` references.
+    test_ids: Tuple[str, ...] = ()
 
     @property
     def key(self) -> Tuple[str, str]:
@@ -129,6 +149,22 @@ class ContractRecord:
         if not isinstance(fixture_ids, list) or not all(isinstance(f, str) for f in fixture_ids):
             errors.append(f"record[{index}]: 'fixtureIDs' must be a list of strings")
             fixture_ids = []
+        test_ids = raw.get("testIDs")
+        if test_ids is None:
+            test_ids = []
+        if not isinstance(test_ids, list) or not all(isinstance(t, str) for t in test_ids):
+            errors.append(f"record[{index}]: 'testIDs' must be a list of strings")
+            test_ids = []
+        else:
+            # File-qualification is enforced at load time so an unqualified
+            # name can never be resolved leniently against the whole test
+            # directory. The reference must say where the evidence lives.
+            for test_id in test_ids:
+                if not _TEST_ID_PATTERN.match(test_id):
+                    errors.append(
+                        f"record[{index}]: testIDs entry {test_id!r} must be "
+                        f"'<SwiftFile>.swift::<testFunctionName>'"
+                    )
         if errors:
             return None, errors
 
@@ -141,6 +177,7 @@ class ContractRecord:
             icon_contract=raw["iconContract"],
             owner_scope=raw["ownerScope"],
             note=raw.get("note"),
+            test_ids=tuple(test_ids),
         )
 
         if record.kind not in ALLOWED_KINDS:
@@ -257,10 +294,6 @@ def discover_expected_ids(repo_root: Path) -> SourceExpectation:
     activities: Set[str] = set()
     if activity_rules_path.is_file():
         activities |= set(json.loads(activity_rules_path.read_text()).get("activities", {}).keys())
-    # camping has no rule entry at all (that is the finding), but it is a
-    # real, presentation-styled activity id the contracts file must still
-    # cover — see PackWiseActivityStyle and golden fixture 18.
-    activities.add("camping")
 
     return SourceExpectation(
         trip_types=trip_types,
@@ -305,6 +338,48 @@ def check_completeness(records: List[ContractRecord], expected: SourceExpectatio
     return errors
 
 
+def check_test_references(records: List[ContractRecord], repo_root: Path) -> List[str]:
+    """Verify every `testIDs` entry names a real test function in its file.
+
+    Resolution is scoped to the file the entry names, never to the test
+    directory as a whole: a same-named function in another suite must not
+    satisfy the reference, or the ledger stops saying where the evidence
+    actually lives and a moved test silently keeps the audit green.
+    """
+    errors: List[str] = []
+    tests_dir = repo_root.joinpath(*_TESTS_DIR)
+    # None means "file does not exist"; a set means "these functions are in it".
+    functions_by_file: Dict[str, Optional[Set[str]]] = {}
+
+    def functions_in(file_name: str) -> Optional[Set[str]]:
+        if file_name not in functions_by_file:
+            path = tests_dir / file_name
+            functions_by_file[file_name] = (
+                set(re.findall(r"\bfunc\s+(\w+)\s*\(", path.read_text())) if path.is_file() else None
+            )
+        return functions_by_file[file_name]
+
+    for record in records:
+        for test_id in record.test_ids:
+            match = _TEST_ID_PATTERN.match(test_id)
+            if match is None:
+                continue  # already reported as a schema error at load time
+            file_name, func_name = match.group("file"), match.group("func")
+            functions = functions_in(file_name)
+            if functions is None:
+                errors.append(
+                    f"{record.kind}/{record.id}: testIDs entry {test_id!r} names "
+                    f"{file_name!r}, which does not exist under {'/'.join(_TESTS_DIR)}"
+                )
+            elif func_name not in functions:
+                errors.append(
+                    f"{record.kind}/{record.id}: testIDs entry {test_id!r} names no "
+                    f"'func {func_name}(' in {file_name}"
+                )
+
+    return errors
+
+
 def find_repo_root() -> Optional[Path]:
     try:
         result = subprocess.run(
@@ -340,7 +415,7 @@ class Report:
         return [
             r
             for r in self.records
-            if r.engine_contract == "deterministic" and not r.fixture_ids
+            if r.engine_contract == "deterministic" and not r.fixture_ids and not r.test_ids
         ]
 
     @property
@@ -348,7 +423,7 @@ class Report:
         return [
             r
             for r in self.records
-            if r.engine_contract == "deterministic" and r.fixture_ids
+            if r.engine_contract == "deterministic" and (r.fixture_ids or r.test_ids)
         ]
 
     def counts(self) -> Dict[str, int]:
@@ -500,6 +575,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             expected = discover_expected_ids(repo_root)
             errors.extend(check_completeness(records, expected))
+            # A fabricated or relocated test reference fails schema
+            # validation rather than quietly greening the UNTESTED bucket.
+            errors.extend(check_test_references(records, repo_root))
 
     if errors:
         print(f"Schema validation failed for {contracts_path} ({len(errors)} error(s)):", file=sys.stderr)

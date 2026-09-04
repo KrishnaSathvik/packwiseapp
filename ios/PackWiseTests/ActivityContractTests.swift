@@ -527,4 +527,72 @@ struct ActivityContractTests {
             $0.field == "activities" && $0.outcome.isUnsupportedButSafe
         })
     }
+
+    // MARK: - Task 5: observable effect for every deterministic activity
+
+    /// Every activity the ledger calls deterministic must be responsible for
+    /// something, proved as a delta against the same trip without it —
+    /// presence in a full list proves nothing.
+    private func addedBy(_ activity: String) throws -> Set<String> {
+        let engine = try makeEngine()
+        let without = ids(engine.generate(context: try campingContext(activities: ["sightseeing"])))
+        let with = ids(engine.generate(context: try campingContext(activities: ["sightseeing", activity])))
+        return with.subtracting(without)
+    }
+
+    /// Requirement 3: executable coverage for every deterministic activity.
+    @Test func everyDeterministicActivityHasAnObservableEffect() throws {
+        let expected: [String: Set<String>] = [
+            "nightlife": ["clothing.nice_outfit"],
+            "shopping": ["essentials.reusable_bag"],
+            "museums": ["clothing.light_sweater"],
+            "wildlife": ["activities.binoculars", "electronics.camera"],
+            "snorkeling": ["activities.snorkel", "footwear.water_shoes"],
+            "boatTrip": ["activities.dry_bag", "health.motion_sickness"],
+            "yoga": ["activities.yoga_mat_travel"],
+            "photography": ["electronics.camera", "electronics.memory_card"]
+            // running/walking/hiking/camping/swimming/beachDays/work/
+            // niceDinner/sightseeing are pinned by their own named tests and
+            // golden fixtures.
+        ]
+        for (activity, mustAppear) in expected.sorted(by: { $0.key < $1.key }) {
+            #expect(mustAppear.isSubset(of: try addedBy(activity)),
+                    "\(activity) produced no observable effect")
+        }
+    }
+
+    // One named test per previously-untested activity, so every ledger
+    // `testIDs` entry resolves to a real function in this file.
+
+    @Test func nightlifeAddsANiceOutfit() throws {
+        #expect(try addedBy("nightlife").contains("clothing.nice_outfit"))
+    }
+
+    @Test func shoppingAddsAReusableBag() throws {
+        #expect(try addedBy("shopping").contains("essentials.reusable_bag"))
+    }
+
+    @Test func museumsAddsALightSweater() throws {
+        #expect(try addedBy("museums").contains("clothing.light_sweater"))
+    }
+
+    @Test func wildlifeAddsBinocularsAndACamera() throws {
+        #expect(try addedBy("wildlife").isSuperset(of: ["activities.binoculars", "electronics.camera"]))
+    }
+
+    @Test func snorkelingAddsSnorkelGearAndWaterShoes() throws {
+        #expect(try addedBy("snorkeling").isSuperset(of: ["activities.snorkel", "footwear.water_shoes"]))
+    }
+
+    @Test func boatTripAddsADryBagAndMotionSickness() throws {
+        #expect(try addedBy("boatTrip").isSuperset(of: ["activities.dry_bag", "health.motion_sickness"]))
+    }
+
+    @Test func yogaAddsAMatAndWorkoutClothes() throws {
+        #expect(try addedBy("yoga").contains("activities.yoga_mat_travel"))
+    }
+
+    @Test func photographyAddsACameraAndMemoryCard() throws {
+        #expect(try addedBy("photography").isSuperset(of: ["electronics.camera", "electronics.memory_card"]))
+    }
 }

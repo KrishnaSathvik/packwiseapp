@@ -112,11 +112,15 @@
       "kind": "tripType",
       "id": "other",
       "exposed": true,
-      "engineContract": "missing",
+      "engineContract": "contextOnly",
       "fixtureIDs": [],
+      "testIDs": [
+        "ActivityContractTests.swift::otherIsADeclaredIdentityTripType",
+        "ActivityContractTests.swift::otherTripsAreCarriedEntirelyByActivitiesAndContext"
+      ],
       "iconContract": "ellipsis.circle",
       "ownerScope": "trip",
-      "note": "shared/rules/trip-types.json['other'].add is an explicit empty list: selecting Other contributes zero trip-type-specific items or reason codes, the same observable effect as a trip type absent from the rules file entirely. No golden fixture exercises it."
+      "note": "Other is the identity element of trip type: shared/rules/trip-types.json declares it with an explicit empty add, meaning \"no additional trip-type-specific needs; activities, preferences and context carry the meaning\". The lookup succeeds and deliberately contributes nothing, which is contextOnly rather than missing. Phase 5 earns that relabel with three checks rather than asserting it: the key exists with an empty add, other is the ONLY trip type with an empty add so the label cannot spread to a trip type that merely lost its rule, and an Other trip still produces a complete list whose every row is explained by base essentials, activities, weather or party."
     },
     {
       "kind": "bagType",
@@ -288,9 +292,13 @@
       "exposed": true,
       "engineContract": "deterministic",
       "fixtureIDs": [],
+      "testIDs": [
+        "ActivityContractTests.swift::nightlifeAddsANiceOutfit",
+        "ActivityContractTests.swift::everyDeterministicActivityHasAnObservableEffect"
+      ],
       "iconContract": "moon.stars",
       "ownerScope": "trip",
-      "note": "Suggested for cityBreak/vacation/festival trip types; rules.activities adds clothing.nice_outfit, but no golden fixture selects nightlife; deterministic and currently untested."
+      "note": "Suggested for cityBreak/vacation/festival trip types; rules.activities adds clothing.nice_outfit, but no golden fixture selects nightlife; Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
     },
     {
       "kind": "activity",
@@ -309,9 +317,13 @@
       "exposed": true,
       "engineContract": "deterministic",
       "fixtureIDs": [],
+      "testIDs": [
+        "ActivityContractTests.swift::shoppingAddsAReusableBag",
+        "ActivityContractTests.swift::everyDeterministicActivityHasAnObservableEffect"
+      ],
       "iconContract": "bag",
       "ownerScope": "trip",
-      "note": "Suggested for cityBreak/vacation; rules.activities adds essentials.reusable_bag, but no golden fixture selects shopping; deterministic and currently untested."
+      "note": "Suggested for cityBreak/vacation; rules.activities adds essentials.reusable_bag, but no golden fixture selects shopping; Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
     },
     {
       "kind": "activity",
@@ -319,9 +331,13 @@
       "exposed": true,
       "engineContract": "deterministic",
       "fixtureIDs": [],
+      "testIDs": [
+        "ActivityContractTests.swift::museumsAddsALightSweater",
+        "ActivityContractTests.swift::everyDeterministicActivityHasAnObservableEffect"
+      ],
       "iconContract": "building.columns",
       "ownerScope": "trip",
-      "note": "Suggested for cityBreak/vacation; rules.activities adds clothing.light_sweater, but no golden fixture selects museums; deterministic and currently untested."
+      "note": "Suggested for cityBreak/vacation; rules.activities adds clothing.light_sweater, but no golden fixture selects museums; Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
     },
     {
       "kind": "activity",
@@ -340,10 +356,18 @@
       "exposed": true,
       "engineContract": "deterministic",
       "fixtureIDs": [
-        "18-reykjavik-64d-roadtrip-camping-seasonal"
+        "18-reykjavik-64d-roadtrip-camping-seasonal",
+        "29-yellowstone-4d-hiking-camping",
+        "32-denver-5d-camping-cold"
+      ],
+      "testIDs": [
+        "ActivityContractTests.swift::hikingOnlyBehaviorIsUnchangedByTheContractMigration",
+        "ActivityContractTests.swift::hikingPlusCampingIsOneComposedTripNotTwoChecklists",
+        "ActivityContractTests.swift::trailFootwearCoverageIsDerivedFromTheNeedNotTheActivityString"
       ],
       "iconContract": "figure.hiking",
-      "ownerScope": "trip"
+      "ownerScope": "trip",
+      "note": "Phase 5 moved hiking's item list out of activity-rules.json (its row is now empty) and into its typed contract: trailFootwear, dayCarry, hydration and blisterCare. Behaviour is unchanged under a zero-diff golden gate. Hiking is the only contract declaring trailFootwear and so the only one that claims PackingCapability.hiking."
     },
     {
       "kind": "activity",
@@ -351,9 +375,13 @@
       "exposed": true,
       "engineContract": "deterministic",
       "fixtureIDs": [],
+      "testIDs": [
+        "ActivityContractTests.swift::wildlifeAddsBinocularsAndACamera",
+        "ActivityContractTests.swift::everyDeterministicActivityHasAnObservableEffect"
+      ],
       "iconContract": "binoculars",
       "ownerScope": "trip",
-      "note": "Suggested for outdoor trips; rules.activities adds activities.binoculars/electronics.camera, but no golden fixture selects wildlife; deterministic and currently untested."
+      "note": "Suggested for outdoor trips; rules.activities adds activities.binoculars/electronics.camera, but no golden fixture selects wildlife; Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
     },
     {
       "kind": "activity",
@@ -383,9 +411,13 @@
       "exposed": true,
       "engineContract": "deterministic",
       "fixtureIDs": [],
+      "testIDs": [
+        "ActivityContractTests.swift::snorkelingAddsSnorkelGearAndWaterShoes",
+        "ActivityContractTests.swift::everyDeterministicActivityHasAnObservableEffect"
+      ],
       "iconContract": "water.waves",
       "ownerScope": "trip",
-      "note": "Suggested for beach trips; rules.activities adds activities.snorkel/footwear.water_shoes/toiletries.sunscreen, but no golden fixture selects snorkeling (06 and 23 use swimming/beachDays only); deterministic and currently untested."
+      "note": "Suggested for beach trips; rules.activities adds activities.snorkel/footwear.water_shoes/toiletries.sunscreen, but no golden fixture selects snorkeling (06 and 23 use swimming/beachDays only); Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
     },
     {
       "kind": "activity",
@@ -393,9 +425,13 @@
       "exposed": true,
       "engineContract": "deterministic",
       "fixtureIDs": [],
+      "testIDs": [
+        "ActivityContractTests.swift::boatTripAddsADryBagAndMotionSickness",
+        "ActivityContractTests.swift::everyDeterministicActivityHasAnObservableEffect"
+      ],
       "iconContract": "sailboat",
       "ownerScope": "trip",
-      "note": "Suggested for beach trips; rules.activities adds activities.dry_bag/health.motion_sickness/toiletries.sunscreen, but no golden fixture selects boatTrip; deterministic and currently untested."
+      "note": "Suggested for beach trips; rules.activities adds activities.dry_bag/health.motion_sickness/toiletries.sunscreen, but no golden fixture selects boatTrip; Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
     },
     {
       "kind": "activity",
@@ -403,9 +439,13 @@
       "exposed": true,
       "engineContract": "deterministic",
       "fixtureIDs": [],
+      "testIDs": [
+        "ActivityContractTests.swift::yogaAddsAMatAndWorkoutClothes",
+        "ActivityContractTests.swift::everyDeterministicActivityHasAnObservableEffect"
+      ],
       "iconContract": "figure.yoga",
       "ownerScope": "trip",
-      "note": "Not offered as a suggested-activity chip for any TripType; reachable only via the free-text keyword \"yoga\" in shared/rules/base.json. rules.activities adds a travel yoga mat and workout clothing, but no golden fixture selects yoga; deterministic and currently untested."
+      "note": "Not offered as a suggested-activity chip for any TripType; reachable only via the free-text keyword \"yoga\" in shared/rules/base.json. rules.activities adds a travel yoga mat and workout clothing, but no golden fixture selects yoga; Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
     },
     {
       "kind": "activity",
@@ -413,21 +453,35 @@
       "exposed": true,
       "engineContract": "deterministic",
       "fixtureIDs": [],
+      "testIDs": [
+        "ActivityContractTests.swift::photographyAddsACameraAndMemoryCard",
+        "ActivityContractTests.swift::everyDeterministicActivityHasAnObservableEffect"
+      ],
       "iconContract": "camera.aperture",
       "ownerScope": "trip",
-      "note": "Not offered as a suggested-activity chip for any TripType; reachable only via the free-text keyword \"photo\" in shared/rules/base.json. rules.activities adds camera/charger/memory card, but no golden fixture selects photography; deterministic and currently untested."
+      "note": "Not offered as a suggested-activity chip for any TripType; reachable only via the free-text keyword \"photo\" in shared/rules/base.json. rules.activities adds camera/charger/memory card, but no golden fixture selects photography; Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
     },
     {
       "kind": "activity",
       "id": "camping",
       "exposed": true,
-      "engineContract": "missing",
+      "engineContract": "deterministic",
       "fixtureIDs": [
-        "18-reykjavik-64d-roadtrip-camping-seasonal"
+        "18-reykjavik-64d-roadtrip-camping-seasonal",
+        "28-yellowstone-4d-camping-mild",
+        "29-yellowstone-4d-hiking-camping",
+        "30-seattle-5d-camping-rain",
+        "31-phoenix-5d-camping-hot",
+        "32-denver-5d-camping-cold"
+      ],
+      "testIDs": [
+        "ActivityContractTests.swift::campingAloneAddsItsFourCandidatesAndNoCampsiteLogistics",
+        "ActivityContractTests.swift::campingNeverProducesCampsiteLogistics",
+        "ActivityContractTests.swift::onlyHikingClaimsTrailFootwear"
       ],
       "iconContract": "tent",
       "ownerScope": "trip",
-      "note": "PackWiseActivityStyle gives camping a full icon/tint (tent, orange) and golden fixture 18 exercises it directly, but camping has no entry in shared/rules/activity-rules.json: the activity contributes zero items, signals, or reason codes. It is also not reachable from any TripType.suggestedActivityIDs chip or shared/rules/base.json free-text keyword today, so a new trip cannot currently select it \u2014 the only way to see it is a trip whose activities array already contains it. Recorded missing, not context-only, per the Phase 1 plan's explicit instruction not to relabel a broken control as context-only to make the report green."
+      "note": "Phase 5 gives camping a typed contract in ActivityContracts: the needs hydration, portableLight, insectProtection, sunProtection and a weather-gated overnightWarmth, resolving to a water bottle, a small flashlight, insect repellent, sunscreen and - only when a cold signal already exists - a thermal top. Camping V1 deliberately excludes all campsite logistics (tents, sleeping bags, pads, stoves, fuel, cookware, food storage, furniture): PackWise packs the traveler. It also deliberately declares no trailFootwear need, because car camping, campground stays, festival camping and cabin stays do not universally require trail shoes; hiking remains the sole claimant of PackingCapability.hiking. Reachable via the \"camping\" free-text keyword in shared/rules/base.json."
     },
     {
       "kind": "contextChip",
@@ -517,7 +571,7 @@
       "fixtureIDs": [],
       "iconContract": "washer",
       "ownerScope": "trip",
-      "note": "rules.contextChips['laundryAvailable'] adds toiletries.laundry_sheets. Trip-level (in ContextChip.tripLevel), but TripSetupView.extrasStep explicitly filters it out of the 'About this trip' chip field ('Laundry moved to the bag-and-style step as a three-way control; the boolean chip stays in the enum for old trips') \u2014 it is not user-toggleable in the current UI, only reachable via legacy trip data, the same 'real enum case, not currently reachable from a fresh trip' status the camping activity record above documents. No golden fixture sets it (fixtures exercise LaundryAccess instead, at 02/02b/03); deterministic and currently untested."
+      "note": "rules.contextChips['laundryAvailable'] adds toiletries.laundry_sheets. Trip-level (in ContextChip.tripLevel), but TripSetupView.extrasStep explicitly filters it out of the 'About this trip' chip field ('Laundry moved to the bag-and-style step as a three-way control; the boolean chip stays in the enum for old trips') — it is not user-toggleable in the current UI, only reachable via legacy trip data, the same 'real enum case, not currently reachable from a fresh trip' status the camping activity record above documents. No golden fixture sets it (fixtures exercise LaundryAccess instead, at 02/02b/03); deterministic and currently untested."
     }
   ]
 }
