@@ -46,9 +46,12 @@ golden fixtures, Python audit/report tooling, Xcode/iOS 18 simulator tests.
 - No change to `shared/rules/party.json`'s data. `sharedByDefault` and
   `sharingPolicies` are read, not edited — F-5 needs no new row, and no
   other task in this plan adds one.
-- `SharingPolicy.personalOnly` is read but not fixed or retired this phase
-  — it is a routed finding (design doc, "Deliberately out of scope"), not a
-  task. Do not opportunistically patch it.
+- `SharingPolicy.personalOnly`'s semantics are made truthful and tested in
+  Task 1 (design doc, "Required amendment") — it must never produce an
+  `ownershipType == .shared` draft with `travelerID == nil`. This is a
+  required amendment, not optional polish: do not defer it. It is tested
+  against a synthetic, test-local policy row only — no existing catalog
+  item is assigned `.personalOnly`, and `party.json` gains no new row.
 - Task 1 and Task 2 (the two refactors) must each be a **zero-diff gate**:
   `report_engine_goldens.py --baseline-ref c9cbb76` shows zero row changes
   before either task's behavior-adjacent test is trusted. `c9cbb76` is
@@ -146,6 +149,78 @@ golden fixtures, Python audit/report tooling, Xcode/iOS 18 simulator tests.
 }
 ```
 
+- [ ] **Step 1b: Write the failing `personalOnly` contract tests (required
+  amendment).** `SharingPolicy.personalOnly` is declared, has zero
+  `sharingPolicies` rows using it, and zero test coverage — reading
+  `applyQuantities` shows it currently falls through to an
+  `ownershipType == .shared` draft with `travelerID == nil` if anything ever
+  used it. This is not a routed finding: it is party-sharing semantics, and
+  Phase 7 owns party-sharing semantics. Fix it now, while zero real data
+  exercises the case, so the fix itself changes zero golden output. Test
+  against a synthetic, test-local policy row on an ordinary real item — do
+  **not** add a `sharingPolicies` row to `shared/rules/party.json`, since no
+  current catalog item independently needs `.personalOnly`.
+
+```swift
+/// `.personalOnly` must behave exactly like "not shared" — one draft per
+/// traveler, real `travelerID`, `ownershipType == .personal` — never an
+/// `ownershipType == .shared` draft with `travelerID == nil` produced by
+/// falling through `applyQuantities`'s old shared-quantity branch. Tested
+/// against a synthetic policy row so no `party.json` row is added; a real
+/// per-traveler item (`toiletries.toothbrush`) stands in as the subject so
+/// the assertion is about actual generated items, not the bare function.
+private func rulesWithSyntheticPersonalOnly(for canonicalItemID: String = "toiletries.toothbrush") throws -> PackingRulesFile {
+    var rules = try SharedLibrary.rules()
+    rules.party.sharedByDefault.append(canonicalItemID)
+    rules.party.sharingPolicies[canonicalItemID] = SharingPolicyRule(policy: .personalOnly, per: nil, min: 1, value: 1)
+    return rules
+}
+
+@Test func personalOnlySoloProducesOneOwnedPersonalItem() throws {
+    let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try rulesWithSyntheticPersonalOnly())
+    let items = engine.generate(context: context(destination: try destination("Chicago"), party: .solo()))
+    let matches = items.filter { $0.canonicalItemID == "toiletries.toothbrush" }
+    #expect(matches.count == 1)
+    #expect(matches.allSatisfy { $0.ownershipType == .personal && $0.travelerID != nil })
+}
+
+@Test func personalOnlyCoupleProducesOnePersonalRowPerTraveler() throws {
+    let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try rulesWithSyntheticPersonalOnly())
+    let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+    let items = engine.generate(context: context(destination: try destination("Chicago"), party: couple))
+    let matches = items.filter { $0.canonicalItemID == "toiletries.toothbrush" }
+    #expect(matches.count == 2)
+    #expect(matches.allSatisfy { $0.ownershipType == .personal })
+    #expect(Set(matches.compactMap(\.travelerID)) == Set(couple.travelers.map(\.id)))
+}
+
+@Test func personalOnlyFamilyNeverProducesAnOwnerlessSharedDraft() throws {
+    let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try rulesWithSyntheticPersonalOnly())
+    let family = TripParty(travelMode: .family, travelers: [
+        Traveler.primarySelf(),
+        Traveler(name: "Sam", role: .partner, ageGroup: .adult),
+        Traveler(name: "Emma", role: .child, ageGroup: .child)
+    ])
+    let items = engine.generate(context: context(destination: try destination("Chicago"), party: family))
+    let matches = items.filter { $0.canonicalItemID == "toiletries.toothbrush" }
+    #expect(matches.count == family.travelers.count)
+    // The exact defect this test exists to prevent: never travelerID == nil
+    // merely because a .personalOnly item fell through the old shared path.
+    #expect(matches.allSatisfy { $0.ownershipType != .shared && $0.travelerID != nil })
+}
+
+/// The pure-function boundary, so a future edit to `sharingResolution`
+/// cannot silently reintroduce the fallthrough without failing here first.
+@Test func sharingResolutionNeverReturnsSharedForPersonalOnlyPolicy() throws {
+    let rules = try rulesWithSyntheticPersonalOnly()
+    let result = ConstraintResolver.sharingResolution(
+        for: "toiletries.toothbrush", rules: rules.party,
+        context: context(destination: try destination("Chicago")), party: .solo()
+    )
+    #expect(result == .personal)
+}
+```
+
 - [ ] **Step 2: Run and verify RED.** Run:
 
 ```bash
@@ -185,6 +260,12 @@ extension ConstraintResolver {
         guard rules.sharedByDefault.contains(canonicalItemID) else { return .personal }
         let policy = rules.sharingPolicies[canonicalItemID]
             ?? SharingPolicyRule(policy: .singlePerParty, per: nil, min: 1, value: 1)
+        // Required amendment: a `.personalOnly` item never reaches the
+        // shared-draft path at all — `generateForParty` calls `.isShared`
+        // (Step 4), so this early return is what keeps such an item on the
+        // ordinary per-traveler personal path with a real `travelerID`,
+        // closing the fallthrough-to-ownerless-shared-draft bug Step 1b
+        // tests. This is the fix, not a stub — do not remove it.
         guard policy.policy != .personalOnly else { return .personal }
         let quantity = sharedQuantity(policy, context: context, party: party)
         let reason = sharedQuantityReason(canonicalItemID, quantity: quantity, context: context, party: party)
@@ -478,6 +559,12 @@ git commit -m "refactor: centralize the explicit-user-authority gate and prove t
 /// own light source independently. `miscellaneous.flashlight` staying out
 /// of `sharedByDefault` is deliberate, not an oversight — see
 /// `docs/superpowers/specs/2026-09-04-product-hardening-phase-7-central-constraints-design.md`.
+///
+/// Scope guard: this decides sharing only — a flashlight is not
+/// `singlePerParty`. It does not decide traveler/age eligibility (whether
+/// every traveler class, including an infant or toddler, independently
+/// receives one); that is Family Hardening's (Phase 10) call via
+/// `skipForYoungChildren`/`skipForInfantsAndToddlers`, not this phase's.
 @Test func aPartyCampingTripKeepsFlashlightsPersonalPerTraveler() throws {
     // ... existing body unchanged ...
 }
@@ -1015,9 +1102,11 @@ PYTHONDONTWRITEBYTECODE=1 python3 scripts/report_engine_goldens.py --baseline-re
   1–36); mechanical scope confirmation (no new `PackingCapability`,
   `ActivityNeed`, or `WeatherSignal` case; `party.json` byte-unchanged;
   `PartyInvariants`, `CatalogItem.companions`, `optionalRuling` byte-
-  unchanged beyond what Task 1/2 read); routed findings
-  (`SharingPolicy.personalOnly`, F-1, the UNTESTED tail, the
-  `CoverageContext` double-construction note).
+  unchanged beyond what Task 1/2 read); the `SharingPolicy.personalOnly`
+  amendment (decided and tested this phase, not routed — state that
+  explicitly, since the design doc's first draft had proposed routing it);
+  routed findings (F-1, the UNTESTED tail, the `CoverageContext`
+  double-construction note).
 
 - [ ] **Step 3: Close Phase 7 in the program tracker.** Update
   `docs/plans/2026-09-02-product-hardening-program.md`: change the header
@@ -1095,13 +1184,17 @@ git commit -m "docs: close product hardening phase 7 central constraints and use
   escape clause ("expected behavior, decided deliberately") applies exactly.
 - **Judgment calls made and recorded, not hidden:** `SharingPolicy.personalOnly`
   is a real, narrow bug (dead, untested, semantics don't match its name)
-  found while designing Task 1, and it is deliberately *not* fixed this
-  phase — routed as a finding, because fixing it isn't required for F-5 or
-  any of the 13 gates, and the Global Constraints forbid touching a
-  mechanism beyond what a named task requires. `PartyInvariants` is
+  found while designing Task 1. The first design draft proposed routing it
+  forward as an out-of-scope finding; review amended that — party sharing
+  semantics are exactly Task 1's subject, zero current data exercises the
+  case, so fixing it here is both in-scope and zero-diff. Task 1's Step 1b
+  adds the four required tests against a synthetic policy row; no
+  `sharingPolicies` row is added to `party.json`. `PartyInvariants` is
   deliberately left outside `ConstraintResolver` as a second, legitimate
   closed authority rather than folded in, the same relationship
-  `CoverageResolver` has to `ActivityContracts`.
+  `CoverageResolver` has to `ActivityContracts`. F-5's scope is also
+  explicitly bounded: it decides sharing, not traveler/age eligibility,
+  which stays Phase 10's.
 - **Design-doc decision: written**, because Phase 7 touches four existing
   subsystems at once (bag/style, party sharing, dependencies, ownership),
   needed to establish which were actually scattered before writing a single

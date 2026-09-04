@@ -277,7 +277,20 @@ covered yet: solo, couple, Hiking+Camping, one traveler carrying a shared
 item, explicit owner assignment, and an unassigned explicit personal-item
 flashlight.
 
-### Deliberately out of scope: `SharingPolicy.personalOnly`
+**Scope guard: this decides sharing, not eligibility.** F-5 answers one
+question — should a flashlight be `sharedByDefault`/`singlePerParty`, or
+stay personal — and the answer is personal. It does not decide, and Task 3's
+tests must not encode, whether every traveler *class* independently
+receives a Camping flashlight regardless of age. Whether an infant or
+toddler should get their own light (versus, say, being covered by a
+guardian's) is a traveler-eligibility question for Family Hardening
+(Phase 10), which already owns age-conditional item behavior via
+`skipForYoungChildren`/`skipForInfantsAndToddlers`. Phase 7's scenario tests
+(Task 3) use adult travelers and an explicitly-typed child role, never an
+infant/toddler age group, so the sharing decision this phase makes stays
+separable from the eligibility decision Phase 10 has not made yet.
+
+### Required amendment: `SharingPolicy.personalOnly` is decided and tested this phase
 
 Reading `sharedQuantity`/`applyQuantities` closely surfaces a real but
 narrow bug, found while designing the sharing-resolution move: the
@@ -285,18 +298,61 @@ narrow bug, found while designing the sharing-resolution move: the
 in `applyQuantities` (`:919`, `sharedQuantity`'s `.singlePerParty, .personalOnly:`
 branch, `:1012`), is used by **zero** `sharingPolicies` rows in `party.json`,
 and is exercised by **zero** tests anywhere in the suite. Worse, its actual
-semantics don't match its name: an item reaches that branch only after
-already being folded into the single shared `PackingItemDraft` (via
-`sharedByDefault` membership), so `.personalOnly` doesn't produce
+semantics don't match its name today: an item reaches that branch only
+after already being folded into the single shared `PackingItemDraft` (via
+raw `sharedByDefault` membership, checked independently of `policy.policy`
+at draft-creation time), so `.personalOnly` doesn't currently produce
 per-traveler personal items — it produces one shared-ownership draft whose
 quantity computation falls through to the traveler-based paths with
-`traveler == nil`, an unexercised and likely-wrong code path. F-5's correct
-resolution does not need this case at all (flashlight simply stays absent
-from `sharedByDefault`, which is the actual mechanism that produces personal
-per-traveler behavior). Fixing or retiring `.personalOnly` is out of scope
-for this phase's file list and is recorded as a routed finding (see below),
-not patched opportunistically — Phase 7's Global Constraints forbid touching
-mechanisms beyond what a named task requires.
+`traveler == nil`, an unexercised and likely-wrong code path.
+
+**Review amendment: this is Phase 7's to fix, not to route.** Party sharing
+membership is exactly the family this phase centralizes, and it is the
+safest possible time to correct it — zero current `sharingPolicies` rows use
+`.personalOnly`, so defining its truthful contract changes no golden output.
+Routing a defect inside the exact subsystem this phase owns, discovered
+while building that subsystem, back out to an unnamed future phase would be
+the wrong call.
+
+**The fix is structural, not a patch layered on top.** `ConstraintResolver.sharingResolution`
+(Task 1) already asks `rules.sharedByDefault.contains(canonicalItemID)`
+*and then* `guard policy.policy != .personalOnly else { return .personal }`
+before ever computing a shared quantity. Because `generateForParty`'s
+draft-creation check moves from raw `sharedByDefault` membership to
+`sharingResolution(...).isShared`, a `.personalOnly`-policy item is never
+created as a `.shared`-ownership draft in the first place — it flows
+through the same per-traveler personal-item path every non-shared item
+already uses, with a real `travelerID` on every draft. The contract:
+
+```text
+singlePerParty          → one shared item for the party
+scaleByParty             → shared quantity scales with party size
+scaleByDevices            → shared quantity scales by relevant devices
+scaleByDurationAndParty  → shared quantity uses duration + party policy
+personalOnly              → personal ownership semantics: one draft per
+                             traveler, `ownershipType == .personal`,
+                             `travelerID` always set — never an
+                             `ownershipType == .shared` draft with
+                             `travelerID == nil` produced by fallthrough
+```
+
+Task 1 adds focused tests proving this against a synthetic, test-local
+`PartyRulesFile` (an existing candidate item's rules copy, with a
+`.personalOnly` row added only inside the test) — **no `party.json` row is
+added**, because no current catalog item independently needs one:
+
+```text
+personalOnly + solo    → owned personal item (one draft, real travelerID)
+personalOnly + couple  → one personal row per traveler
+personalOnly + family  → no ownerless shared draft anywhere in the result
+personalOnly            → never travelerID == nil merely from fallthrough
+```
+
+If `sharedQuantity`'s now-unreachable `.personalOnly` arm (kept for
+`Codable`/switch-exhaustiveness, never invoked once `sharingResolution`
+short-circuits first) reads as dead weight once Task 1 lands, leave it —
+removing an unreachable switch case is cosmetic churn outside this task's
+purpose, not a behavior fix Phase 7 needs.
 
 ## Priority-hierarchy proof
 
@@ -341,12 +397,18 @@ context dimension at a time.
   gains no new UI-facing fields this phase.
 - GPT/context intelligence (Phase 9+), notifications/Final Check/post-trip
   memory (Phase 12), persistence architecture.
-- Fixing or retiring `SharingPolicy.personalOnly` — routed finding, not a
-  Phase 7 task (see above).
+- Assigning any existing catalog item to `SharingPolicy.personalOnly` — its
+  semantics are made truthful and tested this phase (see above), but no
+  current item independently needs the policy, so no `sharingPolicies` row
+  is added.
+- Deciding traveler/age eligibility for Camping items (infant/toddler
+  behavior) — Phase 10 (Family Hardening), not F-5's sharing decision (see
+  above).
 - Folding `PartyInvariants` into `ConstraintResolver` — deliberately kept
   as a separate, already-correct authority (see Architecture).
 - Any change to `shared/rules/party.json`'s data — `sharedByDefault` and
-  `sharingPolicies` are read, not edited; F-5 needs no new row.
+  `sharingPolicies` are read, not edited; F-5 needs no new row, and neither
+  does the `personalOnly` fix.
 
 ## Verification plan
 
@@ -361,8 +423,6 @@ context dimension at a time.
 
 ## Routed findings anticipated
 
-- **`SharingPolicy.personalOnly` is dead and its semantics don't match its
-  name** (see above) — routed forward, no phase currently owns it.
 - **F-1** (golden-diff schema tolerance, P2) — unaffected by Phase 7,
   carried forward unchanged.
 - **Context-chip/bag-type/trip-type UNTESTED tail (14 rows)** — pre-existing,
