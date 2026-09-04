@@ -7,6 +7,9 @@
       "coveredBy" : [
         "clothing.winter_coat"
       ],
+      "coveredCapabilities" : {
+        "outerwear.wind_shell" : "clothing.winter_coat"
+      },
       "owner" : "primary",
       "suppressed" : "clothing.windbreaker"
     }

@@ -21,6 +21,10 @@
 
       ],
       "owner" : "primary",
+      "refutedCapabilities" : [
+        "outerwear.rain_shell",
+        "outerwear.wind_shell"
+      ],
       "suppressed" : "clothing.rain_jacket"
     }
   ],

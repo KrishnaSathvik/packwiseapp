@@ -50,13 +50,25 @@ def item(canonical_item_id, quantity=1, owner="primary", **overrides):
     return base
 
 
-def coverage_entry(suppressed, owner="primary", capabilities=None, covered_by=None):
-    return {
+def coverage_entry(
+    suppressed,
+    owner="primary",
+    capabilities=None,
+    covered_by=None,
+    covered_capabilities=None,
+    refuted_capabilities=None,
+):
+    entry = {
         "owner": owner,
         "suppressed": suppressed,
         "capabilities": capabilities or [],
         "coveredBy": covered_by or [],
     }
+    if covered_capabilities is not None:
+        entry["coveredCapabilities"] = covered_capabilities
+    if refuted_capabilities is not None:
+        entry["refutedCapabilities"] = refuted_capabilities
+    return entry
 
 
 def constraint_entry(constraint, owner="primary", summary="Trimmed.", items=None):
@@ -176,6 +188,22 @@ class TraceChangeTests(unittest.TestCase):
 
 
 class CoverageChangeTests(unittest.TestCase):
+    def test_exact_capability_mapping_is_a_coverage_change(self):
+        baseline = golden(coverage=[coverage_entry(
+            "footwear.walking_shoes",
+            capabilities=["footwear.everyday_walking"],
+            covered_by=["footwear.running_shoes"],
+        )])
+        candidate = golden(coverage=[coverage_entry(
+            "footwear.walking_shoes",
+            capabilities=["footwear.everyday_walking"],
+            covered_by=["footwear.running_shoes"],
+            covered_capabilities={"footwear.everyday_walking": "footwear.running_shoes"},
+        )])
+
+        report = compare_fixture(baseline, candidate)
+        self.assertEqual(len(report.coverage_changes), 1)
+
     def test_new_coverage_suppression_is_a_coverage_change(self):
         report = compare_fixture(
             golden(coverage=[]),

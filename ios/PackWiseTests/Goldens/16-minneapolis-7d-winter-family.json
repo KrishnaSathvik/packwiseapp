@@ -7,6 +7,9 @@
       "coveredBy" : [
         "clothing.winter_coat"
       ],
+      "coveredCapabilities" : {
+        "outerwear.wind_shell" : "clothing.winter_coat"
+      },
       "owner" : "child",
       "suppressed" : "clothing.windbreaker"
     },
@@ -17,6 +20,9 @@
       "coveredBy" : [
         "clothing.winter_coat"
       ],
+      "coveredCapabilities" : {
+        "outerwear.wind_shell" : "clothing.winter_coat"
+      },
       "owner" : "partner",
       "suppressed" : "clothing.windbreaker"
     },
@@ -27,6 +33,9 @@
       "coveredBy" : [
         "clothing.winter_coat"
       ],
+      "coveredCapabilities" : {
+        "outerwear.wind_shell" : "clothing.winter_coat"
+      },
       "owner" : "primary",
       "suppressed" : "clothing.windbreaker"
     }

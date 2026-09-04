@@ -1,4 +1,19 @@
 {
+  "coverage" : [
+    {
+      "capabilities" : [
+        "hand_protection.cold"
+      ],
+      "coveredBy" : [
+        "activities.ski_gloves"
+      ],
+      "coveredCapabilities" : {
+        "hand_protection.cold" : "activities.ski_gloves"
+      },
+      "owner" : "primary",
+      "suppressed" : "clothing.gloves"
+    }
+  ],
   "engineVersion" : "v2",
   "fixture" : "21-aspen-5d-skisnow-checked-prepared-snow",
   "items" : [
@@ -61,25 +76,6 @@
       "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Beanie / warm hat",
-      "importance" : "normal",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Snow is expected during your trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "weather.snow",
-      "signals" : [
-        "tripType",
-        "weather"
-      ]
-    },
-    {
-      "canonicalItemID" : "clothing.gloves",
-      "carrier" : "primary",
-      "category" : "clothing",
-      "displayName" : "Gloves",
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 1,

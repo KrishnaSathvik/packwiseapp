@@ -7,6 +7,9 @@
       "coveredBy" : [
         "footwear.running_shoes"
       ],
+      "coveredCapabilities" : {
+        "footwear.everyday_walking" : "footwear.running_shoes"
+      },
       "owner" : "primary",
       "suppressed" : "footwear.walking_shoes"
     }

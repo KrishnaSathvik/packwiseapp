@@ -135,6 +135,8 @@ class CoverageEntry:
     suppressed: str
     capabilities: Tuple[str, ...]
     covered_by: Tuple[str, ...]
+    covered_capabilities: Tuple[Tuple[str, str], ...]
+    refuted_capabilities: Tuple[str, ...]
 
     @property
     def key(self) -> ItemKey:
@@ -147,11 +149,21 @@ class CoverageEntry:
             suppressed=raw["suppressed"],
             capabilities=tuple(raw.get("capabilities", [])),
             covered_by=tuple(raw.get("coveredBy", [])),
+            covered_capabilities=tuple(sorted((raw.get("coveredCapabilities") or {}).items())),
+            refuted_capabilities=tuple(sorted(raw.get("refutedCapabilities") or [])),
         )
 
     def describe(self) -> str:
         covered_by = ", ".join(self.covered_by) if self.covered_by else "nothing"
-        return f"suppresses [{', '.join(self.capabilities)}], covered by {covered_by}"
+        exact = ", ".join(f"{capability} -> {item}" for capability, item in self.covered_capabilities)
+        refuted = ", ".join(self.refuted_capabilities)
+        details = []
+        if exact:
+            details.append(f"exact [{exact}]")
+        if refuted:
+            details.append(f"refuted [{refuted}]")
+        suffix = f"; {'; '.join(details)}" if details else ""
+        return f"suppresses [{', '.join(self.capabilities)}], covered by {covered_by}{suffix}"
 
 
 @dataclass(frozen=True)

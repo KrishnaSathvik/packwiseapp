@@ -7,6 +7,9 @@
       "coveredBy" : [
         "clothing.light_sweater"
       ],
+      "coveredCapabilities" : {
+        "outerwear.warmth_light" : "clothing.light_sweater"
+      },
       "owner" : "primary",
       "suppressed" : "clothing.light_jacket"
     }

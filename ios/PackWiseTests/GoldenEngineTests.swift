@@ -398,6 +398,8 @@ struct GoldenEngineTests {
         var suppressed: String
         var capabilities: [String]
         var coveredBy: [String]
+        var coveredCapabilities: [String: String]?
+        var refutedCapabilities: [String]?
     }
 
     /// One recorded constraint resolution: the machine key, the one-sentence
@@ -476,7 +478,14 @@ struct GoldenEngineTests {
                         owner: suppression.travelerID.flatMap { slugs[$0] } ?? "primary",
                         suppressed: suppression.canonicalItemID,
                         capabilities: suppression.capabilities,
-                        coveredBy: suppression.coveredBy
+                        coveredBy: suppression.coveredBy,
+                        coveredCapabilities: suppression.covered.isEmpty ? nil : Dictionary(
+                            uniqueKeysWithValues: suppression.covered.map {
+                                ($0.capability.rawValue, $0.coveringItemID)
+                            }
+                        ),
+                        refutedCapabilities: suppression.refutedCapabilities.isEmpty ? nil : suppression
+                            .refutedCapabilities.map(\.rawValue).sorted()
                     )
                 }
                 .sorted {
