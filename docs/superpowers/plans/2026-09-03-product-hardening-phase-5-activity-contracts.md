@@ -17,11 +17,13 @@
 - `CoverageResolver` remains the only coverage authority. Activity needs reach coverage only through the `ActivityNeed → PackingCapability` map; no new capability is added.
 - Activities may participate in existing weather logic and must never manufacture weather. Camping contributes no rain need and no general warmth need. `overnightWarmth` resolves only when an existing cold signal is already present.
 - Camping must never add tents, sleeping bags, sleeping pads, camp stoves, fuel, cookware, food storage, or campsite furniture.
+- Camping does not declare `.trailFootwear`. Car camping, campground stays, festival camping, and cabin stays do not universally require trail footwear, so Camping alone leaves footwear to the baseline and suppresses nothing. Hiking keeps `.trailFootwear` and remains the sole strong signal claiming `PackingCapability.hiking`. The general `trailFootwear → footwear.hiking_shoes → PackingCapability.hiking` mapping is unchanged and must not be gated behind any destination-, fixture-, or duration-specific exception.
+- `shared/rules/party.json` is not modified. `miscellaneous.flashlight` stays absent from `sharedByDefault` (personal-per-traveler), no sharing policy is added, no new canonical `headlamp` item is created, and no new party constraint logic is written. The possible over-count for large camping parties is routed to Phase 7 as finding F-5.
 - Unknown activity ids stay in `unknownActivityIDs`, keep their `unsupportedButSafe` diagnostic, and produce no items, capabilities, or inferred mappings.
 - Do not relabel a broken input `contextOnly` to make the audit green. `tripType.other` becomes `contextOnly` only under the three earned checks in the design doc.
 - User authority is preserved: Not Needed stays Not Needed, manual quantity stays authoritative, user-added items survive, packed state survives, explicit owner/carrier survive, and an activity change cannot resurrect an explicitly rejected item.
 - Phase 5 does not own new weather signals, changed thresholds, cold-without-snow glove generation (Phase 6), seasonal hardening, footwear/clothing quantity redesign, central shared-party constraints (Phase 7), GPT/context intelligence, UI, persistence, or notifications/lifecycle.
-- Golden regressions include any clothing quantity, weather signal/threshold, unrelated footwear/outerwear, ownership/carrier (beyond the reviewed flashlight row), override, persistence, or presentation change.
+- Golden regressions include any clothing quantity, weather signal/threshold, footwear/outerwear, ownership/carrier, override, persistence, or presentation change. Camping declares no footwear need and `party.json` is untouched, so no existing fixture's footwear, ownership, or carrier may move at all.
 - F-1 remains P2 unless it blocks a current-schema comparison against `756f68f`. The Phase 6 cold-hand finding stays routed. Presentation remains frozen; physical-device verification remains deferred; M3B/M3C remain blocked.
 - Do not edit `docs/plans/2026-09-02-product-hardening-program.md` before Task 7. Stop at the Phase 5 exit gate; do not begin Phase 6.
 
@@ -35,7 +37,6 @@
 - Modify `shared/rules/activity-rules.json`: add `"camping": []`, empty `"hiking"`.
 - Modify `shared/rules/base.json`: add the `"camping"` free-text keyword.
 - Modify `shared/rules/reasons.json`: add the `activity.camping` template.
-- Modify `shared/rules/party.json`: add `miscellaneous.flashlight` to `sharedByDefault` with a `singlePerParty` policy.
 - Modify `shared/fixtures/golden/golden-fixtures.json`: add fixtures 28–32.
 - Modify `docs/engine-audits/surfaced-input-contracts.json`: `activity/camping` → `deterministic`, `tripType/other` → `contextOnly`, `testIDs` on every otherwise-untested deterministic activity.
 - Modify `scripts/audit_engine_inputs.py` and `scripts/tests/test_audit_engine_inputs.py`: the `testIDs` field, the `fixtureIDs`-or-`testIDs` untested rule, verified test references, and removal of the hardcoded `activities.add("camping")`.
@@ -91,9 +92,25 @@ struct ActivityContractTests {
             .trailFootwear, .dayCarry, .hydration, .blisterCare
         ])
         #expect(ActivityContracts.needs(for: ["camping"]) == [
-            .trailFootwear, .hydration, .portableLight,
+            .hydration, .portableLight,
             .insectProtection, .sunProtection, .overnightWarmth
         ])
+    }
+
+    /// Camping is not a trail signal. Car camping, campgrounds, festivals and
+    /// cabins do not universally put anyone on a trail, so Camping alone may
+    /// neither add hiking shoes nor claim the hiking capability that would
+    /// suppress ordinary walking shoes. Hiking remains the sole claimant.
+    @Test func onlyHikingClaimsTrailFootwear() {
+        #expect(!ActivityContracts.needs(for: ["camping"]).contains(.trailFootwear))
+        #expect(ActivityContracts.capabilities(for: ActivityContracts.needs(for: ["camping"])).isEmpty)
+        #expect(ActivityContracts.capabilities(for: ActivityContracts.needs(for: ["hiking"])) == [.hiking])
+        #expect(!ActivityContracts.candidates(for: ActivityContracts.needs(for: ["camping"]))
+            .contains("footwear.hiking_shoes"))
+        // The general mapping itself is unchanged and stays available to any
+        // contract that legitimately declares the need.
+        #expect(ActivityContracts.needCandidates[.trailFootwear] == ["footwear.hiking_shoes"])
+        #expect(ActivityContracts.needCapabilities[.trailFootwear] == .hiking)
     }
 
     /// Composition is a set union, so the shared needs appear once.
@@ -101,8 +118,11 @@ struct ActivityContractTests {
         let composed = ActivityContracts.needs(for: ["hiking", "camping"])
         #expect(composed == ActivityContracts.needs(for: ["camping", "hiking"]))
         #expect(composed.count == 8)
+        #expect(composed.contains(.hydration))   // declared by both, present once
+        // Trail footwear enters the composed set through Hiking alone, so
+        // dropping Hiking drops it.
         #expect(composed.contains(.trailFootwear))
-        #expect(composed.contains(.hydration))
+        #expect(!ActivityContracts.needs(for: ["camping"]).contains(.trailFootwear))
     }
 
     /// Hiking's typed needs must resolve to exactly the IDs its JSON row
@@ -214,9 +234,14 @@ enum ActivityContract: Hashable, Sendable {
 /// remains the surfaced vocabulary and the item adds not yet migrated here.
 enum ActivityContracts {
     static let all: [String: ActivityContract] = [
+        // Hiking is the only contract that declares `.trailFootwear`, and so
+        // the only one that claims `PackingCapability.hiking`.
         "hiking": .deterministic(needs: [.trailFootwear, .dayCarry, .hydration, .blisterCare]),
+        // Camping deliberately omits `.trailFootwear`: car camping,
+        // campgrounds, festivals and cabins are camping too, and none of them
+        // require trail shoes or justify suppressing ordinary walking shoes.
         "camping": .deterministic(needs: [
-            .trailFootwear, .hydration, .portableLight,
+            .hydration, .portableLight,
             .insectProtection, .sunProtection, .overnightWarmth
         ]),
         "walking": .deterministic(needs: []),
@@ -310,36 +335,60 @@ git commit -m "feat: type the surfaced activity contract vocabulary"
 **Files:**
 - Modify: `ios/PackWise/Domain/Packing/PackingEngine.swift`
 - Modify: `shared/rules/base.json`
-- Modify: `shared/rules/party.json`
 - Test: `ios/PackWiseTests/ActivityContractTests.swift`
 
 **Interfaces:**
 - Consumes: `ActivityContracts`, `TripContextSnapshot`, `CoverageContext(snapshot:thresholds:)`.
 - Produces: `PackingEngine.ruleSuggestions(for:snapshot:)` and need-derived `RuleSuggestion` rows with `signal: .activity` and code `activity.<originating id>`.
 
-- [ ] **Step 1: Write the failing Camping-only behavior test.** Assert the exact five items, the exact absent families, and the reason attribution. Do not assert "the list is short."
+- [ ] **Step 1: Write the failing Camping-only behavior test.** Assert the exact added items, the exact absent families, and that footwear does not move. Do not assert "the list is short."
+
+Camping's four unconditional candidates are `hydration.water_bottle`, `miscellaneous.flashlight`, `toiletries.insect_repellent` and `toiletries.sunscreen`. How many of those are *new* rows depends on the rest of the trip, and the difference is the structural dedup working. Two contexts make that explicit, and neither is a special case:
 
 ```swift
-@Test func campingAloneAddsFiveItemsAndNoCampsiteLogistics() throws {
+/// On a road-trip camping trip nothing else supplies Camping's candidates,
+/// so all four appear as new rows and none of them is campsite logistics.
+@Test func campingAloneAddsItsFourCandidatesAndNoCampsiteLogistics() throws {
     let engine = try makeEngine()
     let ids = { (trip: TripContext) in Set(engine.generate(context: trip).compactMap(\.canonicalItemID)) }
-    let base = campingContext(activities: ["sightseeing"])
-    let camping = campingContext(activities: ["sightseeing", "camping"])
+    let base = roadTripCampingContext(activities: ["sightseeing"])
+    let camping = roadTripCampingContext(activities: ["sightseeing", "camping"])
 
     #expect(ids(camping).subtracting(ids(base)) == [
-        "footwear.hiking_shoes",
         "hydration.water_bottle",
         "miscellaneous.flashlight",
         "toiletries.insect_repellent",
         "toiletries.sunscreen"
     ])
-    // Walking shoes are not "added" — coverage removes them. Prove it here
-    // so the delta above cannot hide a footwear regression.
-    #expect(ids(base).subtracting(ids(camping)) == ["footwear.walking_shoes"])
+    // Camping declares no footwear need: nothing is added and, critically,
+    // nothing is taken away. Walking shoes survive a camping trip.
+    #expect(ids(base).subtracting(ids(camping)).isEmpty)
+    #expect(ids(camping).contains("footwear.walking_shoes"))
+    #expect(!ids(camping).contains("footwear.hiking_shoes"))
+}
+
+/// The same contract on an `outdoor` trip type adds only the flashlight,
+/// because the trip type already supplies water and repellent and the
+/// seasonal-sun path already supplies sunscreen. One shared candidate yields
+/// one row — that is the collector's de-duplication, not a weaker contract.
+@Test func campingDeDuplicatesAgainstTheOutdoorTripTypeAndSeasonalSun() throws {
+    let engine = try makeEngine()
+    let ids = { (trip: TripContext) in Set(engine.generate(context: trip).compactMap(\.canonicalItemID)) }
+    let base = campingContext(activities: ["sightseeing"])
+    let camping = campingContext(activities: ["sightseeing", "camping"])
+
+    #expect(ids(camping).subtracting(ids(base)) == ["miscellaneous.flashlight"])
+    #expect(ids(base).subtracting(ids(camping)).isEmpty)
+    for id in ["hydration.water_bottle", "toiletries.insect_repellent", "toiletries.sunscreen"] {
+        #expect(ids(camping).filter { $0 == id }.count == 1)
+    }
+    #expect(ids(camping).contains("footwear.walking_shoes"))
 }
 ```
 
-`campingContext` is a helper using Yellowstone, `weather: nil`, `startDate` 2027-08-15, 4 days, `.outdoor`, `.roadTripLuggage`, `.balanced` — a mild trip with no weather signals and no seasonal warmth fallback.
+`campingContext` is a helper using Yellowstone, `weather: nil`, `startDate` 2027-08-15, 4 days, `.outdoor`, `.roadTripLuggage`, `.balanced` — a mild trip with no weather signals and no seasonal warmth fallback. `roadTripCampingContext` is the same trip with `.roadTrip` as the trip type, chosen so Camping's contribution is fully observable; both are ordinary trips a user can build, and neither is tuned to a destination or duration.
+
+Confirm both deltas empirically on the first RED/GREEN cycle rather than trusting the numbers here: `trip-types.json`'s `outdoor` row and `PackingEngine.addSeasonal` are the two overlapping sources, and if either changes the expected sets change with them.
 
 - [ ] **Step 2: Write the failing weather-boundary tests.** Three cases, each asserting an absence that would be a defect if Camping manufactured weather.
 
@@ -393,7 +442,7 @@ git commit -m "feat: type the surfaced activity contract vocabulary"
 }
 ```
 
-- [ ] **Step 4: Run `ActivityContractTests` and verify RED.** Expected: camping still adds nothing, so the delta test fails with an empty set and the attribution test fails on a missing row.
+- [ ] **Step 4: Run `ActivityContractTests` and verify RED.** Expected: camping still adds nothing, so both delta tests fail with an empty set and the attribution test fails on a missing row.
 
 - [ ] **Step 5: Wire the activity family to the snapshot.** Change `ruleSuggestions(for:)` to `ruleSuggestions(for context: TripContext, snapshot: TripContextSnapshot)`. `generateSimple` passes the generation snapshot. `generateForParty` compiles the trip-wide snapshot once — `TripContextCompiler.compile(tripWideContext(context), rules: rules)` — and passes it; it must not compile per traveler. Activities are trip-scoped (`ownerScope: "trip"` in the contract ledger), so need-derived rows join the trip-wide suggestion set and then split shared vs personal through the existing `rules.party.sharedByDefault` path.
 
@@ -422,17 +471,27 @@ for need in activityNeeds.sorted(by: { $0.rawValue < $1.rawValue }) {
 
 Sorting the needs makes emission order explicit rather than set-iteration dependent. Extend `activityReason` with `case "camping": "You're camping on this trip."`.
 
-- [ ] **Step 7: Add the free-text keyword and the reviewed party sharing row.** In `shared/rules/base.json` add `"camping": "camping"` to `free_text_keywords` — the full word, not `"camp"`, which would also match "campus". In `shared/rules/party.json` add `miscellaneous.flashlight` to `sharedByDefault` and `"miscellaneous.flashlight": {"policy": "singlePerParty"}` to `sharingPolicies`. This is a data row inside the existing mechanism; central shared-party constraints remain Phase 7.
+- [ ] **Step 7: Add the free-text keyword.** In `shared/rules/base.json` add `"camping": "camping"` to `free_text_keywords` — the full word, not `"camp"`, which would also match "campus". `shared/rules/party.json` is **not** touched: `miscellaneous.flashlight` keeps its existing behavior (absent from `sharedByDefault`, no sharing policy, therefore personal-per-traveler). Party sharing policy for personal-carry items is Phase 7's to decide; see finding F-5.
 
-- [ ] **Step 8: Add the party and light-packing tests.**
+- [ ] **Step 8: Add the party and light-packing tests.** The party test pins the **existing, unmodified** sharing behavior so the Phase 7 baseline is explicit and any accidental change to it fails loudly. It asserts what the engine does today; it does not assert what the right policy is.
 
 ```swift
-@Test func aPartyCampingTripGetsOneFlashlight() throws {
+/// Phase 5 makes no party-sharing decision. `miscellaneous.flashlight` is not
+/// in `party.sharedByDefault`, so it stays a personal-carry item: one per
+/// traveler, owned personally. Whether a family should instead share one is
+/// finding F-5, routed to Phase 7 — this test records the baseline that
+/// decision will be made against, and must not be "corrected" here.
+@Test func aPartyCampingTripKeepsFlashlightsPersonalPerTraveler() throws {
     let engine = try makeEngine()
-    let items = engine.generate(context: campingContext(activities: ["camping"], party: family(of: 4)))
+    let party = family(of: 4)
+    let items = engine.generate(context: campingContext(activities: ["camping"], party: party))
     let lights = items.filter { $0.canonicalItemID == "miscellaneous.flashlight" }
-    #expect(lights.count == 1)
-    #expect(lights.first?.ownershipType == .shared)
+    #expect(lights.count == party.travelers.count)
+    #expect(lights.allSatisfy { $0.ownershipType == .personal })
+    #expect(Set(lights.compactMap(\.travelerID)) == Set(party.travelers.map(\.id)))
+    // The mechanism that would change this is untouched this phase.
+    #expect(!Set(try rules().party.sharedByDefault).contains("miscellaneous.flashlight"))
+    #expect(try rules().party.sharingPolicies["miscellaneous.flashlight"] == nil)
 }
 
 /// Camping must not blow past an existing bag constraint — the optional
@@ -474,14 +533,14 @@ Sorting the needs makes emission order explicit rather than set-iteration depend
 }
 ```
 
-- [ ] **Step 10: Verify GREEN and review the diff.** Run `ActivityContractTests`, `PackingEngineTests`, `ConstraintTests`, `CoverageTests`, `ClothingQuantityTests`, and `WeatherChangeTests`. Then rerun the semantic diff against `756f68f`. Expected: only fixture 18 changes, gaining the Camping need items. No quantity, weather, constraint, or ownership change anywhere else.
+- [ ] **Step 10: Verify GREEN and review the diff.** Run `ActivityContractTests`, `PackingEngineTests`, `ConstraintTests`, `CoverageTests`, `ClothingQuantityTests`, and `WeatherChangeTests`. Then rerun the semantic diff against `756f68f`. Expected: only fixture 18 changes, gaining the Camping need items. No quantity, weather, constraint, footwear, or ownership change anywhere else — fixture 18's footwear in particular must not move, since its hiking shoes come from Hiking and Hiking is untouched.
 
 - [ ] **Step 11: Commit need resolution.**
 
 ```bash
 git add ios/PackWise/Domain/Packing/PackingEngine.swift \
   ios/PackWiseTests/ActivityContractTests.swift \
-  shared/rules/base.json shared/rules/party.json
+  shared/rules/base.json
 git commit -m "feat: resolve camping needs through the activity contract layer"
 ```
 
@@ -497,12 +556,34 @@ git commit -m "feat: resolve camping needs through the activity contract layer"
 - Consumes: `ActivityContracts.capabilities(for:)`, `CoverageContext.activityIDs`.
 - Produces: `CoverageResolver.needs(context:)` deriving `.hiking` from `ActivityNeed.trailFootwear`.
 
-- [ ] **Step 1: Write the failing composition test.** Camping alone must earn the hiking capability, and Hiking + Camping must resolve to one pair with exact Phase 4 evidence.
+- [ ] **Step 1: Write the failing composition test.** The hiking capability must come from the *need*, not the string; Camping alone must not earn it; and Hiking + Camping must resolve to one pair with exact Phase 4 evidence.
 
 ```swift
-@Test func campingEarnsTrailFootwearCoverageWithoutTheHikingString() throws {
+/// Camping is not a trail signal. A camping-and-walking trip keeps the
+/// ordinary walking shoes it would have had without Camping, and suppresses
+/// nothing — the failure mode this guards is Camping quietly claiming
+/// `PackingCapability.hiking` and deleting a normal traveler's shoes.
+@Test func campingAloneLeavesWalkingFootwearAlone() throws {
     let engine = try makeEngine()
     let generation = engine.generateDetailed(context: campingContext(activities: ["camping", "walking"]))
+    let ids = Set(generation.items.compactMap(\.canonicalItemID))
+    #expect(ids.contains("footwear.walking_shoes"))
+    #expect(!ids.contains("footwear.hiking_shoes"))
+    #expect(!generation.coverageSuppressions.contains { $0.canonicalItemID == "footwear.walking_shoes" })
+
+    let snapshot = TripContextCompiler.compile(
+        campingContext(activities: ["camping", "walking"]), rules: try rules()
+    )
+    let coverage = CoverageContext(snapshot: snapshot, thresholds: try rules().weather.thresholds)
+    #expect(!CoverageResolver.needs(context: coverage).contains(.hiking))
+}
+
+/// The hiking capability is derived from `ActivityNeed.trailFootwear`, not
+/// from the literal id `"hiking"`. Hiking declares that need, so the Phase 4
+/// suppression and its evidence are byte-identical to the baseline.
+@Test func trailFootwearCoverageIsDerivedFromTheNeedNotTheActivityString() throws {
+    let engine = try makeEngine()
+    let generation = engine.generateDetailed(context: campingContext(activities: ["hiking", "walking"]))
     let ids = Set(generation.items.compactMap(\.canonicalItemID))
     #expect(ids.contains("footwear.hiking_shoes"))
     #expect(!ids.contains("footwear.walking_shoes"))
@@ -513,17 +594,35 @@ git commit -m "feat: resolve camping needs through the activity contract layer"
     #expect(suppression.covered == [
         CapabilityCoverage(capability: .everydayWalking, coveringItemID: "footwear.hiking_shoes")
     ])
+
+    // The derivation, stated directly: the capability follows the need set,
+    // and the need set is what the contract table says it is.
+    #expect(ActivityContracts.capabilities(for: ActivityContracts.needs(for: ["hiking", "walking"]))
+        == [.hiking])
+    #expect(ActivityContracts.capabilities(for: ActivityContracts.needs(for: ["camping", "walking"]))
+        .isEmpty)
 }
 
 @Test func hikingPlusCampingIsOneComposedTripNotTwoChecklists() throws {
     let engine = try makeEngine()
     let items = engine.generateDetailed(context: campingContext(activities: ["hiking", "camping"])).items
     func count(_ id: String) -> Int { items.filter { $0.canonicalItemID == id }.count }
+    // `hydration` is declared by both contracts and yields exactly one row.
     #expect(count("hydration.water_bottle") == 1)
+    // Exactly one `.hiking`-covered footwear item, sourced by Hiking alone —
+    // Camping neither adds a second pair nor is required for this one.
     #expect(count("footwear.hiking_shoes") == 1)
     #expect(count("activities.daypack") == 1)
     #expect(count("health.blister_pads") == 1)
     #expect(items.first { $0.canonicalItemID == "hydration.water_bottle" }?.quantity == 1)
+
+    // Composition is preserved but no longer double-sourced: the footwear
+    // result is identical with and without Camping on the same trip.
+    let hikingOnly = engine.generateDetailed(context: campingContext(activities: ["hiking"])).items
+    func footwear(_ rows: [PackingItemDraft]) -> Set<String> {
+        Set(rows.compactMap(\.canonicalItemID).filter { $0.hasPrefix("footwear.") })
+    }
+    #expect(footwear(items) == footwear(hikingOnly))
 }
 ```
 
@@ -544,7 +643,7 @@ git commit -m "feat: resolve camping needs through the activity contract layer"
 }
 ```
 
-- [ ] **Step 3: Run the focused tests and verify RED.** Expected: `campingEarnsTrailFootwearCoverage...` fails because `CoverageResolver.needs` still keys on the literal `"hiking"`.
+- [ ] **Step 3: Run the focused tests and verify RED.** Expected: `trailFootwearCoverageIsDerivedFromTheNeedNotTheActivityString` fails its two `ActivityContracts.capabilities(for:)` assertions because `CoverageResolver.needs` still keys on the literal `"hiking"` and the derivation does not exist yet. The two footwear-behavior halves pass from the start — with Camping declaring no trail need, this step is a pure refactor of *how* the capability is derived, not a change to *what* it derives. That is the point of the zero-diff gate in Step 5, and it is not a reason to skip the step: the string test is the thing that cannot generalize.
 
 - [ ] **Step 4: Derive the hiking capability from the need.** In `CoverageResolver.needs(context:)` replace:
 
@@ -571,7 +670,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 scripts/report_engine_goldens.py \
 
 Expected: fixture 18 shows only the Camping additions from Task 2 — no hiking item may appear, disappear, change quantity, or change reason. If any hiking row moves, the need→candidate table is wrong; fix it rather than re-recording the golden.
 
-- [ ] **Step 6: Verify the Phase 4 coverage matrix is untouched.** Run `CoverageTests` in full. All eight Phase 4 overlap families (running+walking, hiking+walking, running+hiking+walking, formal business, rain+wind, winter layering, ski hands, existing-shell) must pass unchanged. Add one row to the Phase 4 matrix for `camping + walking → keep footwear.hiking_shoes, suppress footwear.walking_shoes`.
+- [ ] **Step 6: Verify the Phase 4 coverage matrix is untouched.** Run `CoverageTests` in full. All eight Phase 4 overlap families (running+walking, hiking+walking, running+hiking+walking, formal business, rain+wind, winter layering, ski hands, existing-shell) must pass unchanged. Add two rows to the Phase 4 matrix: `camping + walking → keep footwear.walking_shoes, no suppression, no .hiking need` and `hiking + camping + walking → keep footwear.hiking_shoes, suppress footwear.walking_shoes` (identical to the existing `hiking + walking` row, proving Camping adds nothing to the footwear decision).
 
 - [ ] **Step 7: Commit the composition.**
 
@@ -662,7 +761,7 @@ git commit -m "feat: compose camping and hiking through capability coverage"
     let records = try loadSurfacedInputContracts()
     let other = try #require(records.first { $0.kind == "tripType" && $0.id == "other" })
     #expect(other.engineContract == "contextOnly")
-    #expect(other.testIDs.contains("otherIsADeclaredIdentityTripType"))
+    #expect(other.testIDs.contains("ActivityContractTests.swift::otherIsADeclaredIdentityTripType"))
 }
 
 @Test func noSurfacedInputRemainsMissing() throws {
@@ -704,7 +803,9 @@ git commit -m "test: pin the other and unknown-activity contracts"
 
 **Interfaces:**
 - Consumes: the contract records and `ios/PackWiseTests/*.swift`.
-- Produces: an optional `testIDs` field, a `fixtureIDs`-or-`testIDs` untested rule, and verified test references.
+- Produces: an optional file-qualified `testIDs` field, a `fixtureIDs`-or-`testIDs` untested rule, and verified test references.
+
+**`testIDs` entry format.** Every entry is `"<SwiftFile>::<testFunctionName>"` — e.g. `"CoverageTests.swift::coverageInputsPassThroughWithoutWeatherReinterpretation"`. A bare function name is rejected. Verification checks that the function exists inside *that* file, not merely somewhere under `ios/PackWiseTests/`, so a moved or renamed test breaks the audit loudly instead of silently resolving against a same-named function elsewhere.
 
 - [ ] **Step 1: Write the failing Python tests.** Prove the new rule and, critically, that it cannot be used to type a green audit.
 
@@ -712,7 +813,8 @@ git commit -m "test: pin the other and unknown-activity contracts"
 def test_a_named_test_satisfies_the_untested_bucket(self):
     records, errors = load_contracts(self.write_contracts([
         record(kind="activity", id_="yoga", engineContract="deterministic",
-               fixtureIDs=[], testIDs=["yogaAddsAMatAndWorkoutClothes"]),
+               fixtureIDs=[],
+               testIDs=["ActivityContractTests.swift::yogaAddsAMatAndWorkoutClothes"]),
     ]))
     self.assertEqual(errors, [])
     self.assertEqual(build_report(records).untested, [])
@@ -720,10 +822,37 @@ def test_a_named_test_satisfies_the_untested_bucket(self):
 def test_a_nonexistent_named_test_is_a_schema_error(self):
     records, errors = load_contracts(self.write_contracts([
         record(kind="activity", id_="yoga", engineContract="deterministic",
-               fixtureIDs=[], testIDs=["thisTestDoesNotExist"]),
+               fixtureIDs=[],
+               testIDs=["ActivityContractTests.swift::thisTestDoesNotExist"]),
     ]))
     errors.extend(check_test_references(records, self.repo_root))
     self.assertTrue(any("thisTestDoesNotExist" in e for e in errors))
+
+def test_a_test_in_a_different_file_does_not_satisfy_the_reference(self):
+    # The function exists — in another suite. The ledger must point at where
+    # the evidence actually lives, so this is still an error.
+    records, errors = load_contracts(self.write_contracts([
+        record(kind="activity", id_="yoga", engineContract="deterministic",
+               fixtureIDs=[],
+               testIDs=["GoldenEngineTests.swift::yogaAddsAMatAndWorkoutClothes"]),
+    ]))
+    errors.extend(check_test_references(records, self.repo_root))
+    self.assertTrue(any("GoldenEngineTests.swift" in e for e in errors))
+
+def test_an_unqualified_test_id_is_a_schema_error(self):
+    records, errors = load_contracts(self.write_contracts([
+        record(kind="activity", id_="yoga", engineContract="deterministic",
+               fixtureIDs=[], testIDs=["yogaAddsAMatAndWorkoutClothes"]),
+    ]))
+    self.assertTrue(any("yogaAddsAMatAndWorkoutClothes" in e for e in errors))
+
+def test_a_reference_to_a_missing_file_is_a_schema_error(self):
+    records, errors = load_contracts(self.write_contracts([
+        record(kind="activity", id_="yoga", engineContract="deterministic",
+               fixtureIDs=[], testIDs=["NoSuchTests.swift::yogaAddsAMatAndWorkoutClothes"]),
+    ]))
+    errors.extend(check_test_references(records, self.repo_root))
+    self.assertTrue(any("NoSuchTests.swift" in e for e in errors))
 
 def test_no_record_remains_missing(self):
     records, _ = load_contracts(REAL_CONTRACTS_PATH)
@@ -740,21 +869,21 @@ Expected: failures for the unknown `testIDs` field and the missing `check_test_r
 
 - [ ] **Step 3: Implement `testIDs` and reference verification.** In `audit_engine_inputs.py`:
 
-- add `test_ids: Tuple[str, ...]` to `ContractRecord`, parsed like `fixtureIDs` (absent means empty);
+- add `test_ids: Tuple[str, ...]` to `ContractRecord`, parsed like `fixtureIDs` (absent means empty), rejecting during load any entry that is not exactly `<file>.swift::<functionName>` — an unqualified bare name is a schema error, not a lenient fallback;
 - change `Report.untested` to `engine_contract == "deterministic" and not r.fixture_ids and not r.test_ids`;
-- add `check_test_references(records, repo_root)` that reads every `ios/PackWiseTests/*.swift`, collects `func <name>(` via regex, and returns one error per `testIDs` entry with no matching function;
-- call it from `main` alongside `check_completeness`, so a fabricated test name fails schema validation (exit 1) rather than quietly greening the report;
+- add `check_test_references(records, repo_root)` that, for each `testIDs` entry, resolves `ios/PackWiseTests/<file>`, and returns an error if that file does not exist or does not itself contain a matching `func <name>(` — matching is scoped to the named file, never to the directory as a whole;
+- call it from `main` alongside `check_completeness`, so a fabricated or relocated test reference fails schema validation (exit 1) rather than quietly greening the report;
 - delete the hardcoded `activities.add("camping")` in `discover_expected_ids` and the comment above it — camping is now a real `activity-rules.json` key;
 - update the module docstring: the DEAD bucket is expected to be empty from Phase 5 on, and `contextOnly` still may not be used to hide a defect.
 
 - [ ] **Step 4: Update the contract ledger.** In `surfaced-input-contracts.json`:
 
 - `activity/camping`: `engineContract` → `deterministic`; `fixtureIDs` → `["18-reykjavik-64d-roadtrip-camping-seasonal", "28-yellowstone-4d-camping-mild", "29-yellowstone-4d-hiking-camping", "30-seattle-5d-camping-rain", "31-phoenix-5d-camping-hot", "32-denver-5d-camping-cold"]`; add a `note` naming the Camping V1 boundary;
-- `activity/hiking`: add fixtures 29 and 32 and `testIDs: ["hikingOnlyBehaviorIsUnchangedByTheContractMigration", "hikingPlusCampingIsOneComposedTripNotTwoChecklists"]`;
-- `tripType/other`: `engineContract` → `contextOnly`; `testIDs: ["otherIsADeclaredIdentityTripType", "otherTripsAreCarriedEntirelyByActivitiesAndContext"]`; `note` recording the declared-identity decision;
-- every deterministic activity with no fixture (`nightlife`, `shopping`, `museums`, `wildlife`, `snorkeling`, `boatTrip`, `yoga`, `photography`): add `testIDs` naming the real per-activity test written in Step 5.
+- `activity/hiking`: add fixtures 29 and 32 and `testIDs: ["ActivityContractTests.swift::hikingOnlyBehaviorIsUnchangedByTheContractMigration", "ActivityContractTests.swift::hikingPlusCampingIsOneComposedTripNotTwoChecklists"]`;
+- `tripType/other`: `engineContract` → `contextOnly`; `testIDs: ["ActivityContractTests.swift::otherIsADeclaredIdentityTripType", "ActivityContractTests.swift::otherTripsAreCarriedEntirelyByActivitiesAndContext"]`; `note` recording the declared-identity decision;
+- every deterministic activity with no fixture (`nightlife`, `shopping`, `museums`, `wildlife`, `snorkeling`, `boatTrip`, `yoga`, `photography`): add file-qualified `testIDs` naming the real per-activity test written in Step 5.
 
-Do not add `testIDs` to a row whose test does not exist — Step 3's verifier will reject it, and that rejection is the point.
+Every entry is file-qualified `<SwiftFile>::<testFunctionName>`. Do not add `testIDs` to a row whose test does not exist, and do not point an entry at a file the function does not live in — Step 3's verifier rejects both, and that rejection is the point.
 
 - [ ] **Step 5: Write the per-activity observable-effect test.** One table-driven test in `ActivityContractTests.swift`, plus one named test per previously untested activity so the ledger has a real reference to point at.
 
@@ -831,7 +960,9 @@ git commit -m "test: close the surfaced input contract audit"
 | `31-phoenix-5d-camping-hot` | Phoenix | `PhoenixHotDry` | 2026-07-13 | 5 | outdoor | `["camping"]` | checked | balanced |
 | `32-denver-5d-camping-cold` | Denver | `DenverColdOutdoor` | 2026-11-09 | 5 | outdoor | `["hiking","camping"]` | checked | prepared |
 
-Fixture 28's `weatherFixture: null` with an August start above 30° north is deliberately the *no-signal* case: no forecast, no seasonal warmth fallback. It isolates Camping's contract from every weather path. Fixtures 28 and 29 differ by one activity so the diff between them is exactly Hiking's contribution.
+Fixture 28's `weatherFixture: null` with an August start above 30° north is deliberately the *no-signal* case: no forecast, no seasonal warmth fallback. It isolates Camping's contract from every weather path. (Yellowstone sits at 44.4° N, below the seasonal-sun path's 45° cutoff, so an August start does take the summer sun branch — `toiletries.sunscreen` and `essentials.sunglasses` are present in the fixture regardless of Camping. That overlap is expected and is what fixture 28 documents; the Camping-attributable new row there is `miscellaneous.flashlight`.)
+
+Fixtures 28 and 29 differ by exactly one activity, so the diff between them is exactly Hiking's contribution — and under the amended contract that difference now *includes* the trail footwear and the walking-shoe suppression. Fixture 28 must show ordinary `footwear.walking_shoes` and no `footwear.hiking_shoes`; fixture 29 must show the Phase 4 hiking/walking coverage result unchanged. This pair is the primary evidence that Camping does not claim trail footwear and that composition still works.
 
 - [ ] **Step 2: Write the failing fixture contracts in `GoldenEngineTests`.**
 
@@ -840,17 +971,25 @@ Fixture 28's `weatherFixture: null` with an August start above 30° north is del
     let mild = try renderFixture(id: "28-yellowstone-4d-camping-mild")
     let mildIDs = Set(mild.items.map(\.canonicalItemID))
     #expect(mildIDs.isSuperset(of: [
-        "footwear.hiking_shoes", "hydration.water_bottle",
-        "miscellaneous.flashlight", "toiletries.insect_repellent",
-        "toiletries.sunscreen"
+        "hydration.water_bottle", "miscellaneous.flashlight",
+        "toiletries.insect_repellent", "toiletries.sunscreen"
     ]))
-    #expect(!mildIDs.contains("footwear.walking_shoes"))
+    // Camping declares no trail-footwear need: the baseline walking shoes
+    // stay and no hiking shoes appear on a camping-only trip.
+    #expect(mildIDs.contains("footwear.walking_shoes"))
+    #expect(!mildIDs.contains("footwear.hiking_shoes"))
     #expect(!mildIDs.contains("clothing.rain_jacket"))
     #expect(!mildIDs.contains("clothing.thermal_top"))
 
+    // Fixtures 28 and 29 differ by exactly one activity, so the difference
+    // between them is exactly Hiking's contribution — trail footwear
+    // included. That attribution is the point of the pair.
     let composed = try renderFixture(id: "29-yellowstone-4d-hiking-camping")
+    let composedIDs = Set(composed.items.map(\.canonicalItemID))
     #expect(composed.items.filter { $0.canonicalItemID == "hydration.water_bottle" }.count == 1)
     #expect(composed.items.filter { $0.canonicalItemID == "footwear.hiking_shoes" }.count == 1)
+    #expect(composedIDs.subtracting(mildIDs).contains("footwear.hiking_shoes"))
+    #expect(!composedIDs.contains("footwear.walking_shoes"))
 
     let rain = try renderFixture(id: "30-seattle-5d-camping-rain")
     #expect(rain.items.filter { $0.canonicalItemID == "clothing.rain_jacket" }.count == 1)
@@ -863,7 +1002,9 @@ Fixture 28's `weatherFixture: null` with an August start above 30° north is del
 }
 
 /// The long trip must improve because Camping has a general contract — not
-/// because Reykjavik or 64 days is special-cased. Same deltas as fixture 28.
+/// because Reykjavik or 64 days is special-cased. Its footwear is Hiking's
+/// doing, exactly as it was at the Phase 4 baseline; Camping contributes the
+/// light, the repellent and the sun protection and nothing else.
 @Test func theLongRoadTripImprovesThroughTheGeneralCampingContract() throws {
     let long = try renderFixture(id: "18-reykjavik-64d-roadtrip-camping-seasonal")
     let ids = Set(long.items.map(\.canonicalItemID))
@@ -872,8 +1013,22 @@ Fixture 28's `weatherFixture: null` with an August start above 30° north is del
     ]))
     #expect(long.items.filter { $0.canonicalItemID == "hydration.water_bottle" }.count == 1)
     #expect(!ids.contains("clothing.thermal_top"))   // August: no cold signal
+
+    // Fixture 18 is roadTrip + hiking + camping. Its trail footwear comes
+    // from Hiking and must be byte-identical to the Phase 4 baseline — if
+    // this fixture's footwear moves at all, Camping has overreached.
+    #expect(long.items.filter { $0.canonicalItemID == "footwear.hiking_shoes" }.count == 1)
+    for row in long.items where row.canonicalItemID == "footwear.hiking_shoes" {
+        // Whichever of the two hiking-attributed codes the baseline recorded
+        // (`applyCoverage` rewrites the coverer to the substitution copy when
+        // it absorbs the walking need), Camping must never own this row.
+        #expect(row.reasonCode != "activity.camping")
+        #expect(["activity.hiking", "substitution.hiking_covers_walking"].contains(row.reasonCode))
+    }
 }
 ```
+
+Read the recorded baseline for fixture 18 rather than assuming which of the two codes applies; the golden diff in Step 6 is the real gate, and this assertion only has to stop Camping from claiming the row.
 
 - [ ] **Step 3: Run `GoldenEngineTests` and verify RED.** Expected: "No golden for 28-…" issues for the five new fixtures.
 
@@ -939,12 +1094,25 @@ Record exact tests, suites, failures, and the `.xcresult` path.
 - `ActivityContracts` is the only activity authority and nothing else maps an activity id to an item list;
 - no capability was added to `PackingCapability` and no weather signal, threshold, or `signalAdds` row changed;
 - no clothing/footwear quantity policy, central constraint, SwiftData, GPT, lifecycle, or presentation file changed;
-- the only party change is the reviewed `miscellaneous.flashlight` sharing row;
+- `shared/rules/party.json` is byte-identical to `756f68f` — `git diff 756f68f..HEAD -- shared/rules/party.json` must be empty — and no new sharing policy or party constraint logic exists anywhere;
+- no `headlamp` canonical item was created, and `miscellaneous.flashlight` remains the sole `portableLight` candidate;
+- `.trailFootwear` appears in exactly one contract's need set (`hiking`), verified by `rg` over `ActivityContracts.swift`;
 - the only `api/` change is regenerated vocabulary/manifest output;
 - no forbidden campsite-logistics ID exists anywhere in the catalog or rules;
 - the main checkout still contains its unrelated signing diff.
 
-- [ ] **Step 6: Write the Phase 5 evidence report.** Include exact commits; the `ActivityNeed` vocabulary and per-activity contract table; the Camping V1 boundary and what it deliberately excludes; the composition rule and reason-attribution rule; the weather boundary and how `overnightWarmth` is gated; the `tripType.other` decision with its three checks; the unknown-activity result; the reviewed party sharing row; the regenerated API vocabulary; required fixture and scenario results 1–11; the golden review buckets with counts; every verification command and count; the remaining UNTESTED context chips as a routed finding; F-1 status; the Phase 6 cold-hand finding restated as still routed; presentation/device/M3B/M3C state; and the exit checklist.
+- [ ] **Step 6: Write the Phase 5 evidence report.** Include exact commits; the `ActivityNeed` vocabulary and per-activity contract table; the Camping V1 boundary and what it deliberately excludes — trail footwear included, with the reasoning; the composition rule, the reason-attribution rule, and the exact Camping-only and Hiking+Camping item sets; the weather boundary and how `overnightWarmth` is gated; the `tripType.other` decision with its three checks; the unknown-activity result; the statement that `party.json` is unchanged; the regenerated API vocabulary; required fixture and scenario results 1–11; the golden review buckets with counts; every verification command and count; and the exit checklist.
+
+Routed findings, all preserved and none silently dropped:
+
+| ID | Finding | Routed to |
+| --- | --- | --- |
+| F-1 | Golden schema comparison caveat | stays P2 |
+| Phase 4 cold-hand | Cold-without-snow ordinary gloves are never generated | Phase 6 |
+| F-5 | A party camping trip generates one `miscellaneous.flashlight` per traveler; whether a party should share one is a personal-carry sharing-policy question, not an activity-contract one | Phase 7 |
+| Context chips | Nine surfaced context chips remain in the audit's UNTESTED bucket | future phase; reported, not silenced |
+
+Also restate presentation/device/M3B/M3C state.
 
 - [ ] **Step 7: Close Phase 5 without opening Phase 6.** Update the program tracker's status line and add a Phase 5 closure section only after every gate is green. Preserve the Phase 1–4 closure text and leave the "Deferred and excluded" full-camping-logistics entry in place — Phase 5 honored it rather than superseding it.
 
@@ -962,14 +1130,16 @@ git commit -m "docs: close phase 5 activity contracts"
 
 | # | Scenario | Where it is proved |
 | --- | --- | --- |
-| 1 | Camping only, mild conditions | fixture 28; `campingAloneAddsFiveItemsAndNoCampsiteLogistics` |
+| 1 | Camping only, mild conditions | fixture 28; `campingAloneAddsItsFourCandidatesAndNoCampsiteLogistics`; `campingDeDuplicatesAgainstTheOutdoorTripTypeAndSeasonalSun` |
 | 2 | Hiking only | `hikingOnlyBehaviorIsUnchangedByTheContractMigration`; fixture 18 |
 | 3 | Hiking + Camping | fixture 29; `hikingPlusCampingIsOneComposedTripNotTwoChecklists` |
+| 3b | Camping does not claim trail footwear | `onlyHikingClaimsTrailFootwear`; `campingAloneLeavesWalkingFootwearAlone`; `trailFootwearCoverageIsDerivedFromTheNeedNotTheActivityString`; fixtures 28 vs 29 |
 | 4 | Camping + rain | fixture 30; `campingPlusRainProducesExactlyOneShellAndNoCampingRainItem` |
 | 5 | Camping + hot/sunny | fixture 31 |
 | 6 | Camping + cold existing signal | fixture 32; `overnightWarmthResolvesOnlyWithAnExistingColdSignal` |
 | 7 | Road Trip + Hiking + Camping (long trip) | fixture 18; `theLongRoadTripImprovesThroughTheGeneralCampingContract` |
 | 8 | Camping + light packing | `campingRespectsLightPackingConstraints` |
+| 8b | Camping in a party (existing sharing behavior) | `aPartyCampingTripKeepsFlashlightsPersonalPerTraveler` — baseline for routed finding F-5 |
 | 9 | Camping + user-added multifunction item | `aUserAddedBottleSatisfiesCampingHydrationWithoutDuplication` |
 | 10 | Unknown custom activity | fixture 25; `anUnknownActivityChangesNothingAtAll`; `unknownActivityHasNoContractAndNoNeeds` |
 | 11 | Every surfaced preset activity contract | `everySurfacedActivityHasAContract`; `everyDeterministicActivityHasAnObservableEffect` plus its named wrappers; the contract ledger |
@@ -978,8 +1148,9 @@ git commit -m "docs: close phase 5 activity contracts"
 
 - Spec coverage: Tasks 1–3 build the typed contract layer, Camping V1, and Hiking/Camping composition through the existing coverage model. Task 4 closes `tripType.other` and unknown activities. Task 5 closes the audit with verified test references. Task 6 records reviewed fixtures for all eleven required scenarios. Task 7 covers every exit command and a separate evidence commit.
 - Architecture boundary: `ActivityContracts` is one new authority replacing a gap, not a second mechanism. `CoverageResolver` keeps its 12 capabilities and gains no new ones — it only learns to derive `.hiking` from a need instead of a string. No item-ID pair table, no per-activity hardcoded list for Camping, and the fifteen non-overlapping activities are deliberately not migrated.
+- Footwear boundary: `.trailFootwear` is declared by Hiking alone. Camping alone leaves footwear at the baseline and suppresses nothing; `Hiking + Camping` produces exactly one `.hiking`-covered pair, sourced by Hiking, so composition is preserved without double-sourcing. The general `trailFootwear → footwear.hiking_shoes → PackingCapability.hiking` mapping is untouched and is not gated behind any destination-, fixture-, or duration-specific exception — the long Reykjavik fixture's footwear is attributed to its Hiking activity like any other trip's.
 - Weather boundary: the only weather-gated need is `overnightWarmth`, gated on signals that already exist. Camping contributes no rain need and no general warmth need, and three tests assert those absences directly.
 - Type consistency: Task 1 defines `ActivityNeed`, `ActivityContract`, `ActivityContracts`; Task 2 consumes `needCandidates` and `originatingActivity`; Task 3 consumes `capabilities(for:)`; Tasks 4–7 consume those exact names.
-- Scope honesty: context chips remain in the UNTESTED bucket and are reported, not silenced. The flashlight party row is called out as an explicitly reviewed change rather than slipped in. The regenerated `api/generated` vocabulary is named as the one file outside `ios/` and `shared/`.
+- Scope honesty: context chips remain in the UNTESTED bucket and are reported, not silenced. Phase 5 makes no party-sharing decision at all — `party.json` is unchanged, and the possible flashlight over-count for large camping parties is routed to Phase 7 as F-5 with the current behavior pinned by a test rather than quietly altered. Camping's observable delta is stated honestly per trip type, including the `outdoor` case where structural dedup leaves only one new row, rather than being inflated by picking a flattering baseline. The regenerated `api/generated` vocabulary is named as the one file outside `ios/` and `shared/`.
 - TDD and review: each behavior task starts red, turns green narrowly, runs a semantic checkpoint against `756f68f`, and ends in an independently reviewable commit. Recording goldens deliberately fails before review. Task 4 explicitly names the case where a test passes on first run and why that is still the right test.
 - Placeholder scan: complete; no unresolved markers. Phase 6 weather work and Phase 7 party constraints are routed, not started inside Phase 5.

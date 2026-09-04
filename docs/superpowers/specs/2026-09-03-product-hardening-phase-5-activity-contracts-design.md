@@ -79,27 +79,36 @@ name it. Enrichment stays gated off until M3B either way.
 
 Closed, eight cases, count pinned by a test the way `PackingCapability`'s is:
 
-| Need | Candidate | Also a coverage need |
-| --- | --- | --- |
-| `trailFootwear` | `footwear.hiking_shoes` | `PackingCapability.hiking` |
-| `dayCarry` | `activities.daypack` | — |
-| `hydration` | `hydration.water_bottle` | — |
-| `blisterCare` | `health.blister_pads` | — |
-| `portableLight` | `miscellaneous.flashlight` | — |
-| `insectProtection` | `toiletries.insect_repellent` | — |
-| `sunProtection` | `toiletries.sunscreen` | — |
-| `overnightWarmth` | `clothing.thermal_top` | — |
+| Need | Candidate | Also a coverage need | Declared by |
+| --- | --- | --- | --- |
+| `trailFootwear` | `footwear.hiking_shoes` | `PackingCapability.hiking` | hiking |
+| `dayCarry` | `activities.daypack` | — | hiking |
+| `hydration` | `hydration.water_bottle` | — | hiking, camping |
+| `blisterCare` | `health.blister_pads` | — | hiking |
+| `portableLight` | `miscellaneous.flashlight` | — | camping |
+| `insectProtection` | `toiletries.insect_repellent` | — | camping |
+| `sunProtection` | `toiletries.sunscreen` | — | camping |
+| `overnightWarmth` | `clothing.thermal_top` | — | camping |
 
 A need is admitted only when more than one contract can plausibly want it or
 when it must route into the Phase 4 capability model. `overnightWarmth` is the
 only weather-gated need; every other need is unconditional for the activities
 that declare it.
 
+`trailFootwear`'s mapping — to `footwear.hiking_shoes` and to
+`PackingCapability.hiking` — is a general rule about what trail footwear *is*,
+and it holds for any contract that ever declares the need. In Phase 5 exactly
+one contract declares it: Hiking. Camping does not. Car camping, campground
+stays, festival camping and cabin stays do not universally put anyone on a
+trail, so Camping alone must not claim trail footwear and must not suppress the
+walking shoes a normal trip already packs. Hiking remains the sole strong
+signal that claims `PackingCapability.hiking`.
+
 ## Contracts
 
 ```text
 hiking   → deterministic [trailFootwear, dayCarry, hydration, blisterCare]
-camping  → deterministic [trailFootwear, hydration, portableLight,
+camping  → deterministic [hydration, portableLight,
                           insectProtection, sunProtection, overnightWarmth]
 the other 15 surfaced activities
          → deterministic [] with their existing JSON adds unchanged
@@ -113,21 +122,30 @@ left as a second source of truth.
 
 ### Camping V1 boundary
 
-Camping may create or strengthen: portable light, suitable outdoor footwear,
-water, insect repellent, sun protection, and cold-gated sleep warmth. Camping
-must never add tents, sleeping bags, pads, stoves, fuel, cookware, food storage
-or campsite furniture. PackWise packs the traveler; the program tracker's
-"Deferred and excluded" section already excludes full camping logistics, and
-this contract is the code-level expression of that exclusion. A test asserts
-the forbidden IDs are absent for every Camping scenario, not merely that the
-list looks short.
+Camping may create or strengthen: portable light, water, insect repellent, sun
+protection, and cold-gated sleep warmth. Camping must never add tents, sleeping
+bags, pads, stoves, fuel, cookware, food storage or campsite furniture, and it
+must not claim trail footwear. PackWise packs the traveler; the program
+tracker's "Deferred and excluded" section already excludes full camping
+logistics, and this contract is the code-level expression of that exclusion. A
+test asserts the forbidden IDs are absent for every Camping scenario, not
+merely that the list looks short.
 
-Camping alone in mild conditions therefore adds five items —
-`footwear.hiking_shoes`, `hydration.water_bottle`,
-`toiletries.insect_repellent`, `toiletries.sunscreen`,
-`miscellaneous.flashlight` — and suppresses `footwear.walking_shoes` through
-the existing coverage model. That is a visible, honest effect and not a
-wilderness inventory.
+Camping alone in mild conditions therefore contributes four candidates —
+`hydration.water_bottle`, `miscellaneous.flashlight`,
+`toiletries.insect_repellent` and `toiletries.sunscreen` — and touches footwear
+not at all: the walking shoes a baseline trip already packs stay, because
+Camping declares no `trailFootwear`.
+
+How many of those four are *new* rows depends on the rest of the trip, and that
+is the structural dedup working rather than a weakness. On an `outdoor` trip
+type — which already adds `hydration.water_bottle` and
+`toiletries.insect_repellent` — and at a latitude and month where the seasonal
+sun path already adds `toiletries.sunscreen`, Camping's only new row is
+`miscellaneous.flashlight`, and its visible effect on the other three is the
+reason they carry. On a `roadTrip` or `vacation` camping trip the same contract
+contributes three or four new rows. One general contract, different honest
+results per trip; no fixture is special-cased to make the number look bigger.
 
 ## Composition
 
@@ -137,12 +155,19 @@ collector is keyed by canonical item ID.
 
 - `Hiking + Camping → {trailFootwear, dayCarry, hydration, blisterCare,
   portableLight, insectProtection, sunProtection, overnightWarmth}` — one
-  water bottle, one pair of trail shoes.
-- Footwear composes through Phase 4: `trailFootwear` contributes
-  `PackingCapability.hiking`, `footwear.hiking_shoes` provides both `.hiking`
-  and `.everydayWalking`, and `footwear.walking_shoes` is suppressed with exact
-  `CapabilityCoverage` evidence. Camping alone reaches the same result, because
-  the capability comes from the need, not from the string `"hiking"`.
+  water bottle, one pair of trail shoes. `hydration` is the need both contracts
+  declare, and it yields exactly one row.
+- Footwear composes through Phase 4: `trailFootwear` — contributed here by
+  Hiking, its only declaring contract — produces `PackingCapability.hiking`,
+  `footwear.hiking_shoes` provides both `.hiking` and `.everydayWalking`, and
+  `footwear.walking_shoes` is suppressed with exact `CapabilityCoverage`
+  evidence. Adding Camping to a Hiking trip does not double-source that need
+  and changes nothing about the footwear result; removing Hiking removes it.
+- The capability is derived from the need rather than from the string
+  `"hiking"`, so the rule generalizes to any future contract that legitimately
+  puts a traveler on a trail. Today it is behaviour-identical to the string
+  test it replaces, which is precisely why it can be introduced under a
+  zero-diff golden gate.
 - Quantities are unchanged: a shared need yields one row, and only the existing
   party/quantity policy may raise it.
 
@@ -210,15 +235,33 @@ inferred mapping to a known activity. `cosplayConvention` must remain byte-for-
 byte identical to the Phase 4 baseline in fixture 25. Unknown activity text does
 not become packing meaning before accepted context intelligence exists.
 
-## Party sharing — one explicitly reviewed change
+## Party sharing — unchanged, with a finding routed to Phase 7
 
-`miscellaneous.flashlight` has no sharing policy, so a four-person camping trip
-would generate four flashlights. Phase 5 adds `miscellaneous.flashlight` to
-`party.sharedByDefault` with a `singlePerParty` sharing policy. This is a data
-row inside the existing mechanism, not a new central shared-party constraint
-(which remains Phase 7). No existing fixture has camping in a party, so the
-golden diff for this row is zero; it is proved by a focused party test and
-recorded as an explicitly reviewed party change.
+`shared/rules/party.json` is **not modified by Phase 5**. `miscellaneous.flashlight`
+is absent from `sharedByDefault` and has no `sharingPolicies` entry, so it is a
+personal-carry item: one per traveler. Phase 5 keeps that behavior exactly and
+adds no party constraint logic of its own.
+
+That is a deliberate decision, not an oversight. A personal light is a
+legitimate personal-carry item — Camping here is *personal travel packing*, and
+"one torch per family" is a party-sharing policy judgement, precisely the class
+of decision Phase 7 exists to centralize. Deciding it inside an activity phase
+would put a second, ad-hoc sharing authority next to the one Phase 7 is meant
+to build.
+
+**Routed finding (Phase 7) — F-5, possible flashlight over-count for large
+camping parties.** A four-person camping trip generates four `miscellaneous.flashlight`
+rows. Whether that is right (four people who each want a light) or wrong (one
+family, one torch) is a sharing-policy question about personal-carry items in a
+party, and it belongs with the central shared-party constraint work in Phase 7
+alongside the rest of `sharedByDefault`/`sharingPolicies`. Phase 5 records it,
+proves the current behavior with a focused test so the baseline is explicit,
+and changes nothing.
+
+There is no personal `headlamp` canonical item in `shared/catalog/` — only
+`miscellaneous.flashlight` ("Small flashlight") — and Phase 5 does not create
+one. `miscellaneous.flashlight` stays the sole candidate for
+`ActivityNeed.portableLight`.
 
 ## Contract ledger and the UNTESTED bucket
 
@@ -230,10 +273,18 @@ Eight deterministic activities (`nightlife`, `shopping`, `museums`, `wildlife`,
 `snorkeling`, `boatTrip`, `yoga`, `photography`) have real code paths and no
 golden fixture. The requirement is "at least one fixture **or** test," so the
 record schema gains an optional `testIDs` array and `Report.untested` requires
-`fixtureIDs` **or** `testIDs` to be non-empty. To keep that from becoming a way
-to type a green audit, the script verifies every named test actually exists as
-a `func <name>(` in `ios/PackWiseTests/*.swift` and fails schema validation
-otherwise. Fixture spam is not a better answer than a named, verified test.
+`fixtureIDs` **or** `testIDs` to be non-empty.
+
+To keep that from becoming a way to type a green audit, each `testIDs` entry is
+**file-qualified** — `"<SwiftFile>::<testFunctionName>"`, e.g.
+`"CoverageTests.swift::coverageInputsPassThroughWithoutWeatherReinterpretation"` —
+and the script verifies that the named function exists as a `func <name>(`
+*inside that specific file*, failing schema validation otherwise. A bare
+function name is not accepted, and finding a same-named function in some other
+test file does not satisfy the reference: the ledger has to point at where the
+evidence actually lives, so a rename or a file move breaks the audit loudly
+instead of silently resolving somewhere else. Fixture spam is not a better
+answer than a named, verified test.
 
 Context chips remain untested in the ledger. Phase 5 does not own them; they
 stay a visible routed finding rather than being papered over.
@@ -245,9 +296,10 @@ need evidence; coverage suppressions caused by the new activity needs; the five
 new Camping fixtures; fixture 18 improving because Camping now has a general
 contract rather than because Reykjavik or 64 days is special-cased.
 
-Reject conditions: clothing quantity policy changes; footwear or outerwear
-changes not explained by a new activity need; any weather signal or threshold
-change; ownership or carrier changes beyond the reviewed flashlight row; manual
+Reject conditions: clothing quantity policy changes; **any** footwear or
+outerwear change — Camping declares no footwear need, so no existing fixture's
+footwear may move at all; any weather signal or threshold change; **any**
+ownership or carrier change, since `party.json` is untouched this phase; manual
 override regressions; persistence, UI, API, or GPT changes.
 
 ## User authority
@@ -264,9 +316,21 @@ Selecting Camping cannot resurrect an explicitly rejected item.
 - Cold-without-snow ordinary-glove generation — the Phase 4 finding stays
   Phase 6.
 - Footwear or clothing quantity redesign.
-- Central shared-party constraints (Phase 7).
+- Central shared-party constraints (Phase 7) — including the routed F-5
+  flashlight over-count for large camping parties. `party.json` is unchanged.
+- Trail/hiking footwear for Camping. Camping alone leaves footwear to the
+  baseline; only Hiking claims `PackingCapability.hiking`.
 - GPT/context intelligence, UI, persistence, notifications, lifecycle.
 - Migrating the fifteen non-overlapping activities off their JSON adds.
+
+## Routed findings
+
+| ID | Finding | Routed to |
+| --- | --- | --- |
+| F-1 | Golden schema comparison caveat | stays P2 |
+| Phase 4 cold-hand | Cold-without-snow ordinary gloves are never generated | Phase 6 |
+| F-5 | A party camping trip generates one `miscellaneous.flashlight` per traveler; whether a party should share one is a personal-carry sharing-policy question | Phase 7 |
+| Context chips | Nine surfaced context chips remain in the audit's UNTESTED bucket | future phase; reported, not silenced |
 
 ## Verification
 
