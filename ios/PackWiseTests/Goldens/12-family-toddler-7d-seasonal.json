@@ -11,11 +11,17 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
@@ -43,11 +49,17 @@
         "wearsPerItem" : 2.5
       },
       "quantityReason" : "5 pants for Child. 7 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -73,12 +85,18 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "2 sleep sets with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
       "reasonArguments" : {
         "ageGroup" : "toddler",
         "name" : "Child"
       },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential",
         "party"
@@ -107,11 +125,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "12 socks for Child. 7 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -139,11 +163,17 @@
         "wearsPerItem" : 1.25
       },
       "quantityReason" : "13 t-shirts for Child. 7 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -171,11 +201,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "Child is mostly in diapers — 3 pairs as backup.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -189,11 +225,17 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Dead batteries cut days short.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -207,11 +249,17 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
@@ -225,11 +273,17 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Seasonal sun is likely. The forecast will refine this closer to departure.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "weather.seasonal_sun",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
@@ -243,11 +297,17 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll be on your feet a lot in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking"
+      ],
       "signals" : [
         "activity",
         "baseEssential"
@@ -262,12 +322,18 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
       "reasonArguments" : {
         "ageGroup" : "toddler",
         "name" : "Child"
       },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "party"
       ]
@@ -281,12 +347,18 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
       "reasonArguments" : {
         "ageGroup" : "toddler",
         "name" : "Child"
       },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "userPreference"
       ]
@@ -300,12 +372,21 @@
       "owner" : "child",
       "quantity" : 35,
       "quantityReason" : "About 5 a day for Child — 35 for 7 days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "name" : "Child",
+        "quantity" : "35",
+        "rate" : "5"
+      },
       "reason" : "Suggested for Child (toddler).",
       "reasonArguments" : {
         "ageGroup" : "toddler",
         "name" : "Child"
       },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "userPreference"
       ]
@@ -319,12 +400,19 @@
       "owner" : "child",
       "quantity" : 3,
       "quantityReason" : "3 spare outfits for Child — spills and surprises happen.",
+      "quantityReasonArguments" : {
+        "name" : "Child",
+        "quantity" : "3"
+      },
       "reason" : "Suggested for Child (toddler).",
       "reasonArguments" : {
         "ageGroup" : "toddler",
         "name" : "Child"
       },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "party"
       ]
@@ -338,12 +426,18 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
       "reasonArguments" : {
         "ageGroup" : "toddler",
         "name" : "Child"
       },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "party"
       ]
@@ -357,12 +451,18 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
       "reasonArguments" : {
         "ageGroup" : "toddler",
         "name" : "Child"
       },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "party"
       ]
@@ -376,11 +476,17 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -394,11 +500,17 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -412,11 +524,17 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -430,11 +548,17 @@
       "owner" : "child",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -448,11 +572,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
@@ -479,11 +609,17 @@
         "wearsPerItem" : 2.5
       },
       "quantityReason" : "3 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -509,11 +645,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "2 sleep sets with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -540,11 +682,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "8 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -571,11 +719,17 @@
         "wearsPerItem" : 1.25
       },
       "quantityReason" : "Why 7 t-shirts? You're traveling for 7 days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -602,11 +756,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "8 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -620,11 +780,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Easy to forget, hard to replace.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.documents",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -638,11 +804,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for a vacation trip.",
       "reasonArguments" : {
         "tripType" : "vacation"
       },
       "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "tripType"
       ]
@@ -656,11 +828,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Dead batteries cut days short.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -674,11 +852,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
@@ -692,11 +876,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -710,11 +900,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -728,11 +924,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Seasonal sun is likely. The forecast will refine this closer to departure.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "weather.seasonal_sun",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
@@ -746,11 +948,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -764,11 +972,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll be on your feet a lot in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking"
+      ],
       "signals" : [
         "activity",
         "baseEssential"
@@ -783,11 +997,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
@@ -801,11 +1021,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Better to have and not need.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.health",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -819,11 +1045,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -837,11 +1069,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -855,11 +1093,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -873,11 +1117,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -891,11 +1141,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -909,11 +1165,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for a vacation trip.",
       "reasonArguments" : {
         "tripType" : "vacation"
       },
       "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "tripType"
       ]
@@ -927,11 +1189,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -945,11 +1213,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -963,11 +1237,17 @@
       "owner" : "partner",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -981,11 +1261,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
@@ -1012,11 +1298,17 @@
         "wearsPerItem" : 2.5
       },
       "quantityReason" : "3 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1042,11 +1334,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "2 sleep sets with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1073,11 +1371,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "8 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1104,11 +1408,17 @@
         "wearsPerItem" : 1.25
       },
       "quantityReason" : "Why 7 t-shirts? You're traveling for 7 days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1135,11 +1445,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "8 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1153,11 +1469,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Easy to forget, hard to replace.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.documents",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1171,11 +1493,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for a vacation trip.",
       "reasonArguments" : {
         "tripType" : "vacation"
       },
       "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "tripType"
       ]
@@ -1189,11 +1517,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Dead batteries cut days short.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1207,11 +1541,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
@@ -1225,11 +1565,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1243,11 +1589,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1261,11 +1613,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Seasonal sun is likely. The forecast will refine this closer to departure.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "weather.seasonal_sun",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
@@ -1279,11 +1637,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1297,11 +1661,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll be on your feet a lot in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking"
+      ],
       "signals" : [
         "activity",
         "baseEssential"
@@ -1316,11 +1686,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Miami.",
       "reasonArguments" : {
         "destination" : "Miami"
       },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
@@ -1334,11 +1710,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Better to have and not need.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.health",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1352,11 +1734,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1370,11 +1758,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1388,11 +1782,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1406,11 +1806,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1424,11 +1830,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1442,11 +1854,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for a vacation trip.",
       "reasonArguments" : {
         "tripType" : "vacation"
       },
       "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "tripType"
       ]
@@ -1460,11 +1878,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1478,11 +1902,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1496,11 +1926,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -1514,12 +1950,19 @@
       "owner" : "shared",
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "quantity" : "1",
+        "travelerCount" : "3"
+      },
       "reason" : "Suggested for Child (toddler).",
       "reasonArguments" : {
         "ageGroup" : "toddler",
         "name" : "Child"
       },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "userPreference"
       ]
@@ -1533,12 +1976,19 @@
       "owner" : "shared",
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "quantity" : "1",
+        "travelerCount" : "3"
+      },
       "reason" : "Suggested for Child (toddler).",
       "reasonArguments" : {
         "ageGroup" : "toddler",
         "name" : "Child"
       },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "userPreference"
       ]
@@ -1552,11 +2002,18 @@
       "owner" : "shared",
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "quantity" : "1",
+        "travelerCount" : "3"
+      },
       "reason" : "Seasonal sun is likely. The forecast will refine this closer to departure.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "weather.seasonal_sun",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]

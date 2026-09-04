@@ -244,7 +244,9 @@ enum CoverageResolver {
             }
             let needed = capabilities.intersection(needs)
             if item.isUserAdded || item.isUserModified {
-                kept.append(item)
+                var copy = item
+                copy.satisfiedCapabilities = needed.map(\.rawValue).sorted()
+                kept.append(copy)
                 for capability in needed where covered[capability] == nil {
                     covered[capability] = canonical
                 }
@@ -259,7 +261,7 @@ enum CoverageResolver {
                         refutedCapabilities: capabilities.sorted { $0.rawValue < $1.rawValue }
                     ))
                 } else {
-                    kept.append(item)
+                    kept.append(item)   // satisfiedCapabilities stays empty — correct
                 }
                 continue
             }
@@ -281,7 +283,9 @@ enum CoverageResolver {
                 ))
                 continue
             }
-            kept.append(item)
+            var copy = item
+            copy.satisfiedCapabilities = needed.map(\.rawValue).sorted()
+            kept.append(copy)
             for capability in needed where covered[capability] == nil {
                 covered[capability] = canonical
             }

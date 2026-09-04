@@ -375,6 +375,24 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
     /// Engine-only structured facts behind a clothing quantity. Persistence
     /// and product presentation are deliberately deferred to Phase 8.
     var quantityEvidence: ClothingQuantityEvidence?
+    /// Structured arguments behind quantityReason for the non-clothing
+    /// quantity families (care, warm-layer rotation, party sharing) — the
+    /// same role reasonArguments already plays for the inclusion reason.
+    /// Closed key vocabulary: quantity, days, rate, name, travelerCount,
+    /// rainDays. Empty for fixed singletons and for the clothing family,
+    /// which already has quantityEvidence.
+    var quantityReasonArguments: [String: String] = [:]
+    /// itemCapabilities[canonicalItemID] ∩ activeNeeds, computed once inside
+    /// CoverageResolver.resolve's own resolution loop. Empty when this
+    /// item's own capabilities don't intersect any currently-active need
+    /// (most items, and every item outside the closed capability
+    /// vocabulary).
+    var satisfiedCapabilities: [String] = []
+    /// Captured once, in PackingEngine.resolve, at the one
+    /// ConstraintResolver.optionalRuling call that decides whether this
+    /// item survives a space-constrained bag. Nil whenever that ruling
+    /// never left its own no-op guard for this item.
+    var bagStyleConstraintFact: BagStyleConstraintFact? = nil
     var isUserAdded: Bool
     var isUserModified: Bool
     var ownershipType: PackingOwnership
@@ -408,6 +426,9 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
         reasonArguments: [String: String] = [:],
         quantityReason: String = "",
         quantityEvidence: ClothingQuantityEvidence? = nil,
+        quantityReasonArguments: [String: String] = [:],
+        satisfiedCapabilities: [String] = [],
+        bagStyleConstraintFact: BagStyleConstraintFact? = nil,
         isUserAdded: Bool = false,
         isUserModified: Bool = false,
         ownershipType: PackingOwnership = .personal,
@@ -428,6 +449,9 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
         self.reasonArguments = reasonArguments
         self.quantityReason = quantityReason
         self.quantityEvidence = quantityEvidence
+        self.quantityReasonArguments = quantityReasonArguments
+        self.satisfiedCapabilities = satisfiedCapabilities
+        self.bagStyleConstraintFact = bagStyleConstraintFact
         self.isUserAdded = isUserAdded
         self.isUserModified = isUserModified
         self.ownershipType = ownershipType
@@ -435,6 +459,18 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
         self.assignedTravelerID = assignedTravelerID
         self.bagID = bagID
     }
+}
+
+struct BagStyleConstraintFact: Hashable, Codable, Sendable {
+    /// True when the item survived only because it carries an
+    /// essentialOptionalTags tag (base/rain/cold/medication) — without that
+    /// protection, this exact bag/style combination would have trimmed it
+    /// (ConstraintResolver.swift's optionalRuling).
+    var survivedByEssentialTagProtection: Bool
+    /// The conflictKey this bag/style combination would use for a
+    /// non-protected optional item. Nil only when this bag/style
+    /// combination doesn't trim optionals at all.
+    var wouldTrimUnderKey: String?
 }
 
 struct QuantityChangeSuggestion: Hashable, Codable, Sendable {

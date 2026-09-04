@@ -36,6 +36,17 @@ enum ConstraintResolver {
         var keep: Bool
         /// Present when the drop should be recorded as a decision.
         var conflictKey: String?
+        /// False whenever this call's own no-op guard short-circuited
+        /// (importance != .optional, or the bag/style combination doesn't
+        /// constrain space) — every other field is trivial in that case.
+        var wasConstraintLive: Bool = false
+        /// True when keep == true only because an essentialOptionalTags tag
+        /// protected the item from a trim that was otherwise live.
+        var essentialTagProtected: Bool = false
+        /// The conflictKey this bag/style combination would use for a
+        /// non-protected optional item; nil when this combination doesn't
+        /// trim optionals at all.
+        var wouldTrimUnderKey: String? = nil
     }
 
     /// Whether an optional item survives the bag/style combination.
@@ -45,6 +56,12 @@ enum ConstraintResolver {
     /// bring backups; the bag says there's no room), resolved in the bag's
     /// favor and recorded under its own key. Carry-on and backpack only trim
     /// when packing light; checked and road-trip luggage never trim.
+    ///
+    /// The would-be conflict key is computed *before* the essential-tag
+    /// check (not just on the non-protected path) so a trace can answer
+    /// "would this have trimmed the item absent tag protection" — a
+    /// behavior-preserving reorder: every `keep`/`conflictKey` output is
+    /// unchanged for every input.
     static func optionalRuling(
         importance: ItemImportance,
         tags: [String],
@@ -53,20 +70,23 @@ enum ConstraintResolver {
     ) -> OptionalRuling {
         guard importance == .optional,
               bag.appliesBagConstraint, bag.isSpaceConstrained else {
-            return OptionalRuling(keep: true, conflictKey: nil)
+            return OptionalRuling(keep: true, conflictKey: nil, wasConstraintLive: false, essentialTagProtected: false, wouldTrimUnderKey: nil)
         }
+        let wouldBeKey: String? = {
+            if bag == .personalItem {
+                return style == .prepared ? "style.prepared_vs_personal_item" : "bag.personal_item"
+            }
+            if style == .light { return "bag.space_constrained" }
+            return nil
+        }()
         let isEssentialOptional = tags.contains { essentialOptionalTags.contains($0) }
         if isEssentialOptional {
-            return OptionalRuling(keep: true, conflictKey: nil)
+            return OptionalRuling(keep: true, conflictKey: nil, wasConstraintLive: true, essentialTagProtected: true, wouldTrimUnderKey: wouldBeKey)
         }
-        if bag == .personalItem {
-            let key = style == .prepared ? "style.prepared_vs_personal_item" : "bag.personal_item"
-            return OptionalRuling(keep: false, conflictKey: key)
+        if let wouldBeKey {
+            return OptionalRuling(keep: false, conflictKey: wouldBeKey, wasConstraintLive: true, essentialTagProtected: false, wouldTrimUnderKey: wouldBeKey)
         }
-        if style == .light {
-            return OptionalRuling(keep: false, conflictKey: "bag.space_constrained")
-        }
-        return OptionalRuling(keep: true, conflictKey: nil)
+        return OptionalRuling(keep: true, conflictKey: nil, wasConstraintLive: true, essentialTagProtected: false, wouldTrimUnderKey: nil)
     }
 
     /// The one-sentence, user-terms copy for each conflict key.

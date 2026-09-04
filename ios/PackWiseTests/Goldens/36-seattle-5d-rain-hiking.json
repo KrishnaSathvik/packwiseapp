@@ -26,11 +26,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Hiking is on your plans.",
       "reasonArguments" : {
         "destination" : "Seattle"
       },
       "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity",
         "tripType"
@@ -45,12 +51,18 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Rain is expected on 3 of your 5 travel days.",
       "reasonArguments" : {
         "rainDays" : "3",
         "tripDays" : "5"
       },
       "reasonCode" : "weather.rain_days",
+      "satisfiedCapabilities" : [
+        "outerwear.warmth_light"
+      ],
       "signals" : [
         "weather"
       ]
@@ -77,11 +89,17 @@
         "wearsPerItem" : 2.5
       },
       "quantityReason" : "2 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -95,12 +113,18 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Rain is expected on 3 of your 5 travel days.",
       "reasonArguments" : {
         "rainDays" : "3",
         "tripDays" : "5"
       },
       "reasonCode" : "weather.rain_days",
+      "satisfiedCapabilities" : [
+        "outerwear.rain_shell"
+      ],
       "signals" : [
         "weather"
       ]
@@ -126,11 +150,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "1 sleep set with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -157,11 +187,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "6 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -188,11 +224,17 @@
         "wearsPerItem" : 1.25
       },
       "quantityReason" : "Why 5 t-shirts? You're traveling for 5 days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -219,11 +261,17 @@
         "wearsPerItem" : 1
       },
       "quantityReason" : "6 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -237,11 +285,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Easy to forget, hard to replace.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.documents",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -255,11 +309,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Dead batteries cut days short.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -273,11 +333,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -291,11 +357,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -309,12 +381,18 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Rain is expected on 3 of your 5 travel days.",
       "reasonArguments" : {
         "rainDays" : "3",
         "tripDays" : "5"
       },
       "reasonCode" : "weather.rain_days",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
@@ -328,11 +406,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -346,11 +430,18 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Hiking shoes can cover most walking days on this trip.",
       "reasonArguments" : {
         "destination" : "Seattle"
       },
       "reasonCode" : "substitution.hiking_covers_walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking",
+        "footwear.hiking"
+      ],
       "signals" : [
         "activity"
       ]
@@ -364,11 +455,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Hiking is on your plans.",
       "reasonArguments" : {
         "destination" : "Seattle"
       },
       "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity",
         "tripType"
@@ -383,11 +480,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for a outdoor trip.",
       "reasonArguments" : {
         "tripType" : "outdoor"
       },
       "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "tripType"
       ]
@@ -401,11 +504,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Better to have and not need.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.health",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -419,11 +528,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Hiking is on your plans.",
       "reasonArguments" : {
         "destination" : "Seattle"
       },
       "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity",
         "tripType"
@@ -438,11 +553,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -456,11 +577,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -474,11 +601,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for a outdoor trip.",
       "reasonArguments" : {
         "tripType" : "outdoor"
       },
       "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "tripType"
       ]
@@ -492,11 +625,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -510,11 +649,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -528,11 +673,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -546,11 +697,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -564,11 +721,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
@@ -582,11 +745,17 @@
       "owner" : "primary",
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
       "reasonArguments" : {
 
       },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]

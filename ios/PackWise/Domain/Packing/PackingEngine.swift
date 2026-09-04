@@ -736,6 +736,12 @@ struct PackingEngine: Sendable {
                     reason: suggestion.reason,
                     reasonCode: suggestion.reasonCode,
                     reasonArguments: suggestion.reasonArguments,
+                    bagStyleConstraintFact: ruling.wasConstraintLive
+                        ? BagStyleConstraintFact(
+                            survivedByEssentialTagProtection: ruling.essentialTagProtected,
+                            wouldTrimUnderKey: ruling.wouldTrimUnderKey
+                          )
+                        : nil,
                     ownershipType: ownership,
                     travelerID: travelerID,
                     assignedTravelerID: assignedTravelerID
@@ -910,12 +916,14 @@ struct PackingEngine: Sendable {
                             ["rainDaysPhrase": rainDaysPhrase, "umbrellaPhrase": umbrellaPhrase],
                             fallback: fallback
                         )
+                        copy.quantityReasonArguments = ["quantity": "\(quantity)", "rainDays": "\(weather.rainDays)"]
                     } else {
                         copy.quantityReason = render(
                             "party.shared",
                             ["quantity": "\(quantity)", "partySize": "\(party.travelers.count)"],
                             fallback: fallback
                         )
+                        copy.quantityReasonArguments = ["quantity": "\(quantity)", "travelerCount": "\(party.travelers.count)"]
                     }
                     return copy
                 }
@@ -929,6 +937,7 @@ struct PackingEngine: Sendable {
             if let care = CareQuantityEngine.quantity(canonicalID: canonical, days: context.durationDays, traveler: traveler) {
                 copy.quantity = care.value
                 copy.quantityReason = render(care.reasonCode, care.arguments, fallback: care.fallback)
+                copy.quantityReasonArguments = care.arguments
                 return copy
             }
 
@@ -942,6 +951,7 @@ struct PackingEngine: Sendable {
             ) {
                 copy.quantity = warm.value
                 copy.quantityReason = render(warm.reasonCode, warm.arguments, fallback: warm.fallback)
+                copy.quantityReasonArguments = warm.arguments
                 return copy
             }
 

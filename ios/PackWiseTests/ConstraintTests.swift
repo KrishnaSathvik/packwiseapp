@@ -379,6 +379,67 @@ struct ConstraintTests {
         #expect(ruling.keep)
     }
 
+    // MARK: - Phase 8, Task 1: bagStyleConstraintFact (Amendment 1)
+
+    /// A pure reference reimplementation of optionalRuling's pre-Phase-8
+    /// keep/conflictKey behavior — used only to prove the widened function
+    /// (which now also surfaces wasConstraintLive/essentialTagProtected/
+    /// wouldTrimUnderKey via a behavior-preserving reorder) is byte-identical
+    /// on keep/conflictKey for every input the reorder could plausibly
+    /// affect.
+    private func referenceKeepAndConflictKey(
+        importance: ItemImportance,
+        tags: [String],
+        bag: BagType,
+        style: PackingStyle
+    ) -> (keep: Bool, conflictKey: String?) {
+        guard importance == .optional, bag.appliesBagConstraint, bag.isSpaceConstrained else {
+            return (true, nil)
+        }
+        let isEssentialOptional = tags.contains { ConstraintResolver.essentialOptionalTags.contains($0) }
+        if isEssentialOptional { return (true, nil) }
+        if bag == .personalItem {
+            let key = style == .prepared ? "style.prepared_vs_personal_item" : "bag.personal_item"
+            return (false, key)
+        }
+        if style == .light { return (false, "bag.space_constrained") }
+        return (true, nil)
+    }
+
+    @Test func optionalRulingReorderIsByteIdenticalOnKeepAndConflictKeyForEveryInput() {
+        let tagSets: [[String]] = [[], ["medication"], ["rain"], ["cold"], ["base"], ["unrelated"], ["unrelated", "cold"]]
+        for importance in ItemImportance.allCases {
+            for bag in BagType.allCases {
+                for style in PackingStyle.allCases {
+                    for tags in tagSets {
+                        let expected = referenceKeepAndConflictKey(importance: importance, tags: tags, bag: bag, style: style)
+                        let actual = ConstraintResolver.optionalRuling(importance: importance, tags: tags, bag: bag, style: style)
+                        #expect(actual.keep == expected.keep, "importance:\(importance) tags:\(tags) bag:\(bag) style:\(style)")
+                        #expect(actual.conflictKey == expected.conflictKey, "importance:\(importance) tags:\(tags) bag:\(bag) style:\(style)")
+                    }
+                }
+            }
+        }
+    }
+
+    /// A personal-item bag trims optionals unless the item is tagged
+    /// essential (rain/cold/medication/base) — an essential-tagged optional
+    /// item on this bag survives via protection, and the trace must say so,
+    /// not just "kept": `wouldTrimUnderKey` names what it was protected
+    /// from.
+    @Test func bagStyleConstraintFactRecordsEssentialTagProtectionOnASpaceConstrainedBag() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Chicago")
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 10))!
+        let freezing = forecast(start: start, days: 5, high: 25, low: 15, rain: 0)
+        let generation = engine.generateDetailed(context: context(
+            destination: dest, days: 5, bag: .personalItem, style: .light, weather: freezing
+        ))
+        let scarf = try #require(generation.items.first { $0.canonicalItemID == "clothing.scarf" })
+        #expect(scarf.bagStyleConstraintFact?.survivedByEssentialTagProtection == true)
+        #expect(scarf.bagStyleConstraintFact?.wouldTrimUnderKey == "bag.personal_item")
+    }
+
     // MARK: - Task 4: authority — removed canonical item
 
     /// A rule-suggested (not just a companion) canonical item stays out once

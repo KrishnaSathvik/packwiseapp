@@ -191,6 +191,71 @@ struct GoldenEngineTests {
         #expect(manualTop.quantityEvidence == nil)
     }
 
+    // MARK: - Phase 8, Task 1: generation-time trace capture
+
+    @Test func warmLayerQuantityArgumentsSurviveOntoTheDraft() throws {
+        let output = try renderFixture(id: "15-minneapolis-6d-deep-winter")
+        let sweater = try item("clothing.light_sweater", owner: "primary", in: output)
+        #expect(sweater.quantityReasonArguments["quantity"] == "\(sweater.quantity)")
+        #expect(sweater.quantityReasonArguments["days"] != nil)
+    }
+
+    @Test func sharedUmbrellaQuantityArgumentsCaptureQuantityAndRainDays() throws {
+        let output = try renderFixture(id: "38-couple-5d-seattle-shared-umbrella")
+        let umbrella = try item("essentials.umbrella_compact", owner: "shared", in: output)
+        #expect(umbrella.quantityReasonArguments["quantity"] == "\(umbrella.quantity)")
+        #expect(umbrella.quantityReasonArguments["rainDays"] != nil)
+    }
+
+    @Test func sharedGenericQuantityArgumentsCaptureQuantityAndTravelerCount() throws {
+        // toiletries.sunscreen is the family's generic (non-umbrella)
+        // scaleByParty shared item: ceil(4/3) = 2.
+        let output = try renderFixture(id: "37-family4-5d-hiking-camping-outdoor")
+        let sunscreen = try item("toiletries.sunscreen", owner: "shared", in: output)
+        #expect(sunscreen.quantity == 2)
+        #expect(sunscreen.quantityReasonArguments["quantity"] == "2")
+        #expect(sunscreen.quantityReasonArguments["travelerCount"] == "4")
+    }
+
+    @Test func fixedSingletonsCarryEmptyQuantityReasonArguments() throws {
+        let output = try renderFixture(id: "01-chicago-5d-city-balanced")
+        let toothbrush = try item("toiletries.toothbrush", owner: "primary", in: output)
+        #expect(toothbrush.quantityReasonArguments.isEmpty)
+    }
+
+    @Test func satisfiedCapabilitiesNamesWhatASurvivingItemCovers() throws {
+        // Hiking shoes cover walking (substitution.hiking_covers_walking,
+        // fixture 29) — the same fact CoverageSuppression already records on
+        // the *suppressed* walking-shoes row now also lands directly on the
+        // surviving hiking-shoes row, computed once inside
+        // CoverageResolver.resolve, not by inverting the suppression.
+        let output = try renderFixture(id: "29-yellowstone-4d-hiking-camping")
+        let hikingShoes = try item("footwear.hiking_shoes", owner: "primary", in: output)
+        #expect(hikingShoes.satisfiedCapabilities.contains(PackingCapability.everydayWalking.rawValue))
+    }
+
+    @Test func bagStyleConstraintFactIsNilWhenTheRulingNeverLeftItsNoOpGuard() throws {
+        // A checked bag never constrains space — every optional item's
+        // ruling is trivial, so the fact stays nil for all of them.
+        let output = try renderFixture(id: "04-tokyo-15d-prepared-checked")
+        let book = try item("travel_comfort.book", owner: "primary", in: output)
+        #expect(book.bagStyleConstraintFact == nil)
+    }
+
+    @Test func quantityReasonArgumentsNeverWritesAKeyOutsideTheClosedVocabulary() throws {
+        let allowed: Set<String> = ["quantity", "days", "rate", "name", "travelerCount", "rainDays"]
+        for output in try allGoldenFixtures() {
+            for item in output.items {
+                for key in item.quantityReasonArguments.keys {
+                    #expect(
+                        allowed.contains(key),
+                        "\(output.fixture): \(item.canonicalItemID) wrote unlisted quantityReasonArguments key \(key)"
+                    )
+                }
+            }
+        }
+    }
+
     @Test func phase4RequiredFixturesHoldCoverageContracts() throws {
         func ids(_ output: GoldenOutput) -> Set<String> {
             Set(output.items.map(\.canonicalItemID))
@@ -358,6 +423,25 @@ struct GoldenEngineTests {
         return try JSONDecoder().decode(GoldenOutput.self, from: Data(json.utf8))
     }
 
+    /// Renders every fixture in the manifest — the Swift-side equivalent of
+    /// `scripts/audit_recommendation_traces.py`'s own fixture sweep, scoped
+    /// to invariants a single Swift test wants to check across all 38.
+    private func allGoldenFixtures() throws -> [GoldenOutput] {
+        let file = try JSONDecoder().decode(
+            GoldenFixtureFile.self,
+            from: Data(contentsOf: Self.fixturesFile)
+        )
+        return try file.fixtures.map { try renderFixture(id: $0.id) }
+    }
+
+    /// Shared lookup for tests that only need one item out of one rendered
+    /// fixture — the same shape `phase3RequiredFixturesHoldClothingQuantityContracts`
+    /// already defines locally; kept here too so file-scope tests can reuse
+    /// it without duplicating the lookup.
+    private func item(_ id: String, owner: String = "primary", in output: GoldenOutput) throws -> GoldenItem {
+        try #require(output.items.first { $0.owner == owner && $0.canonicalItemID == id })
+    }
+
     // MARK: - Context construction
 
     /// Builds the `TripContext` a given fixture describes — the same
@@ -504,6 +588,20 @@ struct GoldenEngineTests {
         var reason: String
         var quantityReason: String
         var quantityEvidence: ClothingQuantityEvidence?
+        /// Structured arguments behind quantityReason for the non-clothing
+        /// quantity families (Phase 8) — the same role reasonArguments plays
+        /// for the inclusion reason. Closed key vocabulary; empty for fixed
+        /// singletons and for the clothing family (quantityEvidence covers
+        /// it there).
+        var quantityReasonArguments: [String: String]
+        /// itemCapabilities ∩ activeNeeds for this surviving item (Phase 8)
+        /// — computed inside CoverageResolver.resolve's own loop, not by
+        /// inverting coverageSuppressions.
+        var satisfiedCapabilities: [String]
+        /// Whether this item's survival on a space-constrained bag was
+        /// contingent on essentialOptionalTags protection (Phase 8). Nil
+        /// when the bag/style ruling never left its no-op guard.
+        var bagStyleConstraintFact: BagStyleConstraintFact?
         var userModified: Bool?
     }
 
@@ -581,6 +679,9 @@ struct GoldenEngineTests {
                         reason: item.reason,
                         quantityReason: item.quantityReason,
                         quantityEvidence: item.quantityEvidence,
+                        quantityReasonArguments: item.quantityReasonArguments,
+                        satisfiedCapabilities: item.satisfiedCapabilities,
+                        bagStyleConstraintFact: item.bagStyleConstraintFact,
                         userModified: item.isUserModified ? true : nil
                     )
                 }

@@ -560,6 +560,30 @@ struct CoverageTests {
         #expect(retained.assignedTravelerID == nil)
     }
 
+    // MARK: - Phase 8, Task 1: satisfiedCapabilities (Amendment 2)
+
+    /// The counterexample that motivated the satisfiedCapabilities redesign:
+    /// a rain jacket genuinely satisfies rainShell even though rainShell is
+    /// a single-item capability in CoverageResolver.itemCapabilities — no
+    /// other candidate can ever be suppressed for it. A design that derived
+    /// this fact by inverting coverageSuppressions could never populate it,
+    /// because nothing is ever suppressed for rainShell; the intersection
+    /// computed directly inside CoverageResolver.resolve's own loop must.
+    @Test func satisfiedCapabilitiesIncludesAGenuinelyMetNeedEvenWithoutAnyMatchingSuppression() throws {
+        let engine = try makeEngine()
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let rain = weather(days: 5, start: start, highF: 58, lowF: 46, rain: 0.7)
+        let generation = engine.generateDetailed(context: context(
+            destination: try destination("Seattle"), activities: ["sightseeing"], bag: .checked, style: .balanced, weather: rain
+        ))
+        let rainJacket = try #require(generation.items.first { $0.canonicalItemID == "clothing.rain_jacket" })
+        #expect(rainJacket.satisfiedCapabilities.contains(PackingCapability.rainShell.rawValue))
+        #expect(
+            !generation.coverageSuppressions.contains { $0.covered.contains { $0.capability == .rainShell } },
+            "no suppression exists for rainShell in this fixture — the fact must not depend on one"
+        )
+    }
+
     private func sortedSuppressions(_ values: [CoverageSuppression]) -> [CoverageSuppression] {
         values.sorted {
             let lhs = "\($0.travelerID?.uuidString ?? ""):\($0.canonicalItemID)"
