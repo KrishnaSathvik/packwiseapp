@@ -21,7 +21,8 @@ struct ConstraintTests {
         bag: BagType = .carryOn,
         style: PackingStyle = .balanced,
         chips: Set<ContextChip> = [],
-        party: TripParty? = nil
+        party: TripParty? = nil,
+        weather: TripWeatherContext? = nil
     ) -> TripContext {
         let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
         let end = Calendar.current.date(byAdding: .day, value: days - 1, to: start)!
@@ -45,10 +46,152 @@ struct ConstraintTests {
             travelerCount: party?.travelers.count ?? 1,
             userNotes: "",
             contextChips: chips,
-            weather: nil,
+            weather: weather,
             preferences: prefs,
             party: party ?? .solo()
         )
+    }
+
+    /// Built the same way `WeatherChangeTests.swift`'s private `forecast(...)`
+    /// helper builds a `TripWeatherContext` — a minimal, deterministic
+    /// fixture, not a fetched forecast.
+    private func forecast(
+        start: Date,
+        days: Int,
+        high: Double,
+        low: Double,
+        rain: Double,
+        uv: Double = 4,
+        wind: Double = 8
+    ) -> TripWeatherContext {
+        let calendar = Calendar.current
+        let daily: [DailyForecast] = (0..<days).map { index in
+            let day = calendar.date(byAdding: .day, value: index, to: start)!
+            return DailyForecast(
+                date: calendar.startOfDay(for: day),
+                symbol: rain >= 0.35 ? "cloud.rain" : "sun.max",
+                highF: high,
+                lowF: low,
+                rainProbability: rain,
+                uvIndex: uv,
+                windMph: wind,
+                snowExpected: false,
+                summary: rain >= 0.35 ? "Rain" : "Sunny"
+            )
+        }
+        let rainDays = daily.filter { $0.rainProbability >= 0.35 }.count
+        return TripWeatherContext(
+            minTemperatureF: daily.map(\.lowF).min() ?? low,
+            maxTemperatureF: daily.map(\.highF).max() ?? high,
+            dailyForecast: daily,
+            rainDays: rainDays,
+            heavyRainDays: daily.filter { $0.rainProbability >= 0.6 }.count,
+            snowDays: 0,
+            outdoorRainOverlapDays: rainDays,
+            maxDailyTemperatureSwing: daily.map(\.swingF).max() ?? 0,
+            uvRange: daily.map(\.uvIndex).max() ?? 0,
+            windRange: daily.map(\.windMph).max() ?? 0,
+            weatherSummary: "Test",
+            fetchedAt: start,
+            providerFetchedAt: start,
+            providerExpiresAt: calendar.date(byAdding: .hour, value: 1, to: start),
+            coverageStart: daily.first?.date,
+            coverageEnd: daily.last?.date,
+            forecastAvailableForWholeTrip: true,
+            forecastAvailableForPartialTrip: false,
+            isPreciseForecast: true,
+            source: .fixture,
+            fixtureID: "test",
+            alerts: [],
+            attribution: nil
+        )
+    }
+
+    // MARK: - Party sharing resolution
+
+    /// The one function `generateForParty`/`addCompanions`/`applyQuantities`
+    /// all ask instead of independently testing `sharedByDefault` membership.
+    @Test func sharingResolutionMatchesTodaysSharedByDefaultMembership() throws {
+        let rules = try SharedLibrary.rules()
+        let solo = TripParty.solo()
+        let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+        let ctx = context(destination: try destination("Chicago"), party: couple)
+
+        // Shared, singlePerParty (no explicit policy row falls to the default).
+        let firstAid = ConstraintResolver.sharingResolution(
+            for: "health.first_aid", rules: rules.party, context: ctx, party: couple
+        )
+        guard case .shared(let quantity, _) = firstAid else {
+            Issue.record("expected health.first_aid to resolve shared")
+            return
+        }
+        #expect(quantity == 1)
+
+        // Not in sharedByDefault → personal, regardless of party size.
+        #expect(ConstraintResolver.sharingResolution(
+            for: "miscellaneous.flashlight", rules: rules.party, context: ctx, party: couple
+        ) == .personal)
+        #expect(ConstraintResolver.sharingResolution(
+            for: "miscellaneous.flashlight", rules: rules.party, context: context(destination: try destination("Chicago"), party: solo), party: solo
+        ) == .personal)
+    }
+
+    /// `.personalOnly` must behave exactly like "not shared" — one draft per
+    /// traveler, real `travelerID`, `ownershipType == .personal` — never an
+    /// `ownershipType == .shared` draft with `travelerID == nil` produced by
+    /// falling through `applyQuantities`'s old shared-quantity branch. Tested
+    /// against a synthetic policy row so no `party.json` row is added; a real
+    /// per-traveler item (`toiletries.toothbrush`) stands in as the subject so
+    /// the assertion is about actual generated items, not the bare function.
+    private func rulesWithSyntheticPersonalOnly(for canonicalItemID: String = "toiletries.toothbrush") throws -> PackingRulesFile {
+        var rules = try SharedLibrary.rules()
+        rules.party.sharedByDefault.append(canonicalItemID)
+        rules.party.sharingPolicies[canonicalItemID] = SharingPolicyRule(policy: .personalOnly, per: nil, min: 1, value: 1)
+        return rules
+    }
+
+    @Test func personalOnlySoloProducesOneOwnedPersonalItem() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try rulesWithSyntheticPersonalOnly())
+        let items = engine.generate(context: context(destination: try destination("Chicago"), party: .solo()))
+        let matches = items.filter { $0.canonicalItemID == "toiletries.toothbrush" }
+        #expect(matches.count == 1)
+        #expect(matches.allSatisfy { $0.ownershipType == .personal && $0.travelerID != nil })
+    }
+
+    @Test func personalOnlyCoupleProducesOnePersonalRowPerTraveler() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try rulesWithSyntheticPersonalOnly())
+        let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+        let items = engine.generate(context: context(destination: try destination("Chicago"), party: couple))
+        let matches = items.filter { $0.canonicalItemID == "toiletries.toothbrush" }
+        #expect(matches.count == 2)
+        #expect(matches.allSatisfy { $0.ownershipType == .personal })
+        #expect(Set(matches.compactMap(\.travelerID)) == Set(couple.travelers.map(\.id)))
+    }
+
+    @Test func personalOnlyFamilyNeverProducesAnOwnerlessSharedDraft() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try rulesWithSyntheticPersonalOnly())
+        let family = TripParty(travelMode: .family, travelers: [
+            Traveler.primarySelf(),
+            Traveler(name: "Sam", role: .partner, ageGroup: .adult),
+            Traveler(name: "Emma", role: .child, ageGroup: .child)
+        ])
+        let items = engine.generate(context: context(destination: try destination("Chicago"), party: family))
+        let matches = items.filter { $0.canonicalItemID == "toiletries.toothbrush" }
+        #expect(matches.count == family.travelers.count)
+        // The exact defect this test exists to prevent: never travelerID == nil
+        // merely because a .personalOnly item fell through the old shared path.
+        #expect(matches.allSatisfy { $0.ownershipType != .shared && $0.travelerID != nil })
+    }
+
+    /// The pure-function boundary, so a future edit to `sharingResolution`
+    /// cannot silently reintroduce the fallthrough without failing here first.
+    @Test func sharingResolutionNeverReturnsSharedForPersonalOnlyPolicy() throws {
+        let rules = try rulesWithSyntheticPersonalOnly()
+        let result = ConstraintResolver.sharingResolution(
+            for: "toiletries.toothbrush", rules: rules.party,
+            context: context(destination: try destination("Chicago")), party: .solo()
+        )
+        #expect(result == .personal)
     }
 
     // MARK: - Dependencies

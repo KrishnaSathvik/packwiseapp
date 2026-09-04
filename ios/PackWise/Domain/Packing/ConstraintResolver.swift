@@ -110,3 +110,77 @@ enum ConstraintResolver {
             }
     }
 }
+
+extension ConstraintResolver {
+    /// Whether an item is shared across the party or stays personal, and if
+    /// shared, its resolved quantity and user-facing reason. The one place
+    /// `PackingEngine` asks this, replacing two independent
+    /// `sharedByDefault` membership checks and the free-standing
+    /// `sharedQuantity`/`sharedQuantityReason` pair.
+    enum SharingResolution: Hashable, Sendable {
+        case personal
+        case shared(quantity: Int, reason: String)
+
+        var isShared: Bool { if case .shared = self { true } else { false } }
+    }
+
+    static func sharingResolution(
+        for canonicalItemID: String,
+        rules: PartyRulesFile,
+        context: TripContext,
+        party: TripParty
+    ) -> SharingResolution {
+        guard rules.sharedByDefault.contains(canonicalItemID) else { return .personal }
+        let policy = rules.sharingPolicies[canonicalItemID]
+            ?? SharingPolicyRule(policy: .singlePerParty, per: nil, min: 1, value: 1)
+        // Required amendment: a `.personalOnly` item never reaches the
+        // shared-draft path at all — `generateForParty` calls `.isShared`,
+        // so this early return is what keeps such an item on the ordinary
+        // per-traveler personal path with a real `travelerID`, closing the
+        // fallthrough-to-ownerless-shared-draft bug the personalOnly
+        // contract tests guard. This is the fix, not a stub — do not remove
+        // it.
+        guard policy.policy != .personalOnly else { return .personal }
+        let quantity = sharedQuantity(policy, context: context, party: party)
+        let reason = sharedQuantityReason(canonicalItemID, quantity: quantity, context: context, party: party)
+        return .shared(quantity: quantity, reason: reason)
+    }
+
+    private static func sharedQuantity(_ rule: SharingPolicyRule, context: TripContext, party: TripParty) -> Int {
+        let minimum = rule.min ?? 1
+        let per = max(1, rule.per ?? 1)
+        switch rule.policy {
+        case .singlePerParty, .personalOnly:
+            return rule.value ?? 1
+        case .scaleByParty:
+            return max(minimum, Int((Double(party.travelers.count) / Double(per)).rounded(.up)))
+        case .scaleByDevices:
+            return max(minimum, Int((Double(max(1, party.adults.count)) / Double(per)).rounded(.up)))
+        case .scaleByDurationAndParty:
+            return max(minimum, Int((Double(party.travelers.count * context.durationDays) / Double(per)).rounded(.up)))
+        }
+    }
+
+    /// Moved verbatim from `PackingEngine.sharedQuantityReason`. Rendering
+    /// templated reason strings requires `rules.reasons.templates`, which
+    /// `ConstraintResolver` does not otherwise depend on — this stays a
+    /// plain-string fallback builder here, and `PackingEngine.applyQuantities`
+    /// re-renders this exact fallback shape through its own
+    /// `render(_:_:fallback:)` (umbrella special case + generic "N for the
+    /// group" case), preserving today's templated-string behavior without
+    /// giving `ConstraintResolver` a `PackingRulesFile` dependency it
+    /// doesn't otherwise need.
+    private static func sharedQuantityReason(_ canonical: String, quantity: Int, context: TripContext, party: TripParty) -> String {
+        if canonical == "essentials.umbrella_compact", let weather = context.weather, weather.rainDays > 0 {
+            // Templates can't pluralize, so the phrases arrive pre-built:
+            // never "1 days", never "1 umbrellas", and a couple is a group,
+            // not a "family".
+            let rainDaysPhrase = weather.rainDays == 1 ? "1 day" : "\(weather.rainDays) days"
+            let umbrellaPhrase = quantity == 1 ? "One umbrella" : "\(quantity) umbrellas"
+            return "Rain is expected on \(rainDaysPhrase). \(umbrellaPhrase) should cover your group — no need to pack one each."
+        }
+        return quantity == 1
+            ? "One for the group — not one per person."
+            : "\(quantity) for the group — not one per person."
+    }
+}

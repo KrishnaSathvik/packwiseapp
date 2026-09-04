@@ -147,7 +147,6 @@ struct PackingEngine: Sendable {
     ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
         var drops: ConstraintDrops = []
         let party = context.effectiveParty
-        let sharedIDs = Set(rules.party.sharedByDefault)
         // Weather and trip-wide activity signals are computed once, then split
         // into personal vs shared effects so rain does not become 4 umbrellas.
         // Activities are trip-scoped, so the trip-wide snapshot is compiled
@@ -169,7 +168,7 @@ struct PackingEngine: Sendable {
             var personal: [RuleSuggestion] = []
             for suggestion in collected.values {
                 if shouldSkip(suggestion.canonicalItemID, for: traveler) { continue }
-                if sharedIDs.contains(suggestion.canonicalItemID) {
+                if ConstraintResolver.sharingResolution(for: suggestion.canonicalItemID, rules: rules.party, context: context, party: party).isShared {
                     mergeSuggestion(suggestion, into: &sharedCollected)
                 } else {
                     personal.append(suggestion)
@@ -780,7 +779,6 @@ struct PackingEngine: Sendable {
         overrides: [RecommendationOverrideDraft]
     ) -> [PackingItemDraft] {
         var result = items
-        let sharedIDs = Set(rules.party.sharedByDefault)
         var presentShared = Set(items.filter { $0.ownershipType == .shared }.compactMap(\.canonicalItemID))
         var presentByGroup = Dictionary(
             grouping: items.compactMap { item in item.canonicalItemID.map { (substitutionGroup(item), $0) } },
@@ -792,7 +790,8 @@ struct PackingEngine: Sendable {
                   let catalogItem = catalog.item(id: canonical) else { continue }
             for companionID in catalogItem.companions {
                 guard let companion = catalog.item(id: companionID) else { continue }
-                let sharedCompanion = sharedIDs.contains(companionID) && !context.effectiveParty.usesSimpleList
+                let sharedCompanion = !context.effectiveParty.usesSimpleList
+                    && ConstraintResolver.sharingResolution(for: companionID, rules: rules.party, context: context, party: context.effectiveParty).isShared
                 let ownership: PackingOwnership = sharedCompanion ? .shared : item.ownershipType
                 let travelerID = sharedCompanion ? nil : item.travelerID
                 let group = "\(ownership.rawValue):\(travelerID?.uuidString ?? "shared")"
@@ -914,11 +913,24 @@ struct PackingEngine: Sendable {
             if item.isUserModified || item.isUserAdded { return copy }
 
             if item.ownershipType == .shared {
-                let policy = rules.party.sharingPolicies[canonical]
-                    ?? SharingPolicyRule(policy: .singlePerParty, per: nil, min: 1, value: 1)
-                if policy.policy != .personalOnly {
-                    copy.quantity = sharedQuantity(policy, context: context, party: party)
-                    copy.quantityReason = sharedQuantityReason(canonical, quantity: copy.quantity, context: context, party: party)
+                let resolution = ConstraintResolver.sharingResolution(for: canonical, rules: rules.party, context: context, party: party)
+                if case .shared(let quantity, let fallback) = resolution {
+                    copy.quantity = quantity
+                    if canonical == "essentials.umbrella_compact", let weather = context.weather, weather.rainDays > 0 {
+                        let rainDaysPhrase = weather.rainDays == 1 ? "1 day" : "\(weather.rainDays) days"
+                        let umbrellaPhrase = quantity == 1 ? "One umbrella" : "\(quantity) umbrellas"
+                        copy.quantityReason = render(
+                            "party.shared_umbrella",
+                            ["rainDaysPhrase": rainDaysPhrase, "umbrellaPhrase": umbrellaPhrase],
+                            fallback: fallback
+                        )
+                    } else {
+                        copy.quantityReason = render(
+                            "party.shared",
+                            ["quantity": "\(quantity)", "partySize": "\(party.travelers.count)"],
+                            fallback: fallback
+                        )
+                    }
                     return copy
                 }
             }
@@ -1005,42 +1017,6 @@ struct PackingEngine: Sendable {
         }
     }
 
-    private func sharedQuantity(_ rule: SharingPolicyRule, context: TripContext, party: TripParty) -> Int {
-        let minimum = rule.min ?? 1
-        let per = max(1, rule.per ?? 1)
-        switch rule.policy {
-        case .singlePerParty, .personalOnly:
-            return rule.value ?? 1
-        case .scaleByParty:
-            return max(minimum, Int((Double(party.travelers.count) / Double(per)).rounded(.up)))
-        case .scaleByDevices:
-            return max(minimum, Int((Double(max(1, party.adults.count)) / Double(per)).rounded(.up)))
-        case .scaleByDurationAndParty:
-            return max(minimum, Int((Double(party.travelers.count * context.durationDays) / Double(per)).rounded(.up)))
-        }
-    }
-
-    private func sharedQuantityReason(_ canonical: String, quantity: Int, context: TripContext, party: TripParty) -> String {
-        if canonical == "essentials.umbrella_compact", let weather = context.weather, weather.rainDays > 0 {
-            // Templates can't pluralize, so the phrases arrive pre-built:
-            // never "1 days", never "1 umbrellas", and a couple is a group,
-            // not a "family".
-            let rainDaysPhrase = weather.rainDays == 1 ? "1 day" : "\(weather.rainDays) days"
-            let umbrellaPhrase = quantity == 1 ? "One umbrella" : "\(quantity) umbrellas"
-            return render(
-                "party.shared_umbrella",
-                ["rainDaysPhrase": rainDaysPhrase, "umbrellaPhrase": umbrellaPhrase],
-                fallback: "Rain is expected on \(rainDaysPhrase). \(umbrellaPhrase) should cover your group — no need to pack one each."
-            )
-        }
-        return render(
-            "party.shared",
-            ["quantity": "\(quantity)", "partySize": "\(party.travelers.count)"],
-            fallback: quantity == 1
-                ? "One for the group — not one per person."
-                : "\(quantity) for the group — not one per person."
-        )
-    }
 
     private func activityReason(_ activity: String, destination: String) -> String {
         switch activity {
