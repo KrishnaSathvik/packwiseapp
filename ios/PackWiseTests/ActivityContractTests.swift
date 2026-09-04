@@ -399,4 +399,86 @@ struct ActivityContractTests {
         #expect(bottles.first?.isUserAdded == true)
         #expect(bottles.first?.displayName == "My filter bottle")
     }
+
+    // MARK: - Task 3: composition through capability coverage
+
+    /// Camping is not a trail signal. A camping-and-walking trip keeps the
+    /// ordinary walking shoes it would have had without Camping, and
+    /// suppresses nothing — the failure mode this guards is Camping quietly
+    /// claiming `PackingCapability.hiking` and deleting a normal traveler's
+    /// shoes.
+    @Test func campingAloneLeavesWalkingFootwearAlone() throws {
+        let engine = try makeEngine()
+        let context = try campingContext(activities: ["camping", "walking"])
+        let generation = engine.generateDetailed(context: context)
+        let generated = ids(generation.items)
+        #expect(generated.contains("footwear.walking_shoes"))
+        #expect(!generated.contains("footwear.hiking_shoes"))
+        #expect(!generation.coverageSuppressions.contains { $0.canonicalItemID == "footwear.walking_shoes" })
+
+        let snapshot = TripContextCompiler.compile(context, rules: try rules())
+        let coverage = CoverageContext(snapshot: snapshot, thresholds: try rules().weather.thresholds)
+        #expect(!CoverageResolver.needs(context: coverage).contains(.hiking))
+    }
+
+    /// The hiking capability is derived from `ActivityNeed.trailFootwear`, not
+    /// from the literal id `"hiking"`. Hiking declares that need, so the
+    /// Phase 4 suppression and its evidence are byte-identical to baseline.
+    @Test func trailFootwearCoverageIsDerivedFromTheNeedNotTheActivityString() throws {
+        let engine = try makeEngine()
+        let generation = engine.generateDetailed(context: try campingContext(activities: ["hiking", "walking"]))
+        let generated = ids(generation.items)
+        #expect(generated.contains("footwear.hiking_shoes"))
+        #expect(!generated.contains("footwear.walking_shoes"))
+
+        let suppression = try #require(generation.coverageSuppressions.first {
+            $0.canonicalItemID == "footwear.walking_shoes"
+        })
+        #expect(suppression.covered == [
+            CapabilityCoverage(capability: .everydayWalking, coveringItemID: "footwear.hiking_shoes")
+        ])
+
+        // The derivation, stated directly: the capability follows the need
+        // set, and the need set is what the contract table says it is.
+        #expect(ActivityContracts.capabilities(for: ActivityContracts.needs(for: ["hiking", "walking"]))
+            == [.hiking])
+        #expect(ActivityContracts.capabilities(for: ActivityContracts.needs(for: ["camping", "walking"]))
+            .isEmpty)
+    }
+
+    @Test func hikingPlusCampingIsOneComposedTripNotTwoChecklists() throws {
+        let engine = try makeEngine()
+        let items = engine.generateDetailed(context: try campingContext(activities: ["hiking", "camping"])).items
+        func count(_ id: String) -> Int { items.filter { $0.canonicalItemID == id }.count }
+        // `hydration` is declared by both contracts and yields exactly one row.
+        #expect(count("hydration.water_bottle") == 1)
+        // Exactly one `.hiking`-covered footwear item, sourced by Hiking alone
+        // — Camping neither adds a second pair nor is required for this one.
+        #expect(count("footwear.hiking_shoes") == 1)
+        #expect(count("activities.daypack") == 1)
+        #expect(count("health.blister_pads") == 1)
+        #expect(items.first { $0.canonicalItemID == "hydration.water_bottle" }?.quantity == 1)
+
+        // Composition is preserved but no longer double-sourced: the footwear
+        // result is identical with and without Camping on the same trip.
+        let hikingOnly = engine.generateDetailed(context: try campingContext(activities: ["hiking"])).items
+        func footwear(_ rows: [PackingItemDraft]) -> Set<String> {
+            Set(rows.compactMap(\.canonicalItemID).filter { $0.hasPrefix("footwear.") })
+        }
+        #expect(footwear(items) == footwear(hikingOnly))
+    }
+
+    /// Hiking's behavior must be unchanged by moving its item list out of
+    /// `activity-rules.json` and into its typed contract.
+    @Test func hikingOnlyBehaviorIsUnchangedByTheContractMigration() throws {
+        let engine = try makeEngine()
+        let items = engine.generate(context: try campingContext(activities: ["hiking"]))
+        #expect(ids(items).isSuperset(of: [
+            "activities.daypack", "footwear.hiking_shoes",
+            "health.blister_pads", "hydration.water_bottle"
+        ]))
+        for item in items where item.canonicalItemID == "activities.daypack" {
+            #expect(item.reasonCode == "activity.hiking")
+        }
+    }
 }

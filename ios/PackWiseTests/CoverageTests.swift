@@ -372,6 +372,24 @@ struct CoverageTests {
                 kept: ["footwear.hiking_shoes"],
                 suppressed: ["footwear.walking_shoes"]
             ),
+            // Phase 5: Camping declares no trail-footwear need, so it neither
+            // adds hiking shoes nor claims the hiking capability. Ordinary
+            // walking shoes survive a camping trip untouched.
+            CoverageCase(
+                name: "camping + walking",
+                context: context(destination: dest, type: .outdoor, activities: ["camping", "walking"]),
+                kept: ["footwear.walking_shoes"],
+                suppressed: []
+            ),
+            // Adding Camping to a hiking trip changes nothing about footwear:
+            // this row is identical to "hiking + walking" above, which is the
+            // point — the need is sourced by Hiking, never double-sourced.
+            CoverageCase(
+                name: "hiking + camping + walking",
+                context: context(destination: dest, type: .outdoor, activities: ["hiking", "camping", "walking"]),
+                kept: ["footwear.hiking_shoes"],
+                suppressed: ["footwear.walking_shoes"]
+            ),
             CoverageCase(
                 name: "running + hiking + walking",
                 context: context(destination: dest, type: .outdoor, activities: ["running", "hiking", "walking"]),

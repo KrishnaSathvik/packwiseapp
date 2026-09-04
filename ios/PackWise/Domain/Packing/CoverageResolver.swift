@@ -24,9 +24,15 @@ enum PackingCapability: String, CaseIterable, Sendable {
     case snowSportHands = "hand_protection.snow_sport"
 }
 
-/// The normalized context surface capability coverage is allowed to read.
+/// The normalized context surface the capability-coverage **and activity**
+/// families are allowed to read — one projection of the snapshot, shared, so
+/// neither family derives a second set of signals from raw `TripContext`.
 /// Weather signals and the seasonal fallback deliberately reproduce the
 /// pre-Phase-4 resolver semantics; Phase 6 owns weather interpretation.
+///
+/// The name is Phase 4's and is deliberately kept: renaming it would be
+/// cosmetic churn across every Phase 4 file, and is routed forward if a third
+/// family ever joins.
 struct CoverageContext: Hashable, Sendable {
     var tripType: TripType
     var activityIDs: Set<String>
@@ -148,9 +154,12 @@ enum CoverageResolver {
         if activities.contains("running") || context.contextChips.contains(.runWhileTraveling) {
             needs.insert(.running)
         }
-        if activities.contains("hiking") {
-            needs.insert(.hiking)
-        }
+        // Derived from the typed activity contract rather than the literal id
+        // `"hiking"`: the rule is that trail footwear implies the hiking
+        // capability, which generalizes to any contract that declares the
+        // need. Today Hiking is the only one that does, so this is
+        // behaviour-identical to the string test it replaces.
+        needs.formUnion(ActivityContracts.capabilities(for: ActivityContracts.needs(for: activities)))
         if context.tripType == .beach
             || !activities.isDisjoint(with: ["swimming", "beachDays", "snorkeling", "boatTrip"]) {
             needs.insert(.beach)
