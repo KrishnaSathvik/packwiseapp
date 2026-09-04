@@ -18,6 +18,7 @@
 - The cold-without-snow glove behavior must be decided and tested this phase, not left routed a third time (Phase 4 named it, Phase 5's closure routed it here explicitly).
 - `WeatherQuality` routing (Task 1) must be a zero-diff refactor: `.complete`, `.seasonalOnly`, and `.missing` reproduce today's output exactly before Task 2 changes `.partial`'s behavior.
 - `addSeasonal`'s existing gap-filling guard (`collected[id] == nil`) is the only safety mechanism a partial-forecast blend may rely on. Do not add a second overwrite-prevention check; if the guard is insufficient, that is a finding, not a new mechanism to invent silently.
+- Four guards, reviewed and required before this phase closes: (1) seasonal fallback fills only the uncovered remainder of a partial forecast, never overwriting or duplicating a precise-day item; (2) seasonal-remainder items keep `addSeasonal`'s own seasonal reason codes (`weather.seasonal_sun`, `weather.seasonal_layer`) and never take on a precise weather reason code that would imply day-level data nobody forecast — pinned by an explicit reason-code assertion in Task 2, not left for Phase 8's trace work; (3) precise-day and seasonal-remainder candidates compose through the one existing `collected`/`CoverageResolver` pipeline before final suppression, never as two independently-resolved checklists; (4) a cached forecast generates identically to the same data fresh (Task 6), while only a genuine fetch failure with no usable cache degrades to no-weather behavior — cached and missing are not the same case.
 - Existing green evidence is cited, not re-implemented: `CoverageTests.hotRainDropsShellKeepsUmbrella`, `coldRainKeepsShell`, `rainShellCoversWind`, `temperatureSwingKeepsOneLightLayer`, `winterLayeringSurvivesCoverage`, `skiGlovesCoverColdHandsWithoutAnIDPairRule`, `coldNonSkiTripNeedsColdHandsButNotSnowSportHands`, `skiIntentResolvesHandOverlapWithoutForecastWeather`; `WeatherChangeTests.partialForecastDoesNotCoverA30DayTrip`, `noWeatherStillGenerates`, `existingUserRainCoveragePreventsADuplicateProposal`, `completedTripsDoNotRefresh`; golden fixtures `11-couple-5d-rain` and `19-phoenix-5d-city-walking-hot`.
 - User authority is preserved: Not Needed stays Not Needed, manual quantity stays authoritative, user-added items survive, packed state survives, explicit owner/carrier survive. A new glove or seasonal-remainder candidate can never resurrect an explicitly rejected item.
 - Golden regressions include any clothing/footwear/quantity/coverage/constraint/ownership/carrier change outside the fixtures each task names. `report_engine_goldens.py --baseline-ref e958c07` runs after every task.
@@ -258,6 +259,15 @@ git commit -m "refactor: route weather generation through the existing WeatherQu
     // addSeasonal never overwrites: exactly one rain jacket, not a
     // seasonal-tier duplicate competing with the precise-tier one.
     #expect(generation.items.filter { $0.canonicalItemID == "clothing.rain_jacket" }.count == 1)
+    // Seasonal evidence must never masquerade as precise-forecast evidence:
+    // the uncovered remainder's items carry addSeasonal's existing seasonal
+    // reason code, not a precise weather code that implies day-level data
+    // nobody forecast. This is provenance, not UI prose — `addSeasonal`
+    // already renders "Seasonal sun is likely." for this exact code.
+    let sunscreenRow = try #require(generation.items.first { $0.canonicalItemID == "toiletries.sunscreen" })
+    #expect(sunscreenRow.reasonCode == "weather.seasonal_sun")
+    let sunglassesRow = try #require(generation.items.first { $0.canonicalItemID == "essentials.sunglasses" })
+    #expect(sunglassesRow.reasonCode == "weather.seasonal_sun")
 }
 
 /// The `.partial` branch calls `addSeasonal` unconditionally; `addSeasonal`
