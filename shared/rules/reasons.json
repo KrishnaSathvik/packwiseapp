@@ -2,6 +2,7 @@
   "templates": {
     "activity.beachDays": "Beach days are on your plans.",
     "activity.boatTrip": "You're planning a boat trip.",
+    "activity.camping": "You're camping on this trip.",
     "activity.generic": "Based on what you'll be doing.",
     "activity.hiking": "Hiking is on your plans.",
     "activity.museums": "Museum visits are on your plans.",

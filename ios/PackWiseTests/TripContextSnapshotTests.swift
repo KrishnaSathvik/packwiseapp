@@ -161,17 +161,21 @@ struct TripContextSnapshotTests {
         }
     }
 
-    @Test func campingIsHonestlyClassifiedUnknownLikeAnyOtherRulelessActivity() throws {
-        // Matches the published Phase 1 finding: camping has no rules.activities
-        // entry. The compiler does not special-case it — this is the exact
-        // "advertised input with no effect" pattern, and hiding it behind a
-        // hardcoded exception would be exactly what the Phase 1 plan forbade
-        // ("do not relabel a broken control as context-only to make the report
-        // green"). See docs/engine-audits/2026-09-03-engine-findings.md.
+    /// Phase 5 gives camping a real contract, so it joins the known
+    /// vocabulary. A genuinely unknown id must still degrade inertly — the
+    /// Phase 1 finding was closed by giving camping an effect, not by
+    /// special-casing the classifier.
+    @Test func campingIsKnownWhileGenuinelyUnknownActivitiesStayUnknown() throws {
         var context = baseContext()
-        context.activities = ["hiking", "camping"]
+        context.activities = ["hiking", "camping", "cosplayConvention"]
         let snapshot = TripContextCompiler.compile(context, rules: try rules())
-        #expect(snapshot.unknownActivityIDs == ["camping"])
+
+        #expect(snapshot.knownActivityIDs == ["hiking", "camping"])
+        #expect(snapshot.unknownActivityIDs == ["cosplayConvention"])
+        #expect(snapshot.diagnostics.contains(ContextDiagnostic(
+            field: "activities",
+            outcome: .unsupportedButSafe(reason: "cosplayConvention: no rule in the engine's activity vocabulary")
+        )))
     }
 
     @Test func notSureBagAppliesNoConstraint() throws {

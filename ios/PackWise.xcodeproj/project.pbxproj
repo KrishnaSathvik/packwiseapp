@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1C5F7C31D21DB29DB71F84AF /* ActivityContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6CB8F01C763206D9EA3FFC /* ActivityContracts.swift */; };
+		67BF207182FF53A751E699D7 /* ActivityContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92E64E84B070E4D2D6D5391 /* ActivityContractTests.swift */; };
 		040D9D6C87FE22095BCAE9FE /* GoldenEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E27BDF139EA12060F23F68 /* GoldenEngineTests.swift */; };
 		0B166F5B69F9A40904D8A584 /* CopyWarmthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B3C88021D1FC4408A8EF995 /* CopyWarmthTests.swift */; };
 		0B2F13F8BAE6AA985012F7AC /* CareQuantity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11EDFD2E14659115F91752CB /* CareQuantity.swift */; };
@@ -148,6 +150,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6E6CB8F01C763206D9EA3FFC /* ActivityContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityContracts.swift; sourceTree = "<group>"; };
+		E92E64E84B070E4D2D6D5391 /* ActivityContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityContractTests.swift; sourceTree = "<group>"; };
 		009E59948241C192C837B2C7 /* base.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = base.json; sourceTree = "<group>"; };
 		015867D7AAFB66AFAC31E37D /* RemoteContextIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteContextIntelligenceService.swift; sourceTree = "<group>"; };
 		026895DA8AD94D9E26C65186 /* travel-comfort.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "travel-comfort.json"; sourceTree = "<group>"; };
@@ -464,6 +468,7 @@
 		6FEF913E762E0098A9F12471 /* Packing */ = {
 			isa = PBXGroup;
 			children = (
+				6E6CB8F01C763206D9EA3FFC /* ActivityContracts.swift */,
 				11EDFD2E14659115F91752CB /* CareQuantity.swift */,
 				B55EC35C902E7A792FD006B6 /* Catalog.swift */,
 				6A0E8822DF70E9125BAF7BCF /* ClothingQuantity.swift */,
@@ -505,6 +510,7 @@
 		8A47DFD989F74EC5A9A4B4E3 /* PackWiseTests */ = {
 			isa = PBXGroup;
 			children = (
+				E92E64E84B070E4D2D6D5391 /* ActivityContractTests.swift */,
 				A19D6F8D79EB38C152DEA6F4 /* ClothingQuantityTests.swift */,
 				1C0849A86554DFBBE2314AAC /* ConstraintTests.swift */,
 				453CAF1B6D79899AE5FF8909 /* ContextIntelligenceGateTests.swift */,
@@ -869,6 +875,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C5F7C31D21DB29DB71F84AF /* ActivityContracts.swift in Sources */,
 				9A99E0FD6BB9530E6A13B2A9 /* AppDependencies.swift in Sources */,
 				EC3F86D0EAF75C79A2AD2C54 /* AppIntegrityProvider.swift in Sources */,
 				0B2F13F8BAE6AA985012F7AC /* CareQuantity.swift in Sources */,
@@ -933,6 +940,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				67BF207182FF53A751E699D7 /* ActivityContractTests.swift in Sources */,
 				2378744014C623FD843F0B79 /* ClothingQuantityTests.swift in Sources */,
 				75505C44F5798222CBCF13A3 /* ConstraintTests.swift in Sources */,
 				58092CC8619394C9498A3635 /* ContextIntelligenceGateTests.swift in Sources */,

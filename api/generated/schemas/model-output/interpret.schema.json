@@ -13,6 +13,7 @@
         "enum": [
           "beachDays",
           "boatTrip",
+          "camping",
           "hiking",
           "museums",
           "niceDinner",

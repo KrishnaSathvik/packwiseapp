@@ -2,6 +2,7 @@
   "all": [
     "activity.beachDays",
     "activity.boatTrip",
+    "activity.camping",
     "activity.generic",
     "activity.hiking",
     "activity.museums",
@@ -133,6 +134,7 @@
   "arguments": {
     "activity.beachDays": [],
     "activity.boatTrip": [],
+    "activity.camping": [],
     "activity.generic": [],
     "activity.hiking": [],
     "activity.museums": [],
