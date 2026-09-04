@@ -465,7 +465,7 @@ struct PackingEngine: Sendable {
             )
         }
 
-        addWeather(context: context, into: &collected)
+        addWeather(context: context, snapshot: snapshot, into: &collected)
 
         if context.bagType == .carryOn || context.bagType == .personalItem || context.transportation == .flight {
             add(
@@ -515,8 +515,15 @@ struct PackingEngine: Sendable {
         }
     }
 
-    private func addWeather(context: TripContext, into collected: inout [String: RuleSuggestion]) {
-        guard let weather = context.weather, weather.isPreciseForecast || !weather.dailyForecast.isEmpty else {
+    private func addWeather(context: TripContext, snapshot: TripContextSnapshot, into collected: inout [String: RuleSuggestion]) {
+        switch snapshot.weatherQuality {
+        case .missing, .seasonalOnly:
+            addSeasonal(context: context, into: &collected)
+            return
+        case .partial, .complete:
+            break
+        }
+        guard let weather = context.weather else {
             addSeasonal(context: context, into: &collected)
             return
         }

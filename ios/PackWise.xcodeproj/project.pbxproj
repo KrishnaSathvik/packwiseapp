@@ -123,6 +123,7 @@
 		C5AD4119C3EBE734CB5B7F99 /* ContextIntelligenceGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FC1FE12B8EBB60922B35CC /* ContextIntelligenceGate.swift */; };
 		C5FDD0FCCCE0D268AEF509B1 /* DebugAttestProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = E86E1F072718D3C623D2C52D /* DebugAttestProbe.swift */; };
 		CE41B2A0B05B0C312E57C154 /* CoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76504170E4729881CEE47E44 /* CoverageTests.swift */; };
+		FB8B022B55B17DC9794CBF48 /* WeatherNeedHardeningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F3C0EFD083F870AD79CD2 /* WeatherNeedHardeningTests.swift */; };
 		CED45D53779C19E6874BC000 /* PackingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FAC7020262230D765C5188A /* PackingEngine.swift */; };
 		D595B518D1CC16AC13E5DBA3 /* TripSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05D676F0AD83BC11FAB9D6B7 /* TripSetupView.swift */; };
 		DA67FFC642323E1F21418451 /* PackWisePrimitives.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1697CEA5933B892DFBA0BB45 /* PackWisePrimitives.swift */; };
@@ -212,6 +213,7 @@
 		704F93609DC125065D64AA4D /* BusinessTrip3Day.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = BusinessTrip3Day.json; sourceTree = "<group>"; };
 		763DDDC34F0A7FB605AD983C /* PackingMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingMemory.swift; sourceTree = "<group>"; };
 		76504170E4729881CEE47E44 /* CoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverageTests.swift; sourceTree = "<group>"; };
+		B23F3C0EFD083F870AD79CD2 /* WeatherNeedHardeningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherNeedHardeningTests.swift; sourceTree = "<group>"; };
 		769A9A7D41136A31F7347658 /* WeatherStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherStripView.swift; sourceTree = "<group>"; };
 		76C3410DE2AE6F0AC7A445CB /* 07-chicago-5d-business-checked.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "07-chicago-5d-business-checked.json"; sourceTree = "<group>"; };
 		7AF7D042F392558AC4913F2D /* WeatherKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WeatherKit.framework; path = System/Library/Frameworks/WeatherKit.framework; sourceTree = SDKROOT; };
@@ -527,6 +529,7 @@
 				F1CF1C942A8267114C19350B /* TripContextSnapshotTests.swift */,
 				A8D8E37093BBD8239F626DCC /* WeatherChangeTests.swift */,
 				A8672F58A94DB708E98B9C4B /* WeatherNormalizationTests.swift */,
+				B23F3C0EFD083F870AD79CD2 /* WeatherNeedHardeningTests.swift */,
 				0E86FA48F852F85AF4C6FA1B /* Goldens */,
 			);
 			path = PackWiseTests;
@@ -957,6 +960,7 @@
 				B07750D23CC323DD86689C63 /* TripContextSnapshotTests.swift in Sources */,
 				6045ABD7F124AAF586080F8F /* WeatherChangeTests.swift in Sources */,
 				2DFF425EC229FB2F7D42CF15 /* WeatherNormalizationTests.swift in Sources */,
+				FB8B022B55B17DC9794CBF48 /* WeatherNeedHardeningTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

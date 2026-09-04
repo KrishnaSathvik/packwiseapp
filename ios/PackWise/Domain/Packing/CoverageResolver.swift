@@ -50,26 +50,31 @@ struct CoverageContext: Hashable, Sendable {
         party = snapshot.party
 
         let outdoor = !activityIDs.isDisjoint(with: ["hiking", "sightseeing", "walking", "running", "beachDays"])
-        if let weather = snapshot.weather,
-           weather.isPreciseForecast || !weather.dailyForecast.isEmpty {
+        let month = Calendar.current.component(.month, from: snapshot.startDate)
+        let latitude = snapshot.destination.latitude
+        let northWinter = latitude >= 0 && [12, 1, 2].contains(month)
+        let southWinter = latitude < 0 && [6, 7, 8].contains(month)
+        let seasonalWarmthEligible = (northWinter || southWinter) && abs(latitude) > 30
+
+        switch snapshot.weatherQuality {
+        case .complete, .partial:
+            // weatherQuality is derived from snapshot.weather, so a non-nil value
+            // here is guaranteed by construction (TripContextSnapshot.swift:201).
+            let forecast = snapshot.weather ?? .seasonal()
             weatherSignals = WeatherSignalExtractor.extract(
-                weather: weather,
-                thresholds: thresholds,
-                outdoorActivities: outdoor,
-                tripDays: snapshot.durationDays
+                weather: forecast, thresholds: thresholds,
+                outdoorActivities: outdoor, tripDays: snapshot.durationDays
             ).signals
             hasForecastWeather = true
-            usesColdMinimumHeavyWarmth = weather.minTemperatureF <= thresholds.coldMaxF
+            usesColdMinimumHeavyWarmth = forecast.minTemperatureF <= thresholds.coldMaxF
+            // Task 1: identical to today — a complete forecast never falls back.
+            // Task 2 widens this to true for `.partial`.
             usesSeasonalWarmthFallback = false
-        } else {
+        case .seasonalOnly, .missing:
             weatherSignals = []
             hasForecastWeather = false
             usesColdMinimumHeavyWarmth = false
-            let month = Calendar.current.component(.month, from: snapshot.startDate)
-            let latitude = snapshot.destination.latitude
-            let northWinter = latitude >= 0 && [12, 1, 2].contains(month)
-            let southWinter = latitude < 0 && [6, 7, 8].contains(month)
-            usesSeasonalWarmthFallback = (northWinter || southWinter) && abs(latitude) > 30
+            usesSeasonalWarmthFallback = seasonalWarmthEligible
         }
     }
 }
