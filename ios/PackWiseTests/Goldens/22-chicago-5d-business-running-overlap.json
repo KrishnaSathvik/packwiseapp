@@ -77,7 +77,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 2,
-      "quantityReason" : "2 based on a 5-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 2,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "2 for 5 wear days.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -113,7 +126,19 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 1,
-      "quantityReason" : "",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 1,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "1 sleep set with repeat wear.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -131,7 +156,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 6,
-      "quantityReason" : "6 based on a 5-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 6,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "6 for 5 wear days.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -149,6 +187,19 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 5,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 1,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 5,
+        "requiredUses" : 4,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
       "quantityReason" : "Why 5 t-shirts? You're traveling for 5 days.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
@@ -167,7 +218,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 6,
-      "quantityReason" : "6 based on a 5-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 6,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "6 for 5 wear days.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -185,7 +249,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 2,
-      "quantityReason" : "2 based on a 5-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "selectedActivityEstimate",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.workout",
+        "quantity" : 2,
+        "requiredUses" : 2,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "2 for the workout plan.",
       "reason" : "You plan to run.",
       "reasonArguments" : {
         "destination" : "Chicago"
@@ -203,7 +280,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 2,
-      "quantityReason" : "2 based on a 5-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "selectedActivityEstimate",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.workout",
+        "quantity" : 2,
+        "requiredUses" : 2,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "2 for the workout plan.",
       "reason" : "You plan to run.",
       "reasonArguments" : {
         "destination" : "Chicago"

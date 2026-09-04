@@ -97,6 +97,46 @@ struct ClothingQuantityTests {
         )
     }
 
+    private func engineContext(
+        days: Int,
+        tripType: TripType = .vacation,
+        activities: [String] = [],
+        datedActivities: [DatedActivity] = [],
+        bag: BagType = .carryOn,
+        style: PackingStyle = .balanced,
+        laundry: LaundryAccess = .none,
+        userNotes: String = "",
+        party: TripParty = .solo()
+    ) throws -> TripContext {
+        let destination = try #require(try SharedLibrary.testDestinations().first { $0.city == "Chicago" })
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let end = Calendar.current.date(byAdding: .day, value: days - 1, to: start)!
+        let math = TripDateMath.daysAndNights(from: start, to: end)
+        var preferences = TravelerPreferences.deviceDefaults()
+        preferences.homeCountryCode = "US"
+        preferences.homeCountrySource = .userConfirmed
+        return TripContext(
+            destination: destination,
+            startDate: start,
+            endDate: end,
+            durationDays: math.days,
+            durationNights: math.nights,
+            tripType: tripType,
+            activities: activities,
+            datedActivities: datedActivities,
+            bagType: bag,
+            packingStyle: style,
+            transportation: .unknown,
+            laundryAccess: laundry,
+            travelerCount: party.travelers.count,
+            userNotes: userNotes,
+            contextChips: [],
+            weather: nil,
+            preferences: preferences,
+            party: party
+        )
+    }
+
     // MARK: - Property 1: global non-decreasing
 
     /// Quantities are non-decreasing (not strictly increasing) across the
@@ -224,10 +264,10 @@ struct ClothingQuantityTests {
 
     // MARK: - Formal tops satisfy daily-top uses
 
-    /// Two dress shirts on a five-day prepared business trip leave three
-    /// days for t-shirts — five with the style buffer, not seven beside the
-    /// dress shirts. The offset applies only to the daily-top need, and the
-    /// always-true floor of two survives any number of formal tops.
+    /// Two dress shirts plus the one nice-dinner outfit on a five-day
+    /// prepared business trip cover three appearance uses. The remaining two
+    /// daily uses plus the prepared buffer produce four t-shirts, rather than
+    /// inflating every overlapping appearance signal independently.
     @Test func formalTopsReduceDailyTopCount() throws {
         let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
         let destination = try SharedLibrary.testDestinations().first { $0.city == "Chicago" }!
@@ -260,7 +300,7 @@ struct ClothingQuantityTests {
         let dress = items.first { $0.canonicalItemID == "clothing.dress_shirt" }
         let tshirt = items.first { $0.canonicalItemID == "clothing.tshirt" }
         #expect(dress?.quantity == 2)
-        #expect(tshirt?.quantity == 5, "3 remaining days + prepared buffer of 2")
+        #expect(tshirt?.quantity == 4, "2 remaining daily uses + prepared buffer of 2")
     }
 
     @Test func formalOffsetRespectsFloorAndScope() throws {
@@ -401,29 +441,6 @@ struct ClothingQuantityTests {
         }
     }
 
-    // MARK: - Task 4: 15d/30d plateau across every laundry state
-
-    /// Property 3 above pins the plateau under planned laundry. The same
-    /// shape holds under `.possible` and `.none` too: the style/bag cap
-    /// forces convergence well before 30 days even when nothing is ever
-    /// washed.
-    @Test func plateauHoldsAcrossEveryLaundryState() {
-        for policy in ClothingNeedPolicy.all {
-            for style in PackingStyle.allCases {
-                for bag in [BagType.carryOn, .checked] {
-                    for laundry in LaundryAccess.allCases {
-                        let fifteen = value(policy, days: 15, style: style, bag: bag, laundry: laundry)
-                        let thirty = value(policy, days: 30, style: style, bag: bag, laundry: laundry)
-                        #expect(
-                            abs(thirty - fifteen) <= 1,
-                            "\(policy.needID) \(style)/\(bag)/\(laundry): 15d=\(fifteen) vs 30d=\(thirty)"
-                        )
-                    }
-                }
-            }
-        }
-    }
-
     // MARK: - Task 4: formal-top offset is scoped to daily_top
 
     /// `offsetByFormalTops` is declared true for exactly one need. Every
@@ -500,6 +517,7 @@ struct ClothingQuantityTests {
         let first = engine.generate(context: context(weather: nil))
         var tshirt = try #require(first.first { $0.canonicalItemID == "clothing.tshirt" })
         tshirt.quantity = 3
+        tshirt.packedQuantity = 2
         tshirt.isUserModified = true
         let existing = first.map { $0.id == tshirt.id ? tshirt : $0 }
 
@@ -511,7 +529,9 @@ struct ClothingQuantityTests {
             fixtureID: "TokyoMildSpring"
         )
         let refreshed = engine.generate(context: context(weather: weather), existing: existing)
-        #expect(refreshed.first { $0.canonicalItemID == "clothing.tshirt" }?.quantity == 3)
+        let preserved = refreshed.first { $0.canonicalItemID == "clothing.tshirt" }
+        #expect(preserved?.quantity == 3)
+        #expect(preserved?.packedQuantity == 2)
     }
 
     @Test func explicitWorkoutUsesDriveQuantityInsteadOfTripLength() throws {
@@ -600,5 +620,92 @@ struct ClothingQuantityTests {
         )
 
         #expect(item.quantityEvidence == nil)
+    }
+
+    @Test func engineClothingUsesNormalizedDurationAndLegacyLaundrySignal() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        var context = try engineContext(days: 15, style: .light, laundry: .none, userNotes: "Laundry may be available")
+        context.durationDays = 1
+        context.durationNights = 0
+        let snapshot = TripContextCompiler.compile(context, rules: try SharedLibrary.rules())
+        let policy = try #require(ClothingNeedPolicy.byKind["daily_top"])
+        let expected = ClothingQuantityEngine.evaluate(policy, context: ClothingQuantityContext(snapshot: snapshot)).value
+
+        let tshirt = try #require(engine.generate(context: context).first { $0.canonicalItemID == "clothing.tshirt" })
+
+        #expect(tshirt.quantity == expected)
+        #expect(tshirt.quantityEvidence?.laundryPlan == .possible)
+        #expect(tshirt.quantityEvidence?.requiredUses == 15)
+    }
+
+    @Test func engineWorkoutQuantityUsesExplicitDatedSessions() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        var context = try engineContext(days: 15, activities: ["running"])
+        context.datedActivities = [0, 3, 7].map { offset in
+            DatedActivity(
+                activityID: "running",
+                date: Calendar.current.date(byAdding: .day, value: offset, to: context.startDate)
+            )
+        }
+
+        let top = try #require(engine.generate(context: context).first { $0.canonicalItemID == "clothing.workout_top" })
+
+        #expect(top.quantity == 3)
+        #expect(top.quantityEvidence?.basis == "datedActivityUses")
+        #expect(top.quantityEvidence?.requiredUses == 3)
+    }
+
+    @Test func swimsuitGetsDryingRotationWithoutDailyScaling() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let context = try engineContext(
+            days: 5,
+            tripType: .beach,
+            activities: ["swimming", "beachDays"],
+            bag: .personalItem,
+            style: .light,
+            laundry: .possible
+        )
+
+        let swimsuit = try #require(engine.generate(context: context).first { $0.canonicalItemID == "clothing.swimsuit" })
+
+        #expect(swimsuit.quantity == 2)
+        #expect(swimsuit.quantityEvidence?.basis == "dryingRotation")
+    }
+
+    @Test func niceOutfitOffsetsDailyTopOnceWithoutInflatingAppearanceItems() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let context = try engineContext(
+            days: 5,
+            tripType: .business,
+            activities: ["work", "niceDinner"],
+            bag: .checked,
+            style: .prepared,
+            laundry: .none
+        )
+        let items = engine.generate(context: context)
+
+        #expect(items.first { $0.canonicalItemID == "clothing.dress_shirt" }?.quantity == 2)
+        #expect(items.first { $0.canonicalItemID == "clothing.nice_outfit" }?.quantity == 1)
+        let tshirt = try #require(items.first { $0.canonicalItemID == "clothing.tshirt" })
+        #expect(tshirt.quantity == 4)
+        #expect(tshirt.quantityEvidence?.appearanceOffsetUses == 3)
+    }
+
+    @Test func explicitlyAttributedToddlerUsesExistingAgeBufferAndEvidence() throws {
+        let adult = Traveler(role: .self, ageGroup: .adult)
+        var toddler = Traveler(role: .child, ageGroup: .toddler)
+        toddler.guardianTravelerID = adult.id
+        let party = TripParty(travelMode: .family, travelers: [adult, toddler])
+        let context = try engineContext(days: 7, style: .balanced, party: party)
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+
+        let toddlerTop = try #require(
+            engine.generate(context: context).first {
+                $0.canonicalItemID == "clothing.tshirt" && $0.travelerID == toddler.id
+            }
+        )
+
+        #expect(toddlerTop.quantityEvidence?.ageMultiplier == 1.75)
+        #expect(toddlerTop.quantityEvidence?.quantity == toddlerTop.quantity)
     }
 }

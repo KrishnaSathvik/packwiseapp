@@ -125,7 +125,7 @@ struct GoldenEngineTests {
     /// The schema carries stable evidence beyond the rendered reason string:
     /// who is on the hook to carry an item (distinct from who owns it), and
     /// the structured arguments the reason template was filled with.
-    @Test func goldenSchemaCapturesCarrierAndReasonArguments() throws {
+    @Test func goldenSchemaCapturesCarrierReasonsAndClothingQuantityEvidence() throws {
         let output = try renderFixture(id: "11-couple-5d-rain")
         // Fixture 11 is a couple trip where every personal item is
         // self-carried; sorted-first non-shared item is the partner's
@@ -136,6 +136,59 @@ struct GoldenEngineTests {
         #expect(firstOwned.owner == "partner")
         #expect(firstOwned.carrier == "partner")
         #expect(output.items.contains { !$0.reasonArguments.isEmpty })
+        #expect(output.items.contains { $0.category == "clothing" && $0.quantityEvidence != nil })
+    }
+
+    @Test func phase3RequiredFixturesHoldClothingQuantityContracts() throws {
+        func item(_ id: String, owner: String = "primary", in output: GoldenOutput) throws -> GoldenItem {
+            try #require(output.items.first { $0.owner == owner && $0.canonicalItemID == id })
+        }
+
+        let planned15 = try renderFixture(id: "02b-tokyo-15d-light-laundry-planned")
+        let none15 = try renderFixture(id: "03-tokyo-15d-light-laundry-none")
+        let planned30 = try renderFixture(id: "05-tokyo-30d-light-laundry-planned")
+        for id in ["clothing.pants", "clothing.sleepwear", "clothing.socks", "clothing.tshirt", "clothing.underwear"] {
+            let fifteen = try item(id, in: planned15)
+            let thirty = try item(id, in: planned30)
+            let noLaundry = try item(id, in: none15)
+            #expect(abs(thirty.quantity - fifteen.quantity) <= 1, "\(id) must plateau once the planned wash cycle dominates")
+            #expect(fifteen.quantity <= noLaundry.quantity, "\(id) planned laundry must not exceed no laundry")
+            #expect(fifteen.quantityEvidence?.laundryPlan == .planned)
+            if id != "clothing.sleepwear" {
+                #expect(fifteen.quantityEvidence?.laundryReduced == true)
+            }
+        }
+
+        let longPlanned = try renderFixture(id: "18-reykjavik-64d-roadtrip-camping-seasonal")
+        #expect(try item("clothing.underwear", in: longPlanned).quantity == 8)
+        #expect(try item("clothing.tshirt", in: longPlanned).quantity == 7)
+
+        let oneDay = try renderFixture(id: "10-one-day-trip")
+        #expect(try item("clothing.underwear", in: oneDay).quantity == 2)
+        #expect(try item("clothing.tshirt", in: oneDay).quantity == 2)
+
+        let miami = try renderFixture(id: "06-miami-5d-beach-personal-item")
+        let swimsuit = try item("clothing.swimsuit", in: miami)
+        #expect(swimsuit.quantity == 2)
+        #expect(swimsuit.quantityEvidence?.basis == "dryingRotation")
+
+        let chicago = try renderFixture(id: "07-chicago-5d-business-checked")
+        let businessTop = try item("clothing.tshirt", in: chicago)
+        #expect(businessTop.quantity == 4)
+        #expect(businessTop.quantityEvidence?.appearanceOffsetUses == 3)
+
+        let runningBusiness = try renderFixture(id: "22-chicago-5d-business-running-overlap")
+        #expect(try item("clothing.workout_top", in: runningBusiness).quantity == 2)
+        #expect(try item("clothing.workout_bottom", in: runningBusiness).quantity == 2)
+
+        let family = try renderFixture(id: "12-family-toddler-7d-seasonal")
+        #expect(try item("clothing.tshirt", owner: "child", in: family).quantityEvidence?.ageMultiplier == 1.75)
+
+        let manual = try renderFixture(id: "14-manual-quantity-survives-refresh")
+        let manualTop = try item("clothing.tshirt", in: manual)
+        #expect(manualTop.quantity == 3)
+        #expect(manualTop.userModified == true)
+        #expect(manualTop.quantityEvidence == nil)
     }
 
     /// Full-ledger proof that `TripContextCompiler` compiles every real,
@@ -334,6 +387,7 @@ struct GoldenEngineTests {
         var reasonArguments: [String: String]
         var reason: String
         var quantityReason: String
+        var quantityEvidence: ClothingQuantityEvidence?
         var userModified: Bool?
     }
 
@@ -408,6 +462,7 @@ struct GoldenEngineTests {
                         reasonArguments: item.reasonArguments,
                         reason: item.reason,
                         quantityReason: item.quantityReason,
+                        quantityEvidence: item.quantityEvidence,
                         userModified: item.isUserModified ? true : nil
                     )
                 }

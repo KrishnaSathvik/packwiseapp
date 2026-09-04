@@ -40,7 +40,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 4,
-      "quantityReason" : "4 based on a 64-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "planned",
+        "laundryReduced" : true,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 4,
+        "requiredUses" : 64,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "4 for 64 wear days. Laundry reduces the rotation.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -58,7 +71,19 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 2,
-      "quantityReason" : "2 based on a 64-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "planned",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 2,
+        "requiredUses" : 64,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "2 sleep sets with repeat wear.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -76,7 +101,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 8,
-      "quantityReason" : "8 based on a 64-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "planned",
+        "laundryReduced" : true,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 8,
+        "requiredUses" : 64,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "8 for 64 wear days. Laundry reduces the rotation.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -94,7 +132,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 7,
-      "quantityReason" : "Why 7 t-shirts? You're traveling for 64 days, and you indicated laundry access.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "planned",
+        "laundryReduced" : true,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 7,
+        "requiredUses" : 64,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
+      "quantityReason" : "Why 7 t-shirts? You're traveling for 64 days, with laundry in the plan.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -112,7 +163,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 8,
-      "quantityReason" : "8 based on a 64-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "planned",
+        "laundryReduced" : true,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 8,
+        "requiredUses" : 64,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "8 for 64 wear days. Laundry reduces the rotation.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 

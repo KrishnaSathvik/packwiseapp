@@ -113,7 +113,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 3,
-      "quantityReason" : "3 based on a 6-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 3,
+        "requiredUses" : 6,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "3 for 6 wear days.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -149,7 +162,19 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 2,
-      "quantityReason" : "2 based on a 6-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 2,
+        "requiredUses" : 6,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "2 sleep sets with repeat wear.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -167,7 +192,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 7,
-      "quantityReason" : "7 based on a 6-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 7,
+        "requiredUses" : 6,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "7 for 6 wear days.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 
@@ -221,6 +259,19 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 6,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 6,
+        "requiredUses" : 6,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
       "quantityReason" : "Why 6 t-shirts? You're traveling for 6 days.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
@@ -239,7 +290,20 @@
       "importance" : "normal",
       "owner" : "primary",
       "quantity" : 7,
-      "quantityReason" : "7 based on a 6-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 7,
+        "requiredUses" : 6,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "7 for 6 wear days.",
       "reason" : "The basics you'll wear every day.",
       "reasonArguments" : {
 

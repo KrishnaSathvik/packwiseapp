@@ -36,16 +36,14 @@ struct PackingEngine: Sendable {
         existing: [PackingItemDraft] = [],
         overrides: [RecommendationOverrideDraft] = []
     ) -> EngineGeneration {
-        // Compiled once, purely for validation/diagnostics — no decision
-        // logic below this line reads from the snapshot. See the Phase 2
-        // plan's migration rule: nothing inside generateSimple/
-        // generateForParty/resolve may reference TripContextSnapshot in
-        // this phase.
+        // Compiled once. Phase 3 passes the normalized snapshot only to the
+        // clothing quantity family; every other decision family remains on
+        // raw TripContext until its own hardening phase.
         let snapshot = TripContextCompiler.compile(context, rules: rules)
         let party = context.effectiveParty
         let generated = party.usesSimpleList
-            ? generateSimple(context: context, existing: existing, overrides: overrides)
-            : generateForParty(context: context, existing: existing, overrides: overrides)
+            ? generateSimple(context: context, snapshot: snapshot, existing: existing, overrides: overrides)
+            : generateForParty(context: context, snapshot: snapshot, existing: existing, overrides: overrides)
         return EngineGeneration(
             items: generated.items.map { PartyInvariants.normalize($0, in: party) },
             coverageSuppressions: generated.suppressions,
@@ -109,6 +107,7 @@ struct PackingEngine: Sendable {
 
     private func generateSimple(
         context: TripContext,
+        snapshot: TripContextSnapshot,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
     ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
@@ -126,11 +125,12 @@ struct PackingEngine: Sendable {
         )
         let (covered, suppressions) = applyCoverage(resolved, context: context)
         let completed = addCompanions(covered, context: context, overrides: overrides)
-        return (applyQuantities(completed, context: context), suppressions, drops)
+        return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops)
     }
 
     private func generateForParty(
         context: TripContext,
+        snapshot: TripContextSnapshot,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
     ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
@@ -186,7 +186,7 @@ struct PackingEngine: Sendable {
         result = result.filter { seen.insert($0.id).inserted }
         let (covered, suppressions) = applyCoverage(result, context: context)
         let completed = addCompanions(covered, context: context, overrides: overrides)
-        return (applyQuantities(completed, context: context), suppressions, drops)
+        return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops)
     }
 
     private func tripWideContext(_ context: TripContext) -> TripContext {
@@ -803,23 +803,29 @@ struct PackingEngine: Sendable {
         "\(item.ownershipType.rawValue):\(item.travelerID?.uuidString ?? "shared")"
     }
 
-    private func applyQuantities(_ items: [PackingItemDraft], context: TripContext) -> [PackingItemDraft] {
+    private func applyQuantities(
+        _ items: [PackingItemDraft],
+        context: TripContext,
+        snapshot: TripContextSnapshot
+    ) -> [PackingItemDraft] {
         let engine = QuantityEngine(policies: rules.quantities.policies, reasons: rules.reasons)
         let clothingEngine = ClothingQuantityEngine(reasons: rules.reasons)
-        let party = context.effectiveParty
+        let clothingContext = ClothingQuantityContext(snapshot: snapshot)
+        let party = snapshot.party
 
-        // Formal tops satisfy daily-top uses, so their counts resolve first,
-        // per traveler: two dress shirts on a five-day business trip leave
-        // three days for t-shirts, not seven t-shirts beside them.
-        var formalTopUnits: [String: Int] = [:]
+        // Appearance garments satisfy daily-top uses. Resolve each canonical
+        // garment once per owner group; overlapping source signals never add
+        // phantom units.
+        let outfitIDs: Set<String> = ["clothing.formal_outfit", "clothing.nice_outfit"]
+        var appearanceUnits: [String: Int] = [:]
         for item in items {
             guard let canonical = item.canonicalItemID,
                   let catalogItem = catalog.item(id: canonical),
-                  catalogItem.quantityKind == "formal_top" else { continue }
+                  catalogItem.quantityKind == "formal_top" || outfitIDs.contains(canonical) else { continue }
             let value = item.isUserModified
                 ? item.quantity
-                : engine.quantity(kind: "formal_top", context: context, itemName: catalogItem.displayName).value
-            formalTopUnits[substitutionGroup(item), default: 0] += value
+                : engine.quantity(kind: catalogItem.quantityKind, context: context, itemName: catalogItem.displayName).value
+            appearanceUnits[substitutionGroup(item), default: 0] += value
         }
         return items.map { item in
             var copy = item
@@ -865,24 +871,29 @@ struct PackingEngine: Sendable {
             let multipliers = traveler.flatMap { rules.party.ageGroups[$0.ageGroup.rawValue]?.quantityMultipliers } ?? [:]
             // The clothing family runs on the needs-based V2 model; every
             // other kind stays on the legacy policy file untouched.
-            let result = ClothingQuantityEngine.handles(catalogItem.quantityKind)
-                ? clothingEngine.quantity(
+            if ClothingQuantityEngine.handles(catalogItem.quantityKind) {
+                let result = clothingEngine.quantity(
                     kind: catalogItem.quantityKind,
-                    context: context,
+                    context: clothingContext,
                     itemName: catalogItem.displayName,
                     traveler: traveler,
                     multipliers: multipliers,
-                    formalTopUnits: formalTopUnits[substitutionGroup(item)] ?? 0
+                    appearanceUnits: appearanceUnits[substitutionGroup(item)] ?? 0
                 )
-                : engine.quantity(
+                copy.quantity = result.value
+                copy.quantityReason = result.reason
+                copy.quantityEvidence = result.evidence
+            } else {
+                let result = engine.quantity(
                     kind: catalogItem.quantityKind,
                     context: context,
                     itemName: catalogItem.displayName,
                     traveler: traveler,
                     multipliers: multipliers
                 )
-            copy.quantity = result.value
-            copy.quantityReason = result.reason
+                copy.quantity = result.value
+                copy.quantityReason = result.reason
+            }
             // Diapers satisfy most underwear uses — partial coverage, keyed
             // to the explicit diapers need and never the age alone, and a
             // few pairs stay for the potty-training case.
@@ -897,6 +908,11 @@ struct PackingEngine: Sendable {
                     ["quantity": "\(copy.quantity)", "name": traveler.displayName],
                     fallback: "\(traveler.displayName) is mostly in diapers — \(copy.quantity) pairs as backup."
                 )
+                if var evidence = copy.quantityEvidence {
+                    evidence.basis = "diaperedBackup"
+                    evidence.quantity = copy.quantity
+                    copy.quantityEvidence = evidence
+                }
             }
             return copy
         }

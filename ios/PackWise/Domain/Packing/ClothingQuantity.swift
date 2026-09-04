@@ -275,48 +275,66 @@ struct ClothingQuantityEngine: Sendable {
         ClothingNeedPolicy.byKind[kind] != nil
     }
 
-    /// Same contract as `QuantityEngine.quantity`, including age-group
-    /// multiplier handling, so `PackingEngine` can route by kind and nothing
-    /// downstream learns which engine produced the number.
     func quantity(
         kind: String,
-        context: TripContext,
+        context: ClothingQuantityContext,
         itemName: String,
         traveler: Traveler? = nil,
         multipliers: [String: Double] = [:],
-        formalTopUnits: Int = 0
-    ) -> (value: Int, reason: String) {
-        guard let policy = ClothingNeedPolicy.byKind[kind] else {
-            return (1, "")
-        }
-        var value = Self.compute(policy, context: context, formalTopUnits: formalTopUnits)
-        if let traveler, let multiplier = multipliers[kind], multiplier > 1 {
-            value = max(1, Int((Double(value) * multiplier).rounded(.up)))
-            let reason = ReasonRenderer.render(
+        appearanceUnits: Int = 0
+    ) -> ClothingQuantityResult {
+        precondition(ClothingNeedPolicy.byKind[kind] != nil, "Unsupported clothing quantity kind: \(kind)")
+        let policy = ClothingNeedPolicy.byKind[kind]!
+        let multiplier = multipliers[kind]
+        var result = Self.evaluate(
+            policy,
+            context: context,
+            appearanceUnits: appearanceUnits,
+            ageMultiplier: multiplier
+        )
+        if let traveler, result.evidence.ageMultiplier != nil {
+            result.reason = ReasonRenderer.render(
                 code: "quantity.age_extra",
                 arguments: [
-                    "quantity": "\(value)",
+                    "quantity": "\(result.value)",
                     "item": itemName.lowercased(),
                     "name": traveler.displayName,
-                    "days": "\(context.durationDays)",
+                    "days": "\(context.days)",
                     "ageGroup": traveler.ageGroup.title.lowercased()
                 ],
                 templates: reasons.templates,
-                fallback: "\(value) \(itemName.lowercased()) for \(traveler.displayName). \(context.durationDays) travel days plus extra changes for a \(traveler.ageGroup.title.lowercased())."
+                fallback: "\(result.value) \(itemName.lowercased()) for \(traveler.displayName), including the supported \(traveler.ageGroup.title.lowercased()) change buffer."
             )
-            return (value, reason)
+            return result
         }
-        let reason = ReasonRenderer.render(
-            code: kind == "daily_top" ? "quantity.daily_top" : "",
-            arguments: [
-                "days": "\(context.durationDays)",
-                "styleClause": context.packingStyle == .light ? ", packing light" : "",
-                "laundryClause": context.hasLaundry ? ", and you indicated laundry access" : ""
-            ],
-            templates: reasons.templates,
-            fallback: value == 1 ? "" : "\(value) based on a \(context.durationDays)-day trip."
-        )
-        return (value, kind == "daily_top" ? "Why \(value) \(itemName.lowercased())? \(reason)" : reason)
+        if kind == "daily_top" {
+            let rendered = ReasonRenderer.render(
+                code: "quantity.daily_top",
+                arguments: [
+                    "days": "\(context.days)",
+                    "styleClause": context.style == .light ? ", packing light" : "",
+                    "laundryClause": context.laundry == .none ? "" : ", with laundry in the plan"
+                ],
+                templates: reasons.templates,
+                fallback: "\(result.value) for \(result.evidence.requiredUses) uncovered wear days."
+            )
+            result.reason = "Why \(result.value) \(itemName.lowercased())? \(rendered)"
+            return result
+        }
+        let laundryClause = result.evidence.laundryReduced ? " Laundry reduces the rotation." : ""
+        switch result.evidence.basis {
+        case "sleepRotation":
+            result.reason = "\(result.value) sleep set\(result.value == 1 ? "" : "s") with repeat wear."
+        case "datedActivityUses":
+            result.reason = "\(result.value) for \(result.evidence.requiredUses) scheduled uses.\(laundryClause)"
+        case "selectedActivityEstimate":
+            result.reason = "\(result.value) for the workout plan.\(laundryClause)"
+        case "dryingRotation":
+            result.reason = "\(result.value) for swim use and drying rotation."
+        default:
+            result.reason = "\(result.value) for \(result.evidence.requiredUses) wear days.\(laundryClause)"
+        }
+        return result
     }
 
     static func compute(_ policy: ClothingNeedPolicy, context: TripContext, formalTopUnits: Int = 0) -> Int {
@@ -400,8 +418,10 @@ struct ClothingQuantityEngine: Sendable {
         let resolved = resolve(policy, none: none, planned: planned, context: context)
         let multiplier = ageMultiplier.flatMap { $0 > 1 ? $0 : nil }
         let multiplied = multiplier.map { Int((Double(resolved.value) * $0).rounded(.up)) } ?? resolved.value
-        let maximum = policy.styleMaximum[style] ?? Int.max
-        let value = max(policy.minimum, min(multiplied, maximum))
+        // Existing supported age buffers apply after the adult policy has
+        // resolved its family/style/bag bounds, matching the pre-Phase-3
+        // party behavior rather than inventing a new age model here.
+        let value = max(policy.minimum, multiplied)
         let evidence = ClothingQuantityEvidence(
             policyID: policy.needID,
             basis: basis,
