@@ -525,6 +525,20 @@
       "style": "balanced",
       "laundry": "none",
       "homeCountryCode": "US"
+    },
+    {
+      "id": "34-reykjavik-5d-cold-windy-no-snow",
+      "proves": "Sustained cold without snow produces ordinary gloves, not ski gloves; coldRain still forces a rain shell that also covers the wind need",
+      "destination": "Reykjavik",
+      "weatherFixture": "ReykjavikColdWindy",
+      "startDate": "2026-11-09",
+      "days": 5,
+      "tripType": "cityBreak",
+      "activities": ["sightseeing", "walking"],
+      "bag": "carryOn",
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
     }
   ]
 }

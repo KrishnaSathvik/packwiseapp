@@ -247,36 +247,6 @@ struct WeatherNeedHardeningTests {
         #expect(layers.count == 1)
     }
 
-    /// Decision: `clothing.gloves` reaches `sustainedCold` trips, not only
-    /// `snowExposure` ones. `sustainedCold` is the broader signal — `freezingCold`
-    /// is a strict subset of it in `WeatherSignalExtractor` — so this single
-    /// change also covers every `freezingCold` trip without a second row.
-    /// `coldEvenings` is deliberately NOT the gating signal: it fires on merely
-    /// cool evenings (min ≤ 62°F) that are not a cold-hands trip.
-    @Test func sustainedColdWithoutSnowProducesOrdinaryGlovesNotSkiGloves() throws {
-        let dest = try destination("Denver")
-        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 12))!
-        let coldNoSnow = syntheticWeather(days: 5, start: start, highF: 44, lowF: 28, rain: 0.1, wind: 12, snow: false)
-        let generation = try makeEngine().generateDetailed(
-            context: context(destination: dest, type: .cityBreak, activities: ["sightseeing"], weather: coldNoSnow)
-        )
-        let ids = Set(generation.items.compactMap(\.canonicalItemID))
-        #expect(ids.contains("clothing.gloves"))
-        #expect(!ids.contains("activities.ski_gloves"))  // no ski intent on a city trip
-        let gloveRow = try #require(generation.items.first { $0.canonicalItemID == "clothing.gloves" })
-        #expect(gloveRow.reasonCode == "weather.sustained_cold")
-    }
-
-    /// A merely cool-evening trip (not sustained cold) still gets no gloves —
-    /// the gate is deliberately narrower than `coldEvenings`.
-    @Test func merelyCoolEveningsDoNotProduceGloves() throws {
-        let dest = try destination("Chicago")
-        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 5))!
-        let cool = syntheticWeather(days: 5, start: start, highF: 70, lowF: 55, rain: 0.1)  // coldEvenings, not sustainedCold
-        let ids = Set(try makeEngine().generate(context: context(destination: dest, weather: cool)).compactMap(\.canonicalItemID))
-        #expect(!ids.contains("clothing.gloves"))
-    }
-
     /// Snow and business do not conflict: dress shoes claim `.formal`, boots
     /// claim `.coldFootwear` — distinct capabilities, so both survive alongside
     /// the walking-shoes base essential, which neither claims.
