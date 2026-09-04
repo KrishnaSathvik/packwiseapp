@@ -72,12 +72,13 @@ struct ActivityContractTests {
         type: TripType = .outdoor,
         bag: BagType = .roadTripLuggage,
         style: PackingStyle = .balanced,
-        party: TripParty? = nil
+        party: TripParty? = nil,
+        days: Int = 4
     ) throws -> TripContext {
         trip(
             destination: try destination("Yellowstone"),
             start: Self.frozenDate(2027, 8, 15),
-            days: 4,
+            days: days,
             type: type,
             activities: activities,
             bag: bag,
@@ -346,11 +347,20 @@ struct ActivityContractTests {
         #expect(try bottleReason(["camping", "hiking"]) == "activity.camping")
     }
 
-    /// Phase 5 makes no party-sharing decision. `miscellaneous.flashlight` is
-    /// not in `party.sharedByDefault`, so it stays a personal-carry item: one
-    /// per traveler, owned personally. Whether a family should instead share
-    /// one is finding F-5, routed to Phase 7 — this test records the baseline
-    /// that decision will be made against, and must not be "corrected" here.
+    /// Decision (Phase 7, F-5): a flashlight is a personal-safety item, not
+    /// scarce infrastructure (like a travel adapter) or naturally communal
+    /// (like sunscreen) — the three properties everything else in
+    /// `sharedByDefault` has. At a dark campsite, someone getting up alone at
+    /// night, or the party splitting into two groups, each person needs their
+    /// own light source independently. `miscellaneous.flashlight` staying out
+    /// of `sharedByDefault` is deliberate, not an oversight — see
+    /// `docs/superpowers/specs/2026-09-04-product-hardening-phase-7-central-constraints-design.md`.
+    ///
+    /// Scope guard: this decides sharing only — a flashlight is not
+    /// `singlePerParty`. It does not decide traveler/age eligibility (whether
+    /// every traveler class, including an infant or toddler, independently
+    /// receives one); that is Family Hardening's (Phase 10) call via
+    /// `skipForYoungChildren`/`skipForInfantsAndToddlers`, not this phase's.
     @Test func aPartyCampingTripKeepsFlashlightsPersonalPerTraveler() throws {
         let engine = try makeEngine()
         let party = family(of: 4)
@@ -362,6 +372,94 @@ struct ActivityContractTests {
         // The mechanism that would change this is untouched this phase.
         #expect(!Set(try rules().party.sharedByDefault).contains("miscellaneous.flashlight"))
         #expect(try rules().party.sharingPolicies["miscellaneous.flashlight"] == nil)
+    }
+
+    // MARK: - Task 3 (F-5): six required scenarios
+
+    /// Solo camping: exactly one flashlight, owned by the sole traveler.
+    @Test func soloCampingGetsOneFlashlightOwnedByTheSoleTraveler() throws {
+        let engine = try makeEngine()
+        let generation = engine.generateDetailed(context: try campingContext(activities: ["camping"]))
+        let lights = generation.items.filter { $0.canonicalItemID == "miscellaneous.flashlight" }
+        #expect(lights.count == 1)
+        #expect(lights.first?.ownershipType == .personal)
+    }
+
+    /// Couple camping: two flashlights, one per traveler — the case the
+    /// design doc argues matters most for staying personal, not least.
+    @Test func coupleCampingGetsOneFlashlightPerTraveler() throws {
+        let engine = try makeEngine()
+        let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+        let items = engine.generate(context: try campingContext(activities: ["camping"], party: couple))
+        let lights = items.filter { $0.canonicalItemID == "miscellaneous.flashlight" }
+        #expect(lights.count == 2)
+        #expect(Set(lights.compactMap(\.travelerID)) == Set(couple.travelers.map(\.id)))
+    }
+
+    /// Hiking + Camping composes into one outdoor trip (Phase 5) but still
+    /// produces one flashlight per traveler, not per activity.
+    @Test func hikingPlusCampingStillGivesOneFlashlightPerTravelerNotPerActivity() throws {
+        let engine = try makeEngine()
+        let party = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+        let items = engine.generate(context: try campingContext(activities: ["hiking", "camping"], party: party))
+        #expect(items.filter { $0.canonicalItemID == "miscellaneous.flashlight" }.count == 2)
+    }
+
+    /// A traveler with `packingResponsibility == .guardian` still owns their
+    /// own flashlight; the party's carrier convention (`carrierID`) changes
+    /// who packs it, never whose it is. Uses a school-age child role, never
+    /// an infant/toddler age group — F-5 decides sharing only, not
+    /// traveler/age eligibility (Phase 10's call).
+    @Test func oneTravelerCarryingAnothersItemsDoesNotMergeTheirFlashlights() throws {
+        let engine = try makeEngine()
+        let primary = Traveler.primarySelf()
+        var child = Traveler(name: "Emma", role: .child, ageGroup: .child)
+        child.packingResponsibility = .guardian
+        child.guardianTravelerID = primary.id
+        let party = TripParty(travelMode: .family, travelers: [primary, child])
+        let items = engine.generate(context: try campingContext(activities: ["camping"], party: party))
+        let lights = items.filter { $0.canonicalItemID == "miscellaneous.flashlight" }
+        #expect(lights.count == 2, "each traveler still gets their own — carrying someone's bag does not merge ownership")
+        #expect(Set(lights.compactMap(\.travelerID)) == Set(party.travelers.map(\.id)))
+        let childLight = try #require(lights.first { $0.travelerID == child.id })
+        #expect(childLight.assignedTravelerID == party.primary.id, "the guardian carries it; the child still owns it")
+    }
+
+    /// An explicit carrier reassignment on a flashlight survives regeneration,
+    /// exactly like `manuallyReassignedCarrierSurvivesRegeneration` proves for
+    /// contacts solution — owner and carrier stay distinct here too.
+    @Test func explicitFlashlightCarrierReassignmentSurvivesRegeneration() throws {
+        let engine = try makeEngine()
+        let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+        var first = engine.generate(context: try campingContext(activities: ["camping"], party: couple))
+        guard let index = first.firstIndex(where: { $0.canonicalItemID == "miscellaneous.flashlight" && $0.travelerID == couple.primary.id }) else {
+            Issue.record("Expected the primary's flashlight")
+            return
+        }
+        let partnerID = couple.travelers.first { $0.role == .partner }!.id
+        first[index].assignedTravelerID = partnerID
+
+        let second = engine.generate(context: try campingContext(activities: ["camping"], party: couple, days: 6), existing: first)
+        let flashlight = try #require(second.first { $0.canonicalItemID == "miscellaneous.flashlight" && $0.travelerID == couple.primary.id })
+        #expect(flashlight.assignedTravelerID == partnerID)
+        #expect(flashlight.travelerID == couple.primary.id, "owner is unaffected by the carrier reassignment")
+    }
+
+    /// A user-added, explicitly-personal flashlight with no traveler chosen
+    /// stays unassigned rather than being guessed onto the primary — the same
+    /// fail-safe `generateDetailed` already applies to any explicit party item,
+    /// exercised here on the F-5 item itself.
+    @Test func unassignedExplicitPersonalFlashlightStaysUnassigned() throws {
+        let engine = try makeEngine()
+        let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
+        let extra = PackingItemDraft(
+            canonicalItemID: "miscellaneous.flashlight", displayName: "Small flashlight", category: .miscellaneous,
+            quantity: 1, importance: .optional, sourceSignals: [.userPreference], reason: "Added by you",
+            isUserAdded: true, ownershipType: .personal, travelerID: nil
+        )
+        let generation = engine.generateDetailed(context: try campingContext(activities: ["camping"], party: couple), existing: [extra])
+        let unassigned = generation.items.first { $0.id == extra.id }
+        #expect(unassigned?.travelerID == nil, "ambiguous ownership must not be inferred, per the Global Constraints")
     }
 
     /// Camping must not blow past an existing bag constraint — the optional
