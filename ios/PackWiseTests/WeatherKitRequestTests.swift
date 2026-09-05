@@ -301,6 +301,40 @@ struct WeatherKitRequestTests {
         #expect(diag.engineReceivedPreciseWeather == false)
     }
 
+    // MARK: - 7. Debug fixture date remapping
+
+    @Test @MainActor func debugFixtureRebasesOntoAnyTripDateRange() async throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let model = ModelContext(container)
+        // Deliberately far beyond the live-service horizon, and nowhere near
+        // whatever relative "offset" the bundled fixture's days carry — the
+        // old MockWeatherService-backed path failed here.
+        let farFutureStart = date(2026, 12, 1)
+        let farFutureEnd = calendar.date(byAdding: .day, value: 4, to: farFutureStart)!
+        let trip = try makeTrip(in: model, start: farFutureStart, end: farFutureEnd, days: 5, nights: 4)
+        let repo = TripRepository(context: model)
+
+        let outcome = await DebugWeatherInjection.inject(
+            .rain,
+            trip: trip,
+            preferences: .deviceDefaults(),
+            engine: try engine(),
+            rules: try rules(),
+            repository: repo,
+            now: date(2026, 8, 1)
+        )
+
+        #expect(!outcome.detail.contains("produced no forecast for these dates"))
+        let stored = try #require(trip.weatherSnapshots.first?.weatherContext)
+        #expect(stored.source == .fixture)
+        #expect(stored.fixtureID == DebugWeatherInjection.Scenario.rain.rawValue)
+        #expect(stored.dailyForecast.count == 5)
+        #expect(stored.isPreciseForecast)
+        let coveredDays = Set(stored.dailyForecast.map { calendar.startOfDay(for: $0.date) })
+        let expectedDays = Set((0..<5).map { calendar.startOfDay(for: calendar.date(byAdding: .day, value: $0, to: farFutureStart)!) })
+        #expect(coveredDays == expectedDays)
+    }
+
     // MARK: - 8. Timezone / date-boundary normalization
 
     @Test func destinationTimezoneQueryBoundsAreDestinationAnchored() throws {

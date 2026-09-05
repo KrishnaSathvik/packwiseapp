@@ -220,6 +220,15 @@ actor WeatherRequestDiagnosticsStore {
         return diagnostics
     }
 
+    /// Records a fully-built entry directly — used by Debug fixture
+    /// injection, which never goes through the stage/commit sequence
+    /// above since it never calls the live provider.
+    @discardableResult
+    func record(_ diagnostics: WeatherRequestDiagnostics) -> WeatherRequestDiagnostics {
+        append(diagnostics)
+        return diagnostics
+    }
+
     private func append(_ entry: WeatherRequestDiagnostics) {
         history.append(entry)
         if history.count > historyLimit {
