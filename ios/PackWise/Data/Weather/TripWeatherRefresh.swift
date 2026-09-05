@@ -73,6 +73,7 @@ enum TripWeatherRefresh {
         let bounds = WeatherForecastNormalizer.queryBounds(start: trip.startDate, end: trip.endDate, calendar: calendar)
         let entry = WeatherRequestDiagnostics(
             recordedAt: now,
+            origin: .live,
             destinationName: trip.destination.displayName,
             destinationLatitude: trip.destination.latitude,
             destinationLongitude: trip.destination.longitude,

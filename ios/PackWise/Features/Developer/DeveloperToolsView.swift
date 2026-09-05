@@ -115,6 +115,8 @@ struct DeveloperToolsView: View {
                 Button("Refresh") { Task { await loadLatestDiagnostics() } }
                 Button("Copy latest") { copyLatestDiagnostics() }
                     .disabled(diagnosticsText == nil)
+                Button("Copy all (\(diagnosticsCount))") { Task { await copyAllDiagnostics() } }
+                    .disabled(diagnosticsCount == 0)
                 Button("Clear log", role: .destructive) { Task { await clearDiagnostics() } }
             } header: {
                 Text("Weather diagnostics")
@@ -183,6 +185,15 @@ struct DeveloperToolsView: View {
     private func copyLatestDiagnostics() {
         guard let diagnosticsText else { return }
         UIPasteboard.general.string = diagnosticsText
+    }
+
+    /// Every recorded entry, oldest first — for a repro that spans several
+    /// refreshes (first open, backgrounding, pull-to-refresh) so nothing
+    /// before the latest one is lost.
+    private func copyAllDiagnostics() async {
+        let text = await WeatherRequestDiagnosticsStore.shared.allReportText()
+        guard !text.isEmpty else { return }
+        UIPasteboard.general.string = text
     }
 
     private func clearDiagnostics() async {

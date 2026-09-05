@@ -26,6 +26,7 @@ struct WeatherKitWeatherService: WeatherService {
         if WeatherForecastNormalizer.isBeyondDailyHorizon(tripStart: start, now: fetchedAt, calendar: calendar) {
             #if DEBUG
             await Self.stageDiagnostics(
+                recordedAt: fetchedAt,
                 destination: destination,
                 start: start,
                 end: end,
@@ -59,6 +60,7 @@ struct WeatherKitWeatherService: WeatherService {
             )
             #if DEBUG
             await Self.stageDiagnostics(
+                recordedAt: fetchedAt,
                 destination: destination,
                 start: start,
                 end: end,
@@ -86,6 +88,7 @@ struct WeatherKitWeatherService: WeatherService {
             #if DEBUG
             let nsError = error as NSError
             await Self.stageDiagnostics(
+                recordedAt: fetchedAt,
                 destination: destination,
                 start: start,
                 end: end,
@@ -131,6 +134,7 @@ struct WeatherKitWeatherService: WeatherService {
     }
 
     private static func stageDiagnostics(
+        recordedAt: Date,
         destination: Destination,
         start: Date,
         end: Date,
@@ -142,7 +146,8 @@ struct WeatherKitWeatherService: WeatherService {
     ) async {
         let bounds = WeatherForecastNormalizer.queryBounds(start: start, end: end, calendar: calendar)
         let entry = WeatherRequestDiagnostics(
-            recordedAt: .now,
+            recordedAt: recordedAt,
+            origin: .live,
             destinationName: destination.displayName,
             destinationLatitude: destination.latitude,
             destinationLongitude: destination.longitude,

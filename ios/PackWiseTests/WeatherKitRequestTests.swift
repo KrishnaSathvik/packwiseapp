@@ -109,6 +109,7 @@ struct WeatherKitRequestTests {
         )
 
         let diag = try #require(await WeatherRequestDiagnosticsStore.shared.latest())
+        #expect(diag.origin == .live)
         #expect(diag.destinationName == trip.destination.displayName)
         #expect(diag.destinationLatitude == trip.destination.latitude)
         #expect(diag.destinationLongitude == trip.destination.longitude)
@@ -304,6 +305,7 @@ struct WeatherKitRequestTests {
     // MARK: - 7. Debug fixture date remapping
 
     @Test @MainActor func debugFixtureRebasesOntoAnyTripDateRange() async throws {
+        await WeatherRequestDiagnosticsStore.shared.clear()
         let container = try PackWisePersistence.container(inMemory: true)
         let model = ModelContext(container)
         // Deliberately far beyond the live-service horizon, and nowhere near
@@ -333,6 +335,14 @@ struct WeatherKitRequestTests {
         let coveredDays = Set(stored.dailyForecast.map { calendar.startOfDay(for: $0.date) })
         let expectedDays = Set((0..<5).map { calendar.startOfDay(for: calendar.date(byAdding: .day, value: $0, to: farFutureStart)!) })
         #expect(coveredDays == expectedDays)
+
+        // The diagnostic entry must say *how* this data was produced without
+        // repurposing `skipReason` (which means something else entirely: a
+        // live fetch that was skipped or declined).
+        let diag = try #require(await WeatherRequestDiagnosticsStore.shared.latest())
+        #expect(diag.origin == .fixtureInjection(fixtureID: DebugWeatherInjection.Scenario.rain.rawValue))
+        #expect(diag.skipReason == nil)
+        #expect(diag.fetchAttempted)
     }
 
     // MARK: - 8. Timezone / date-boundary normalization

@@ -152,6 +152,7 @@ enum DebugWeatherInjection {
         let uncovered = tripDays.map { calendar.startOfDay(for: $0) }.filter { !covered.contains($0) }
         let entry = WeatherRequestDiagnostics(
             recordedAt: now,
+            origin: .fixtureInjection(fixtureID: scenario.rawValue),
             destinationName: trip.destination.displayName,
             destinationLatitude: trip.destination.latitude,
             destinationLongitude: trip.destination.longitude,
@@ -165,7 +166,9 @@ enum DebugWeatherInjection {
                 normalizedEndExclusive: bounds.endExclusive
             ),
             fetchAttempted: true,
-            skipReason: "Debug fixture injection (\(scenario.rawValue)) — rebased onto this trip's own dates, never the live provider",
+            // Not a skipped/declined live fetch — `origin` above already
+            // says this came from Debug fixture injection.
+            skipReason: nil,
             provider: WeatherRequestDiagnostics.ProviderResult(
                 kind: .success,
                 returnedDayCount: injected.dailyForecast.count,

@@ -67,6 +67,16 @@ struct WeatherRequestDiagnostics: Sendable, Equatable, Identifiable {
         var isPreciseForecast: Bool
     }
 
+    /// Where this entry's weather came from. Kept distinct from
+    /// `skipReason` (which only ever describes a *live* fetch that was
+    /// skipped or declined) so a Debug fixture injection — which always has
+    /// `fetchAttempted == true` because it always produces data — never has
+    /// to overload `skipReason` to say so.
+    enum Origin: Sendable, Equatable {
+        case live
+        case fixtureInjection(fixtureID: String)
+    }
+
     struct CacheDecision: Sendable, Equatable {
         var hit: Bool
         var ageSeconds: Double?
@@ -79,6 +89,7 @@ struct WeatherRequestDiagnostics: Sendable, Equatable, Identifiable {
 
     var id = UUID()
     var recordedAt: Date
+    var origin: Origin
 
     var destinationName: String
     var destinationLatitude: Double
@@ -127,6 +138,12 @@ extension WeatherRequestDiagnostics {
     var reportText: String {
         var lines: [String] = []
         lines.append("WeatherRequestDiagnostics @ \(Self.fmt(recordedAt))")
+        switch origin {
+        case .live:
+            lines.append("source: live WeatherKit refresh")
+        case .fixtureInjection(let fixtureID):
+            lines.append("source: Debug fixture injection (\(fixtureID)) — never the live provider")
+        }
         lines.append(
             "destination: \(destinationName) (\(destinationLatitude), \(destinationLongitude)) tz=\(destinationTimeZoneIdentifier)"
         )
@@ -238,6 +255,16 @@ actor WeatherRequestDiagnosticsStore {
 
     func latest() -> WeatherRequestDiagnostics? { history.last }
     func all() -> [WeatherRequestDiagnostics] { history }
+
+    /// All recorded entries, oldest first, as one copyable report — for a
+    /// repro that spans several refreshes (first open, backgrounding,
+    /// pull-to-refresh) so nothing before the very last one is lost.
+    func allReportText() -> String {
+        guard !history.isEmpty else { return "" }
+        return history
+            .map(\.reportText)
+            .joined(separator: "\n\n———\n\n")
+    }
 
     func clear() {
         history.removeAll()
