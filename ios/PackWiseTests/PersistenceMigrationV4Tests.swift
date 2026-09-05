@@ -496,6 +496,48 @@ struct PersistenceMigrationV4Tests {
         #expect(trip.bags.isEmpty)
     }
 
+    /// Regression: `TripRecord.bagTypes` derives from the `bags`
+    /// relationship, and the only code that ever populated `bags` for an
+    /// existing trip was `replaceParty` — which used to create a bag only
+    /// when `trip.bags.isEmpty`, so it silently no-op'd on every *edit* of
+    /// an already-set-up trip's bag selection (exactly what
+    /// `TripRepository.apply`, and so `TripSetupView.saveTrip()`'s edit
+    /// path, calls). `bagTypeRaw` got updated harmlessly; `bagTypes` — the
+    /// value every reader actually consumes — kept returning the trip's
+    /// original bag forever.
+    @Test @MainActor func editingBagSelectionReconcilesBagsInsteadOfLeavingTheOriginalBagStale() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        let repo = TripRepository(context: context)
+        let destination = try chicago()
+        let trip = TripRecord(
+            destination: destination, startDate: .now, endDate: .now.addingTimeInterval(2 * 86400),
+            durationDays: 2, durationNights: 1, tripType: .vacation, activities: [], bagType: .carryOn,
+            packingStyle: .balanced
+        )
+        context.insert(trip)
+        repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
+        let originalBagID = try #require(trip.bags.first).id
+        #expect(trip.bagTypes == [.carryOn])
+
+        // The edit: same call `TripRepository.apply` makes, with a
+        // genuinely different bag type than the trip already has.
+        repo.replaceParty(.solo(), bagType: .checked, on: trip)
+
+        #expect(
+            trip.bagTypes == [.checked],
+            "editing the bag selection must update the bags relationship — bagTypes' source of truth — not just the unread bagTypeRaw scalar"
+        )
+        #expect(trip.bags.count == 1)
+        #expect(trip.bags.first?.id != originalBagID, "the stale Carry-on record must not survive alongside or instead of the new selection")
+
+        // Re-applying the same (now current) bag type must be a no-op that
+        // preserves identity, not a needless recreate.
+        let checkedBagID = try #require(trip.bags.first).id
+        repo.replaceParty(.solo(), bagType: .checked, on: trip)
+        #expect(trip.bags.first?.id == checkedBagID, "re-applying the same bag type must preserve the existing record's identity")
+    }
+
     // MARK: - Regression: the V3 → V4 backfill must never re-run against
     // already-migrated data and clobber a later multi-value write.
     //

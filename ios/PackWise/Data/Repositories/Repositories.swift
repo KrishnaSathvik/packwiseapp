@@ -82,7 +82,21 @@ final class TripRepository {
             context.delete(record)
         }
         trip.travelers = next
-        if trip.bags.isEmpty {
+        // Reconcile the trip's bag record against `bagType` on every call,
+        // not only when `trip.bags` starts empty. `TripRecord.bagTypes`
+        // (the source of truth other readers consume) derives from `bags`,
+        // not `bagTypeRaw` — so an edit that only changed `bagTypeRaw`
+        // (as `TripRepository.apply` used to do, relying solely on this
+        // method for the bag side) would leave `bagTypes` silently
+        // pointing at the trip's original bag forever, since a non-empty
+        // `trip.bags` used to always short-circuit here. If a matching
+        // record already exists, its identity/owner are preserved
+        // untouched — this only replaces the bag when the selection
+        // actually changed.
+        if !trip.bags.contains(where: { $0.bagTypeRaw == bagType.rawValue }) {
+            for stale in trip.bags {
+                context.delete(stale)
+            }
             let ownership: PackingOwnership = party.usesSimpleList ? .personal : .shared
             let bag = TripBag(
                 name: bagType.title,
@@ -134,6 +148,12 @@ final class TripRepository {
             context.insert(record)
             trip.bags.append(record)
         }
+        // Compat scalar, symmetric with `applyTripTypes`'s `tripTypeRaw`
+        // handling: `.notSure` already means "no bag constraint" in the
+        // legacy vocabulary, so an empty selection has just as meaningful
+        // a single-value representation as a populated one. Never read
+        // back as authority.
+        trip.bagTypeRaw = (bagTypes.first ?? .notSure).rawValue
         trip.updatedAt = .now
     }
 
