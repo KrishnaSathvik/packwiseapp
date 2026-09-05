@@ -92,11 +92,19 @@ final class TripRepository {
         // `trip.bags` used to always short-circuit here. If a matching
         // record already exists, its identity/owner are preserved
         // untouched — this only replaces the bag when the selection
-        // actually changed.
-        if !trip.bags.contains(where: { $0.bagTypeRaw == bagType.rawValue }) {
-            for stale in trip.bags {
-                context.delete(stale)
-            }
+        // actually changed. Filters per-record (mirroring `applyBagTypes`)
+        // rather than an all-or-nothing "does any bag match" check: the
+        // design invariant is at most one setup-created `BagRecord`, but a
+        // per-record filter converges to exactly one matching record
+        // regardless of starting state — 0, 1, or, were that invariant
+        // ever violated, N existing records — instead of leaving stray
+        // non-matching ones behind whenever a match happens to already be
+        // present among several.
+        for stale in trip.bags where stale.bagTypeRaw != bagType.rawValue {
+            context.delete(stale)
+        }
+        trip.bags.removeAll { $0.bagTypeRaw != bagType.rawValue }
+        if trip.bags.isEmpty {
             let ownership: PackingOwnership = party.usesSimpleList ? .personal : .shared
             let bag = TripBag(
                 name: bagType.title,

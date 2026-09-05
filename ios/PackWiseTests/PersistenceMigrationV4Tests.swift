@@ -538,6 +538,41 @@ struct PersistenceMigrationV4Tests {
         #expect(trip.bags.first?.id == checkedBagID, "re-applying the same bag type must preserve the existing record's identity")
     }
 
+    /// Regression: `replaceParty`'s reconciliation must filter per-record,
+    /// not ask "does any bag match" — an all-or-nothing check skips the
+    /// whole branch (leaving a stray non-matching record behind) whenever
+    /// a match happens to already be present among several bag records.
+    /// No shipped path currently produces more than one `BagRecord`, but
+    /// the reconciliation must still converge to exactly one matching
+    /// record regardless of starting state.
+    @Test @MainActor func replacePartyRemovesStrayBagRecordsEvenWhenAMatchingOneAlreadyExists() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        let repo = TripRepository(context: context)
+        let destination = try chicago()
+        let trip = TripRecord(
+            destination: destination, startDate: .now, endDate: .now.addingTimeInterval(2 * 86400),
+            durationDays: 2, durationNights: 1, tripType: .vacation, activities: [], bagType: .carryOn,
+            packingStyle: .balanced
+        )
+        context.insert(trip)
+
+        // Seed two bag records directly: one already matching the target
+        // selection, one a stray that must be cleaned up.
+        let matchingBag = BagRecord(from: TripBag(name: "Carry-on", bagType: .carryOn, ownershipType: .personal), trip: trip)
+        let strayBag = BagRecord(from: TripBag(name: "Checked bag", bagType: .checked, ownershipType: .personal), trip: trip)
+        context.insert(matchingBag)
+        context.insert(strayBag)
+        trip.bags = [matchingBag, strayBag]
+        let matchingBagID = matchingBag.id
+
+        repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
+
+        #expect(trip.bags.count == 1, "the stray Checked record must be removed even though a matching Carry-on record was already present")
+        #expect(trip.bags.first?.id == matchingBagID, "the already-matching record's identity must be preserved, not recreated")
+        #expect(trip.bagTypes == [.carryOn])
+    }
+
     // MARK: - Regression: the V3 → V4 backfill must never re-run against
     // already-migrated data and clobber a later multi-value write.
     //
