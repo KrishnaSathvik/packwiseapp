@@ -13,7 +13,14 @@ Frozen V2 decisions:
 - Trip types contribute typed needs into the existing coverage/quantity/constraint/trace pipeline, not independent item templates.
 - Traveler eligibility becomes explicit and conservative; sharing remains separate from owner/carrier.
 - Family All is presentation aggregation over real traveler records.
+- Trip-type suggested activities remain unselected and non-causal until the user taps them.
+- Family and Group both count Other adults because the current user is implicit.
+- Travel-document eligibility is item-specific; international children may need personal passports and entry documents.
+- `RecommendationTrace` is the sole explanation authority; persisted trace JSON is its encoding, not a parallel system.
 - SwiftData V4 migration preserves existing data, and container failure never deletes a store.
+- Every intermediate commit stays green across iOS/shared/API boundaries; temporary adapters reject unsupported multi-value behavior and never choose a primary value.
+- Current-trip WeatherKit diagnosis/repair runs immediately after safe V4 groundwork, before engine and broad UI work.
+- A whole-product contact sheet passes before production UI wiring.
 - M3B/M3C remain frozen until the complete V2 simulator and physical-device gate is green.
 
 ## Repo

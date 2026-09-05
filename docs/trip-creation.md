@@ -81,7 +81,7 @@ Group
 
 **Family** asks for adult count, child count, and each child's age group (teen / child / toddler / infant). Optional first names. No birth dates.
 
-**Group** asks for an adult count. One device manages the list. Invites and realtime sync are later.
+**Group** asks for an **Other adults** count because the current user is implicit. One device manages the list. Invites and realtime sync are later.
 
 Shared trip context (destination, dates, weather, activities, bag, style) is not re-asked per person.
 
@@ -113,7 +113,7 @@ Trip types are multi-select. At least one known type is required. Every selected
 
 Headline: **What will you be doing?**
 
-Suggested chips are the stable union from all selected trip types. Changing trip types never silently removes an activity the user selected.
+Suggested chips are the stable union from all selected trip types, but suggestion is not selection. Trip type changes affect only suggestion visibility/order. Only a user tap writes an activity into trip context, and changing trip types never silently adds or removes a selected activity.
 
 For beach:
 

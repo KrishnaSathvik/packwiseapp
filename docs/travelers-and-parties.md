@@ -146,13 +146,15 @@ Toddler
 - **Just me** — no extra screens. Internally `TripParty` with one `self` adult.
 - **Couple** — You + Partner. Optional partner differences only.
 - **Family** — adult count, child count, each child's age group, and only the child needs that apply.
-- **Group** — adult count. One device manages the list.
+- **Group** — Other adults count; the current user is implicit. One device manages the list.
 
-Family input counts **Other adults**, not total adults including the current user. Empty names derive stable distinct labels in party order: You, Adult 1, Adult 2, Child 1, Child 2, Shared.
+Family and Group both count **Other adults**, not total adults including the current user. Family separately counts Children. Empty names derive stable distinct labels in party order: You, Adult 1, Adult 2, Child 1, Child 2, Shared.
 
 ## Engine
 
 Weather and trip-wide signals run **once**. Traveler eligibility runs before quantity and sharing. Age alone never assigns a young child a device, charger, headphones, deodorant, medication, or child equipment; explicit child needs remain authoritative.
+
+Travel documents are adjudicated per item, never by excluding the Documents category for children: passports and Visa/entry docs may be personal for every traveler on a confirmed international trip, including a toddler; Photo ID defaults to adult/teen eligibility; Travel insurance info is shared once per party. See the approved matrix in `docs/plans/2026-09-04-product-experience-v2-design.md`.
 
 ```text
 Trip-wide context

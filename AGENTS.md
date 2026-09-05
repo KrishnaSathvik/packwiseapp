@@ -50,7 +50,9 @@ See `docs/implementation-decisions.md`. **M3A-2 implementation is complete and i
 
 Be precise about what is verified: fixture-backed cryptographic verification is not Apple-service verification, and a green test suite is not a deployment. Acceptance criteria retain evidence rather than a checkbox. Do not start M3B or M3C before the Product Experience V2 exit gate in `docs/plans/2026-09-04-product-experience-v2-design.md` is green. Development App Attest must remain green; TestFlight production App Attest is deferred to distribution. Current-trip WeatherKit on physical hardware is part of the V2 gate.
 
-The next code is the reviewed Product Experience V2 implementation plan in `docs/superpowers/plans/2026-09-04-product-experience-v2.md`. Do not begin it until product review approves the documentation. Once the V2 gate is green, reconsider the first deliberate M3B context-enrichment change. Not more infrastructure.
+The next code is the approved Product Experience V2 implementation plan in `docs/superpowers/plans/2026-09-04-product-experience-v2.md`. Execute its amended order sequentially. Once the V2 gate is green, reconsider the first deliberate M3B context-enrichment change. Not more infrastructure.
+
+The 2026-09-04 amendment is approved: follow the mandatory execution order in that plan. WeatherKit evidence comes immediately after safe V4 groundwork; the approved TripTypeContract and travel-document tables are product contracts; suggested activities are non-causal until tapped; RecommendationTrace remains the one explanation authority; and every intermediate commit must keep iOS/shared/API boundaries green.
 
 `PACKWISE_APP_ATTEST_ENVIRONMENT` is stated per deployment, never inferred: TestFlight and App Store builds always use `production` regardless of the local entitlement. An unset value is a boot failure, not a default.
 

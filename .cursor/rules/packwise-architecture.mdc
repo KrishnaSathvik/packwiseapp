@@ -44,6 +44,7 @@ DesignSystem/  Resources/{PackingCatalog,Rules}
 - `TripContext` is what intelligence evaluates (destination, days/nights, `tripTypes`, activities, `bagTypes`/normalized luggage, style, notes, weather, preferences, `TripParty`, relevant memory). Trip types and physical bags are stable sets; there is no primary trip type
 - `TripParty` + `Traveler` are first-class. Solo is one traveler. Couple/family add personal vs shared items
 - `PackingItem` uses `canonicalItemID`, `ownershipType` personal|shared, `travelerID?`, `assignedTravelerID?`, `bagID?`, quantities, importance, `sourceSignals`, `reason`, `isUserAdded`, `isUserModified`
+- Product Experience V2 has one `RecommendationTrace` explanation authority (provenance, quantity evidence, satisfied capabilities, suppressions, constraints, authority). Persisted trace JSON encodes it; legacy reason/source fields are migration inputs only
 - Persist from day one: Trip, TripParty/Traveler, PackingItem, Bag, Destination, WeatherSnapshot, TripActivity, PackingPreference, PackingMemory (per traveler when known), RecommendationOverride, PostTripFeedback, WeatherChangeProposal
 - Version the data model from day one
 

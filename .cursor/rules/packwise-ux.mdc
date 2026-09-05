@@ -29,9 +29,9 @@ Progressive steps, not one form. V1: one primary destination.
 
 1. Destination — MapKit search, store displayName/city/region/country/coords/timeZone
 2. Dates — native range; persist **days and nights**
-3. Travelers — single party mode: Just me / Me + partner / Family / Group
+3. Travelers — single party mode: Just me / Me + partner / Family / Group. Family and Group count **Other adults** because You is implicit; Family separately counts Children
 4. Trip types — **multi-select** Vacation, City Break, Beach, Business, Outdoor, Road Trip, Wedding/Event, Ski/Snow, Festival, Visiting Family, Other. No primary type
-5. Activities — multi-select type-based chips + **+ Add something** free text
+5. Activities — multi-select type-based suggestions + **+ Add something** free text. Suggestions remain unselected/non-causal until tapped; changing trip types never silently adds or removes selections
 6. Bags — **multi-select** Personal item / Carry-on / Checked / Backpack. Empty means Not sure/no constraint. Road Trip is not a bag
 7. Style + laundry — both separate single-select policies; Light / **Balanced (default)** / Prepared and No laundry / If needed / Planned
 8. About you — multi-select chips + free note

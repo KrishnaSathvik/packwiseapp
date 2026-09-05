@@ -10,6 +10,31 @@
 
 **Design specification:** `docs/plans/2026-09-04-product-experience-v2-design.md`
 
+## Mandatory amended execution order
+
+Task headings retain their original identifiers so review comments remain stable, but implementation executes in this order:
+
+```text
+Task 1  Stable collection contracts
+Task 2  Safe SwiftData V4 groundwork
+Task 14 WeatherKit diagnostics → current-device reproduction → evidence-only fix → device recheck
+Task 15 Cross-boundary array contract/fixture migration with explicit compatibility bridge
+Task 3  Product-approved TripTypeContract table and typed contracts
+Task 4  Multi-trip-type engine composition
+Task 5  Multi-bag luggage semantics
+Task 6  Traveler eligibility, including documents
+Task 7  Catalog-wide sharing audit
+Checkpoint V  One contact sheet for all major V2 reference states
+Tasks 8–13 Production UX wiring and recommendation naming
+Tasks 16–18 Authority, full automation, and physical-device exit gate
+```
+
+The order above is authoritative. In particular, Task 14 is not deferred until after UX work, and Tasks 3–5 do not start before Task 15 leaves all request/fixture boundaries green.
+
+### Green-commit rule
+
+Every task ends with a coherent repository. Before each commit run the focused iOS tests for that task and `python3 scripts/validate_shared.py`. If the task touches `shared/contracts`, request/fixture schemas, generated API artifacts, Swift DTOs, or TypeScript validation/model input, also run `npm --prefix api test` and `npm --prefix api run preflight`. A temporary adapter is allowed only when it is explicit, rejects unsupported multi-value behavior rather than choosing a primary value, has a removal test/task, and keeps production behavior unchanged until the consuming engine stage lands.
+
 ## Global Constraints
 
 - Never label or market PackWise as AI in customer-facing UI or copy.
@@ -120,7 +145,7 @@ git commit -m "feat: add stable multi-value trip context contracts"
 **Interfaces:**
 
 - Consumes: stable codecs from Task 1.
-- Produces: `PackWiseSchemaV4`, `TripRecord.tripTypes`, `TripRecord.bagTypes` derived from `BagRecord`, `TravelerPreferences.preferredBagTypes`, persisted `PackingItemRecord.provenance`, set-valued repository create/apply methods, V4 `ContextFingerprint` values, non-destructive container failure behavior.
+- Produces: `PackWiseSchemaV4`, `TripRecord.tripTypes`, `TripRecord.bagTypes` derived from `BagRecord`, `TravelerPreferences.preferredBagTypes`, persisted `PackingItemRecord.recommendationTrace`, set-valued repository create/apply methods, V4 `ContextFingerprint` values, non-destructive container failure behavior.
 
 - [ ] **Step 1: Write a file-backed V3→V4 migration test.** Seed a V3 store with singular Beach/Carry-on plus travelers, personal/shared items, manual quantity, packed quantity, Not Needed override, custom item, owner/carrier, and category edit. Reopen through V4 and assert `[.beach]`, `[.carryOn]`, all IDs/relationships/state unchanged, and a second relaunch succeeds.
 
@@ -134,7 +159,7 @@ xcodebuild -project ios/PackWise.xcodeproj -scheme PackWise \
   -only-testing:PackWiseTests/PersistenceMigrationV4Tests test
 ```
 
-- [ ] **Step 4: Add defaulted trip-type, preferred-bag-set, memory-fingerprint, and item-provenance JSON-array scalar fields and the explicit V4 migration/backfill.** Preserve legacy scalar columns for compatibility. Migrate the legacy trip bag scalar into the existing to-many `BagRecord` relationship, preserving a matching record’s ID/owner; derive `TripRecord.bagTypes` from that relationship instead of adding a second raw field. Update `TripRepository.attach`, `replaceParty`, `apply`, preference mapping, and memory-event recording to accept sets and synchronize one setup-created record per selected physical bag type.
+- [ ] **Step 4: Add defaulted trip-type, preferred-bag-set, memory-fingerprint arrays and optional `recommendationTraceRaw`, then implement the explicit V4 migration/backfill.** Preserve legacy scalar columns as migration inputs only. Migrate the legacy trip bag scalar into the existing to-many `BagRecord` relationship, preserving a matching record’s ID/owner; derive `TripRecord.bagTypes` from that relationship instead of adding a second raw field. Update repository and preference persistence to accept sets. Until Tasks 3 and 5 land, existing engine adapters must require a singleton set and fail safely for a multi-value set; they must never select an arbitrary primary value.
 
 - [ ] **Step 5: Remove `resetUnknownStore` and make container-open failure non-destructive.** Add a test that supplies an invalid/incompatible store, asserts the error is surfaced, and verifies the store/WAL/SHM bytes still exist unchanged.
 
@@ -164,9 +189,11 @@ git commit -m "feat: migrate trips to multi-value context safely"
 - Produces: `PackingNeed`, `RecommendationProvenance`, `PackingNeedContribution`, `TripTypeContract`, `TripTypeContractResolver.contributions(for:)`.
 - Contract rule: trip-type JSON contains closed need IDs and suggested activity IDs, never canonical item IDs.
 
-- [ ] **Step 1: Write validator and decoder tests.** Reject unknown need IDs, duplicate stable values, and canonical-looking item IDs in a trip-type contract. Assert `.other` has no deterministic need contribution.
+- [ ] **Step 1: Re-read and pin the approved table in design Section 8.1 before production code.** Encode a table-driven test for the exact needs, unselected suggested activities, and non-implications of Vacation, City Break, Beach, Business, Outdoor, Road Trip, Wedding/Event, Ski/Snow, Festival, Visiting Family, and Other. If an implementation concern would change a row, stop for product approval and commit that spec change first.
 
-- [ ] **Step 2: Write combination tests for all ten required trip-type sets.** Assert normalized needs and provenance, not only final item counts. Include insertion-order determinism.
+- [ ] **Step 2: Write validator and decoder tests.** Reject unknown need IDs, duplicate stable values, and canonical-looking item IDs in a trip-type contract. Assert `.other` has no deterministic need contribution.
+
+- [ ] **Step 3: Write combination tests for all ten required trip-type sets.** Assert normalized needs and provenance, not only final item counts. Include insertion-order determinism.
 
 ```swift
 @Test func businessAndCityBreakComposeNeedsWithoutPrimaryType() throws {
@@ -178,7 +205,9 @@ git commit -m "feat: migrate trips to multi-value context safely"
 }
 ```
 
-- [ ] **Step 3: Run shared validation and the focused Swift tests; confirm both fail on the old direct-item contract.**
+- [ ] **Step 4: Write suggestion-vs-selection tests.** Selecting City Break may order Walking/Museums/Nice Dinner as suggestions, but `TripContext.activities` stays empty until an explicit selection action. Changing trip types preserves the exact selected activity set and never adds/removes activities.
+
+- [ ] **Step 5: Run shared validation and the focused Swift tests; confirm both fail on the old direct-item contract.**
 
 ```bash
 python3 scripts/validate_shared.py
@@ -187,9 +216,9 @@ xcodebuild -project ios/PackWise.xcodeproj -scheme PackWise \
   -only-testing:PackWiseTests/TripTypeCompositionTests test
 ```
 
-- [ ] **Step 4: Implement the typed contract decoder and convert every trip type to needs.** Preserve current legitimate semantics through central need→candidate/capability mappings; do not copy each old list into Swift.
+- [ ] **Step 6: Implement the typed contract decoder and convert every trip type exactly as approved.** Preserve current legitimate semantics through central need→candidate/capability mappings; do not copy each old list into Swift. Suggested activity IDs feed display ordering only and cannot write `TripContext.activities`.
 
-- [ ] **Step 5: Run validation/tests and commit the contract layer.**
+- [ ] **Step 7: Run validation/tests and commit the contract layer.**
 
 ```bash
 git add shared/rules/trip-types.json scripts/validate_shared.py \
@@ -280,15 +309,17 @@ git commit -m "feat: apply deterministic multi-bag capacity semantics"
 - Produces: `TravelerEligibilityResolver.evaluate(...) -> EligibilityDecision` and closed eligibility metadata.
 - Replaces: distributed `shouldSkip` decisions as the final eligibility authority; temporary adapters may feed the resolver during migration.
 
-- [ ] **Step 1: Write failing toddler tests.** With no explicit signal, exclude phone, phone charger, headphones, deodorant, medication, laptop, and adult documents while retaining tops, sleepwear, socks, and suitable shoes. With explicit diapers/stroller/car-seat/medication/comfort needs, include only the selected need families.
+- [ ] **Step 1: Write failing toddler tests.** With no explicit signal, exclude phone, phone charger, headphones, deodorant, medication, laptop, and Photo ID while retaining tops, sleepwear, socks, and suitable shoes. With explicit diapers/stroller/car-seat/medication/comfort needs, include only the selected need families. Never implement a category-wide Documents exclusion.
 
 - [ ] **Step 2: Write attribution tests.** A primary traveler’s medication/laptop chip cannot make the child eligible; an unassigned note/chip cannot claim coverage for anyone.
 
-- [ ] **Step 3: Add closed eligibility metadata and validator coverage.** Missing metadata for sensitive families fails validation rather than defaulting permissively.
+- [ ] **Step 3: Write the approved travel-document matrix tests from design Section 9.3.** On a confirmed international family trip, every traveler including a toddler receives a personal passport and traveler-specific Visa/entry docs; Photo ID follows adult/teen eligibility and is not blindly assigned to the toddler; Travel insurance info resolves once as shared/single-per-party.
 
-- [ ] **Step 4: Insert eligibility before quantity/sharing, record suppressions in the audit ledger, delete redundant skip branching, and run focused tests.**
+- [ ] **Step 4: Add closed eligibility metadata and validator coverage.** Missing metadata for sensitive families and each canonical document family fails validation rather than defaulting permissively.
 
-- [ ] **Step 5: Commit the eligibility layer.**
+- [ ] **Step 5: Insert eligibility before quantity/sharing, record suppressions in the audit ledger, delete redundant skip branching, and run focused tests.**
+
+- [ ] **Step 6: Commit the eligibility layer.**
 
 ```bash
 git add ios/PackWise/Domain/Packing/TravelerEligibilityResolver.swift ios/PackWise/Domain/Packing/Catalog.swift \
@@ -310,7 +341,7 @@ git commit -m "feat: enforce traveler eligibility before recommendation"
 
 - Produces: reviewed eligibility/sharing classification table for every relevant canonical ID and executable rule coverage.
 
-- [ ] **Step 1: Inventory every canonical item and write the audit table.** Explicitly adjudicate toothpaste, shampoo, body wash, pain reliever, laundry bag, packing cubes, toiletry bag, chargers, adapters, sunscreen, umbrellas, medicines, books, and electronics across eligibility and sharing axes.
+- [ ] **Step 1: Inventory every canonical item and write the audit table.** Explicitly adjudicate Passport, Photo ID, Visa/entry docs, Travel insurance info, toothpaste, shampoo, body wash, pain reliever, laundry bag, packing cubes, toiletry bag, chargers, adapters, sunscreen, umbrellas, medicines, books, and electronics across eligibility and sharing axes.
 
 - [ ] **Step 2: Add failing tests for shared toiletries, personal clothing, personal footwear, shared umbrella, device-scaled adapters/chargers, and party/duration-scaled consumables.** Include solo, couple, family with two other adults+toddler, and group with three additional adults.
 
@@ -323,6 +354,43 @@ python3 scripts/validate_shared.py
 git add shared/rules/party.json shared/catalog ios/PackWiseTests \
   docs/plans/2026-09-04-product-experience-v2-sharing-audit.md
 git commit -m "fix: align family eligibility and sharing across catalog"
+```
+
+## Checkpoint V — Whole-product visual reference before production wiring
+
+### Visual reference contact sheet
+
+**Files:**
+
+- Modify: `ios/PackWise/Features/Developer/DebugPreviewScene.swift`
+- Modify: `scripts/capture_ios_screens.sh`
+- Modify: `ios/PackWiseTests/M1LoopTests.swift`
+- Add evidence: `docs/device-evidence/product-v2/visual-reference-checkpoint.md`
+
+**Produces:** deterministic, non-production reference states for 3 onboarding pages, all 9 setup steps, Trip Detail, solo Packing List, family grouped Packing List, traveler-filtered Packing List, Add Item, Choose Category, and Item Detail, rendered into one contact sheet.
+
+- [ ] **Step 1: Add a failing inventory test for every required reference-state identifier.** The test pins the complete set so no major surface silently drops from the checkpoint.
+
+- [ ] **Step 2: Add deterministic Debug preview models and reference compositions using the existing PackWise tokens/primitives.** These are visual targets, not wired production screens; they contain no network calls, persistence writes, or new product behavior.
+
+- [ ] **Step 3: Extend the existing capture script to render every reference state at the standard device size, then build one contact sheet.** Record the commit, simulator/runtime, capture command, and artifact paths in the evidence document.
+
+- [ ] **Step 4: Review the contact sheet with screen titles covered.** Typography hierarchy, margins, card/row restraint, icon containers, selected states, navigation treatment, CTA position, sheets, and empty states must still read as one app.
+
+- [ ] **Step 5: Fix systemic discrepancies only in shared tokens, primitives, preview shell, or reference compositions; rerender until the contact sheet passes.** Do not wire feature behavior in this checkpoint.
+
+- [ ] **Step 6: Run focused tests, shared validation, a Debug build, and commit the reference checkpoint.**
+
+```bash
+xcodebuild -project ios/PackWise.xcodeproj -scheme PackWise \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:PackWiseTests/M1LoopTests test
+python3 scripts/validate_shared.py
+xcodebuild -project ios/PackWise.xcodeproj -scheme PackWise \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+git add ios/PackWise/Features/Developer/DebugPreviewScene.swift scripts/capture_ios_screens.sh \
+  ios/PackWiseTests/M1LoopTests.swift docs/device-evidence/product-v2/visual-reference-checkpoint.md
+git commit -m "test: establish product v2 visual reference"
 ```
 
 ## Stage E — Setup flow redesign
@@ -344,15 +412,15 @@ git commit -m "fix: align family eligibility and sharing across catalog"
 - Produces: nine-step `SetupStep`, set-valued `TripDraft`, reusable `TripSetupShell`, reusable `MultiSelectionCard`/grid.
 - Consumes: repository set APIs and stable ordering.
 
-- [ ] **Step 1: Add state tests for fresh/edit drafts.** Assert multi-bag preference prefill, legacy-empty bags, multi-type round trip, family ID reuse, explicit activity retention when types change, and review summaries.
+- [ ] **Step 1: Add state tests for fresh/edit drafts.** Assert multi-bag preference prefill, legacy-empty bags, multi-type round trip, family ID reuse, and review summaries. Assert suggested activities remain absent from `TripContext.activities` until tapped and selected activities remain byte-for-byte stable when trip types change.
 
 - [ ] **Step 2: Change `TripDraft` to `tripTypes`/`bagTypes` and split the nine logical steps.** Require at least one trip type; allow empty bags.
 
 - [ ] **Step 3: Implement the shared shell with bottom safe-area action.** Remove confirmation-action Next from the toolbar; retain native Back/cancel and accessible “Step n of 9.” Verify keyboard avoidance and Dynamic Type.
 
-- [ ] **Step 4: Implement related multi-select surfaces for trip types, activities, and bags.** Suggested activities are the stable union from all selected trip types; never auto-remove an explicit activity.
+- [ ] **Step 4: Implement related multi-select surfaces for trip types, activities, and bags.** Suggested activities are the stable union from selected trip types and affect display/order only. Only a user tap changes `draft.activities`; changing trip types never auto-adds or removes an activity.
 
-- [ ] **Step 5: Implement unambiguous traveler counts/labels, the combined style/laundry screen, and the matching Me default-bags multi-select.** Family count means Other adults; derived labels are stable and distinct.
+- [ ] **Step 5: Implement unambiguous traveler counts/labels, the combined style/laundry screen, and the matching Me default-bags multi-select.** Family and Group both count Other adults because You is implicit; Family separately counts Children. Review renders one interpretation (`You + 3 adults` or `4 adults`). Derived labels are stable and distinct.
 
 - [ ] **Step 6: Update Review with separate wrapping sections for all context values and run focused tests/build.**
 
@@ -492,7 +560,7 @@ git commit -m "feat: add a shared category selection flow"
 
 ## Stage J — Recommendation naming and trace audit
 
-### Task 13: Align causal needs, item names, reasons, and provenance
+### Task 13: Align causal needs, names, and the single RecommendationTrace
 
 **Files:**
 
@@ -505,13 +573,13 @@ git commit -m "feat: add a shared category selection flow"
 
 **Interfaces:**
 
-- Produces: one reviewed mapping from causal need → candidate display name → reason template → structured provenance.
+- Produces: one reviewed mapping from causal need → candidate display name → `RecommendationTrace`, consumed by every customer-facing explanation surface.
 
 - [ ] **Step 1: Generate the audit inventory from all trip-type/activity contracts.** Manually adjudicate every mismatch, beginning with Nightlife/Nice dinner outfit; record keep/rename/remap decisions in the audit doc.
 
-- [ ] **Step 2: Add failing reason-quality tests for each adjudicated mismatch and multi-source trace.** Assert customer text is specific, truthful, and contains no internal/AI vocabulary.
+- [ ] **Step 2: Add failing reason-quality tests for each adjudicated mismatch and multi-source trace.** Assert customer text is specific, truthful, and contains no internal/AI vocabulary. Assert Item Detail, row subtitle, and reason rendering all consume the same `RecommendationTrace` value.
 
-- [ ] **Step 3: Apply catalog/rule/reason changes and merge compatible multi-cause facts into one structured trace.** Keep Phase 8 sections and quantity trace unchanged.
+- [ ] **Step 3: Apply catalog/rule/reason changes and merge compatible multi-cause facts into the existing Phase 8 trace structure:** `provenance[]`, quantity evidence, satisfied capabilities, suppressions, constraints, and authority. `recommendationTraceRaw` is its persistence encoding. Legacy source/reason fields feed only one migration adapter and never independently decide UI copy. Keep Phase 8 sections and quantity behavior unchanged.
 
 - [ ] **Step 4: Run shared validation and reason/golden tests; review semantic diffs; commit.**
 
@@ -541,17 +609,21 @@ git commit -m "fix: align recommendation names with causal context"
 
 - Produces: destination-timezone query bounds, typed diagnostic envelope, deterministic fixture rebasing, unchanged `WeatherAvailability`/reconciliation authority.
 
-- [ ] **Step 1: Add boundary tests with device timezone different from destination timezone.** Cover a trip beginning today in Chicago, Sep 4–8 coverage, end-exclusive request bounds, partial provider coverage, seasonal future trip, stale cache, and weather-change reconciliation.
+- [ ] **Step 1: Add diagnostic-envelope tests before changing live behavior.** Assert request coordinates/dates/timezones, provider-returned day bounds, normalization inclusions/exclusions, cache decision, typed error, and final `WeatherQuality` are captured; assert notes/custom text are absent.
 
-- [ ] **Step 2: Add diagnostic tests.** Assert request coordinates/dates/timezones, returned day bounds, normalization exclusions, cache choice, typed error, and final weather state are captured; assert notes/custom text are absent.
+- [ ] **Step 2: Implement diagnostics only and run the focused tests.** Wire the envelope through `WeatherKitClient` → `WeatherKitWeatherService` → `TripWeatherResolver` → cache/result selection without changing query bounds, normalization, fallback, or UI behavior.
 
-- [ ] **Step 3: Add fixture-rebase tests.** A fixed named fixture rebases local day components to any target trip range and then passes through real normalization; no hardcoded fixture date may cause injection failure.
+- [ ] **Step 3: Reproduce the current Chicago failure on physical hardware before any behavioral fix.** Use a trip beginning on the device’s current day. Save raw requested coordinates/dates, destination/device timezones, provider coverage, normalization result, cache result, typed error, and final quality in `docs/device-evidence/product-v2/weatherkit.md`.
 
-- [ ] **Step 4: Instrument and run the current code on the affected physical-device scenario before changing behavior.** Save raw evidence in `docs/device-evidence/product-v2/weatherkit.md`. Diagnose only from the captured boundary.
+- [ ] **Step 4: Write the smallest failing regression test proved by Step 3.** If the evidence shows a destination-timezone boundary defect, cover the exact device/destination timezone and current-date range. If it shows entitlement, provider, cache, or normalization failure instead, test that exact boundary and do not add an unrelated timezone fix.
 
-- [ ] **Step 5: Apply the smallest source fix supported by evidence.** Normalize query bounds in destination timezone, preserve precise/partial/seasonal semantics, and keep Apple attribution. Do not turn an error into fake seasonal weather.
+- [ ] **Step 5: Apply the smallest source fix supported by evidence and verify red→green.** Preserve precise/partial/seasonal semantics and Apple attribution. Do not turn an error into fake seasonal weather.
 
-- [ ] **Step 6: Implement debug fixture rebasing behind Debug compilation, rerun tests and the real Chicago current-trip request, and commit with evidence.**
+- [ ] **Step 6: Add a failing fixture-rebase test, then implement Debug-only rebasing.** A named fixture rebases local day components to any target trip range and passes through real normalization/reconciliation; hardcoded fixture dates cannot make injection fail.
+
+- [ ] **Step 7: Run focused and full weather tests, then re-prove the same Chicago trip on hardware.** Append before/after evidence and final quality to the evidence file. Stop if the live symptom remains.
+
+- [ ] **Step 8: Run the green-commit checks and commit diagnostics, evidence-supported repair, Debug injection, and evidence.**
 
 ```bash
 git add ios/PackWise/Data/Weather ios/PackWise/Data/WeatherKit ios/PackWise/Domain/Weather \
@@ -579,12 +651,13 @@ git commit -m "fix: repair and instrument current-trip WeatherKit"
 
 - Produces: array-valued `tripTypes`/`bagTypes` DTOs in stable order and aligned source-of-truth documentation.
 - Constraint: interpretation remains gated off; this changes contract shape, not M3B behavior.
+- Compatibility: until Tasks 3–5 consume multi-value context, boundary adapters accept singleton arrays and empty bags but explicitly return `unsupportedButSafe` for multiple values. They never select a first/primary value. Tasks 4 and 5 remove those guards as their engine semantics land.
 
 - [ ] **Step 1: Add failing schema/API tests.** Require one-or-more known `tripTypes`, zero-or-more known physical `bagTypes`, reject legacy singular fields in new requests, reject unknown values, and verify canonical stable ordering.
 
-- [ ] **Step 2: Convert all fixtures to arrays and add realistic combination fixtures.** Keep legacy-store migration fixtures separate from new request fixtures.
+- [ ] **Step 2: Convert existing request/eval fixtures to singleton `tripTypes` arrays and zero/singleton `bagTypes` arrays.** Keep legacy-store migration fixtures separate. Add multi-value contract fixtures only where the temporary adapter can validate/round-trip them without invoking unfinished engine behavior.
 
-- [ ] **Step 3: Update Swift DTO and TypeScript validation/model input shapes.** Do not enable note enrichment or gap wiring.
+- [ ] **Step 3: Update Swift DTO and TypeScript validation/model input shapes in the same change.** Add explicit temporary singleton/empty compatibility guards at unfinished engine call sites; multiple values return `unsupportedButSafe` and never choose a primary. Do not enable note enrichment or gap wiring.
 
 - [ ] **Step 4: Regenerate artifacts using only the generators, then run validation/preflight/tests.**
 
@@ -603,7 +676,7 @@ npm --prefix api run preflight
 ```bash
 git add shared api ios/PackWise/Data/SharedResources.swift ios/PackWise/Data/Intelligence/IntelligenceDTO.swift \
   AGENTS.md .cursor/rules docs
-git commit -m "docs: align contracts and product sources with experience v2"
+git commit -m "feat: migrate product v2 contracts to array context"
 ```
 
 ## Stage L — Authority, simulator, and physical-device verification

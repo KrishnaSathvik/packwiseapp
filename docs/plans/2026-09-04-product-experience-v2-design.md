@@ -1,6 +1,6 @@
 # PackWise Product Experience V2 — Design Specification
 
-**Status:** Proposed for review. Documentation only; implementation has not started.
+**Status:** Approved with the 2026-09-04 amendments below. Implementation may start only from the amended task order.
 
 **Date:** 2026-09-04
 
@@ -39,6 +39,19 @@ destination + dates + party + trip types + activities + bags
 ```
 
 Product Experience V2 is a prerequisite gate. Phase 9, M3B, M3C, memory product work, notifications, and lifecycle work remain frozen until the V2 exit gate is green.
+
+## 1.1 Approved execution amendments
+
+The following are part of the approved design, not implementation discretion:
+
+1. Instrument, reproduce, diagnose, minimally repair, and physically recheck the current-trip WeatherKit failure immediately after safe V4 groundwork and before engine or broad UI changes.
+2. Use the product-owned trip-type matrix in Section 8.1. Coding may not invent or expand type semantics.
+3. Suggested activities remain unselected and non-causal until the user taps them.
+4. Family and Group both count **Other adults** because the current user is implicit.
+5. Traveler eligibility includes the travel-document matrix in Section 9.3; young child does not mean no documents.
+6. Persist and render one Phase 8 `RecommendationTrace`; do not create a second explanation authority.
+7. Any commit touching request/fixture shape updates or bridges Swift, shared schemas, TypeScript validation, generated artifacts, and tests together so the branch remains green.
+8. Review all major V2 screens as one contact sheet before full production UI wiring.
 
 ## 2. Repository baseline
 
@@ -121,7 +134,7 @@ Unknown persisted values are dropped with a normalization diagnostic. If all tri
 
 ```text
 TripRecord.tripTypesRaw     JSON string array, default "[]"
-PackingItemRecord.provenanceRaw  JSON string array, default "[]"
+PackingItemRecord.recommendationTraceRaw  versioned JSON object, optional for migrated rows
 PackingPreferenceRecord.preferredBagTypesRaw  JSON string array, default "[]"
 PackingMemoryEventRecord.tripTypesRaw  JSON string array, default "[]"
 PackingMemoryEventRecord.bagTypesRaw   JSON string array, default "[]"
@@ -138,7 +151,7 @@ var bagTypes: Set<BagType>  // derived from the existing BagRecord relationship
 
 `TripRecord.bags` is the persisted bag source of truth; adding a parallel `bagTypesRaw` field would create drift. V2 maintains at most one setup-created `BagRecord` per selected physical type, preserves the ID/owner of a matching existing record, and derives a sorted set at context boundaries. Future bag assignment may add concrete instances, but `TripContext` still consumes the de-duplicated type set. Every trip-type write sets the new stable array. During the compatibility window it may also write the first stable trip type to `tripTypeRaw`, solely so older diagnostics can read the record. No engine or UI decision reads legacy `tripTypeRaw` or `bagTypeRaw`.
 
-`PackingItemRecord.provenanceRaw` persists the stable structured trip-type/activity/weather facts needed by multi-context trace. Existing `sourceSignalsRaw`, reason code/arguments, quantities, and authority fields remain intact.
+`PackingItemRecord.recommendationTraceRaw` is the persistence encoding of the existing Phase 8 `RecommendationTrace` source of truth. It carries inclusion provenance, quantity evidence references, satisfied capabilities, suppressions, constraints, and authority facts. Existing `sourceSignalsRaw`, `reason`, `reasonCode`, and `reasonArgumentsRaw` remain only as V3 migration inputs and compatibility diagnostics; no V2 Item Detail or reason renderer independently reads them to decide customer-facing explanation.
 
 ### 6.2 Migration rules
 
@@ -156,7 +169,7 @@ V3 → V4 is an explicit migration with fixture-backed store tests:
 
 Migrating `roadTripLuggage` does **not** add `.roadTrip` to `tripTypes`; doing so would infer transportation intent from an obsolete bag label.
 
-The same one-to-one conversion applies to immutable `ContextFingerprint` memory events using stable arrays. If an existing matching `BagRecord` exists, migration keeps its identity and owner; it does not discard assignment metadata. Existing item, override, owner, carrier, packed, category, and quantity fields are untouched. Existing packing items begin with empty structured provenance and continue to render their Phase 8 source-signal/reason fallback until the next accepted regeneration supplies facts.
+The same one-to-one conversion applies to immutable `ContextFingerprint` memory events using stable arrays. If an existing matching `BagRecord` exists, migration keeps its identity and owner; it does not discard assignment metadata. Existing item, override, owner, carrier, packed, category, and quantity fields are untouched. Existing packing items use one migration adapter to decode legacy source/reason fields into `RecommendationTrace`; the UI still consumes only the trace interface. The next accepted regeneration persists the native V2 trace encoding.
 
 `TravelerPreferences.preferredBagTypes` and `PackingPreferenceRecord.preferredBagTypesRaw` replace the singular default-bag preference. Legacy physical defaults migrate to singleton sets; `notSure`, `roadTripLuggage`, and unknown values migrate to empty. Me edits the same four-bag multi-select used by setup, and fresh setup drafts copy that set without making it mandatory.
 
@@ -205,7 +218,55 @@ Precedence is deterministic:
 
 ## 8. Typed need composition
 
-### 8.1 Contracts
+### 8.1 Approved TripTypeContract matrix
+
+This table is the product contract. Suggested activities affect discovery/order only and are not selected or causal until the user taps them.
+
+| Trip type | Exact typed needs contributed | Suggested activities, unselected | Explicit non-implications |
+| --- | --- | --- | --- |
+| Vacation | `leisureGeneralTravel` | Sightseeing, Walking, Nice Dinner, Shopping | Beach/swim, formal/work, nightlife, or a second baseline |
+| City Break | `urbanWalking`, `cityDayUse` | Sightseeing, Walking, Museums, Nice Dinner, Shopping, Nightlife | Business/work, checked capacity, or automatic activity selection |
+| Beach | `beachSwim`, `sunExposure` | Swimming, Beach Days, Snorkeling, Boat Trip | Vacation baseline, nightlife, or duplicated everyday clothing |
+| Business | `workContext`, `formalPresentation` | Work, Nice Dinner, Walking | Leisure, nightlife, or larger luggage capacity |
+| Outdoor | `outdoorDayUse` | Hiking, Wildlife, Walking, Running | Camping, overnight/technical gear, or backpack ownership |
+| Road Trip | `roadTravelComfort` | Sightseeing, Walking | Larger luggage capacity, a physical bag, camping, or outdoor activity |
+| Wedding / Event | `formalEvent` | Nice Dinner | Business/work devices, nightlife, or a vacation baseline |
+| Ski / Snow | `snowSport`, `coldActivityExposure` | none | A duplicate generic Outdoor contract, camping, or technical gear beyond the approved snow candidates |
+| Festival | `festivalAttendance` | none | Nightlife, camping, substance use, or larger luggage capacity |
+| Visiting Family | `hostVisit` | Sightseeing, Walking | Family party structure, children, caregiving items, or duplicated Vacation context |
+| Other | none | none | Any deterministic packing inference from the label or arbitrary text |
+
+The needs have these bounded meanings:
+
+- `leisureGeneralTravel`: quiet leisure/down-time candidates only; base essentials and clothing remain elsewhere.
+- `urbanWalking` and `cityDayUse`: city mobility/day-use coverage, not an itinerary.
+- `beachSwim` and `sunExposure`: swim/beach capability and sun protection.
+- `workContext` and `formalPresentation`: approved work-device/formal candidates subject to traveler eligibility.
+- `outdoorDayUse`: non-technical day-outdoor hydration, first-aid, insect, and walking/hiking candidates.
+- `roadTravelComfort`: car-power and road-snack/comfort candidates; never capacity.
+- `formalEvent`: event clothing/footwear and approved event accessory candidates, not work.
+- `snowSport` and `coldActivityExposure`: approved snow-sport equipment and cold-layer capabilities without replaying Outdoor.
+- `festivalAttendance`: hearing protection, power, sun, and hygiene candidates; no inferred nightlife/camping.
+- `hostVisit`: the approved host-gift candidate and no party inference.
+
+Required combination behavior follows unioned needs plus one coverage/quantity pass:
+
+| Combination | Required composition behavior |
+| --- | --- |
+| Vacation + Beach | leisure + beach/swim/sun; baseline once |
+| Vacation + City Break | leisure + urban/city; everyday walking once |
+| Vacation + Beach + City Break | all three bounded contexts; shared essentials and quantities once |
+| Business + City Break | work/formal + urban walking; no leisure inference |
+| Business + Vacation | work/formal + leisure; one baseline and eligibility-aware devices |
+| Road Trip + Outdoor | road comfort + outdoor day use; no luggage-capacity inference |
+| Outdoor + Ski/Snow | day-outdoor + snow/cold, with coverage suppressing only genuine redundancy |
+| Vacation + Wedding/Event | leisure + formal event; no work-device inference from the event |
+| Festival + City Break | festival + urban/city; Nightlife remains unselected/non-causal |
+| Visiting Family + Vacation | host visit + leisure; no party/child inference |
+
+Any change to this table is a product-spec change with its own reviewed documentation commit before code.
+
+### 8.2 Contracts
 
 The new contract layer is:
 
@@ -231,7 +292,7 @@ The initial `PackingNeed` vocabulary is deliberately product-sized: everyday mob
 
 Trip-type contracts live in a generated/validated shared rule file and contain need IDs, not canonical item IDs. A central need-candidate mapping may identify canonical candidates, but no trip type directly owns an item checklist. Existing catalog capability metadata and `CoverageResolver` decide overlaps. Candidate IDs still pass through canonical validation.
 
-### 8.2 Composition
+### 8.3 Composition
 
 All selected known types contribute. The engine unions identical needs and retains all distinct provenance. Candidate identity remains the existing recommendation key (`ownership + traveler + canonical ID`), so a beach and city need cannot produce duplicate sunscreen or walking-shoe rows.
 
@@ -250,7 +311,7 @@ The order is fixed:
 
 The implementation must not create a second deduper, quantity engine, constraint engine, or trace architecture.
 
-### 8.3 Combination expectations
+### 8.4 Combination expectations
 
 - Vacation + Beach + City Break contributes leisure, swim/beach, and urban walking needs. Everyday essentials and clothing quantities are computed once.
 - Business + City Break contributes work/formal and urban walking needs. A versatile walking shoe may cover city use; dress shoes remain only when formal capability is needed.
@@ -290,9 +351,34 @@ The audit must explicitly cover toothpaste, shampoo, body wash, pain reliever, l
 
 Underlying personal records remain one per traveler where appropriate. Sharing changes neither owner nor carrier semantics.
 
+### 9.3 Approved travel-document eligibility matrix
+
+Young-child filtering is item-specific. It must never become “remove Documents.”
+
+| Canonical document family | Eligibility | Ownership/sharing | Deterministic trigger |
+| --- | --- | --- | --- |
+| Passport | every traveler, including infant/toddler/child | `personalOnly`, one per traveler | confirmed international trip |
+| Photo ID | adult and teen by default; younger child only with a future explicit requirement | `personalOnly` | base travel identity rule for eligible ages; never blindly attach to a toddler |
+| Visa / entry docs | every traveler, including infant/toddler/child | `personalOnly`, one record per traveler | confirmed international/entry-document context under the existing deterministic rule; trace says to verify requirements, not that a visa is certainly required |
+| Travel insurance info | all parties | `singlePerParty`, optional carrier | approved trip-level insurance/document rule; never multiplied once per family member |
+
+Passport and entry-document eligibility does not infer citizenship, custody, consent letters, or destination-specific legal requirements PackWise does not know. Any future document expansion requires its own explicit contract.
+
 ## 10. Recommendation trace
 
-`RecommendationSignal` remains the broad customer-facing grouping, but each draft also carries stable structured provenance facts for the selected trip type/activity/weather signal that contributed. Multiple facts may coexist:
+There is one explanation model:
+
+```text
+RecommendationTrace
+├── provenance[]
+├── quantityEvidence
+├── satisfiedCapabilities[]
+├── suppressions[]
+├── constraints[]
+└── authority[]
+```
+
+`RecommendationSignal` remains a broad label inside trace provenance. Each draft carries stable structured facts for every selected trip type/activity/weather signal that actually contributed. `recommendationTraceRaw` is only this model's persistence encoding. `sourceSignalsRaw`, `reasonArgumentsRaw`, and legacy reason fields may feed a migration adapter for old rows, but Item Detail, row subtitles, and reason rendering consume `RecommendationTrace` only. Multiple facts may coexist:
 
 ```text
 Walking shoes
@@ -311,6 +397,8 @@ Weather · Outdoor
 Reason selection is deterministic and may synthesize one sentence from compatible facts. It never chooses a fake primary type. Phase 8’s structured trace sections and user-authority behavior remain unchanged.
 
 ## 11. Setup experience
+
+Before wiring the production interaction flow, the implementation creates deterministic preview/reference states for all 3 onboarding pages, all 9 setup steps, Trip Detail, solo Packing List, family grouped Packing List, traveler-filtered Packing List, Add Item, Choose Category, and Item Detail. They are rendered into one contact sheet and reviewed as a family. The gate is systemic: if titles were removed, typography, margins, surfaces, selection states, CTA placement, and navigation treatment must still identify one PackWise product. Corrections happen in shared tokens, primitives, shells, and preview models before feature-specific wiring.
 
 The setup becomes nine logical steps:
 
@@ -334,11 +422,11 @@ The empty state has a title, concise helper, search field, and recent destinatio
 
 ### Travelers
 
-Party mode remains single-select. Family input labels the count as “Other adults,” because the current user is implicit. Review produces unambiguous totals. Empty optional names are formatted by stable party order as You, Adult 1, Adult 2, Child 1, Child 2, Shared. Stable labels are presentation-derived from stable traveler IDs/order and do not overwrite optional names.
+Party mode remains single-select. Family and Group both label the count as “Other adults,” because the current user is implicit; Family additionally counts Children. Review produces unambiguous totals such as “You + 3 adults” or “4 adults.” Empty optional names are formatted by stable party order as You, Adult 1, Adult 2, Child 1, Child 2, Shared. Stable labels are presentation-derived from stable traveler IDs/order and do not overwrite optional names.
 
 ### Trip types and activities
 
-Both use the same multi-selection primitive: clear checkmark, accent selected surface, icon, text, and color-independent accessibility state. Trip types require at least one selection. Suggested activities are the stable union of suggestions from all selected trip types; explicit activity selections are never removed when trip types change. Custom activity text stays inert unless it normalizes to a known contract.
+Both use the same multi-selection primitive: clear checkmark, accent selected surface, icon, text, and color-independent accessibility state. Trip types require at least one selection. Suggested activities are the stable union of suggestions from all selected trip types, but suggestion is not selection: trip types affect only option visibility/order, a user tap alone writes `TripContext.activities`, and an unselected suggestion is non-causal. Explicit activity selections are never silently added or removed when trip types change. Custom activity text stays inert unless it normalizes to a known contract and the user accepts it.
 
 ### Bags
 
@@ -387,6 +475,8 @@ The naming audit compares every trip-type/activity trigger, need, canonical disp
 
 ## 14. WeatherKit repair and diagnostics
 
+This work executes immediately after safe V4/domain groundwork and before trip-type engine, family, or broad UI changes. The first action is instrumentation and reproduction on the current planning HEAD so later changes cannot obscure the baseline.
+
 The physical-device failure is treated as an unknown until evidence identifies it. Debug diagnostics capture, with no sensitive user text:
 
 ```text
@@ -401,6 +491,8 @@ final TripWeatherState and WeatherQuality
 ```
 
 Dates are normalized in the destination timezone before the WeatherKit query and again when matching returned days. Current-date, partial-window, and future-seasonal tests pin the boundary behavior. The UI never diagnoses from absence alone.
+
+The repair sequence is strict: add diagnostics without changing behavior; reproduce the Chicago current-trip failure on hardware; save the raw boundary; identify the smallest supported cause; add a failing regression test; apply only the evidence-supported fix; rerun focused/full weather tests; then re-prove the same trip on hardware. If the evidence contradicts the timezone hypothesis, the implementation follows the evidence rather than this document's example.
 
 Debug injection rebases a named fixture’s local day components onto the target trip’s date range, preserving the fixture’s weather pattern and passing through the real normalization/reconciliation path. It remains compiled only in Debug.
 

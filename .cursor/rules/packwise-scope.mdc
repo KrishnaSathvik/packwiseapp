@@ -7,7 +7,9 @@ alwaysApply: true
 
 Build the current milestone unless the user expands scope. Frozen decisions: `docs/implementation-decisions.md`.
 
-**Now: Product Experience V2 documentation review** — development App Attest is green, but the first physical-device UI/UX pass and current-trip WeatherKit behavior exposed blockers. Do not implement V2 until `docs/plans/2026-09-04-product-experience-v2-design.md` and `docs/superpowers/plans/2026-09-04-product-experience-v2.md` are reviewed. M3B and M3C remain frozen until the complete V2 simulator and physical-device gate is green. TestFlight production App Attest remains deferred to distribution.
+**Now: Product Experience V2 implementation** — the amended design and plan are approved. Development App Attest is green, but the first physical-device UI/UX pass and current-trip WeatherKit behavior exposed blockers. M3B and M3C remain frozen until the complete V2 simulator and physical-device gate is green. TestFlight production App Attest remains deferred to distribution.
+
+The amended plan is approved. Execute its mandatory order: safe V4 groundwork, then current-device WeatherKit evidence/repair, then green cross-boundary array migration, then approved type/engine/family work. Pass the whole-product visual contact-sheet checkpoint before production UI wiring. Every intermediate commit keeps focused iOS, shared validation, and affected API/preflight checks green.
 
 Sequence: **M3A** API foundation → **Product Experience V2** → **M3B** accepted trip-note enrichment → **M3C** resolver-filtered packing gaps. `/v1/packing/optimize` is backend-only. Ask PackWise / Pack lighter UI are V1+.
 

@@ -153,7 +153,7 @@ M3
         ✅ physical-device App Attest (development)
         ❌ first full device UI/UX pass exposed Product Experience V2 blockers
         ⏸ TestFlight production App Attest — deferred to distribution
-Product Experience V2 ← CURRENT, documentation under review
+Product Experience V2 ← CURRENT, amended plan approved
     true multi-trip-type + multi-bag context
     family eligibility/sharing + grouped All view
     coherent setup/onboarding/destination/list UX

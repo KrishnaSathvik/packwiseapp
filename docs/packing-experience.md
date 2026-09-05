@@ -210,6 +210,8 @@ Don't suggest on trips like this
 
 Tap an item. Bottom sheet.
 
+Product Experience V2 keeps one structured `RecommendationTrace` as the explanation source of truth: provenance, quantity evidence, satisfied capabilities, suppressions, constraints, and authority. Persisted trace JSON backs that model; legacy source/reason fields are migration inputs only and do not independently render customer copy.
+
 Example:
 
 **Rain Jacket**
