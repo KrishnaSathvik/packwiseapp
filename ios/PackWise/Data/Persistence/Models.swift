@@ -530,6 +530,16 @@ final class PackingPreferenceRecord {
     /// `preferredBagRaw` as the default-bag preference (design Section
     /// 6.2); the legacy scalar remains only as a migration/compat column.
     var preferredBagTypesRaw: String = "[]"
+    /// True once `preferredBagTypesRaw` holds real V4 data — either backfilled
+    /// from `preferredBagRaw` once, or written directly by `init`/`apply`.
+    /// Unlike `TripRecord.tripTypesRaw` (never legitimately empty, so its
+    /// own default doubles as an "unmigrated" signal), an empty
+    /// `preferredBagTypesRaw` is a valid real V4 value (no bag preference),
+    /// so this needs its own explicit marker: without it, the V3 → V4
+    /// backfill would re-derive from the stale `preferredBagRaw` scalar on
+    /// every launch forever and could clobber a genuine later multi-value
+    /// write the same way it once did for `TripRecord.tripTypesRaw`/`bags`.
+    var preferredBagTypesMigrated: Bool = false
     var usesFahrenheit: Bool
     var usesImperial: Bool
     var usuallyWorkOut: Bool
@@ -545,6 +555,7 @@ final class PackingPreferenceRecord {
         self.packingStyleRaw = preferences.packingStyle.rawValue
         self.preferredBagRaw = preferences.preferredBag.rawValue
         self.preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(preferences.preferredBagTypes)
+        self.preferredBagTypesMigrated = true
         self.usesFahrenheit = preferences.usesFahrenheit
         self.usesImperial = preferences.usesImperial
         self.usuallyWorkOut = preferences.usuallyWorkOut
@@ -583,6 +594,7 @@ final class PackingPreferenceRecord {
         packingStyleRaw = preferences.packingStyle.rawValue
         preferredBagRaw = preferences.preferredBag.rawValue
         preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(preferences.preferredBagTypes)
+        preferredBagTypesMigrated = true
         usesFahrenheit = preferences.usesFahrenheit
         usesImperial = preferences.usesImperial
         usuallyWorkOut = preferences.usuallyWorkOut
@@ -693,6 +705,21 @@ final class PostTripFeedbackRecord {
     }
 }
 
+// Known limitation, pre-existing before Product Experience V2: unlike
+// `PackWiseSchemaV1` (`SchemaV1.swift`, a genuinely frozen snapshot type),
+// `PackWiseSchemaV2` and `PackWiseSchemaV3` below alias the same always-live
+// types this file currently declares, rather than freezing their own
+// historical shape. That has been safe so far because every V2→V3 change
+// was purely additive (new defaulted/optional columns, one new entity) and
+// `MigrationStage.lightweight` tolerates that. It does mean there is no
+// independent, testable model of "an actual V2/V3-shaped store" to migrate
+// against — only ever today's live types. A `.custom` stage (which needs
+// its two schema versions to be genuinely distinct models, not just
+// differently labeled) was tried for V3 → V4 and does not work under this
+// aliasing scheme; see `PackWiseSchemaV4`'s doc comment for what was used
+// instead. A real fix — frozen per-version snapshot types for V2/V3, the
+// same pattern `SchemaV1.swift` already uses — is a separate task; flagging
+// it here rather than re-attempting it under this one.
 enum PackWiseSchemaV2: VersionedSchema {
     static var versionIdentifier: Schema.Version { Schema.Version(2, 0, 0) }
     static var models: [any PersistentModel.Type] {
@@ -746,25 +773,65 @@ enum PackWiseSchemaV4: VersionedSchema {
 /// Exposed as internal functions, not private, so tests can drive and
 /// assert on migration diagnostics directly.
 enum PackWiseSchemaV4Migration {
-    /// Migrates every V3-shaped record in `context` and saves the result.
-    /// Returns every normalization diagnostic recorded along the way
-    /// (design Section 6.2's "unknown value" rows). A per-record failure
-    /// never throws — only genuine SwiftData fetch/save failures propagate
-    /// — so one malformed row can't abort migrating the rest.
+    /// Migrates every still-unmigrated V3-shaped record in `context` and
+    /// saves the result. Returns every normalization diagnostic recorded
+    /// along the way (design Section 6.2's "unknown value" rows). A
+    /// per-record failure never throws — only genuine SwiftData fetch/save
+    /// failures propagate — so one malformed row can't abort migrating the
+    /// rest.
+    ///
+    /// Every record is filtered to "not yet migrated" before its legacy
+    /// scalar is consulted at all (see `needsTripMigration`,
+    /// `needsMemoryEventMigration`, and `PackingPreferenceRecord
+    /// .preferredBagTypesMigrated`). This function runs on *every*
+    /// container open, not once — without that
+    /// filter, it would keep re-deriving `tripTypesRaw`/`bags`/
+    /// `preferredBagTypesRaw` from their legacy scalars forever, silently
+    /// discarding any later genuine multi-value write made through
+    /// `TripRepository.applyTripTypes`/`applyBagTypes` (whose compat
+    /// scalars deliberately hold only the first stable value, never the
+    /// full selection) the next time the app launched. A record is only
+    /// ever migrated once; from then on its V4 columns are the only
+    /// authority.
     @discardableResult
     static func migrateV3Records(in context: ModelContext) throws -> [TripContextNormalizationDiagnostic] {
         var diagnostics: [TripContextNormalizationDiagnostic] = []
-        for trip in try context.fetch(FetchDescriptor<TripRecord>()) {
+        for trip in try context.fetch(FetchDescriptor<TripRecord>()) where needsTripMigration(trip) {
             diagnostics += migrate(trip, in: context)
         }
-        for preference in try context.fetch(FetchDescriptor<PackingPreferenceRecord>()) {
+        for preference in try context.fetch(FetchDescriptor<PackingPreferenceRecord>()) where !preference.preferredBagTypesMigrated {
             migrate(preference)
         }
-        for event in try context.fetch(FetchDescriptor<PackingMemoryEventRecord>()) {
+        for event in try context.fetch(FetchDescriptor<PackingMemoryEventRecord>()) where needsMemoryEventMigration(event) {
             diagnostics += migrate(event)
         }
         try context.save()
         return diagnostics
+    }
+
+    /// A trip has already been migrated to V4 the moment `tripTypesRaw`
+    /// holds a real value: every genuine V4 write — `TripRecord.init`,
+    /// `TripRepository.apply`/`applyTripTypes`, and this migration itself —
+    /// always writes at least one stable trip type (a trip can never
+    /// validly have zero), so `tripTypesRaw` staying at its just-added
+    /// default `"[]"` is only possible for a row that predates this
+    /// migration ever running. Gating the whole trip (bag conversion
+    /// included, not only the trip-type array) on this one check is
+    /// intentional: both legs are migrated together in `migrate(_:in:)`,
+    /// so one flag correctly protects both once either has run.
+    private static func needsTripMigration(_ trip: TripRecord) -> Bool {
+        trip.tripTypesRaw == "[]"
+    }
+
+    /// Parallel reasoning to `needsTripMigration`: a memory-event
+    /// fingerprint's `tripTypesRaw` is always non-empty once genuinely
+    /// written at V4 (it derives from `TripRecord.tripTypes`, itself never
+    /// empty), so its untouched default marks a still-unmigrated row. Its
+    /// `bagTypesRaw` has no such invariant — an empty bag set is a valid
+    /// real V4 fingerprint — which is exactly why that column alone
+    /// couldn't be the guard.
+    private static func needsMemoryEventMigration(_ event: PackingMemoryEventRecord) -> Bool {
+        event.tripTypesRaw == "[]"
     }
 
     /// `tripTypeRaw = beach` → `tripTypesRaw = ["beach"]`; an unknown value
@@ -774,7 +841,8 @@ enum PackWiseSchemaV4Migration {
     /// `roadTripLuggage`/unknown leave no setup-created bag record (unknown
     /// also records a diagnostic). Migrating `roadTripLuggage` never adds
     /// `.roadTrip` to `tripTypes` — this only ever sees the bag scalar and
-    /// must not infer a trip type from it.
+    /// must not infer a trip type from it. Only ever called for a trip
+    /// `needsTripMigration` has confirmed is still legacy-shaped.
     private static func migrate(_ trip: TripRecord, in context: ModelContext) -> [TripContextNormalizationDiagnostic] {
         var diagnostics: [TripContextNormalizationDiagnostic] = []
 
@@ -808,15 +876,20 @@ enum PackWiseSchemaV4Migration {
     }
 
     /// Legacy physical defaults become singleton `preferredBagTypes`;
-    /// `notSure`, `roadTripLuggage`, and unknown values become empty.
+    /// `notSure`, `roadTripLuggage`, and unknown values become empty. Only
+    /// ever called for a preference row that isn't `preferredBagTypesMigrated`
+    /// yet.
     private static func migrate(_ preference: PackingPreferenceRecord) {
         let result = (try? BagType.normalizedSet(fromStableJSON: PackWiseStableEncoding.wrapLegacyScalar(preference.preferredBagRaw)))
             ?? NormalizedSet(values: [], diagnostics: [])
         preference.preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(result.values)
+        preference.preferredBagTypesMigrated = true
     }
 
     /// The same one-to-one scalar → stable-array conversion applies to
-    /// immutable memory-event fingerprints (design Section 6.2).
+    /// immutable memory-event fingerprints (design Section 6.2). Only ever
+    /// called for an event `needsMemoryEventMigration` has confirmed is
+    /// still legacy-shaped.
     private static func migrate(_ event: PackingMemoryEventRecord) -> [TripContextNormalizationDiagnostic] {
         var diagnostics: [TripContextNormalizationDiagnostic] = []
 

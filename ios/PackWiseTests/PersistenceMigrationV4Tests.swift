@@ -90,6 +90,14 @@ struct PersistenceMigrationV4Tests {
             otherAdultID = try #require(party.travelers.first { $0.role == .otherAdult }).id
             repo.replaceParty(party, bagType: .carryOn, on: trip)
             existingBagID = try #require(trip.bags.first).id
+            // `TripRecord.init` (the live type V3 also aliases) already
+            // populates `tripTypesRaw` as a side effect — that's Task 2's
+            // own V4 write behavior, not what a genuine pre-V4 row on disk
+            // would ever have. Resetting it to its untouched default is
+            // what actually makes this fixture V3-shaped and exercises the
+            // real backfill below, instead of the value already being
+            // correct by construction.
+            trip.tripTypesRaw = "[]"
 
             repo.replaceItems(on: trip, with: [
                 PackingItemDraft(
@@ -203,6 +211,7 @@ struct PersistenceMigrationV4Tests {
             context.insert(trip)
             tripID = trip.id
             repo.replaceParty(.solo(), bagType: .checked, on: trip)
+            trip.tripTypesRaw = "[]" // simulate a genuine pre-V4 row; see the family-trip test's comment
             try context.save()
         }
 
@@ -240,6 +249,12 @@ struct PersistenceMigrationV4Tests {
             let context = ModelContext(container)
             let repo = TripRepository(context: context)
 
+            // `TripRecord.init` (the live type V3 also aliases) already
+            // populates `tripTypesRaw` as a side effect — that's Task 2's
+            // own V4 write behavior, not what a genuine pre-V4 row on disk
+            // would ever have. Resetting it to its untouched default here
+            // is what actually makes this fixture "V3-shaped": the same
+            // technique already used below for the memory-event fixtures.
             func makeTrip(tripType: TripType, bagType: BagType) -> TripRecord {
                 let trip = TripRecord(
                     destination: destination, startDate: start, endDate: end,
@@ -248,6 +263,7 @@ struct PersistenceMigrationV4Tests {
                 )
                 context.insert(trip)
                 repo.replaceParty(.solo(), bagType: bagType, on: trip)
+                trip.tripTypesRaw = "[]"
                 return trip
             }
 
@@ -266,21 +282,22 @@ struct PersistenceMigrationV4Tests {
             for bag in unknownBagTypeTrip.bags { bag.bagTypeRaw = "duffelBag" }
             unknownBagTypeTripID = unknownBagTypeTrip.id
 
-            let physicalPreferences = PackingPreferenceRecord(from: .deviceDefaults())
-            physicalPreferences.preferredBagRaw = BagType.checked.rawValue
-            context.insert(physicalPreferences)
+            // `PackingPreferenceRecord.init` also already marks itself
+            // migrated (`preferredBagTypesMigrated = true`) as Task 2's own
+            // V4 write behavior; reset that plus the derived array to their
+            // untouched defaults so each fixture is genuinely V3-shaped.
+            func makeLegacyPreferences(preferredBagRaw: String) {
+                let record = PackingPreferenceRecord(from: .deviceDefaults())
+                record.preferredBagRaw = preferredBagRaw
+                record.preferredBagTypesRaw = "[]"
+                record.preferredBagTypesMigrated = false
+                context.insert(record)
+            }
 
-            let notSurePreferences = PackingPreferenceRecord(from: .deviceDefaults())
-            notSurePreferences.preferredBagRaw = BagType.notSure.rawValue
-            context.insert(notSurePreferences)
-
-            let roadTripLuggagePreferences = PackingPreferenceRecord(from: .deviceDefaults())
-            roadTripLuggagePreferences.preferredBagRaw = BagType.roadTripLuggage.rawValue
-            context.insert(roadTripLuggagePreferences)
-
-            let unknownPreferences = PackingPreferenceRecord(from: .deviceDefaults())
-            unknownPreferences.preferredBagRaw = "tote"
-            context.insert(unknownPreferences)
+            makeLegacyPreferences(preferredBagRaw: BagType.checked.rawValue)
+            makeLegacyPreferences(preferredBagRaw: BagType.notSure.rawValue)
+            makeLegacyPreferences(preferredBagRaw: BagType.roadTripLuggage.rawValue)
+            makeLegacyPreferences(preferredBagRaw: "tote")
 
             // Two genuine-looking pre-migration memory events: the array
             // columns reset to "[]" (their default) to represent a row that
@@ -477,5 +494,89 @@ struct PersistenceMigrationV4Tests {
 
         try repo.applyBagTypes([], on: trip)
         #expect(trip.bags.isEmpty)
+    }
+
+    // MARK: - Regression: the V3 → V4 backfill must never re-run against
+    // already-migrated data and clobber a later multi-value write.
+    //
+    // `PackWiseSchemaV4Migration.migrateV3Records` runs on every container
+    // open (not once). Before the `needsTripMigration`/
+    // `preferredBagTypesMigrated` guards existed, it unconditionally
+    // re-derived `tripTypesRaw`/`bags`/`preferredBagTypesRaw` from their
+    // legacy scalars every time — and `TripRepository.applyTripTypes`/
+    // `applyBagTypes` deliberately keep those legacy scalars at only a
+    // single stable/first value for old-diagnostic compatibility. Reopening
+    // the container after a multi-value write silently collapsed it back to
+    // that single legacy value (trip types) or resurrected a bag the user
+    // had explicitly removed (bags), because the backfill treated the
+    // stale scalar as authoritative forever. These tests close and reopen
+    // a real file-backed store — not the same session — to prove that
+    // failure mode is actually fixed, not just untriggered.
+
+    @Test @MainActor func multiValueTripTypeAndEmptyBagWritesSurviveContainerRelaunchWithoutClobbering() throws {
+        let storeURL = try makeStoreDirectory().appendingPathComponent("packwise.store")
+        let destination = try chicago()
+        var tripID = UUID()
+
+        do {
+            let container = try openV4Container(url: storeURL)
+            let context = ModelContext(container)
+            let repo = TripRepository(context: context)
+            let trip = TripRecord(
+                destination: destination, startDate: .now, endDate: .now.addingTimeInterval(3 * 86400),
+                durationDays: 4, durationNights: 3, tripType: .vacation, activities: [], bagType: .carryOn,
+                packingStyle: .balanced
+            )
+            context.insert(trip)
+            tripID = trip.id
+            repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
+
+            try repo.applyTripTypes([.beach, .cityBreak, .vacation], on: trip)
+            try repo.applyBagTypes([], on: trip) // user explicitly removes every bag
+            try context.save()
+        }
+
+        func assertSurvived(url: URL) throws {
+            let container = try openV4Container(url: url)
+            let context = ModelContext(container)
+            let trip = try #require(
+                try context.fetch(FetchDescriptor<TripRecord>(predicate: #Predicate { $0.id == tripID })).first
+            )
+            #expect(
+                trip.tripTypes == [.beach, .cityBreak, .vacation],
+                "a multi-value trip-type write must survive relaunch, not collapse to the compat scalar's single stable value"
+            )
+            #expect(trip.bags.isEmpty, "an explicit empty bag selection must survive relaunch, not resurrect the removed bag")
+            #expect(trip.bagTypes.isEmpty)
+        }
+
+        try assertSurvived(url: storeURL)
+        // A second relaunch must remain stable too — this is exactly the
+        // "runs on every open" code path that used to keep re-clobbering.
+        try assertSurvived(url: storeURL)
+    }
+
+    @Test @MainActor func multiValuePreferredBagTypesWriteSurvivesContainerRelaunchWithoutClobbering() throws {
+        let storeURL = try makeStoreDirectory().appendingPathComponent("packwise.store")
+
+        do {
+            let container = try openV4Container(url: storeURL)
+            let context = ModelContext(container)
+            let record = PackingPreferenceRecord(from: .deviceDefaults())
+            context.insert(record)
+            var preferences = record.preferences
+            preferences.preferredBag = .checked
+            preferences.preferredBagTypes = [.checked, .carryOn]
+            record.apply(preferences)
+            try context.save()
+        }
+
+        let container = try openV4Container(url: storeURL)
+        let context = ModelContext(container)
+        let record = try #require(try context.fetch(FetchDescriptor<PackingPreferenceRecord>()).first)
+        #expect(
+            record.preferredBagTypes == [.checked, .carryOn],
+            "a multi-value preferred-bag write must survive relaunch, not collapse to the compat scalar's single value"
+        )
     }
 }
