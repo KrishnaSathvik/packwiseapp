@@ -80,6 +80,17 @@ enum TripType: String, Codable, CaseIterable, Identifiable, Sendable {
             ["sightseeing", "walking"]
         }
     }
+
+    /// The one true persistence/API/signature order for `Set<TripType>`,
+    /// per the product-approved matrix in design Section 8.1
+    /// (`docs/plans/2026-09-04-product-experience-v2-design.md`). Every
+    /// stable-boundary serialization of a trip-type set must use this order
+    /// instead of `Set` iteration order, which Swift does not guarantee.
+    /// See `StableRawValueSetCodec` in `TripContextCollections.swift`.
+    static let stableOrder: [TripType] = [
+        .vacation, .cityBreak, .beach, .business, .outdoor, .roadTrip,
+        .weddingEvent, .skiSnow, .festival, .visitingFamily, .other
+    ]
 }
 
 enum BagType: String, Codable, CaseIterable, Identifiable, Sendable {
@@ -122,6 +133,18 @@ enum BagType: String, Codable, CaseIterable, Identifiable, Sendable {
         case .checked, .roadTripLuggage, .notSure: false
         }
     }
+
+    /// The four V2 physical bags, in the one true persistence/API/signature
+    /// order. `.notSure` and `.roadTripLuggage` remain declared cases for
+    /// existing non-V2 call sites (default preferences, legacy pickers) but
+    /// are deliberately excluded here: "not sure yet" is represented by an
+    /// empty `Set<BagType>`, not a case, and `roadTripLuggage` is retired in
+    /// favor of Road Trip as a trip type. `stableOrder` is what excludes
+    /// them from V2 stable encoding/decoding without touching those other
+    /// call sites or removing the cases from this enum. See
+    /// `StableRawValueSetCodec` and `BagTypeLegacyRawValue` in
+    /// `TripContextCollections.swift`.
+    static let stableOrder: [BagType] = [.personalItem, .carryOn, .checked, .backpack]
 }
 
 enum PackingStyle: String, Codable, CaseIterable, Identifiable, Sendable {
