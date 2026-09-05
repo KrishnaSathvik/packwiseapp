@@ -369,6 +369,11 @@ struct TravelerPreferences: Codable, Hashable, Sendable {
     var homeCountrySource: HomeCountrySource
     var packingStyle: PackingStyle
     var preferredBag: BagType
+    /// V4 multi-bag default-bag preference (design Section 6.2), replacing
+    /// `preferredBag` as the authoritative persisted value.
+    /// `preferredBag` remains for existing call sites (`MeView`, setup)
+    /// until Task 8 rewires them to the multi-select.
+    var preferredBagTypes: Set<BagType> = []
     var usesFahrenheit: Bool
     var usesImperial: Bool
     var usuallyWorkOut: Bool

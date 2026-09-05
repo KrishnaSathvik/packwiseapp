@@ -1,0 +1,481 @@
+import Foundation
+import SwiftData
+import Testing
+@testable import PackWise
+
+/// Product Experience V2, Task 2 — SwiftData V3 → V4 migration
+/// (`docs/plans/2026-09-04-product-experience-v2-design.md` Section 6).
+///
+/// These tests use real file-backed `ModelContainer`s, not in-memory ones,
+/// for every migration scenario: the property under test is migration
+/// correctness across a genuine store relaunch, which an in-memory store
+/// that never actually serializes can't exercise. The non-destructive
+/// container-failure test likewise asserts on real bytes on disk, not
+/// merely "no crash."
+struct PersistenceMigrationV4Tests {
+    // MARK: - Fixtures
+
+    private func makeStoreDirectory() throws -> URL {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PersistenceMigrationV4Tests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    private func makeV3Container(url: URL) throws -> ModelContainer {
+        let schema = Schema(versionedSchema: PackWiseSchemaV3.self)
+        let config = ModelConfiguration("packwise", schema: schema, url: url, cloudKitDatabase: .none)
+        return try ModelContainer(for: schema, configurations: [config])
+    }
+
+    /// Mirrors `PackWisePersistence.container`: opens (and, for a V3 store,
+    /// structurally migrates) the container, then runs the V4 data backfill
+    /// the same way the real app does — see that function's doc comment for
+    /// why the backfill is a separate, idempotent post-open step rather
+    /// than a migration-stage callback.
+    private func openV4Container(url: URL) throws -> ModelContainer {
+        let schema = Schema(versionedSchema: PackWiseSchemaV4.self)
+        let config = ModelConfiguration("packwise", schema: schema, url: url, cloudKitDatabase: .none)
+        let container = try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [config])
+        try PackWiseSchemaV4Migration.migrateV3Records(in: ModelContext(container))
+        return container
+    }
+
+    private func chicago() throws -> Destination {
+        try #require(try SharedLibrary.testDestinations().first { $0.city == "Chicago" })
+    }
+
+    // MARK: - Step 1: the core authority-preserving migration
+
+    /// Seeds a genuine V3 file-backed store — through the real
+    /// `TripRepository` code path, exactly like a shipped app would — with a
+    /// family trip carrying every kind of protected user state, then proves
+    /// it survives both the V3 → V4 migration and a second relaunch.
+    @Test @MainActor func beachCarryOnFamilyTripMigratesAuthorityAndSurvivesTwoRelaunches() throws {
+        let storeURL = try makeStoreDirectory().appendingPathComponent("packwise.store")
+        let destination = try chicago()
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 10))!
+        let end = Calendar.current.date(byAdding: .day, value: 5, to: start)!
+
+        var tripID = UUID()
+        var primaryID = UUID()
+        var otherAdultID = UUID()
+        var existingBagID = UUID()
+        var personalItemID = UUID()
+        var sharedItemID = UUID()
+        var customItemID = UUID()
+
+        // --- Seed a genuine V3 store. ---
+        do {
+            let container = try makeV3Container(url: storeURL)
+            let context = ModelContext(container)
+            let repo = TripRepository(context: context)
+
+            let trip = TripRecord(
+                destination: destination,
+                startDate: start,
+                endDate: end,
+                durationDays: 6,
+                durationNights: 5,
+                tripType: .beach,
+                activities: ["swimming"],
+                bagType: .carryOn,
+                packingStyle: .balanced
+            )
+            context.insert(trip)
+            tripID = trip.id
+
+            let party = TripPartyBuilder.make(mode: .family)
+            primaryID = party.primary.id
+            otherAdultID = try #require(party.travelers.first { $0.role == .otherAdult }).id
+            repo.replaceParty(party, bagType: .carryOn, on: trip)
+            existingBagID = try #require(trip.bags.first).id
+
+            repo.replaceItems(on: trip, with: [
+                PackingItemDraft(
+                    canonicalItemID: "clothing.tshirt", displayName: "T-shirts", category: .clothing,
+                    quantity: 4, importance: .normal, sourceSignals: [.baseEssential], reason: "",
+                    ownershipType: .personal, travelerID: party.primary.id
+                ),
+                PackingItemDraft(
+                    canonicalItemID: "travel_comfort.umbrella", displayName: "Umbrella", category: .travelComfort,
+                    quantity: 1, importance: .normal, sourceSignals: [.baseEssential], reason: "",
+                    ownershipType: .shared, assignedTravelerID: otherAdultID
+                ),
+                PackingItemDraft(
+                    canonicalItemID: "clothing.rain_jacket", displayName: "Rain jacket", category: .clothing,
+                    quantity: 1, importance: .normal, sourceSignals: [.weather], reason: ""
+                )
+            ])
+
+            personalItemID = try #require(trip.items.first { $0.canonicalItemID == "clothing.tshirt" }).id
+            sharedItemID = try #require(trip.items.first { $0.canonicalItemID == "travel_comfort.umbrella" }).id
+
+            // Manual quantity + packed quantity (authority).
+            let tshirt = try #require(trip.items.first { $0.id == personalItemID })
+            tshirt.quantity = 3
+            tshirt.isUserModified = true
+            tshirt.packedQuantity = 2
+
+            // Category edit (authority).
+            let umbrella = try #require(trip.items.first { $0.id == sharedItemID })
+            umbrella.categoryRaw = PackingCategory.miscellaneous.rawValue
+
+            // Not Needed override.
+            let jacket = try #require(trip.items.first { $0.canonicalItemID == "clothing.rain_jacket" })
+            repo.markNotNeeded(jacket, on: trip)
+
+            // Custom item.
+            repo.addItem(
+                PackingItemDraft(
+                    canonicalItemID: nil, displayName: "Travel journal", category: .miscellaneous,
+                    quantity: 1, importance: .optional, sourceSignals: [.userPreference], reason: "",
+                    isUserAdded: true
+                ),
+                to: trip
+            )
+            customItemID = try #require(trip.items.first { $0.displayName == "Travel journal" }).id
+
+            try context.save()
+        }
+
+        func assertMigratedState(url: URL) throws {
+            let container = try openV4Container(url: url)
+            let context = ModelContext(container)
+
+            let trip = try #require(
+                try context.fetch(FetchDescriptor<TripRecord>(predicate: #Predicate { $0.id == tripID })).first
+            )
+
+            #expect(trip.tripTypes == [.beach])
+            #expect(trip.tripType == .beach, "the singleton compat accessor must agree with the migrated set")
+            #expect(trip.bagTypes == [.carryOn])
+            #expect(trip.bagType == .carryOn)
+            #expect(trip.bags.count == 1)
+            #expect(trip.bags.first?.id == existingBagID, "migration must preserve the existing bag record's identity")
+            #expect(trip.travelers.count == 2)
+            #expect(trip.travelers.contains { $0.id == otherAdultID })
+
+            let tshirt = try #require(trip.items.first { $0.id == personalItemID })
+            #expect(tshirt.quantity == 3, "manual quantity must survive migration")
+            #expect(tshirt.packedQuantity == 2, "packed quantity must survive migration")
+            #expect(tshirt.isUserModified)
+            #expect(tshirt.ownershipType == .personal)
+            #expect(tshirt.travelerID == primaryID, "owner assignment must survive migration")
+
+            let umbrella = try #require(trip.items.first { $0.id == sharedItemID })
+            #expect(umbrella.category == .miscellaneous, "the category edit must survive migration")
+            #expect(umbrella.ownershipType == .shared)
+            #expect(umbrella.assignedTravelerID == otherAdultID, "carrier assignment must survive migration")
+
+            #expect(trip.items.contains { $0.id == customItemID && $0.isUserAdded }, "the custom item must survive migration")
+            #expect(!trip.items.contains { $0.canonicalItemID == "clothing.rain_jacket" }, "the Not Needed item must stay removed")
+            #expect(
+                trip.overrides.contains { $0.canonicalItemID == "clothing.rain_jacket" && $0.action == "removed" },
+                "the Not Needed override itself must survive migration"
+            )
+        }
+
+        // --- First relaunch: the actual V3 → V4 migration. ---
+        try assertMigratedState(url: storeURL)
+
+        // --- Second relaunch: the store is already V4; must remain stable. ---
+        try assertMigratedState(url: storeURL)
+    }
+
+    // MARK: - Solo coverage
+
+    @Test @MainActor func soloTripMigratesTripTypeAndBagTypeAcrossRelaunch() throws {
+        let storeURL = try makeStoreDirectory().appendingPathComponent("packwise.store")
+        let destination = try chicago()
+        let start = Date.now
+        var tripID = UUID()
+
+        do {
+            let container = try makeV3Container(url: storeURL)
+            let context = ModelContext(container)
+            let repo = TripRepository(context: context)
+            let trip = TripRecord(
+                destination: destination, startDate: start, endDate: start.addingTimeInterval(3 * 86400),
+                durationDays: 4, durationNights: 3, tripType: .business, activities: ["work"],
+                bagType: .checked, packingStyle: .prepared
+            )
+            context.insert(trip)
+            tripID = trip.id
+            repo.replaceParty(.solo(), bagType: .checked, on: trip)
+            try context.save()
+        }
+
+        for _ in 0..<2 {
+            let container = try openV4Container(url: storeURL)
+            let context = ModelContext(container)
+            let trip = try #require(
+                try context.fetch(FetchDescriptor<TripRecord>(predicate: #Predicate { $0.id == tripID })).first
+            )
+            #expect(trip.tripTypes == [.business])
+            #expect(trip.bagTypes == [.checked])
+            #expect(trip.bags.count == 1)
+        }
+    }
+
+    // MARK: - Step 2: legacy/unknown-value edge cases
+
+    /// One V3 store carrying every non-happy-path row from design Section
+    /// 6.2's migration table: `notSure`/`roadTripLuggage`/unknown bag
+    /// values, an unknown trip type, and the matching preference and memory
+    /// event fingerprint conversions.
+    @Test @MainActor func legacyEdgeCasesMigrateWithoutInferringRoadTripOrArbitraryPrimary() throws {
+        let storeURL = try makeStoreDirectory().appendingPathComponent("packwise.store")
+        let destination = try chicago()
+        let start = Date.now
+        let end = start.addingTimeInterval(3 * 86400)
+
+        var notSureTripID = UUID()
+        var roadTripLuggageTripID = UUID()
+        var unknownTripTypeTripID = UUID()
+        var unknownBagTypeTripID = UUID()
+
+        do {
+            let container = try makeV3Container(url: storeURL)
+            let context = ModelContext(container)
+            let repo = TripRepository(context: context)
+
+            func makeTrip(tripType: TripType, bagType: BagType) -> TripRecord {
+                let trip = TripRecord(
+                    destination: destination, startDate: start, endDate: end,
+                    durationDays: 4, durationNights: 3,
+                    tripType: tripType, activities: [], bagType: bagType, packingStyle: .balanced
+                )
+                context.insert(trip)
+                repo.replaceParty(.solo(), bagType: bagType, on: trip)
+                return trip
+            }
+
+            let notSureTrip = makeTrip(tripType: .vacation, bagType: .notSure)
+            notSureTripID = notSureTrip.id
+
+            let roadTripLuggageTrip = makeTrip(tripType: .vacation, bagType: .roadTripLuggage)
+            roadTripLuggageTripID = roadTripLuggageTrip.id
+
+            let unknownTripTypeTrip = makeTrip(tripType: .vacation, bagType: .carryOn)
+            unknownTripTypeTrip.tripTypeRaw = "campingWeekend" // a pre-V2 label no longer in the enum
+            unknownTripTypeTripID = unknownTripTypeTrip.id
+
+            let unknownBagTypeTrip = makeTrip(tripType: .vacation, bagType: .carryOn)
+            unknownBagTypeTrip.bagTypeRaw = "duffelBag"
+            for bag in unknownBagTypeTrip.bags { bag.bagTypeRaw = "duffelBag" }
+            unknownBagTypeTripID = unknownBagTypeTrip.id
+
+            let physicalPreferences = PackingPreferenceRecord(from: .deviceDefaults())
+            physicalPreferences.preferredBagRaw = BagType.checked.rawValue
+            context.insert(physicalPreferences)
+
+            let notSurePreferences = PackingPreferenceRecord(from: .deviceDefaults())
+            notSurePreferences.preferredBagRaw = BagType.notSure.rawValue
+            context.insert(notSurePreferences)
+
+            let roadTripLuggagePreferences = PackingPreferenceRecord(from: .deviceDefaults())
+            roadTripLuggagePreferences.preferredBagRaw = BagType.roadTripLuggage.rawValue
+            context.insert(roadTripLuggagePreferences)
+
+            let unknownPreferences = PackingPreferenceRecord(from: .deviceDefaults())
+            unknownPreferences.preferredBagRaw = "tote"
+            context.insert(unknownPreferences)
+
+            // Two genuine-looking pre-migration memory events: the array
+            // columns reset to "[]" (their default) to represent a row that
+            // predates this migration, exactly as a real V3 row would be.
+            let knownEvent = PackingMemoryEventRecord(PackingMemoryEvent(
+                tripID: notSureTripID, travelerID: nil, canonicalItemID: "clothing.tshirt",
+                kind: .suggested, value: 3, timestamp: .now,
+                context: ContextFingerprint(
+                    durationBucket: .short, laundryPlan: .none, packingStyle: .balanced,
+                    bagTypes: [.carryOn], tripTypes: [.beach], partySize: 1
+                )
+            ))
+            knownEvent.tripTypesRaw = "[]"
+            knownEvent.bagTypesRaw = "[]"
+            context.insert(knownEvent)
+
+            let unknownEvent = PackingMemoryEventRecord(PackingMemoryEvent(
+                tripID: unknownTripTypeTripID, travelerID: nil, canonicalItemID: "clothing.socks",
+                kind: .suggested, value: 2, timestamp: .now,
+                context: ContextFingerprint(
+                    durationBucket: .short, laundryPlan: .none, packingStyle: .balanced,
+                    bagTypes: [], tripTypes: [.other], partySize: 1
+                )
+            ))
+            unknownEvent.tripTypeRaw = "campingWeekend"
+            unknownEvent.bagRaw = "duffelBag"
+            unknownEvent.tripTypesRaw = "[]"
+            unknownEvent.bagTypesRaw = "[]"
+            context.insert(unknownEvent)
+
+            try context.save()
+        }
+
+        let container = try openV4Container(url: storeURL)
+        let context = ModelContext(container)
+
+        let notSureTrip = try #require(
+            try context.fetch(FetchDescriptor<TripRecord>(predicate: #Predicate { $0.id == notSureTripID })).first
+        )
+        #expect(notSureTrip.bagTypes.isEmpty)
+        #expect(notSureTrip.bags.isEmpty, "a notSure bag record carries no real bag information and is not preserved")
+        #expect(notSureTrip.tripTypes == [.vacation])
+
+        let roadTripLuggageTrip = try #require(
+            try context.fetch(FetchDescriptor<TripRecord>(predicate: #Predicate { $0.id == roadTripLuggageTripID })).first
+        )
+        #expect(roadTripLuggageTrip.bagTypes.isEmpty)
+        #expect(roadTripLuggageTrip.bags.isEmpty)
+        #expect(!roadTripLuggageTrip.tripTypes.contains(.roadTrip), "a roadTripLuggage bag label must never infer the Road Trip trip type")
+        #expect(roadTripLuggageTrip.tripTypes == [.vacation])
+
+        let unknownTripTypeTrip = try #require(
+            try context.fetch(FetchDescriptor<TripRecord>(predicate: #Predicate { $0.id == unknownTripTypeTripID })).first
+        )
+        #expect(unknownTripTypeTrip.tripTypes == [.other])
+        #expect(unknownTripTypeTrip.bagTypes == [.carryOn], "the bag scalar migrates independently of the trip-type scalar")
+
+        let unknownBagTypeTrip = try #require(
+            try context.fetch(FetchDescriptor<TripRecord>(predicate: #Predicate { $0.id == unknownBagTypeTripID })).first
+        )
+        #expect(unknownBagTypeTrip.bagTypes.isEmpty)
+        #expect(unknownBagTypeTrip.bags.isEmpty)
+
+        let allPreferences = try context.fetch(FetchDescriptor<PackingPreferenceRecord>())
+        let physical = try #require(allPreferences.first { $0.preferredBagRaw == BagType.checked.rawValue })
+        #expect(physical.preferredBagTypes == [.checked], "a physical legacy default becomes a singleton set")
+        let notSurePrefs = try #require(allPreferences.first { $0.preferredBagRaw == BagType.notSure.rawValue })
+        #expect(notSurePrefs.preferredBagTypes.isEmpty)
+        let roadTripLuggagePrefs = try #require(allPreferences.first { $0.preferredBagRaw == BagType.roadTripLuggage.rawValue })
+        #expect(roadTripLuggagePrefs.preferredBagTypes.isEmpty)
+        let unknownPrefs = try #require(allPreferences.first { $0.preferredBagRaw == "tote" })
+        #expect(unknownPrefs.preferredBagTypes.isEmpty)
+
+        let events = try context.fetch(FetchDescriptor<PackingMemoryEventRecord>()).map(\.event)
+        let migratedKnownEvent = try #require(events.first { $0.canonicalItemID == "clothing.tshirt" })
+        #expect(migratedKnownEvent.context.tripTypes == [.beach])
+        #expect(migratedKnownEvent.context.bagTypes == [.carryOn])
+
+        let migratedUnknownEvent = try #require(events.first { $0.canonicalItemID == "clothing.socks" })
+        #expect(migratedUnknownEvent.context.tripTypes == [.other], "an unknown fingerprint trip type falls back to .other")
+        #expect(migratedUnknownEvent.context.bagTypes.isEmpty, "an unknown fingerprint bag value drops to no bag constraint")
+    }
+
+    // MARK: - Step 5: non-destructive failure
+
+    /// A store that fails to open — corrupt bytes standing in for any
+    /// unreadable/incompatible store — must surface its error rather than
+    /// being silently deleted and recreated. Asserted against the actual
+    /// bytes on disk, not merely "the app didn't crash."
+    @Test func containerOpenFailureNeverDeletesStoreBytes() throws {
+        let dir = try makeStoreDirectory()
+        let storeURL = dir.appendingPathComponent("packwise.store")
+        let walURL = URL(fileURLWithPath: storeURL.path + "-wal")
+        let shmURL = URL(fileURLWithPath: storeURL.path + "-shm")
+
+        let storeBytes = Data("not a real SwiftData store".utf8)
+        let walBytes = Data("wal-sentinel".utf8)
+        let shmBytes = Data("shm-sentinel".utf8)
+        try storeBytes.write(to: storeURL)
+        try walBytes.write(to: walURL)
+        try shmBytes.write(to: shmURL)
+
+        let schema = Schema(versionedSchema: PackWiseSchemaV4.self)
+        let config = ModelConfiguration("packwise", schema: schema, url: storeURL, cloudKitDatabase: .none)
+
+        #expect(throws: (any Error).self, "an incompatible/corrupt store must surface its open error, not be silently repaired") {
+            _ = try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [config])
+        }
+
+        #expect(try Data(contentsOf: storeURL) == storeBytes, "packwise.store must never be deleted or rewritten merely because it failed to open")
+        #expect(try Data(contentsOf: walURL) == walBytes, "the WAL must never be deleted merely because the store failed to open")
+        #expect(try Data(contentsOf: shmURL) == shmBytes, "the SHM must never be deleted merely because the store failed to open")
+    }
+
+    // MARK: - Fail-safe compatibility accessors
+
+    /// `TripRecord.tripType`/`bagType` are read by every existing engine
+    /// call site that hasn't yet moved to the multi-value sets (Tasks 3/5).
+    /// A genuine multi-value selection must never resolve to one of the
+    /// selected values as if it were primary.
+    @Test @MainActor func tripTypeAndBagTypeCompatAccessorsFailSafeForMultiValueSelections() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        let destination = try chicago()
+        let trip = TripRecord(
+            destination: destination, startDate: .now, endDate: .now.addingTimeInterval(2 * 86400),
+            durationDays: 2, durationNights: 1, tripType: .beach, activities: [], bagType: .carryOn,
+            packingStyle: .balanced
+        )
+        context.insert(trip)
+
+        // Not yet reachable through any shipped write path (Task 8's UI),
+        // but the compatibility accessors must already fail safe once a
+        // multi-value selection reaches a `TripRecord` some other way.
+        // `TripRecord.init` never creates a `BagRecord` on its own (only
+        // `TripRepository.replaceParty` does), so both physical bags are
+        // added explicitly here.
+        trip.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON([.beach, .cityBreak])
+        trip.bags.append(BagRecord(from: TripBag(name: "Carry-on", bagType: .carryOn, ownershipType: .personal), trip: trip))
+        trip.bags.append(BagRecord(from: TripBag(name: "Checked bag", bagType: .checked, ownershipType: .personal), trip: trip))
+
+        #expect(trip.tripTypes == [.beach, .cityBreak])
+        #expect(trip.tripType == .other, "a multi-value selection must never resolve to one selected type as if it were primary")
+        #expect(trip.bagTypes == [.carryOn, .checked])
+        #expect(trip.bagType == .notSure, "a multi-bag selection must never resolve to one selected bag as if it were the only one")
+    }
+
+    // MARK: - Set-valued repository write boundary
+
+    @Test @MainActor func applyTripTypesWritesStableArrayAndRejectsEmptySelection() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        let repo = TripRepository(context: context)
+        let destination = try chicago()
+        let trip = TripRecord(
+            destination: destination, startDate: .now, endDate: .now.addingTimeInterval(2 * 86400),
+            durationDays: 2, durationNights: 1, tripType: .vacation, activities: [], bagType: .notSure,
+            packingStyle: .balanced
+        )
+        context.insert(trip)
+
+        try repo.applyTripTypes([.beach, .cityBreak, .vacation], on: trip)
+        #expect(trip.tripTypes == [.beach, .cityBreak, .vacation])
+        #expect(trip.tripTypeRaw == TripType.vacation.rawValue, "the compat scalar is the first stable-order value, for older diagnostics only")
+
+        #expect(throws: TripTypeSelectionError.emptySelection) {
+            try repo.applyTripTypes([], on: trip)
+        }
+        #expect(trip.tripTypes == [.beach, .cityBreak, .vacation], "a rejected write must not partially apply")
+    }
+
+    @Test @MainActor func applyBagTypesRejectsMultiValueSelectionAndPreservesExistingBagIdentity() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        let repo = TripRepository(context: context)
+        let destination = try chicago()
+        let trip = TripRecord(
+            destination: destination, startDate: .now, endDate: .now.addingTimeInterval(2 * 86400),
+            durationDays: 2, durationNights: 1, tripType: .vacation, activities: [], bagType: .carryOn,
+            packingStyle: .balanced
+        )
+        context.insert(trip)
+        repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
+        let existingBagID = try #require(trip.bags.first).id
+
+        try repo.applyBagTypes([.carryOn], on: trip)
+        #expect(trip.bags.count == 1)
+        #expect(trip.bags.first?.id == existingBagID, "re-applying the same bag must preserve its identity, not recreate it")
+
+        #expect(throws: TripRepository.BagAssignmentError.multipleBagsNotYetSupported) {
+            try repo.applyBagTypes([.carryOn, .checked], on: trip)
+        }
+        #expect(trip.bags.map(\.id) == [existingBagID], "a rejected multi-bag write must not partially apply")
+
+        try repo.applyBagTypes([], on: trip)
+        #expect(trip.bags.isEmpty)
+    }
+}

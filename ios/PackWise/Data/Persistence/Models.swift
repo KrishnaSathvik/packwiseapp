@@ -1,6 +1,29 @@
 import Foundation
 import SwiftData
 
+/// Best-effort stable-order JSON encoding for the V4 multi-value columns.
+/// `StableRawValueSetCodec.encode` only fails if `JSONEncoder` itself fails
+/// to encode `[String]`, which does not happen in practice; the fallback
+/// exists so a persistence write is never allowed to throw over it.
+enum PackWiseStableEncoding {
+    static func tripTypesJSON(_ values: Set<TripType>) -> String {
+        (try? StableRawValueSetCodec.encode(values, order: TripType.stableOrder)) ?? #"["other"]"#
+    }
+
+    static func bagTypesJSON(_ values: Set<BagType>) -> String {
+        (try? StableRawValueSetCodec.encode(values, order: BagType.stableOrder)) ?? "[]"
+    }
+
+    /// Wraps a single legacy scalar raw value as the one-element JSON array
+    /// `StableRawValueSetCodec.decode` expects, so V3 scalar migration
+    /// reuses the same normalization/diagnostic logic as any other stable
+    /// set boundary instead of re-implementing it.
+    static func wrapLegacyScalar(_ rawValue: String) -> String {
+        guard let data = try? JSONEncoder().encode([rawValue]) else { return "[]" }
+        return String(decoding: data, as: UTF8.self)
+    }
+}
+
 @Model
 final class TripRecord {
     @Attribute(.unique) var id: UUID
@@ -19,6 +42,10 @@ final class TripRecord {
     var durationDays: Int
     var durationNights: Int
     var tripTypeRaw: String
+    /// V4 stable-order JSON array; see `TripType.stableOrder`. The
+    /// authoritative multi-value trip-type storage — `tripTypeRaw` remains
+    /// only as a migration-era compatibility column (design Section 6.1).
+    var tripTypesRaw: String = "[]"
     var activitiesRaw: String
     var bagTypeRaw: String
     var packingStyleRaw: String
@@ -87,6 +114,7 @@ final class TripRecord {
         self.durationDays = durationDays
         self.durationNights = durationNights
         self.tripTypeRaw = tripType.rawValue
+        self.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON([tripType])
         self.activitiesRaw = activities.joined(separator: ",")
         self.bagTypeRaw = bagType.rawValue
         self.packingStyleRaw = packingStyle.rawValue
@@ -122,8 +150,39 @@ final class TripRecord {
         )
     }
 
-    var tripType: TripType { TripType(rawValue: tripTypeRaw) ?? .other }
-    var bagType: BagType { BagType(rawValue: bagTypeRaw) ?? .notSure }
+    /// The V4 multi-value trip-type selection, decoded from the stable JSON
+    /// array. Falls back to `.other` if the stored JSON is somehow corrupt,
+    /// matching `TripType.normalizedSet`'s own empty-result fallback.
+    var tripTypes: Set<TripType> {
+        (try? TripType.normalizedSet(fromStableJSON: tripTypesRaw))?.values ?? [.other]
+    }
+
+    /// The V4 physical bag selection, derived from the `bags` relationship —
+    /// not stored as a parallel raw field, so it can never drift from the
+    /// actual `BagRecord`s a trip owns (design Section 6.1).
+    var bagTypes: Set<BagType> {
+        Set(bags.compactMap { BagType(rawValue: $0.bagTypeRaw) }.filter { BagType.stableOrder.contains($0) })
+    }
+
+    /// Compatibility accessor for call sites not yet updated to consume
+    /// `tripTypes` (Tasks 3/4 land the multi-type engine). A genuine
+    /// multi-selection fails safe to `.other` — which contributes no typed
+    /// packing needs — rather than silently picking one of the selected
+    /// types as if it alone were authoritative.
+    var tripType: TripType {
+        let values = tripTypes
+        guard values.count == 1, let only = values.first else { return .other }
+        return only
+    }
+
+    /// Compatibility accessor; see `tripType`. A multi-bag selection fails
+    /// safe to `.notSure` (no luggage constraint) rather than picking one
+    /// bag as if it were the trip's only bag.
+    var bagType: BagType {
+        let values = bagTypes
+        guard values.count == 1, let only = values.first else { return .notSure }
+        return only
+    }
     var packingStyle: PackingStyle { PackingStyle(rawValue: packingStyleRaw) ?? .balanced }
     var status: TripStatus { TripStatus(rawValue: statusRaw) ?? .planning }
     var activities: [String] {
@@ -196,6 +255,12 @@ final class PackingItemRecord {
     var reason: String
     var reasonCode: String = ""
     var reasonArgumentsRaw: String = ""
+    /// V4 persistence encoding of the Phase 8 `RecommendationTrace` (Task
+    /// 13's concern to define/populate). Optional because migrated V3 rows
+    /// have no trace yet; `sourceSignalsRaw`/`reason`/`reasonCode`/
+    /// `reasonArgumentsRaw` remain the engine's current source/reason
+    /// fields until Task 13 lands.
+    var recommendationTraceRaw: String?
     var quantityReason: String
     var isUserAdded: Bool
     var isUserModified: Bool
@@ -461,6 +526,10 @@ final class PackingPreferenceRecord {
     var homeCountrySourceRaw: String = "deviceSuggested"
     var packingStyleRaw: String
     var preferredBagRaw: String
+    /// V4 stable-order JSON array; see `BagType.stableOrder`. Replaces
+    /// `preferredBagRaw` as the default-bag preference (design Section
+    /// 6.2); the legacy scalar remains only as a migration/compat column.
+    var preferredBagTypesRaw: String = "[]"
     var usesFahrenheit: Bool
     var usesImperial: Bool
     var usuallyWorkOut: Bool
@@ -475,6 +544,7 @@ final class PackingPreferenceRecord {
         self.homeCountrySourceRaw = preferences.homeCountrySource.rawValue
         self.packingStyleRaw = preferences.packingStyle.rawValue
         self.preferredBagRaw = preferences.preferredBag.rawValue
+        self.preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(preferences.preferredBagTypes)
         self.usesFahrenheit = preferences.usesFahrenheit
         self.usesImperial = preferences.usesImperial
         self.usuallyWorkOut = preferences.usuallyWorkOut
@@ -485,12 +555,19 @@ final class PackingPreferenceRecord {
         self.hasConfirmedHomeCountry = false
     }
 
+    /// V4 multi-value default-bag preference, decoded from the stable JSON
+    /// array. See `TravelerPreferences.preferredBagTypes`.
+    var preferredBagTypes: Set<BagType> {
+        (try? BagType.normalizedSet(fromStableJSON: preferredBagTypesRaw))?.values ?? []
+    }
+
     var preferences: TravelerPreferences {
         TravelerPreferences(
             homeCountryCode: homeCountryCode.isEmpty ? nil : homeCountryCode,
             homeCountrySource: HomeCountrySource(rawValue: homeCountrySourceRaw) ?? .deviceSuggested,
             packingStyle: PackingStyle(rawValue: packingStyleRaw) ?? .balanced,
             preferredBag: BagType(rawValue: preferredBagRaw) ?? .notSure,
+            preferredBagTypes: preferredBagTypes,
             usesFahrenheit: usesFahrenheit,
             usesImperial: usesImperial,
             usuallyWorkOut: usuallyWorkOut,
@@ -505,6 +582,7 @@ final class PackingPreferenceRecord {
         homeCountrySourceRaw = preferences.homeCountrySource.rawValue
         packingStyleRaw = preferences.packingStyle.rawValue
         preferredBagRaw = preferences.preferredBag.rawValue
+        preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(preferences.preferredBagTypes)
         usesFahrenheit = preferences.usesFahrenheit
         usesImperial = preferences.usesImperial
         usuallyWorkOut = preferences.usuallyWorkOut
@@ -554,8 +632,13 @@ final class PackingMemoryEventRecord {
     var durationBucketRaw: String
     var laundryPlanRaw: String
     var packingStyleRaw: String
+    /// Legacy V3 scalar fields; migration source/compat only. No production
+    /// code reads them — `tripTypesRaw`/`bagTypesRaw` are authoritative.
     var bagRaw: String
     var tripTypeRaw: String
+    /// V4 stable-order JSON arrays; see `TripType`/`BagType.stableOrder`.
+    var tripTypesRaw: String = "[]"
+    var bagTypesRaw: String = "[]"
     var partySize: Int
 
     init(_ event: PackingMemoryEvent) {
@@ -568,8 +651,12 @@ final class PackingMemoryEventRecord {
         durationBucketRaw = event.context.durationBucket.rawValue
         laundryPlanRaw = event.context.laundryPlan.rawValue
         packingStyleRaw = event.context.packingStyle.rawValue
-        bagRaw = event.context.bag.rawValue
-        tripTypeRaw = event.context.tripType.rawValue
+        tripTypesRaw = PackWiseStableEncoding.tripTypesJSON(event.context.tripTypes)
+        bagTypesRaw = PackWiseStableEncoding.bagTypesJSON(event.context.bagTypes)
+        // Compat scalars: the first stable value only, so older diagnostics
+        // can still read the record. Never read back as authority.
+        bagRaw = BagType.stableOrder.first(where: event.context.bagTypes.contains)?.rawValue ?? BagType.notSure.rawValue
+        tripTypeRaw = TripType.stableOrder.first(where: event.context.tripTypes.contains)?.rawValue ?? TripType.other.rawValue
         partySize = event.context.partySize
     }
 
@@ -585,8 +672,8 @@ final class PackingMemoryEventRecord {
                 durationBucket: DurationBucket(rawValue: durationBucketRaw) ?? .medium,
                 laundryPlan: LaundryAccess(rawValue: laundryPlanRaw) ?? .none,
                 packingStyle: PackingStyle(rawValue: packingStyleRaw) ?? .balanced,
-                bag: BagType(rawValue: bagRaw) ?? .notSure,
-                tripType: TripType(rawValue: tripTypeRaw) ?? .other,
+                bagTypes: (try? BagType.normalizedSet(fromStableJSON: bagTypesRaw))?.values ?? [],
+                tripTypes: (try? TripType.normalizedSet(fromStableJSON: tripTypesRaw))?.values ?? [.other],
                 partySize: partySize
             )
         )
@@ -631,13 +718,129 @@ enum PackWiseSchemaV3: VersionedSchema {
     }
 }
 
+/// V4 adds no new `@Model` entity and no structural attribute SwiftData
+/// itself needs to migrate: every new V4 column (`tripTypesRaw`,
+/// `recommendationTraceRaw`, `preferredBagTypesRaw`, the memory-event stable
+/// arrays) is declared directly on the live types in this file with a
+/// default value, exactly like every additive column V2 → V3 already added
+/// this way. What genuinely needs "migrating" is the *data* — populating
+/// those columns from the legacy scalars — not the schema shape, so V4
+/// reuses `PackWiseSchemaV3.models` (see `PackWiseSchemaV4Migration` below
+/// for the data step, run from `PackWisePersistence.container`).
+enum PackWiseSchemaV4: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(4, 0, 0) }
+    static var models: [any PersistentModel.Type] {
+        PackWiseSchemaV3.models
+    }
+}
+
+/// V3 → V4 data migration (design Section 6.2): converts every legacy
+/// scalar trip-type/bag-type/preferred-bag/memory-fingerprint value into its
+/// V4 stable multi-value representation. The new V4 columns already exist
+/// with their defaults (`PackWisePersistence.container` opens the store
+/// before calling this), so this only has to backfill them from the legacy
+/// scalars for pre-existing rows. Idempotent: every derived column is
+/// recomputed from a legacy field this migration never modifies, so running
+/// it again against already-migrated rows reproduces the same result.
+///
+/// Exposed as internal functions, not private, so tests can drive and
+/// assert on migration diagnostics directly.
+enum PackWiseSchemaV4Migration {
+    /// Migrates every V3-shaped record in `context` and saves the result.
+    /// Returns every normalization diagnostic recorded along the way
+    /// (design Section 6.2's "unknown value" rows). A per-record failure
+    /// never throws — only genuine SwiftData fetch/save failures propagate
+    /// — so one malformed row can't abort migrating the rest.
+    @discardableResult
+    static func migrateV3Records(in context: ModelContext) throws -> [TripContextNormalizationDiagnostic] {
+        var diagnostics: [TripContextNormalizationDiagnostic] = []
+        for trip in try context.fetch(FetchDescriptor<TripRecord>()) {
+            diagnostics += migrate(trip, in: context)
+        }
+        for preference in try context.fetch(FetchDescriptor<PackingPreferenceRecord>()) {
+            migrate(preference)
+        }
+        for event in try context.fetch(FetchDescriptor<PackingMemoryEventRecord>()) {
+            diagnostics += migrate(event)
+        }
+        try context.save()
+        return diagnostics
+    }
+
+    /// `tripTypeRaw = beach` → `tripTypesRaw = ["beach"]`; an unknown value
+    /// becomes `["other"]` plus a diagnostic. `bagTypeRaw` becomes at most
+    /// one physical `BagRecord`: `carryOn`/`checked` preserve an existing
+    /// matching record's identity/owner or create one; `notSure`/
+    /// `roadTripLuggage`/unknown leave no setup-created bag record (unknown
+    /// also records a diagnostic). Migrating `roadTripLuggage` never adds
+    /// `.roadTrip` to `tripTypes` — this only ever sees the bag scalar and
+    /// must not infer a trip type from it.
+    private static func migrate(_ trip: TripRecord, in context: ModelContext) -> [TripContextNormalizationDiagnostic] {
+        var diagnostics: [TripContextNormalizationDiagnostic] = []
+
+        let tripTypeResult = (try? TripType.normalizedSet(fromStableJSON: PackWiseStableEncoding.wrapLegacyScalar(trip.tripTypeRaw)))
+            ?? NormalizedSet(values: [.other], diagnostics: [.droppedUnknownRawValues([trip.tripTypeRaw])])
+        diagnostics += tripTypeResult.diagnostics
+        trip.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON(tripTypeResult.values)
+
+        if let physicalBagType = BagType.stableOrder.first(where: { $0.rawValue == trip.bagTypeRaw }) {
+            if !trip.bags.contains(where: { $0.bagTypeRaw == physicalBagType.rawValue }) {
+                let bag = TripBag(name: physicalBagType.title, bagType: physicalBagType, ownershipType: .personal)
+                let record = BagRecord(from: bag, trip: trip)
+                context.insert(record)
+                trip.bags.append(record)
+            }
+        } else {
+            // notSure, roadTripLuggage, or an unknown raw value: no
+            // setup-created bag record. A V3 setup bag was created directly
+            // from this same scalar (`TripRepository.replaceParty`), so any
+            // matching stray record here carried no real bag information.
+            for bag in trip.bags where bag.bagTypeRaw == trip.bagTypeRaw {
+                context.delete(bag)
+            }
+            trip.bags.removeAll { $0.bagTypeRaw == trip.bagTypeRaw }
+            if BagType(rawValue: trip.bagTypeRaw) == nil {
+                diagnostics.append(.droppedUnknownRawValues([trip.bagTypeRaw]))
+            }
+        }
+
+        return diagnostics
+    }
+
+    /// Legacy physical defaults become singleton `preferredBagTypes`;
+    /// `notSure`, `roadTripLuggage`, and unknown values become empty.
+    private static func migrate(_ preference: PackingPreferenceRecord) {
+        let result = (try? BagType.normalizedSet(fromStableJSON: PackWiseStableEncoding.wrapLegacyScalar(preference.preferredBagRaw)))
+            ?? NormalizedSet(values: [], diagnostics: [])
+        preference.preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(result.values)
+    }
+
+    /// The same one-to-one scalar → stable-array conversion applies to
+    /// immutable memory-event fingerprints (design Section 6.2).
+    private static func migrate(_ event: PackingMemoryEventRecord) -> [TripContextNormalizationDiagnostic] {
+        var diagnostics: [TripContextNormalizationDiagnostic] = []
+
+        let tripTypeResult = (try? TripType.normalizedSet(fromStableJSON: PackWiseStableEncoding.wrapLegacyScalar(event.tripTypeRaw)))
+            ?? NormalizedSet(values: [.other], diagnostics: [.droppedUnknownRawValues([event.tripTypeRaw])])
+        diagnostics += tripTypeResult.diagnostics
+        event.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON(tripTypeResult.values)
+
+        let bagResult = (try? BagType.normalizedSet(fromStableJSON: PackWiseStableEncoding.wrapLegacyScalar(event.bagRaw)))
+            ?? NormalizedSet(values: [], diagnostics: [.droppedUnknownRawValues([event.bagRaw])])
+        diagnostics += bagResult.diagnostics
+        event.bagTypesRaw = PackWiseStableEncoding.bagTypesJSON(bagResult.values)
+
+        return diagnostics
+    }
+}
+
 enum PackWiseMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self]
+        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self, PackWiseSchemaV4.self]
     }
 
     static var stages: [MigrationStage] {
-        [migrateV1toV2, migrateV2toV3]
+        [migrateV1toV2, migrateV2toV3, migrateV3toV4]
     }
 
     static let migrateV1toV2 = MigrationStage.lightweight(
@@ -649,11 +852,31 @@ enum PackWiseMigrationPlan: SchemaMigrationPlan {
         fromVersion: PackWiseSchemaV2.self,
         toVersion: PackWiseSchemaV3.self
     )
+
+    /// Lightweight, not custom: `PackWiseSchemaV4.models` is exactly
+    /// `PackWiseSchemaV3.models` — the same live types, unchanged as a
+    /// schema graph — so there is no structural difference for a
+    /// `MigrationStage.custom` stage to act on. (A `.custom` stage requires
+    /// its `fromVersion`/`toVersion` model graphs to be genuinely distinct;
+    /// with identical graphs, SwiftData/CoreData raises "the current model
+    /// reference and the next model reference cannot be equal.") The actual
+    /// V4 *data* migration — populating the new stable-array columns from
+    /// their legacy scalars — is not a schema-shape change at all, so it
+    /// runs as an ordinary, idempotent post-open step from
+    /// `PackWisePersistence.container` instead. See `PackWiseSchemaV4Migration`.
+    static let migrateV3toV4 = MigrationStage.lightweight(
+        fromVersion: PackWiseSchemaV3.self,
+        toVersion: PackWiseSchemaV4.self
+    )
 }
 
 enum PackWisePersistence {
+    /// A persistent-store open or migration error is surfaced to the
+    /// caller, never silently recovered by deleting data (design Section
+    /// 6.3): PackWise must never delete `packwise.store`, its WAL, or SHM
+    /// merely because migration failed.
     static func container(inMemory: Bool = false) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: PackWiseSchemaV3.self)
+        let schema = Schema(versionedSchema: PackWiseSchemaV4.self)
         let config: ModelConfiguration
         if inMemory {
             config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
@@ -668,18 +891,15 @@ enum PackWisePersistence {
                 cloudKitDatabase: .none
             )
         }
-        do {
-            return try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [config])
-        } catch {
-            resetUnknownStore(config)
-            return try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [config])
-        }
-    }
-
-    private static func resetUnknownStore(_ config: ModelConfiguration) {
-        let url = config.url
-        for file in [url, URL(fileURLWithPath: url.path + "-wal"), URL(fileURLWithPath: url.path + "-shm")] {
-            try? FileManager.default.removeItem(at: file)
-        }
+        let container = try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [config])
+        // The V3 → V4 *data* backfill (design Section 6.2) runs here rather
+        // than as a migration-stage callback — see `migrateV3toV4` above.
+        // It is idempotent (re-deriving every stable column from its
+        // untouched legacy scalar), so running it on every open is
+        // deliberate and safe, not merely tolerated: it converges a store
+        // to the V4 shape regardless of which exact version it last opened
+        // at, with no separate "have I migrated yet" flag to keep in sync.
+        try PackWiseSchemaV4Migration.migrateV3Records(in: ModelContext(container))
+        return container
     }
 }

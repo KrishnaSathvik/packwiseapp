@@ -132,6 +132,7 @@
 		F189C852DDECE28B06E70E15 /* WeatherChangeReconciler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33100A95CC9029B6972A8069 /* WeatherChangeReconciler.swift */; };
 		F377BE05FBB46F0534FDEA57 /* activities.json in Resources */ = {isa = PBXBuildFile; fileRef = DC009A7A04A110F08355DAF6 /* activities.json */; };
 		F53F1533BD914916391666D5 /* CoverageResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8563EBE58395EE00F38E3956 /* CoverageResolver.swift */; };
+		F20B022908BB6AC11F0B6485 /* PersistenceMigrationV4Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D22B5490D8C51DAA3AE49C /* PersistenceMigrationV4Tests.swift */; };
 		F70240D380A399786325B5C3 /* substitutions.json in Resources */ = {isa = PBXBuildFile; fileRef = 80EEC6508BE45DA115516182 /* substitutions.json */; };
 		F7F89C50F44AE543A1C8A4B1 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40FC0820E9532861F4745CDB /* CoreLocation.framework */; };
 		FB9E892DB5F234700B754B96 /* travel-comfort.json in Resources */ = {isa = PBXBuildFile; fileRef = 026895DA8AD94D9E26C65186 /* travel-comfort.json */; };
@@ -281,6 +282,7 @@
 		FD44B8454240EBE0F41B79C3 /* SchemaV1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchemaV1.swift; sourceTree = "<group>"; };
 		FD6E2F696EEE47E598A5C70A /* TripContextCollectionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripContextCollectionsTests.swift; sourceTree = "<group>"; };
 		FD7167A22C009DDA79027D79 /* documents.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = documents.json; sourceTree = "<group>"; };
+		F4D22B5490D8C51DAA3AE49C /* PersistenceMigrationV4Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceMigrationV4Tests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -516,6 +518,7 @@
 				D03309136A7EDCCFFFBD7539 /* MemoryEventTests.swift */,
 				1BA26A7C17A5C90EE5560B90 /* PackingEngineTests.swift */,
 				F9237E072B633D8169D5D161 /* PackingImpactTests.swift */,
+				F4D22B5490D8C51DAA3AE49C /* PersistenceMigrationV4Tests.swift */,
 				5B50B260EFF252BBC08DBC17 /* ReasonQualityTests.swift */,
 				FD6E2F696EEE47E598A5C70A /* TripContextCollectionsTests.swift */,
 				15CC5CF6B7D99AE5A8E5A735 /* WarmLayerTests.swift */,
@@ -944,6 +947,7 @@
 				9887A2251B4DCB5603B0335B /* MemoryEventTests.swift in Sources */,
 				7FF1329C2272BBA507C66813 /* PackingEngineTests.swift in Sources */,
 				97AAB3482B02A10C51B0BFFE /* PackingImpactTests.swift in Sources */,
+				F20B022908BB6AC11F0B6485 /* PersistenceMigrationV4Tests.swift in Sources */,
 				4C354A096430ECAA283B0AD3 /* ReasonQualityTests.swift in Sources */,
 				E18114AFBB134392AFEA9D81 /* TripContextCollectionsTests.swift in Sources */,
 				73478534EFF932732A441BA9 /* WarmLayerTests.swift in Sources */,

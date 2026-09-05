@@ -94,6 +94,49 @@ final class TripRepository {
         }
     }
 
+    /// Set-valued trip-type write boundary for Task 3/4 callers (design
+    /// Sections 6.1/6.2). Trip types are a flat stable array, so a
+    /// multi-value write is fully safe today; nothing yet reads more than
+    /// the compatibility singleton (`TripRecord.tripType`), and that
+    /// accessor already fails safe rather than picking a primary value.
+    func applyTripTypes(_ tripTypes: Set<TripType>, on trip: TripRecord) throws {
+        try TripTypeSelection.validateNonEmptyDraftSelection(tripTypes)
+        trip.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON(tripTypes)
+        if let first = TripType.stableOrder.first(where: tripTypes.contains) {
+            trip.tripTypeRaw = first.rawValue
+        }
+        trip.updatedAt = .now
+    }
+
+    enum BagAssignmentError: Error, Equatable {
+        /// Until Task 5 lands multi-bag luggage semantics, a caller must
+        /// not persist more than one bag through this boundary — doing so
+        /// would require picking an arbitrary "primary" bag for every
+        /// reader still built around a single `BagType`, which the design
+        /// explicitly forbids (Section 6.1's fail-safe requirement).
+        case multipleBagsNotYetSupported
+    }
+
+    /// Set-valued bag write boundary for Task 5/8 callers. Rejects a
+    /// genuine multi-bag selection rather than silently collapsing it;
+    /// `LuggageContext` (Task 5) removes this guard once bag-set-aware
+    /// engine consumers exist. Preserves the identity/owner of an existing
+    /// matching `BagRecord`, exactly like migration does.
+    func applyBagTypes(_ bagTypes: Set<BagType>, on trip: TripRecord) throws {
+        guard bagTypes.count <= 1 else { throw BagAssignmentError.multipleBagsNotYetSupported }
+        for existing in trip.bags where !bagTypes.contains(where: { $0.rawValue == existing.bagTypeRaw }) {
+            context.delete(existing)
+        }
+        trip.bags.removeAll { existing in !bagTypes.contains(where: { $0.rawValue == existing.bagTypeRaw }) }
+        if let only = bagTypes.first, !trip.bags.contains(where: { $0.bagTypeRaw == only.rawValue }) {
+            let bag = TripBag(name: only.title, bagType: only, ownershipType: .personal)
+            let record = BagRecord(from: bag, trip: trip)
+            context.insert(record)
+            trip.bags.append(record)
+        }
+        trip.updatedAt = .now
+    }
+
     func addItem(_ draft: PackingItemDraft, to trip: TripRecord, syncWeatherChange: Bool = true) {
         trip.items.append(PackingItemRecord(from: draft, trip: trip))
         trip.updatedAt = .now
@@ -179,8 +222,8 @@ final class TripRepository {
                 durationBucket: .from(days: trip.durationDays),
                 laundryPlan: trip.laundryAccess,
                 packingStyle: trip.packingStyle,
-                bag: trip.bagType,
-                tripType: trip.tripType,
+                bagTypes: trip.bagTypes,
+                tripTypes: trip.tripTypes,
                 partySize: max(1, trip.travelerCount)
             )
         )
@@ -218,6 +261,7 @@ final class TripRepository {
         trip.durationDays = durationDays
         trip.durationNights = durationNights
         trip.tripTypeRaw = tripType.rawValue
+        trip.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON([tripType])
         trip.activitiesRaw = activities.joined(separator: ",")
         trip.bagTypeRaw = bagType.rawValue
         trip.packingStyleRaw = packingStyle.rawValue
