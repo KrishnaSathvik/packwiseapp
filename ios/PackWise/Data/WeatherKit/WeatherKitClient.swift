@@ -12,8 +12,9 @@ struct LiveWeatherKitClient: WeatherProvidingClient {
     ) async throws -> RawWeatherFetch {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
-        let startDay = calendar.startOfDay(for: start)
-        let endExclusive = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: end)) ?? end
+        let bounds = WeatherForecastNormalizer.queryBounds(start: start, end: end, calendar: calendar)
+        let startDay = bounds.start
+        let endExclusive = bounds.endExclusive
         let location = CLLocation(latitude: latitude, longitude: longitude)
         let daily = try await WeatherKit.WeatherService.shared.weather(
             for: location,
