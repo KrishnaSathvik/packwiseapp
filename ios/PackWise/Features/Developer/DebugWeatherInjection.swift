@@ -34,10 +34,10 @@ enum DebugWeatherInjection {
 
         var title: String {
             switch self {
-            case .rain: "Meaningful rain"
-            case .coldAndWindy: "Cold and windy"
-            case .hotAndSunny: "Hot and sunny"
-            case .mild: "Mild — clears signals"
+            case .rain: "Meaningful Rain Fixture"
+            case .coldAndWindy: "Cold and Windy Fixture"
+            case .hotAndSunny: "Hot and Sunny Fixture"
+            case .mild: "Mild Fixture — clears signals"
             }
         }
     }

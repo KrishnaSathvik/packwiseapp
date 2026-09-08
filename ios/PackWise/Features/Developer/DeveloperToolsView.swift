@@ -75,17 +75,19 @@ struct DeveloperToolsView: View {
                             Text(trip.destination.displayName).tag(trip.id)
                         }
                     }
-                    Picker("Forecast", selection: $scenario) {
+                    Picker("Test forecast", selection: $scenario) {
                         ForEach(DebugWeatherInjection.Scenario.allCases) { option in
                             Text(option.title).tag(option)
                         }
                     }
-                    button("Inject weather change") { await injectWeather() }
+                    button("Inject Test Weather") { await injectWeather() }
                 }
             } header: {
-                Text("Weather")
+                Text("Test Forecast")
             } footer: {
-                Text("Stores a fixture snapshot and reconciles it through the same path as a real refresh, so the result is a real proposal.")
+                Text(
+                    "Synthetic weather used only to test weather-change reconciliation. Not live WeatherKit data. The fixture snapshot is stored and reconciled through the same path as a real refresh, so the proposal is real but the forecast is not — weather screens show a TEST WEATHER badge while it is in place."
+                )
             }
 
             if !results.isEmpty {
@@ -109,7 +111,7 @@ struct DeveloperToolsView: View {
                         .font(.system(.footnote, design: .monospaced))
                         .textSelection(.enabled)
                 } else {
-                    Text("No weather refresh has run yet. Open a trip's detail screen (or bring the app to the foreground while it's open) to trigger one, then refresh here.")
+                    Text("No weather refresh has run yet. Create a trip, open a trip's detail screen, or bring the app to the foreground while one is open to trigger a live attempt, then refresh here.")
                         .foregroundStyle(.secondary)
                 }
                 Button("Refresh") { Task { await loadLatestDiagnostics() } }

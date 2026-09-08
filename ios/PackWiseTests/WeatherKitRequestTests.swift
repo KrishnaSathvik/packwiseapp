@@ -386,12 +386,109 @@ struct WeatherKitRequestTests {
         // calendar day once re-read in the destination's timezone.
         #expect(destinationDay == 3, "documents the shift; not an assertion about correct behavior")
     }
+
+    // MARK: - 9. Current-day trip in another timezone: provider auth failure
+
+    /// Physical-device evidence (2026-09-08, Chicago, Sep 8–12) plus the
+    /// entitled-simulator reproduction recorded in
+    /// `docs/device-evidence/product-v2/weatherkit.md`: the live provider
+    /// threw `WeatherDaemon.WDSJWTAuthenticatorServiceListener.Errors` code 2
+    /// before returning any forecast, and the trip-creation path
+    /// (`TripSetupView.saveTrip`) resolved weather without ever committing a
+    /// diagnostics entry, so the very first live attempt was invisible.
+    ///
+    /// Pins that a trip beginning today — captured as the *device*
+    /// calendar's midnight — in a destination timezone other than the
+    /// device's still attempts the fetch (it is not horizon-gated), sends
+    /// destination-anchored bounds, records the exact provider error domain
+    /// and code, lands on `.unavailable` with no snapshot for the engine,
+    /// and commits that evidence from the setup path.
+    @Test @MainActor func currentDayTripInAnotherTimezoneRecordsProviderAuthFailure() async throws {
+        await WeatherRequestDiagnosticsStore.shared.clear()
+        let destination = try SharedLibrary.testDestinations().first { $0.city == "Tokyo" }!
+        var tokyo = Calendar(identifier: .gregorian)
+        tokyo.timeZone = TimeZone(identifier: destination.timeZone)!
+        // The traveller taps "today" on a device in Chicago at 09:23 local —
+        // the instant of the recorded device reproduction.
+        let now = calendar.date(from: DateComponents(year: 2026, month: 9, day: 8, hour: 9, minute: 23))!
+        let start = calendar.startOfDay(for: now)
+        let end = calendar.date(byAdding: .day, value: 4, to: start)!
+        let authError = NSError(domain: "WeatherDaemon.WDSJWTAuthenticatorServiceListener.Errors", code: 2)
+        let client = StubFetchClient.failing(with: authError)
+        let service = WeatherKitWeatherService(client: client, now: { now })
+
+        let resolved = await TripWeatherRefresh.resolveForSetup(
+            using: service,
+            destination: destination,
+            start: start,
+            end: end,
+            cached: nil,
+            now: now
+        )
+
+        #expect(client.fetchCount == 1)
+        #expect(resolved.state == .unavailable)
+        #expect(resolved.snapshot == nil)
+        #expect(resolved.engineWeather == nil)
+
+        let diag = try #require(await WeatherRequestDiagnosticsStore.shared.latest())
+        #expect(diag.origin == .live)
+        #expect(diag.fetchAttempted)
+        #expect(diag.skipReason == nil)
+        #expect(diag.destinationTimeZoneIdentifier == "Asia/Tokyo")
+        #expect(diag.bounds.requestedStart == start)
+        #expect(diag.bounds.requestedEnd == end)
+        #expect(diag.bounds.normalizedStart == tokyo.startOfDay(for: start))
+        #expect(diag.bounds.normalizedEndExclusive == tokyo.date(byAdding: .day, value: 1, to: tokyo.startOfDay(for: end)))
+        #expect(diag.provider?.kind == .thrown)
+        #expect(diag.provider?.errorDomain == "WeatherDaemon.WDSJWTAuthenticatorServiceListener.Errors")
+        #expect(diag.provider?.errorCode == 2)
+        #expect(diag.provider?.returnedDayCount == 0)
+        #expect(diag.normalization == nil)
+        #expect(diag.cache?.hit == false)
+        #expect(diag.cache?.selectedAsFinal == false)
+        #expect(diag.finalState == .unavailable)
+        #expect(diag.engineReceivedPreciseWeather == false)
+        // The staged half was consumed by the commit — nothing dangles for
+        // the next refresh to mis-merge into.
+        #expect(await WeatherRequestDiagnosticsStore.shared.stagedEntry() == nil)
+    }
+
+    // MARK: - 10. A failed live fetch is never presented as a far-future forecast
+
+    /// The device showed "Forecast closer to departure / Your list currently
+    /// uses seasonal conditions for Chicago." for a trip beginning *today*.
+    /// That copy belongs to the far-future seasonal state; with no stored
+    /// snapshot it was actually a provider failure, and the wording sent the
+    /// investigation toward date gating. Pins that the two states read
+    /// differently.
+    @Test func unavailableWeatherIsNotPresentedAsCloserToDeparture() {
+        let unavailable = TripDetailWeatherCopy.pending(snapshot: nil, destinationName: "Chicago")
+        #expect(unavailable.headline == "Forecast isn't available right now")
+        #expect(!unavailable.headline.localizedCaseInsensitiveContains("closer to departure"))
+        #expect(unavailable.detail.contains("Chicago"))
+        #expect(unavailable.detail.contains("seasonal conditions"))
+
+        let seasonal = TripWeatherContext.seasonal()
+        let farFuture = TripDetailWeatherCopy.pending(snapshot: seasonal, destinationName: "Chicago")
+        #expect(farFuture.headline == "Forecast closer to departure")
+        #expect(farFuture.detail == seasonal.coverageCopy)
+    }
+
+    // MARK: - 11. Debug fixture controls cannot be mistaken for live weather
+
+    @Test func debugFixtureScenariosAreLabeledAsFixtures() {
+        for scenario in DebugWeatherInjection.Scenario.allCases {
+            #expect(scenario.title.contains("Fixture"), "\(scenario.rawValue) must say it is a fixture")
+        }
+        #expect(DebugWeatherInjection.Scenario.rain.title == "Meaningful Rain Fixture")
+    }
 }
 
 private final class StubFetchClient: WeatherProvidingClient, @unchecked Sendable {
     enum Behavior {
         case success([DailyForecast])
-        case failure
+        case failure(Error)
     }
 
     private let behavior: Behavior
@@ -402,7 +499,10 @@ private final class StubFetchClient: WeatherProvidingClient, @unchecked Sendable
     }
 
     static func success(_ days: [DailyForecast]) -> StubFetchClient { StubFetchClient(behavior: .success(days)) }
-    static func failing() -> StubFetchClient { StubFetchClient(behavior: .failure) }
+    static func failing() -> StubFetchClient {
+        StubFetchClient(behavior: .failure(NSError(domain: "WeatherKitRequestTests.StubFetchClient", code: 42)))
+    }
+    static func failing(with error: Error) -> StubFetchClient { StubFetchClient(behavior: .failure(error)) }
 
     func fetch(
         latitude: Double,
@@ -420,8 +520,8 @@ private final class StubFetchClient: WeatherProvidingClient, @unchecked Sendable
                 providerExpiresAt: start.addingTimeInterval(60 * 60 * 24 * 365),
                 alerts: []
             )
-        case .failure:
-            throw NSError(domain: "WeatherKitRequestTests.StubFetchClient", code: 42)
+        case .failure(let error):
+            throw error
         }
     }
 

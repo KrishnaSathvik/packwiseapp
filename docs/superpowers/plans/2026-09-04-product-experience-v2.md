@@ -609,19 +609,19 @@ git commit -m "fix: align recommendation names with causal context"
 
 - Produces: destination-timezone query bounds, typed diagnostic envelope, deterministic fixture rebasing, unchanged `WeatherAvailability`/reconciliation authority.
 
-- [ ] **Step 1: Add diagnostic-envelope tests before changing live behavior.** Assert request coordinates/dates/timezones, provider-returned day bounds, normalization inclusions/exclusions, cache decision, typed error, and final `WeatherQuality` are captured; assert notes/custom text are absent.
+- [x] **Step 1: Add diagnostic-envelope tests before changing live behavior.** Assert request coordinates/dates/timezones, provider-returned day bounds, normalization inclusions/exclusions, cache decision, typed error, and final `WeatherQuality` are captured; assert notes/custom text are absent.
 
-- [ ] **Step 2: Implement diagnostics only and run the focused tests.** Wire the envelope through `WeatherKitClient` → `WeatherKitWeatherService` → `TripWeatherResolver` → cache/result selection without changing query bounds, normalization, fallback, or UI behavior.
+- [x] **Step 2: Implement diagnostics only and run the focused tests.** Wire the envelope through `WeatherKitClient` → `WeatherKitWeatherService` → `TripWeatherResolver` → cache/result selection without changing query bounds, normalization, fallback, or UI behavior.
 
-- [ ] **Step 3: Reproduce the current Chicago failure on physical hardware before any behavioral fix.** Use a trip beginning on the device’s current day. Save raw requested coordinates/dates, destination/device timezones, provider coverage, normalization result, cache result, typed error, and final quality in `docs/device-evidence/product-v2/weatherkit.md`.
+- [x] **Step 3: Reproduce the current Chicago failure on physical hardware before any behavioral fix.** (2026-09-08 — device symptom plus entitled-simulator reproduction recorded in `docs/device-evidence/product-v2/weatherkit.md`; provider throws `WDSJWTAuthenticatorServiceListener.Errors` code 2.) Use a trip beginning on the device’s current day. Save raw requested coordinates/dates, destination/device timezones, provider coverage, normalization result, cache result, typed error, and final quality in `docs/device-evidence/product-v2/weatherkit.md`.
 
-- [ ] **Step 4: Write the smallest failing regression test proved by Step 3.** If the evidence shows a destination-timezone boundary defect, cover the exact device/destination timezone and current-date range. If it shows entitlement, provider, cache, or normalization failure instead, test that exact boundary and do not add an unrelated timezone fix.
+- [x] **Step 4: Write the smallest failing regression test proved by Step 3.** (`currentDayTripInAnotherTimezoneRecordsProviderAuthFailure`; the evidence shows a provider authorization failure, so no timezone fix was added.) If the evidence shows a destination-timezone boundary defect, cover the exact device/destination timezone and current-date range. If it shows entitlement, provider, cache, or normalization failure instead, test that exact boundary and do not add an unrelated timezone fix.
 
-- [ ] **Step 5: Apply the smallest source fix supported by evidence and verify red→green.** Preserve precise/partial/seasonal semantics and Apple attribution. Do not turn an error into fake seasonal weather.
+- [x] **Step 5: Apply the smallest source fix supported by evidence and verify red→green.** (Setup-path diagnostics commit and honest unavailable copy. The root cause is Apple-side WeatherKit App Service authorization for `com.packwiseapp.app`, which no source change can repair — see the evidence file §4.) Preserve precise/partial/seasonal semantics and Apple attribution. Do not turn an error into fake seasonal weather.
 
-- [ ] **Step 6: Add a failing fixture-rebase test, then implement Debug-only rebasing.** A named fixture rebases local day components to any target trip range and passes through real normalization/reconciliation; hardcoded fixture dates cannot make injection fail.
+- [x] **Step 6: Add a failing fixture-rebase test, then implement Debug-only rebasing.** A named fixture rebases local day components to any target trip range and passes through real normalization/reconciliation; hardcoded fixture dates cannot make injection fail.
 
-- [ ] **Step 7: Run focused and full weather tests, then re-prove the same Chicago trip on hardware.** Append before/after evidence and final quality to the evidence file. Stop if the live symptom remains.
+- [ ] **Step 7: Run focused and full weather tests, then re-prove the same Chicago trip on hardware.** (Tests green 2026-09-08. Hardware re-proof is blocked on the portal action in the evidence file §4 and must be run from the `product-v2-stage-a` worktree.) Append before/after evidence and final quality to the evidence file. Stop if the live symptom remains.
 
 - [ ] **Step 8: Run the green-commit checks and commit diagnostics, evidence-supported repair, Debug injection, and evidence.**
 

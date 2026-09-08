@@ -36,7 +36,14 @@ enum TripWeatherRefresh {
             now: now
         )
         #if DEBUG
-        await Self.commitDiagnostics(trip: trip, cached: cached, resolved: resolved, now: now)
+        await Self.commitDiagnostics(
+            destination: trip.destination,
+            start: trip.startDate,
+            end: trip.endDate,
+            cached: cached,
+            resolved: resolved,
+            now: now
+        )
         #endif
         guard let snapshot = resolved.snapshot else { return }
         repository.storeWeather(snapshot, on: trip)
@@ -60,6 +67,42 @@ enum TripWeatherRefresh {
             repository.replacePendingWeatherChange(proposal, on: trip)
         }
         try? repository.save()
+    }
+
+    /// Trip creation and editing (`TripSetupView.saveTrip`) resolve weather
+    /// before there is a persisted `TripRecord` to refresh, so they cannot
+    /// go through `run`. This is the same resolve plus — in Debug — the same
+    /// diagnostics commit `run` performs, so the very first live attempt for
+    /// a new trip is recorded rather than left staged and invisible. The
+    /// 2026-09-08 physical-device reproduction lost exactly that entry.
+    @MainActor
+    static func resolveForSetup(
+        using weatherService: any WeatherService,
+        destination: Destination,
+        start: Date,
+        end: Date,
+        cached: TripWeatherContext?,
+        now: Date = .now
+    ) async -> ResolvedTripWeather {
+        let resolved = await TripWeatherResolver.resolve(
+            using: weatherService,
+            destination: destination,
+            start: start,
+            end: end,
+            cached: cached,
+            now: now
+        )
+        #if DEBUG
+        await Self.commitDiagnostics(
+            destination: destination,
+            start: start,
+            end: end,
+            cached: cached,
+            resolved: resolved,
+            now: now
+        )
+        #endif
+        return resolved
     }
 
     #if DEBUG
@@ -108,7 +151,9 @@ enum TripWeatherRefresh {
     /// staged for this same destination/date bounds during `resolve` above.
     @MainActor
     private static func commitDiagnostics(
-        trip: TripRecord,
+        destination: Destination,
+        start: Date,
+        end: Date,
         cached: TripWeatherContext?,
         resolved: ResolvedTripWeather,
         now: Date
@@ -121,9 +166,9 @@ enum TripWeatherRefresh {
             selectedAsFinal: resolved.snapshot?.source == .cache
         )
         await WeatherRequestDiagnosticsStore.shared.commit(
-            matchingDestination: trip.destination.displayName,
-            requestedStart: trip.startDate,
-            requestedEnd: trip.endDate,
+            matchingDestination: destination.displayName,
+            requestedStart: start,
+            requestedEnd: end,
             cache: cacheDecision,
             finalState: resolved.state,
             engineReceivedPreciseWeather: resolved.engineWeather != nil

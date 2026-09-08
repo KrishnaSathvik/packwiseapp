@@ -60,6 +60,14 @@ struct WeatherDetailView: View {
                     }
                     Spacer(minLength: 0)
                 }
+                #if DEBUG
+                // Developer Tools fixture injection renders through this
+                // same screen. Say so, or a synthetic forecast reads as
+                // WeatherKit.
+                if weather.source == .fixture {
+                    PackWiseStatusBadge(title: "TEST WEATHER", symbol: "flask", tint: .orange)
+                }
+                #endif
                 if let coverage = coverageBadge {
                     PackWiseRowDivider(inset: 0)
                     PackWiseStatusBadge(

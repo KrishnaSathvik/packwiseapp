@@ -1014,7 +1014,7 @@ struct TripSetupView: View {
         let party = draft.party
         let repository = TripRepository(context: modelContext)
 
-        let resolved = await TripWeatherResolver.resolve(
+        let resolved = await TripWeatherRefresh.resolveForSetup(
             using: dependencies.weatherService,
             destination: destination,
             start: draft.startDate,
