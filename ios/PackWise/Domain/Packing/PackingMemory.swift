@@ -43,12 +43,16 @@ enum PackingMemoryEventKind: String, Codable, CaseIterable, Sendable {
 /// The trip conditions an event happened under. Structured so later queries
 /// are a group-by, not a research project — a hash here would collect
 /// unqueryable data for months.
+/// V4: trip type and bag are stable multi-value sets, matching
+/// `TripRecord.tripTypes`/`bagTypes` — the same one-to-one conversion
+/// applies to these immutable memory events as to trips (design Section
+/// 6.2).
 struct ContextFingerprint: Hashable, Codable, Sendable {
     var durationBucket: DurationBucket
     var laundryPlan: LaundryAccess
     var packingStyle: PackingStyle
-    var bag: BagType
-    var tripType: TripType
+    var bagTypes: Set<BagType>
+    var tripTypes: Set<TripType>
     var partySize: Int
 }
 

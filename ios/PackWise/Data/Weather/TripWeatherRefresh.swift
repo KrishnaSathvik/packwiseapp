@@ -20,6 +20,9 @@ enum TripWeatherRefresh {
             tripStatus: trip.status,
             now: now
         ) else {
+            #if DEBUG
+            await Self.recordSkippedFetch(trip: trip, cached: cached, now: now)
+            #endif
             try? repository.save()
             return
         }
@@ -32,6 +35,16 @@ enum TripWeatherRefresh {
             cached: cached,
             now: now
         )
+        #if DEBUG
+        await Self.commitDiagnostics(
+            destination: trip.destination,
+            start: trip.startDate,
+            end: trip.endDate,
+            cached: cached,
+            resolved: resolved,
+            now: now
+        )
+        #endif
         guard let snapshot = resolved.snapshot else { return }
         repository.storeWeather(snapshot, on: trip)
         repository.syncPendingWeatherChange(on: trip)
@@ -55,4 +68,111 @@ enum TripWeatherRefresh {
         }
         try? repository.save()
     }
+
+    /// Trip creation and editing (`TripSetupView.saveTrip`) resolve weather
+    /// before there is a persisted `TripRecord` to refresh, so they cannot
+    /// go through `run`. This is the same resolve plus — in Debug — the same
+    /// diagnostics commit `run` performs, so the very first live attempt for
+    /// a new trip is recorded rather than left staged and invisible. The
+    /// 2026-09-08 physical-device reproduction lost exactly that entry.
+    @MainActor
+    static func resolveForSetup(
+        using weatherService: any WeatherService,
+        destination: Destination,
+        start: Date,
+        end: Date,
+        cached: TripWeatherContext?,
+        now: Date = .now
+    ) async -> ResolvedTripWeather {
+        let resolved = await TripWeatherResolver.resolve(
+            using: weatherService,
+            destination: destination,
+            start: start,
+            end: end,
+            cached: cached,
+            now: now
+        )
+        #if DEBUG
+        await Self.commitDiagnostics(
+            destination: destination,
+            start: start,
+            end: end,
+            cached: cached,
+            resolved: resolved,
+            now: now
+        )
+        #endif
+        return resolved
+    }
+
+    #if DEBUG
+    /// The refresh policy declined to fetch — an existing cache is still
+    /// valid, or the trip's status excludes weather. No provider call was
+    /// made, so this is recorded directly rather than staged by the
+    /// service layer.
+    @MainActor
+    private static func recordSkippedFetch(trip: TripRecord, cached: TripWeatherContext?, now: Date) async {
+        let calendar = WeatherForecastNormalizer.calendar(for: trip.destination)
+        let bounds = WeatherForecastNormalizer.queryBounds(start: trip.startDate, end: trip.endDate, calendar: calendar)
+        let entry = WeatherRequestDiagnostics(
+            recordedAt: now,
+            origin: .live,
+            destinationName: trip.destination.displayName,
+            destinationLatitude: trip.destination.latitude,
+            destinationLongitude: trip.destination.longitude,
+            destinationTimeZoneIdentifier: trip.destination.timeZone,
+            deviceTimeZoneIdentifier: TimeZone.current.identifier,
+            deviceCalendarIdentifier: String(describing: Calendar.current.identifier),
+            bounds: WeatherRequestDiagnostics.DateBounds(
+                requestedStart: trip.startDate,
+                requestedEnd: trip.endDate,
+                normalizedStart: bounds.start,
+                normalizedEndExclusive: bounds.endExclusive
+            ),
+            fetchAttempted: false,
+            skipReason: "WeatherRefreshPolicy.shouldFetch declined (trip status \(trip.status.rawValue), existing cache still valid, or archived/completed)",
+            provider: nil,
+            normalization: nil,
+            cache: WeatherRequestDiagnostics.CacheDecision(
+                hit: cached != nil,
+                ageSeconds: cached.map { now.timeIntervalSince($0.fetchedAt) },
+                coverageStart: cached?.coverageStart,
+                coverageEnd: cached?.coverageEnd,
+                selectedAsFinal: cached != nil
+            ),
+            finalState: cached?.state(now: now) ?? .unavailable,
+            engineReceivedPreciseWeather: cached?.isPreciseForecast ?? false
+        )
+        await WeatherRequestDiagnosticsStore.shared.recordSkippedFetch(entry)
+    }
+
+    /// Merges the cache decision and the engine's final consumption of the
+    /// resolved weather onto whatever `WeatherKitWeatherService.availability`
+    /// staged for this same destination/date bounds during `resolve` above.
+    @MainActor
+    private static func commitDiagnostics(
+        destination: Destination,
+        start: Date,
+        end: Date,
+        cached: TripWeatherContext?,
+        resolved: ResolvedTripWeather,
+        now: Date
+    ) async {
+        let cacheDecision = WeatherRequestDiagnostics.CacheDecision(
+            hit: cached != nil,
+            ageSeconds: cached.map { now.timeIntervalSince($0.fetchedAt) },
+            coverageStart: cached?.coverageStart,
+            coverageEnd: cached?.coverageEnd,
+            selectedAsFinal: resolved.snapshot?.source == .cache
+        )
+        await WeatherRequestDiagnosticsStore.shared.commit(
+            matchingDestination: destination.displayName,
+            requestedStart: start,
+            requestedEnd: end,
+            cache: cacheDecision,
+            finalState: resolved.state,
+            engineReceivedPreciseWeather: resolved.engineWeather != nil
+        )
+    }
+    #endif
 }

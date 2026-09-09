@@ -36,6 +36,18 @@ enum WeatherForecastNormalizer {
         return daysOut >= dailyHorizonDays
     }
 
+    /// The exact bounds sent to the weather provider: the destination-
+    /// timezone start of the trip's start day, and the destination-timezone
+    /// exclusive end (one day past the start of the trip's end day). Shared
+    /// by `LiveWeatherKitClient` (which needs it to build the WeatherKit
+    /// query) and Debug diagnostics (which report it as evidence), so the
+    /// two can never drift apart.
+    static func queryBounds(start: Date, end: Date, calendar: Calendar) -> (start: Date, endExclusive: Date) {
+        let startDay = calendar.startOfDay(for: start)
+        let endExclusive = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: end)) ?? end
+        return (startDay, endExclusive)
+    }
+
     static func clip(
         _ days: [DailyForecast],
         tripStart: Date,

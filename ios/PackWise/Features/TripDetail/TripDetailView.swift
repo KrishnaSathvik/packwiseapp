@@ -284,6 +284,14 @@ struct TripDetailView: View {
                 Spacer(minLength: 0)
             }
 
+            #if DEBUG
+            // Developer Tools fixture injection renders through this same
+            // card. Say so, or a synthetic forecast reads as WeatherKit.
+            if snapshot.source == .fixture {
+                PackWiseStatusBadge(title: "TEST WEATHER", symbol: "flask", tint: .orange)
+            }
+            #endif
+
             if !snapshot.dailyForecast.isEmpty {
                 PackWiseRowDivider(inset: 0)
                 WeatherStripView(
@@ -328,13 +336,14 @@ struct TripDetailView: View {
     /// Seasonal, partial, or nothing yet — drawn in the shape of the forecast
     /// it will become, so the section never blinks out of the screen.
     private func pendingWeather(_ snapshot: TripWeatherContext?) -> some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+        let copy = TripDetailWeatherCopy.pending(snapshot: snapshot, destinationName: trip.destinationDisplayName)
+        return VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
             HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
-                PackWiseIconBadge(symbol: "calendar", tint: PackWiseColor.accent, size: 42)
+                PackWiseIconBadge(symbol: copy.symbol, tint: PackWiseColor.accent, size: 42)
                 VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                    Text("Forecast closer to departure")
+                    Text(copy.headline)
                         .font(.headline)
-                    Text(pendingWeatherDetail(snapshot))
+                    Text(copy.detail)
                         .font(.subheadline)
                         .foregroundStyle(PackWiseColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -357,13 +366,6 @@ struct TripDetailView: View {
                 }
             }
         }
-    }
-
-    private func pendingWeatherDetail(_ snapshot: TripWeatherContext?) -> String {
-        guard let snapshot else {
-            return "Your list currently uses seasonal conditions for \(trip.destinationDisplayName)."
-        }
-        return snapshot.coverageCopy
     }
 
     @ViewBuilder
@@ -607,6 +609,37 @@ struct TripDetailView: View {
     private func completeTrip() {
         TripRepository(context: modelContext).complete(trip)
         try? modelContext.save()
+    }
+}
+
+/// Copy for the Weather card when there is no precise forecast to draw.
+///
+/// A trip with no stored snapshot at all is not a far-future trip: the
+/// far-future path stores a seasonal snapshot and reads from its
+/// `coverageCopy`. No snapshot means the live fetch failed with nothing to
+/// fall back on, and it has to read that way. The 2026-09-08 device pass saw
+/// "Forecast closer to departure" on a trip beginning that same day and
+/// chased date gating when the provider had actually refused the request.
+enum TripDetailWeatherCopy {
+    struct Pending: Equatable {
+        var headline: String
+        var detail: String
+        var symbol: String
+    }
+
+    static func pending(snapshot: TripWeatherContext?, destinationName: String) -> Pending {
+        guard let snapshot else {
+            return Pending(
+                headline: "Forecast isn't available right now",
+                detail: "PackWise couldn't reach the forecast. Your list uses seasonal conditions for \(destinationName) until it can.",
+                symbol: "exclamationmark.triangle"
+            )
+        }
+        return Pending(
+            headline: "Forecast closer to departure",
+            detail: snapshot.coverageCopy,
+            symbol: "calendar"
+        )
     }
 }
 

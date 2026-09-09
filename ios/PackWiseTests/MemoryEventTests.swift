@@ -30,6 +30,10 @@ struct MemoryEventTests {
             laundryAccess: .planned
         )
         model.insert(trip)
+        // V4: `bagTypes` derives from the `BagRecord` relationship, not the
+        // legacy `bagTypeRaw` scalar — set up via the same repository call
+        // real trip creation uses, so the fingerprint below sees a bag.
+        repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
 
         // Generation: two engine suggestions.
         repo.replaceItems(on: trip, with: [
@@ -82,8 +86,8 @@ struct MemoryEventTests {
                 durationBucket: .medium,
                 laundryPlan: .planned,
                 packingStyle: .light,
-                bag: .carryOn,
-                tripType: .cityBreak,
+                bagTypes: [.carryOn],
+                tripTypes: [.cityBreak],
                 partySize: 1
             ))
         }

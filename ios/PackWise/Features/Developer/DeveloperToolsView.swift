@@ -1,6 +1,7 @@
 #if DEBUG
 import SwiftData
 import SwiftUI
+import UIKit
 
 /// The three things the physical-device pass cannot do by hand: prove that a
 /// real assertion is rejected when replayed, prove that the body it signed is
@@ -18,6 +19,8 @@ struct DeveloperToolsView: View {
     @State private var running = false
     @State private var selectedTripID: UUID?
     @State private var scenario: DebugWeatherInjection.Scenario = .rain
+    @State private var diagnosticsText: String?
+    @State private var diagnosticsCount = 0
 
     private struct Result: Identifiable {
         let id = UUID()
@@ -72,17 +75,19 @@ struct DeveloperToolsView: View {
                             Text(trip.destination.displayName).tag(trip.id)
                         }
                     }
-                    Picker("Forecast", selection: $scenario) {
+                    Picker("Test forecast", selection: $scenario) {
                         ForEach(DebugWeatherInjection.Scenario.allCases) { option in
                             Text(option.title).tag(option)
                         }
                     }
-                    button("Inject weather change") { await injectWeather() }
+                    button("Inject Test Weather") { await injectWeather() }
                 }
             } header: {
-                Text("Weather")
+                Text("Test Forecast")
             } footer: {
-                Text("Stores a fixture snapshot and reconciles it through the same path as a real refresh, so the result is a real proposal.")
+                Text(
+                    "Synthetic weather used only to test weather-change reconciliation. Not live WeatherKit data. The fixture snapshot is stored and reconciled through the same path as a real refresh, so the proposal is real but the forecast is not — weather screens show a TEST WEATHER badge while it is in place."
+                )
             }
 
             if !results.isEmpty {
@@ -99,10 +104,34 @@ struct DeveloperToolsView: View {
                     Button("Clear", role: .destructive) { results.removeAll() }
                 }
             }
+
+            Section {
+                if let diagnosticsText {
+                    Text(diagnosticsText)
+                        .font(.system(.footnote, design: .monospaced))
+                        .textSelection(.enabled)
+                } else {
+                    Text("No weather refresh has run yet. Create a trip, open a trip's detail screen, or bring the app to the foreground while one is open to trigger a live attempt, then refresh here.")
+                        .foregroundStyle(.secondary)
+                }
+                Button("Refresh") { Task { await loadLatestDiagnostics() } }
+                Button("Copy latest") { copyLatestDiagnostics() }
+                    .disabled(diagnosticsText == nil)
+                Button("Copy all (\(diagnosticsCount))") { Task { await copyAllDiagnostics() } }
+                    .disabled(diagnosticsCount == 0)
+                Button("Clear log", role: .destructive) { Task { await clearDiagnostics() } }
+            } header: {
+                Text("Weather diagnostics")
+            } footer: {
+                Text(
+                    "\(diagnosticsCount) recorded — the exact request/provider/cache/normalization boundary for the most recent refresh or injection. Coordinates, dates, and timezones only — no trip notes. Debug builds only."
+                )
+            }
         }
         .navigationTitle("Developer Tools")
         .navigationBarTitleDisplayMode(.inline)
         .disabled(running)
+        .task { await loadLatestDiagnostics() }
     }
 
     private func button(_ title: String, action: @escaping () async -> DebugAttestProbe.Outcome?) -> some View {
@@ -137,6 +166,7 @@ struct DeveloperToolsView: View {
             rules: dependencies.rules,
             repository: TripRepository(context: modelContext)
         )
+        await loadLatestDiagnostics()
         return DebugAttestProbe.Outcome(passed: outcome.passed, detail: outcome.detail)
     }
 
@@ -146,6 +176,31 @@ struct DeveloperToolsView: View {
             return
         }
         results.insert(Result(name: name, passed: outcome.passed, detail: outcome.detail), at: 0)
+    }
+
+    private func loadLatestDiagnostics() async {
+        let store = WeatherRequestDiagnosticsStore.shared
+        diagnosticsText = await store.latest()?.reportText
+        diagnosticsCount = await store.all().count
+    }
+
+    private func copyLatestDiagnostics() {
+        guard let diagnosticsText else { return }
+        UIPasteboard.general.string = diagnosticsText
+    }
+
+    /// Every recorded entry, oldest first — for a repro that spans several
+    /// refreshes (first open, backgrounding, pull-to-refresh) so nothing
+    /// before the latest one is lost.
+    private func copyAllDiagnostics() async {
+        let text = await WeatherRequestDiagnosticsStore.shared.allReportText()
+        guard !text.isEmpty else { return }
+        UIPasteboard.general.string = text
+    }
+
+    private func clearDiagnostics() async {
+        await WeatherRequestDiagnosticsStore.shared.clear()
+        await loadLatestDiagnostics()
     }
 }
 #endif
