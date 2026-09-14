@@ -2,11 +2,15 @@
   "id": "WeddingWeekend",
   "destinationFixture": "Chicago",
   "days": 3,
-  "tripType": "weddingEvent",
+  "tripTypes": [
+    "weddingEvent"
+  ],
   "activities": [
     "niceDinner"
   ],
-  "bag": "carryOn",
+  "bagTypes": [
+    "carryOn"
+  ],
   "style": "balanced",
   "homeCountryCode": "US",
   "homeCountrySource": "userConfirmed",

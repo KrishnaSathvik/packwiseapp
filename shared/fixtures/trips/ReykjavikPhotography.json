@@ -3,12 +3,16 @@
   "destinationFixture": "Reykjavik",
   "weatherFixture": "ReykjavikColdWindy",
   "days": 5,
-  "tripType": "outdoor",
+  "tripTypes": [
+    "outdoor"
+  ],
   "activities": [
     "photography",
     "sightseeing"
   ],
-  "bag": "checked",
+  "bagTypes": [
+    "checked"
+  ],
   "style": "prepared",
   "homeCountryCode": "US",
   "homeCountrySource": "userConfirmed",

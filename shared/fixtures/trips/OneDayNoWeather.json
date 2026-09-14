@@ -2,9 +2,11 @@
   "id": "OneDayNoWeather",
   "destinationFixture": "Chicago",
   "days": 1,
-  "tripType": "cityBreak",
+  "tripTypes": [
+    "cityBreak"
+  ],
   "activities": [],
-  "bag": "notSure",
+  "bagTypes": [],
   "style": "balanced",
   "homeCountryCode": "US",
   "homeCountrySource": "userConfirmed",

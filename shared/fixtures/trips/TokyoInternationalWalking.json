@@ -3,12 +3,16 @@
   "destinationFixture": "Tokyo",
   "weatherFixture": "TokyoMildSpring",
   "days": 6,
-  "tripType": "cityBreak",
+  "tripTypes": [
+    "cityBreak"
+  ],
   "activities": [
     "sightseeing",
     "walking"
   ],
-  "bag": "carryOn",
+  "bagTypes": [
+    "carryOn"
+  ],
   "style": "balanced",
   "homeCountryCode": "US",
   "homeCountrySource": "userConfirmed",

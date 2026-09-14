@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
+
+import { Ajv2020 } from "ajv/dist/2020.js";
 
 import { canonicalBagTypes, canonicalTripTypes } from "../src/canonical.ts";
 import { gapsCapability } from "../src/capabilities/gaps.ts";
@@ -15,7 +19,7 @@ import { InMemoryDurableStore } from "../src/store/memory.ts";
 import type { ModelAdapter, ModelRequest } from "../src/model/adapter.ts";
 import { FakeModelAdapter } from "../src/model/fake.ts";
 import { validateRequest } from "../src/validation.ts";
-import { SAFETY_IDENTIFIER, capture, post, tripContext } from "./helpers.ts";
+import { SAFETY_IDENTIFIER, SHARED_DIR, capture, post, tripContext, tripEvalFixtures } from "./helpers.ts";
 
 /**
  * Product Experience V2, Task 15: trip context crosses the API boundary as
@@ -242,3 +246,83 @@ for (const endpoint of ENDPOINTS) {
     assert.equal(spy.inputs.length, 0);
   });
 }
+
+// MARK: - Product V2 combination fixtures (contract-only until Tasks 3–5)
+
+type CombinationFixture = {
+  id: string;
+  covers: string;
+  owningTask: string;
+  context: { tripTypes: string[]; bagTypes: string[] } & Record<string, unknown>;
+};
+
+function combinationFixtures(): CombinationFixture[] {
+  const file = join(SHARED_DIR, "fixtures", "contexts", "product-v2-combinations.json");
+  return (JSON.parse(readFileSync(file, "utf8")) as { contexts: CombinationFixture[] }).contexts;
+}
+
+test("the combination fixtures cover every agreed multi-value context", () => {
+  const combos = combinationFixtures();
+  const tripSets = combos.map((row) => row.context.tripTypes.join("+"));
+  const bagSets = combos.map((row) => row.context.bagTypes.join("+"));
+  for (const expected of [
+    "vacation+beach",
+    "vacation+cityBreak+beach",
+    "cityBreak+business",
+    "outdoor+roadTrip",
+    "vacation+weddingEvent",
+    "outdoor+skiSnow",
+  ]) {
+    assert.ok(tripSets.includes(expected), `missing trip-type combination ${expected}`);
+  }
+  for (const expected of [
+    "personalItem+carryOn",
+    "carryOn+checked",
+    "personalItem+carryOn+checked",
+    "checked+backpack",
+  ]) {
+    assert.ok(bagSets.includes(expected), `missing bag combination ${expected}`);
+  }
+  for (const row of combos) {
+    // Contract-only: no engine expectation may be faked before its owning task.
+    for (const key of ["mustInclude", "mustNotInclude", "expectedQuantityRanges", "expectedExactQuantities"]) {
+      assert.ok(!Object.hasOwn(row, key) && !Object.hasOwn(row.context, key), `${row.id} carries ${key}`);
+    }
+  }
+});
+
+for (const row of combinationFixtures()) {
+  test(`combination ${row.id} is a valid context whose canonical form is itself`, () => {
+    accepts(row.context);
+    const reversed = {
+      ...row.context,
+      tripTypes: [...row.context.tripTypes].reverse(),
+      bagTypes: [...row.context.bagTypes].reverse(),
+    };
+    accepts(reversed);
+    const shape = tripShape(reversed as unknown as Parameters<typeof tripShape>[0]);
+    assert.deepEqual(shape.tripTypes, row.context.tripTypes);
+    assert.deepEqual(shape.bagTypes, row.context.bagTypes);
+  });
+}
+
+// MARK: - Evaluation fixture schema
+
+test("trip-eval.schema.json accepts every current fixture and rejects the retired singular shape", () => {
+  const schema = JSON.parse(readFileSync(join(SHARED_DIR, "schemas", "trip-eval.schema.json"), "utf8")) as object;
+  const validate = new Ajv2020({ strict: false, allErrors: true }).compile(schema);
+
+  const fixtures = tripEvalFixtures();
+  assert.equal(fixtures.length, 12);
+  for (const fixture of fixtures) {
+    assert.ok(validate(fixture), `${fixture.id}: ${JSON.stringify(validate.errors)}`);
+  }
+
+  const base = { id: "x", destinationFixture: "Chicago", mustInclude: [], mustNotInclude: [] };
+  assert.ok(validate({ ...base, tripTypes: ["business"], bagTypes: [] }), "zero bags is valid");
+  assert.ok(!validate({ ...base, tripType: "business", bag: "carryOn" }), "singular-only fixture");
+  assert.ok(!validate({ ...base, tripTypes: ["business"], bagTypes: [], bag: "carryOn" }), "arrays plus bag");
+  assert.ok(!validate({ ...base, tripTypes: [], bagTypes: [] }), "empty tripTypes");
+  assert.ok(!validate({ ...base, tripTypes: ["business"], bagTypes: ["notSure"] }), "legacy notSure bag");
+  assert.ok(!validate({ ...base, tripTypes: ["business"], bagTypes: ["roadTripLuggage"] }), "legacy roadTripLuggage bag");
+});

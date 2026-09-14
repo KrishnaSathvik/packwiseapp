@@ -68,9 +68,11 @@ struct TripEvalFixture: Codable, Sendable {
     var destinationFixture: String
     var weatherFixture: String?
     var days: Int
-    var tripType: String
+    /// Stable-ordered trip-type raw values; one or more.
+    var tripTypes: [String]
     var activities: [String]
-    var bag: String
+    /// Stable-ordered physical bag raw values; empty means not sure yet.
+    var bagTypes: [String]
     var style: String
     var chips: [String]?
     var homeCountryCode: String

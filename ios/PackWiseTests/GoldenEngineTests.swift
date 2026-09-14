@@ -56,9 +56,9 @@ struct GoldenEngineTests {
         var weatherFixture: String?
         var startDate: String
         var days: Int
-        var tripType: String
+        var tripTypes: [String]
         var activities: [String]
-        var bag: String
+        var bagTypes: [String]
         var style: String
         var laundry: String
         var homeCountryCode: String
@@ -148,10 +148,10 @@ struct GoldenEngineTests {
             endDate: end,
             durationDays: math.days,
             durationNights: math.nights,
-            tripTypes: [TripType(rawValue: fixture.tripType)!],
+            tripTypes: Set(fixture.tripTypes.map { TripType(rawValue: $0)! }),
             activities: fixture.activities,
             datedActivities: fixture.activities.map { DatedActivity(activityID: $0, date: nil) },
-            bagTypes: Set([BagType(rawValue: fixture.bag)!].filter(BagType.stableOrder.contains)),
+            bagTypes: Set(fixture.bagTypes.map { BagType(rawValue: $0)! }),
             packingStyle: PackingStyle(rawValue: fixture.style)!,
             transportation: .unknown,
             laundryAccess: LaundryAccess(rawValue: fixture.laundry)!,

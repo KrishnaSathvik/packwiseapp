@@ -46,6 +46,39 @@ def swift_stable_order(path: Path, name: str) -> list[str] | None:
     return re.findall(r"\.(\w+)", match.group(1))
 
 
+RETIRED_CONTEXT_KEYS = ("tripType", "bagType", "bag")
+
+
+def trip_context_errors(label: str, row: dict) -> list[str]:
+    """Current request/eval fixtures carry tripTypes[]/bagTypes[] only.
+
+    Arrays are sets stored in the stable canonical order, so a fixture's bytes
+    never depend on how someone happened to type the selection. Legacy V3
+    persistence inputs are not fixtures here; they live in the Swift migration
+    tests, which deliberately seed the retired scalar columns.
+    """
+    errors: list[str] = []
+    if retired := [key for key in RETIRED_CONTEXT_KEYS if key in row]:
+        errors.append(f"{label} uses retired singular context keys {retired}")
+    for field, order, minimum in (
+        ("tripTypes", build_intelligence_schemas.TRIP_TYPES, 1),
+        ("bagTypes", build_intelligence_schemas.BAG_TYPES, 0),
+    ):
+        values = row.get(field)
+        if not isinstance(values, list):
+            errors.append(f"{label} {field} must be an array")
+            continue
+        if len(values) < minimum:
+            errors.append(f"{label} {field} needs at least {minimum} value")
+        if unknown := [v for v in values if v not in order]:
+            errors.append(f"{label} {field} unknown values {unknown}")
+        elif len(set(values)) != len(values):
+            errors.append(f"{label} {field} repeats a value")
+        elif values != [v for v in order if v in values]:
+            errors.append(f"{label} {field} not in stable order: {values}")
+    return errors
+
+
 def load(path: Path):
     return json.loads(path.read_text())
 
@@ -146,6 +179,7 @@ def main() -> int:
 
     for path in sorted((SHARED / "fixtures" / "trips").glob("*.json")):
         trip = load(path)
+        errors.extend(trip_context_errors(trip["id"], trip))
         if trip["destinationFixture"] not in dest_names:
             errors.append(f"{trip['id']} unknown destination")
         if (fixture := trip.get("weatherFixture")) and fixture not in weather_ids:
@@ -173,6 +207,22 @@ def main() -> int:
                     errors.append(f"{trip['id']} unknown ageGroup {traveler.get('ageGroup')}")
                 if unknown := [n for n in traveler.get("needs", []) if n not in CHILD_NEEDS]:
                     errors.append(f"{trip['id']} unknown child needs {unknown}")
+
+    for fixture in load(SHARED / "fixtures" / "golden" / "golden-fixtures.json")["fixtures"]:
+        errors.extend(trip_context_errors(f"golden {fixture['id']}", fixture))
+
+    combinations = SHARED / "fixtures" / "contexts" / "product-v2-combinations.json"
+    if combinations.exists():
+        activity_vocabulary = set(build_intelligence_schemas.vocabularies()["activities"])
+        for row in load(combinations)["contexts"]:
+            context = row["context"]
+            errors.extend(trip_context_errors(f"combination {row['id']}", context))
+            if context["destination"]["displayName"] not in dest_names:
+                errors.append(f"combination {row['id']} unknown destination")
+            if unknown := [a for a in context.get("activities", []) if a not in activity_vocabulary]:
+                errors.append(f"combination {row['id']} unknown activities {unknown}")
+    else:
+        errors.append("missing shared/fixtures/contexts/product-v2-combinations.json")
 
     if build_intelligence_schemas.main(["--check"]) != 0:
         errors.append("generated intelligence schemas are stale")

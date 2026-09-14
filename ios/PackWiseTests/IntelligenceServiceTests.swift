@@ -215,6 +215,50 @@ struct IntelligenceServiceTests {
         #expect(!types.contains("other"), "the compat fallback never reaches the wire")
     }
 
+    /// Product V2 combination contexts in `shared/fixtures/contexts/`. Contract-
+    /// only until Tasks 3–5 give them behavior: this proves each one survives
+    /// the domain set → DTO round trip exactly, with no primary type invented.
+    @Test func productV2CombinationFixturesRoundTripThroughTheDTOExactly() throws {
+        struct File: Decodable {
+            struct Row: Decodable {
+                struct Context: Decodable {
+                    struct Place: Decodable { var displayName: String }
+                    var destination: Place
+                    var tripTypes: [String]
+                    var bagTypes: [String]
+                }
+                var id: String
+                var context: Context
+            }
+            var contexts: [Row]
+        }
+        let url = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("shared/fixtures/contexts/product-v2-combinations.json")
+        let rows = try JSONDecoder().decode(File.self, from: Data(contentsOf: url)).contexts
+        #expect(rows.count == 10)
+        let destinations = try SharedLibrary.testDestinations()
+
+        for row in rows {
+            let tripTypes = row.context.tripTypes.compactMap(TripType.init(rawValue:))
+            let bagTypes = row.context.bagTypes.compactMap(BagType.init(rawValue:))
+            #expect(tripTypes.count == row.context.tripTypes.count, "\(row.id) has an unknown trip type")
+            #expect(bagTypes.count == row.context.bagTypes.count, "\(row.id) has an unknown bag")
+            #expect(bagTypes.allSatisfy(BagType.stableOrder.contains), "\(row.id) has a non-physical bag")
+
+            var trip = try context()
+            trip.destination = try #require(destinations.first { $0.displayName == row.context.destination.displayName })
+            trip.tripTypes = Set(tripTypes)
+            trip.bagTypes = Set(bagTypes)
+            let payload = IntelligenceDTO.payload(for: trip)
+            #expect(payload.tripTypes == row.context.tripTypes, "\(row.id) trip types")
+            #expect(payload.bagTypes == row.context.bagTypes, "\(row.id) bags")
+            if tripTypes.count > 1 {
+                #expect(trip.tripType == .other, "\(row.id) must not resolve a primary trip type")
+            }
+        }
+    }
+
     @Test func legacyScalarContextFieldsAreAbsentFromTheRequest() async throws {
         let service = try makeService(json: """
         { \(metaJSON), "suggestions": [] }

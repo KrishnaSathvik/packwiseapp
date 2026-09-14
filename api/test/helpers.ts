@@ -58,9 +58,9 @@ export type TripEvalFixture = {
   id: string;
   destinationFixture: string;
   days: number;
-  tripType: string;
+  tripTypes: string[];
   activities: string[];
-  bag: string;
+  bagTypes: string[];
   style: string;
   chips?: string[];
   travelerCount?: number;
@@ -96,13 +96,10 @@ export function contextFromFixture(fixture: TripEvalFixture): TripContextDTO {
     startDate: "2026-09-01",
     endDate: "2026-09-05",
     durationDays: fixture.days,
-    // TEMPORARY Task 15 bridge: the shared trip fixtures still carry the
-    // singular shape until the fixture-migration commit, which deletes this
-    // wrapping. It wraps the one stated value; it never picks among several.
-    tripTypes: [fixture.tripType],
+    tripTypes: fixture.tripTypes,
     activities: fixture.activities,
     contextChips: fixture.chips ?? [],
-    bagTypes: fixture.bag === "notSure" ? [] : [fixture.bag],
+    bagTypes: fixture.bagTypes,
     packingStyle: fixture.style,
     travelerCount: fixture.party?.travelers.length ?? fixture.travelerCount ?? 1,
   };

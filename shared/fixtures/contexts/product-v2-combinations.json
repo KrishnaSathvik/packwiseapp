@@ -1,0 +1,288 @@
+{
+  "comment": "Product Experience V2 multi-value trip contexts (Task 15). Contract-only inputs in the Intelligence API TripContextDTO shape, with tripTypes/bagTypes stored in stable canonical order. They carry no engine expectations on purpose: multi-trip-type composition lands in Tasks 3-4 and multi-bag luggage semantics in Task 5, and each owning task adds its reviewed expectations then. Deliberately outside the golden ledger and the trip evals until that happens.",
+  "contexts": [
+    {
+      "id": "vacation-beach",
+      "covers": "Vacation + Beach",
+      "owningTask": "Task 4",
+      "context": {
+        "destination": {
+          "displayName": "Maui",
+          "countryCode": "US"
+        },
+        "startDate": "2026-11-02",
+        "endDate": "2026-11-08",
+        "durationDays": 7,
+        "tripTypes": [
+          "vacation",
+          "beach"
+        ],
+        "activities": [
+          "swimming",
+          "beachDays",
+          "snorkeling"
+        ],
+        "contextChips": [],
+        "bagTypes": [
+          "carryOn"
+        ],
+        "packingStyle": "balanced",
+        "travelerCount": 1
+      }
+    },
+    {
+      "id": "vacation-city-break-beach",
+      "covers": "Vacation + City Break + Beach, bags not specified",
+      "owningTask": "Task 4",
+      "context": {
+        "destination": {
+          "displayName": "Barcelona",
+          "countryCode": "ES"
+        },
+        "startDate": "2026-10-05",
+        "endDate": "2026-10-10",
+        "durationDays": 6,
+        "tripTypes": [
+          "vacation",
+          "cityBreak",
+          "beach"
+        ],
+        "activities": [
+          "sightseeing",
+          "walking",
+          "beachDays",
+          "niceDinner"
+        ],
+        "contextChips": [],
+        "bagTypes": [],
+        "packingStyle": "balanced",
+        "travelerCount": 1
+      }
+    },
+    {
+      "id": "city-break-business",
+      "covers": "Business + City Break",
+      "owningTask": "Task 4",
+      "context": {
+        "destination": {
+          "displayName": "New York",
+          "countryCode": "US"
+        },
+        "startDate": "2026-10-19",
+        "endDate": "2026-10-22",
+        "durationDays": 4,
+        "tripTypes": [
+          "cityBreak",
+          "business"
+        ],
+        "activities": [
+          "work",
+          "niceDinner",
+          "museums"
+        ],
+        "contextChips": [],
+        "bagTypes": [
+          "carryOn"
+        ],
+        "packingStyle": "balanced",
+        "travelerCount": 1
+      }
+    },
+    {
+      "id": "outdoor-road-trip",
+      "covers": "Road Trip + Outdoor, bags not specified",
+      "owningTask": "Task 4",
+      "context": {
+        "destination": {
+          "displayName": "Yellowstone",
+          "countryCode": "US"
+        },
+        "startDate": "2026-09-21",
+        "endDate": "2026-09-28",
+        "durationDays": 8,
+        "tripTypes": [
+          "outdoor",
+          "roadTrip"
+        ],
+        "activities": [
+          "hiking",
+          "wildlife",
+          "photography"
+        ],
+        "contextChips": [],
+        "bagTypes": [],
+        "packingStyle": "balanced",
+        "travelerCount": 1
+      }
+    },
+    {
+      "id": "vacation-wedding-event",
+      "covers": "Vacation + Wedding/Event",
+      "owningTask": "Task 4",
+      "context": {
+        "destination": {
+          "displayName": "Lisbon",
+          "countryCode": "PT"
+        },
+        "startDate": "2026-10-09",
+        "endDate": "2026-10-13",
+        "durationDays": 5,
+        "tripTypes": [
+          "vacation",
+          "weddingEvent"
+        ],
+        "activities": [
+          "niceDinner",
+          "sightseeing"
+        ],
+        "contextChips": [],
+        "bagTypes": [
+          "checked"
+        ],
+        "packingStyle": "balanced",
+        "travelerCount": 1
+      }
+    },
+    {
+      "id": "outdoor-ski-snow",
+      "covers": "Outdoor + Ski/Snow",
+      "owningTask": "Task 4",
+      "context": {
+        "destination": {
+          "displayName": "Aspen",
+          "countryCode": "US"
+        },
+        "startDate": "2027-01-11",
+        "endDate": "2027-01-15",
+        "durationDays": 5,
+        "tripTypes": [
+          "outdoor",
+          "skiSnow"
+        ],
+        "activities": [
+          "hiking"
+        ],
+        "contextChips": [],
+        "bagTypes": [
+          "checked"
+        ],
+        "packingStyle": "prepared",
+        "travelerCount": 1
+      }
+    },
+    {
+      "id": "bags-personal-item-carry-on",
+      "covers": "Personal item + Carry-on",
+      "owningTask": "Task 5",
+      "context": {
+        "destination": {
+          "displayName": "Chicago",
+          "countryCode": "US"
+        },
+        "startDate": "2026-10-02",
+        "endDate": "2026-10-04",
+        "durationDays": 3,
+        "tripTypes": [
+          "cityBreak"
+        ],
+        "activities": [
+          "sightseeing",
+          "walking"
+        ],
+        "contextChips": [],
+        "bagTypes": [
+          "personalItem",
+          "carryOn"
+        ],
+        "packingStyle": "light",
+        "travelerCount": 1
+      }
+    },
+    {
+      "id": "bags-carry-on-checked",
+      "covers": "Carry-on + Checked",
+      "owningTask": "Task 5",
+      "context": {
+        "destination": {
+          "displayName": "Tokyo",
+          "countryCode": "JP"
+        },
+        "startDate": "2027-04-05",
+        "endDate": "2027-04-14",
+        "durationDays": 10,
+        "tripTypes": [
+          "vacation"
+        ],
+        "activities": [
+          "walking",
+          "shopping"
+        ],
+        "contextChips": [],
+        "bagTypes": [
+          "carryOn",
+          "checked"
+        ],
+        "packingStyle": "balanced",
+        "travelerCount": 1
+      }
+    },
+    {
+      "id": "bags-personal-item-carry-on-checked",
+      "covers": "Personal item + Carry-on + Checked",
+      "owningTask": "Task 5",
+      "context": {
+        "destination": {
+          "displayName": "Paris",
+          "countryCode": "FR"
+        },
+        "startDate": "2026-11-16",
+        "endDate": "2026-11-24",
+        "durationDays": 9,
+        "tripTypes": [
+          "vacation"
+        ],
+        "activities": [
+          "museums",
+          "niceDinner",
+          "walking"
+        ],
+        "contextChips": [],
+        "bagTypes": [
+          "personalItem",
+          "carryOn",
+          "checked"
+        ],
+        "packingStyle": "balanced",
+        "travelerCount": 1
+      }
+    },
+    {
+      "id": "bags-checked-backpack",
+      "covers": "Backpack + Checked",
+      "owningTask": "Task 5",
+      "context": {
+        "destination": {
+          "displayName": "Reykjavik",
+          "countryCode": "IS"
+        },
+        "startDate": "2026-10-12",
+        "endDate": "2026-10-18",
+        "durationDays": 7,
+        "tripTypes": [
+          "outdoor"
+        ],
+        "activities": [
+          "hiking",
+          "photography"
+        ],
+        "contextChips": [],
+        "bagTypes": [
+          "checked",
+          "backpack"
+        ],
+        "packingStyle": "prepared",
+        "travelerCount": 1
+      }
+    }
+  ]
+}

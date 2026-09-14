@@ -3,12 +3,16 @@
   "destinationFixture": "Miami",
   "weatherFixture": "MiamiHotBeach",
   "days": 6,
-  "tripType": "beach",
+  "tripTypes": [
+    "beach"
+  ],
   "activities": [
     "swimming",
     "beachDays"
   ],
-  "bag": "carryOn",
+  "bagTypes": [
+    "carryOn"
+  ],
   "style": "light",
   "chips": [
     "laundryAvailable"
