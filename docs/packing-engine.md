@@ -335,11 +335,11 @@ Packing gap check example:
 ```text
 destination
 dates
-trip type
+trip types (stable array, one or more)
 activities
 weather summary
 packing style
-bag
+bags (stable array; empty means not specified)
 current item IDs
 relevant preferences
 small amount of packing memory

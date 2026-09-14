@@ -52,6 +52,8 @@ Also referred to as `/interpret-trip`, `/recommend-context`, `/check-gaps`, `/pa
 
 Minimize context. Gap check sends destination, dates, stable tripTypes, activities, weather summary, style, stable bagTypes, current item IDs, relevant preferences, a small memory slice — not the user's whole history.
 
+Trip context contract (schema `2026-09-14`): `tripTypes[]` one or more known values, `bagTypes[]` zero or more physical bags (`[]` = not specified), both unique and canonicalized to `TripType.stableOrder` / `BagType.stableOrder` before model input. The singular `tripType`/`bagType` fields, `notSure`, and `roadTripLuggage` are rejected — never a fallback. Never send or format a first/primary trip type.
+
 GPT responses must be structured (`canonicalItemID`, `action`, `reasonCode`, `reasonArguments`, numeric `confidence` 0...1, `signals`, optional fallback `reason` prose). camelCase throughout. `reasonCode` + `reasonArguments` is the durable identifier PackWise renders from a localized template; `reason` is never a stable key. Confidence is internal — ranking and suppression only, never rendered. Validate before resolve.
 
 ## Product surfaces

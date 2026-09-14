@@ -76,6 +76,11 @@ strict schemas unchanged. 18/18 on the nine fixtures: no `mustInfer` misses, no
 `unrenderable_reason` rejections. gpt-5.6, `interpret/1` / `gaps/1`, schema
 `2026-08-29`, 1.2–4.3s per call, ~10.8k tokens for the suite.
 
+That run predates the Product Experience V2 array contract. Since schema
+`2026-09-14`, trip context is `tripTypes[]` / `bagTypes[]` and the singular
+request shape is rejected, so any re-run must use the current fixtures and
+contract; the 2026-08-30 evidence stays valid for what it verified.
+
 Two findings came out of it. The reason-argument names were unconstrained, so a
 model could return a code whose template could not render — now closed by the
 schema and by `canRenderReason`. And `fineDining` / `niceDinner` were duplicate

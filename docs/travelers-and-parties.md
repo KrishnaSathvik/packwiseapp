@@ -192,7 +192,7 @@ In All scope, identical canonical personal records aggregate into one presentati
 
 ## Persistence
 
-The shipped model is `PackWiseSchemaV3`; Product Experience V2 adds an explicit V4 migration. Do not treat delete-and-reinstall as the migration strategy.
+`PackWiseSchemaV4` is the current model: Product Experience V2's explicit, non-destructive migration from V3. Do not treat delete-and-reinstall as the migration strategy.
 
 ## Memory
 

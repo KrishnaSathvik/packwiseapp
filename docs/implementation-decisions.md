@@ -23,6 +23,14 @@ Frozen V2 decisions:
 - A whole-product contact sheet passes before production UI wiring.
 - M3B/M3C remain frozen until the complete V2 simulator and physical-device gate is green.
 
+### Implemented so far vs. approved target
+
+The decisions above are the approved V2 target. On the `product-v2-stage-a` branch, as of 2026-09-14:
+
+- **Implemented (Tasks 1, 2, 14, 15):** stable `TripType.stableOrder` / `BagType.stableOrder` codecs; SwiftData V4 with set-valued trip types, bag records, preferred bags, and memory fingerprints; WeatherKit request diagnostics; and array trip context at every request, fixture, and API boundary. `TripContext` carries the full `tripTypes`/`bagTypes` sets, and the Intelligence API contract (`schemaVersion` `2026-09-14`) accepts only `tripTypes[]` (one or more) and `bagTypes[]` (zero or more physical bags), rejecting the singular fields, `notSure`, and `roadTripLuggage`.
+- **Not implemented yet:** the engine, Trip Detail, and Packing List still read temporary singleton accessors (`TripContext.tripType`/`bagType`, `TripRecord.tripType`/`bagType`). A multi-value selection resolves to `.other`/`.notSure` (no typed needs, no bag constraint), never to a primary value, until Tasks 3–5 compose the sets. Setup and Me still edit one trip type and one bag until Task 8, so no shipped screen can create a multi-value trip yet.
+- Task record: [plans/2026-09-14-product-v2-task-15-array-contract.md](plans/2026-09-14-product-v2-task-15-array-contract.md).
+
 ## Repo
 
 ```text

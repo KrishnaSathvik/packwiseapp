@@ -4,6 +4,8 @@ Do not use one giant form.
 
 Use a progressive setup. The user should feel like they are describing their trip, not filling in a database record.
 
+This document is the approved Product Experience V2 target. Implementation status (2026-09-14): trip types and bags are already sets in persistence, `TripContext`, fixtures, and the Intelligence API, but the shipped setup screens still select one trip type and one bag, and the engine consumes a selection only as a singleton, until Tasks 3–5 and 8 land. See [implementation-decisions.md](implementation-decisions.md).
+
 Product Experience V2 uses one shared shell on every step: native Back/cancel, compact progress, title and helper, scrollable content, and a sticky bottom primary action. `Next` does not live at top-right.
 
 V1 supports **one primary destination**. Multi-destination comes later.

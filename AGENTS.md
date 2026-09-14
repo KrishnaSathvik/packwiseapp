@@ -66,6 +66,7 @@ M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `Tri
 - Trip types are a true multi-select set; no hidden primary trip type controls behavior
 - Bags are a true multi-select set of personal item / carry-on / checked bag / backpack; an empty set means “Not sure yet” and applies no bag constraint
 - Road Trip is trip context, never a luggage type
+- Intelligence API trip context is `tripTypes[]` / `bagTypes[]` in stable order (schema `2026-09-14`); the singular fields are rejected, not read as a fallback. Until Tasks 3–5 land, the engine still consumes a singleton selection through temporary accessors that fail safe for multi-value sets
 - Units follow locale
 - Catalog source of truth: `shared/catalog/`
 - Destinations: MapKit in production; `shared/fixtures/test-destinations.json` is test/preview/weather-fixture matching only

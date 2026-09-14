@@ -158,6 +158,8 @@ protocol ContextIntelligenceService {
 
 M1: `MockContextIntelligenceService`. M3: `RemoteContextIntelligenceService`.
 
+Trip context crosses the API as `tripTypes[]` (one or more known types) and `bagTypes[]` (zero or more physical bags; `[]` means not specified). The schema rejects duplicates, unknown values, `notSure`, `roadTripLuggage`, and the retired singular `tripType`/`bagType` fields, and the server canonicalizes both arrays to the stable order before building model input. The generated `api/generated/vocab/trip-context.json` mirrors the Swift orders, and `scripts/validate_shared.py` fails on drift.
+
 ## Feature organization
 
 ```text
@@ -238,7 +240,9 @@ archived
 
 ## Trip context
 
-The shipped model is `PackWiseSchemaV3`. Product Experience V2 plans an explicit `PackWiseSchemaV4` migration for set-valued trip types, preferred bags, memory fingerprints, and structured provenance. Add a new schema version for every stored-model change; never delete the store to conceal migration failure.
+`PackWiseSchemaV4` (Product Experience V2, Task 2) persists set-valued trip types, preferred bags, memory fingerprints, and structured provenance; the legacy scalar columns remain only as V3 migration input. Add a new schema version for every stored-model change; never delete the store to conceal migration failure.
+
+`TripContext` carries `tripTypes` and `bagTypes` as sets (Task 15). Every boundary that serializes them — persistence, the Intelligence API DTO, fixtures, signatures — orders them through `StableRawValueSetCodec.orderedRawValues` with `TripType.stableOrder` / `BagType.stableOrder`, never `Set` iteration order. Until Tasks 3–5 land, engine and list code still read temporary singleton accessors that resolve a multi-value selection to `.other` / `.notSure` rather than a primary value.
 
 `Trip` is persistent user data. `TripContext` is what the intelligence system evaluates.
 

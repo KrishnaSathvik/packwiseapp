@@ -653,13 +653,13 @@ git commit -m "fix: repair and instrument current-trip WeatherKit"
 - Constraint: interpretation remains gated off; this changes contract shape, not M3B behavior.
 - Compatibility: until Tasks 3–5 consume multi-value context, boundary adapters accept singleton arrays and empty bags but explicitly return `unsupportedButSafe` for multiple values. They never select a first/primary value. Tasks 4 and 5 remove those guards as their engine semantics land.
 
-- [ ] **Step 1: Add failing schema/API tests.** Require one-or-more known `tripTypes`, zero-or-more known physical `bagTypes`, reject legacy singular fields in new requests, reject unknown values, and verify canonical stable ordering.
+- [x] **Step 1: Add failing schema/API tests.** (2026-09-14, `api/test/tripContext.test.ts` red on missing canonicalization; Swift DTO tests red on missing fields. Record: `docs/plans/2026-09-14-product-v2-task-15-array-contract.md`.) Require one-or-more known `tripTypes`, zero-or-more known physical `bagTypes`, reject legacy singular fields in new requests, reject unknown values, and verify canonical stable ordering.
 
-- [ ] **Step 2: Convert existing request/eval fixtures to singleton `tripTypes` arrays and zero/singleton `bagTypes` arrays.** Keep legacy-store migration fixtures separate. Add multi-value contract fixtures only where the temporary adapter can validate/round-trip them without invoking unfinished engine behavior.
+- [x] **Step 2: Convert existing request/eval fixtures to singleton `tripTypes` arrays and zero/singleton `bagTypes` arrays.** (12 trip evals + 17 golden fixtures; 10 contract-only combinations in `shared/fixtures/contexts/`; goldens byte-identical.) Keep legacy-store migration fixtures separate. Add multi-value contract fixtures only where the temporary adapter can validate/round-trip them without invoking unfinished engine behavior.
 
-- [ ] **Step 3: Update Swift DTO and TypeScript validation/model input shapes in the same change.** Add explicit temporary singleton/empty compatibility guards at unfinished engine call sites; multiple values return `unsupportedButSafe` and never choose a primary. Do not enable note enrichment or gap wiring.
+- [x] **Step 3: Update Swift DTO and TypeScript validation/model input shapes in the same change.** (`56c59bd`. The API accepts multi-value context per the Task 15 instruction; the fail-safe guards are the temporary `TripContext`/`TripRecord` singleton accessors, which resolve multi-value sets to `.other`/`.notSure`.) Add explicit temporary singleton/empty compatibility guards at unfinished engine call sites; multiple values return `unsupportedButSafe` and never choose a primary. Do not enable note enrichment or gap wiring.
 
-- [ ] **Step 4: Regenerate artifacts using only the generators, then run validation/preflight/tests.**
+- [x] **Step 4: Regenerate artifacts using only the generators, then run validation/preflight/tests.** (`build_intelligence_schemas.py` → schema `2026-09-14`, build `43fc852c9f70f9f9`. `build_shared.py` is an unrunnable one-shot bootstrap whose inputs no longer exist; see the Task 15 record.)
 
 ```bash
 python3 scripts/build_intelligence_schemas.py
@@ -669,9 +669,9 @@ npm --prefix api test
 npm --prefix api run preflight
 ```
 
-- [ ] **Step 5: Align canonical docs and rules with the approved V2 decisions and freeze Phase 9/M3B behind the V2 exit gate.** Remove stale singular, top-Next, fake road-trip-bag, truncated-category, and shipped-memory claims.
+- [x] **Step 5: Align canonical docs and rules with the approved V2 decisions and freeze Phase 9/M3B behind the V2 exit gate.** (Docs already carried the V2 target; added implemented-vs-target status, the array contract, and V4-as-current.) Remove stale singular, top-Next, fake road-trip-bag, truncated-category, and shipped-memory claims.
 
-- [ ] **Step 6: Commit contracts, generated artifacts, fixtures, and aligned documentation.**
+- [x] **Step 6: Commit contracts, generated artifacts, fixtures, and aligned documentation.** (Four bounded commits instead of one; each green at its boundary.)
 
 ```bash
 git add shared api ios/PackWise/Data/SharedResources.swift ios/PackWise/Data/Intelligence/IntelligenceDTO.swift \
