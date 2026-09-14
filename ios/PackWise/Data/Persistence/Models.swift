@@ -679,6 +679,16 @@ final class PackingPreferenceRecord {
         preferredBagTypesMigrated = true
     }
 
+    /// Binding surface for Me's single-select picker: reads the legacy raw
+    /// value the picker shows and writes through
+    /// `setSingleSelectPreferredBag`. A computed property rather than a
+    /// `Binding(get:set:)` so the binding never captures this non-Sendable
+    /// record in a `@Sendable` closure. Not persisted.
+    var singleSelectPreferredBagRaw: String {
+        get { preferredBagRaw }
+        set { setSingleSelectPreferredBag(BagType(rawValue: newValue) ?? .notSure) }
+    }
+
     func apply(_ preferences: TravelerPreferences) {
         homeCountryCode = preferences.homeCountryCode ?? ""
         homeCountrySourceRaw = preferences.homeCountrySource.rawValue

@@ -289,9 +289,6 @@ private struct UnitsDetailView: View {
 /// can switch readers to V4 without resurrecting a stale migrated value.
 enum MePreferredBagSelection {
     static func binding(for prefs: PackingPreferenceRecord) -> Binding<String> {
-        Binding(
-            get: { prefs.preferredBagRaw },
-            set: { prefs.setSingleSelectPreferredBag(BagType(rawValue: $0) ?? .notSure) }
-        )
+        Bindable(prefs).singleSelectPreferredBagRaw
     }
 }
