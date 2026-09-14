@@ -584,16 +584,18 @@ struct ActivityContractTests {
 
     /// `Other` means "no additional trip-type-specific needs; activities,
     /// preferences, and context carry the meaning." That is a declared empty
-    /// rule, not a failed lookup — and it must stay the only one.
+    /// contract, not a failed lookup — and it must stay the only one.
+    /// (Since Product Experience V2 Task 3 trip types declare typed needs, not
+    /// item lists; the same identity holds at the need level.)
     @Test func otherIsADeclaredIdentityTripType() throws {
-        let tripTypes = try rules().tripTypes
-        let other = try #require(tripTypes["other"])
-        #expect(other.add.isEmpty)
-        #expect(other.preferActivities?.isEmpty ?? true)
+        let contracts = try rules().tripTypeContracts
+        let other = contracts.contract(for: .other)
+        #expect(other.needs.isEmpty)
+        #expect(other.suggestedActivityIDs.isEmpty)
 
-        let emptyRules = tripTypes.filter { $0.value.add.isEmpty }.keys.sorted()
-        #expect(emptyRules == ["other"], "a trip type silently lost its rule: \(emptyRules)")
-        #expect(Set(tripTypes.keys) == Set(TripType.allCases.map(\.rawValue)))
+        let empty = TripType.allCases.filter { contracts.contract(for: $0).needs.isEmpty }
+        #expect(empty == [.other], "a trip type silently lost its needs: \(empty)")
+        #expect(Set(try rules().tripTypes.keys) == Set(TripType.allCases.map(\.rawValue)))
     }
 
     /// An `Other` trip still produces a complete, coherent list, and every row

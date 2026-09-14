@@ -101,18 +101,12 @@ struct BaseRulesFile: Codable, Sendable {
     }
 }
 
-struct TripTypesRulesFile: Codable, Sendable {
-    var tripTypes: [String: TripTypeRule]
-    enum CodingKeys: String, CodingKey { case tripTypes = "trip_types" }
-}
-
-struct TripTypeRule: Codable, Sendable {
+/// TEMPORARY Task 3 → Task 4 bridge: the item list the unchanged engine reads
+/// for a single trip type, derived from that type's contract needs through the
+/// central need→candidate map. Trip types no longer own item lists; Task 4
+/// composes `TripTypeContractResolver` needs directly and deletes this.
+struct TripTypeRule: Sendable {
     var add: [String]
-    var preferActivities: [String]?
-    enum CodingKeys: String, CodingKey {
-        case add
-        case preferActivities = "prefer_activities"
-    }
 }
 
 struct ActivityRulesFile: Codable, Sendable {
@@ -339,7 +333,7 @@ struct SharingPolicyRule: Codable, Sendable {
 
 struct PackingRulesFile: Sendable {
     var base: BaseRulesFile
-    var tripTypes: [String: TripTypeRule]
+    var tripTypeContracts: TripTypeContractTable
     var activities: [String: [String]]
     var weather: WeatherRulesFile
     var quantities: QuantityPolicyFile
@@ -348,6 +342,14 @@ struct PackingRulesFile: Sendable {
     var party: PartyRulesFile
 
     var baseEssentials: [String] { base.baseEssentials }
+
+    /// TEMPORARY bridge for `PackingEngine` until Task 4; see `TripTypeRule`.
+    var tripTypes: [String: TripTypeRule] {
+        Dictionary(uniqueKeysWithValues: TripType.allCases.map { tripType in
+            let needs = tripTypeContracts.contract(for: tripType).needs
+            return (tripType.rawValue, TripTypeRule(add: tripTypeContracts.candidateItemIDs(for: needs)))
+        })
+    }
     var internationalAdds: [String] { base.internationalAdds }
     var contextChips: [String: [String]] { base.contextChips }
     var freeTextKeywords: [String: String] { base.freeTextKeywords }
@@ -357,6 +359,9 @@ struct RecommendationProvenance: Hashable, Sendable {
     var reasonCode: String
     var reasonArguments: [String: String]
     var sourceSignals: [RecommendationSignal]
+    /// The trip type behind this fact, when a trip type is the source
+    /// (design Section 10: structured facts per contributing trip type).
+    var tripType: TripType? = nil
 }
 
 struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {

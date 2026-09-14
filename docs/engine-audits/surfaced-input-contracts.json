@@ -81,7 +81,7 @@
       "fixtureIDs": [],
       "iconContract": "heart",
       "ownerScope": "trip",
-      "note": "shared/rules/trip-types.json adds formal_outfit/dress_shoes/wedding_card but no golden fixture sets tripType=weddingEvent; deterministic and currently untested."
+      "note": "its trip-type contract need formalEvent (shared/rules/trip-types.json) resolves to formal_outfit/dress_shoes/wedding_card but no golden fixture sets tripType=weddingEvent; deterministic and currently untested."
     },
     {
       "kind": "tripType",
@@ -102,7 +102,7 @@
       "fixtureIDs": [],
       "iconContract": "music.note",
       "ownerScope": "trip",
-      "note": "shared/rules/trip-types.json adds festival_earplugs/power_bank/sunscreen/hand_sanitizer but no golden fixture sets tripType=festival; deterministic and currently untested."
+      "note": "its trip-type contract need festivalAttendance (shared/rules/trip-types.json) resolves to festival_earplugs/power_bank/sunscreen/hand_sanitizer but no golden fixture sets tripType=festival; deterministic and currently untested."
     },
     {
       "kind": "tripType",
@@ -112,7 +112,7 @@
       "fixtureIDs": [],
       "iconContract": "house",
       "ownerScope": "trip",
-      "note": "shared/rules/trip-types.json adds a gift item but no golden fixture sets tripType=visitingFamily; deterministic and currently untested."
+      "note": "its trip-type contract need hostVisit (shared/rules/trip-types.json) resolves to a gift item but no golden fixture sets tripType=visitingFamily; deterministic and currently untested."
     },
     {
       "kind": "tripType",
@@ -126,7 +126,7 @@
       ],
       "iconContract": "ellipsis.circle",
       "ownerScope": "trip",
-      "note": "Other is the identity element of trip type: shared/rules/trip-types.json declares it with an explicit empty add, meaning \"no additional trip-type-specific needs; activities, preferences and context carry the meaning\". The lookup succeeds and deliberately contributes nothing, which is contextOnly rather than missing. Phase 5 earns that relabel with three checks rather than asserting it: the key exists with an empty add, other is the ONLY trip type with an empty add so the label cannot spread to a trip type that merely lost its rule, and an Other trip still produces a complete list whose every row is explained by base essentials, activities, weather or party."
+      "note": "Other is the identity element of trip type: shared/rules/trip-types.json declares it with an explicit empty needs list (Product Experience V2 Task 3; previously an empty add), meaning \"no additional trip-type-specific needs; activities, preferences and context carry the meaning\". The lookup succeeds and deliberately contributes nothing, which is contextOnly rather than missing. Phase 5 earns that relabel with three checks rather than asserting it: the key exists with an empty add, other is the ONLY trip type with an empty add so the label cannot spread to a trip type that merely lost its rule, and an Other trip still produces a complete list whose every row is explained by base essentials, activities, weather or party."
     },
     {
       "kind": "bagType",

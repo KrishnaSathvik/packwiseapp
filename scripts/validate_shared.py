@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import build_intelligence_schemas
+import trip_type_contracts
 
 ROOT = Path(__file__).resolve().parents[1]
 SHARED = ROOT / "shared"
@@ -139,9 +140,8 @@ def main() -> int:
         if missing := check(f"activity {activity}", refs):
             errors.append(f"activity {activity}: {missing}")
 
-    for trip_type, body in load(SHARED / "rules" / "trip-types.json")["trip_types"].items():
-        if missing := check(f"trip {trip_type}", body["add"]):
-            errors.append(f"trip {trip_type}: {missing}")
+    # Trip types own typed needs, not item lists (Product Experience V2, Task 3).
+    errors.extend(trip_type_contracts.repository_contract_errors(ROOT))
 
     for signal, refs in load(SHARED / "rules" / "weather.json")["signalAdds"].items():
         if missing := check(f"weather {signal}", refs):

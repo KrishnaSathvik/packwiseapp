@@ -56,6 +56,9 @@ enum TripType: String, Codable, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// Legacy setup-UI suggestion list. The approved suggestions now live in
+    /// `TripTypeContract.suggestedActivityIDs` (`trip-types.json`); Task 8
+    /// switches setup to them. Display data only — never a selection.
     var suggestedActivityIDs: [String] {
         switch self {
         case .beach:

@@ -21,10 +21,14 @@ enum SharedLibrary {
 
     static func rules(bundle: Bundle = .main) throws -> PackingRulesFile {
         let decoder = JSONDecoder()
+        let activities = try decoder.decode(ActivityRulesFile.self, from: try data(named: "activity-rules", in: bundle)).activities
         return PackingRulesFile(
             base: try decoder.decode(BaseRulesFile.self, from: try data(named: "base", in: bundle)),
-            tripTypes: try decoder.decode(TripTypesRulesFile.self, from: try data(named: "trip-types", in: bundle)).tripTypes,
-            activities: try decoder.decode(ActivityRulesFile.self, from: try data(named: "activity-rules", in: bundle)).activities,
+            tripTypeContracts: try TripTypeContractTable(
+                data: try data(named: "trip-types", in: bundle),
+                activityIDs: Set(activities.keys)
+            ),
+            activities: activities,
             weather: try decoder.decode(WeatherRulesFile.self, from: try data(named: "weather", in: bundle)),
             quantities: try decoder.decode(QuantityPolicyFile.self, from: try data(named: "quantities", in: bundle)),
             substitutions: try decoder.decode(SubstitutionRulesFile.self, from: try data(named: "substitutions", in: bundle)),

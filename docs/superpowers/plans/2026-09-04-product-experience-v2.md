@@ -189,11 +189,11 @@ git commit -m "feat: migrate trips to multi-value context safely"
 - Produces: `PackingNeed`, `RecommendationProvenance`, `PackingNeedContribution`, `TripTypeContract`, `TripTypeContractResolver.contributions(for:)`.
 - Contract rule: trip-type JSON contains closed need IDs and suggested activity IDs, never canonical item IDs.
 
-- [ ] **Step 1: Re-read and pin the approved table in design Section 8.1 before production code.** Encode a table-driven test for the exact needs, unselected suggested activities, and non-implications of Vacation, City Break, Beach, Business, Outdoor, Road Trip, Wedding/Event, Ski/Snow, Festival, Visiting Family, and Other. If an implementation concern would change a row, stop for product approval and commit that spec change first.
+- [x] **Step 1: Re-read and pin the approved table in design Section 8.1 before production code.** (2026-09-14: `docs/engine-audits/2026-09-14-trip-type-contract-matrix.md`, committed first; `everyKnownTripTypeMatchesTheApprovedMatrixExactly`. No row changed.) Encode a table-driven test for the exact needs, unselected suggested activities, and non-implications of Vacation, City Break, Beach, Business, Outdoor, Road Trip, Wedding/Event, Ski/Snow, Festival, Visiting Family, and Other. If an implementation concern would change a row, stop for product approval and commit that spec change first.
 
-- [ ] **Step 2: Write validator and decoder tests.** Reject unknown need IDs, duplicate stable values, and canonical-looking item IDs in a trip-type contract. Assert `.other` has no deterministic need contribution.
+- [x] **Step 2: Write validator and decoder tests.** (`scripts/tests/test_trip_type_contracts.py`, `theDecoderRejectsEveryInvalidContractShape`.) Reject unknown need IDs, duplicate stable values, and canonical-looking item IDs in a trip-type contract. Assert `.other` has no deterministic need contribution.
 
-- [ ] **Step 3: Write combination tests for all ten required trip-type sets.** Assert normalized needs and provenance, not only final item counts. Include insertion-order determinism.
+- [x] **Step 3: Write combination tests for all ten required trip-type sets.** (Design 8.1's ten, plus insertion-order permutations and a shared-need dedupe.) Assert normalized needs and provenance, not only final item counts. Include insertion-order determinism.
 
 ```swift
 @Test func businessAndCityBreakComposeNeedsWithoutPrimaryType() throws {
@@ -205,9 +205,9 @@ git commit -m "feat: migrate trips to multi-value context safely"
 }
 ```
 
-- [ ] **Step 4: Write suggestion-vs-selection tests.** Selecting City Break may order Walking/Museums/Nice Dinner as suggestions, but `TripContext.activities` stays empty until an explicit selection action. Changing trip types preserves the exact selected activity set and never adds/removes activities.
+- [x] **Step 4: Write suggestion-vs-selection tests.** (Domain boundary only; setup's pre-existing auto-selection is finding F-1 for Task 8.) Selecting City Break may order Walking/Museums/Nice Dinner as suggestions, but `TripContext.activities` stays empty until an explicit selection action. Changing trip types preserves the exact selected activity set and never adds/removes activities.
 
-- [ ] **Step 5: Run shared validation and the focused Swift tests; confirm both fail on the old direct-item contract.**
+- [x] **Step 5: Run shared validation and the focused Swift tests; confirm both fail on the old direct-item contract.** (Python red on the missing validator; Swift red on missing contract types.)
 
 ```bash
 python3 scripts/validate_shared.py
@@ -216,9 +216,9 @@ xcodebuild -project ios/PackWise.xcodeproj -scheme PackWise \
   -only-testing:PackWiseTests/TripTypeCompositionTests test
 ```
 
-- [ ] **Step 6: Implement the typed contract decoder and convert every trip type exactly as approved.** Preserve current legitimate semantics through central need→candidate/capability mappings; do not copy each old list into Swift. Suggested activity IDs feed display ordering only and cannot write `TripContext.activities`.
+- [x] **Step 6: Implement the typed contract decoder and convert every trip type exactly as approved.** (Central need→candidate map is a lossless partition of the old lists; the engine reads a temporary derived list until Task 4.) Preserve current legitimate semantics through central need→candidate/capability mappings; do not copy each old list into Swift. Suggested activity IDs feed display ordering only and cannot write `TripContext.activities`.
 
-- [ ] **Step 7: Run validation/tests and commit the contract layer.**
+- [x] **Step 7: Run validation/tests and commit the contract layer.**
 
 ```bash
 git add shared/rules/trip-types.json scripts/validate_shared.py \

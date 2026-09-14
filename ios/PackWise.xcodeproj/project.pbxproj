@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		388A50B374A78BA2D3234C35 /* TripTypeContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174A9ADD35A69392BDE10E2C /* TripTypeContracts.swift */; };
+		FCB34CE8A21DC56894291157 /* TripTypeCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A668756ACD1F8990F14B93CB /* TripTypeCompositionTests.swift */; };
 		31F2BEAED61DA79783B9196E /* WeatherNeedHardeningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C01AF49040DF67F8E845C18 /* WeatherNeedHardeningTests.swift */; };
 		B13FF3D5CAAFEE365402E00B /* TripContextSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95E3886B07D48DB06DA4738B /* TripContextSnapshotTests.swift */; };
 		034EB0C8C0E13CEB747F8E14 /* RegenerationProvenanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C98258D3D5577E1A5DA655 /* RegenerationProvenanceTests.swift */; };
@@ -162,6 +164,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		174A9ADD35A69392BDE10E2C /* TripTypeContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripTypeContracts.swift; sourceTree = "<group>"; };
+		A668756ACD1F8990F14B93CB /* TripTypeCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripTypeCompositionTests.swift; sourceTree = "<group>"; };
 		5C01AF49040DF67F8E845C18 /* WeatherNeedHardeningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherNeedHardeningTests.swift; sourceTree = "<group>"; };
 		95E3886B07D48DB06DA4738B /* TripContextSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripContextSnapshotTests.swift; sourceTree = "<group>"; };
 		D9C98258D3D5577E1A5DA655 /* RegenerationProvenanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegenerationProvenanceTests.swift; sourceTree = "<group>"; };
@@ -492,6 +496,7 @@
 		6FEF913E762E0098A9F12471 /* Packing */ = {
 			isa = PBXGroup;
 			children = (
+				174A9ADD35A69392BDE10E2C /* TripTypeContracts.swift */,
 				A243E601A204510B1E8D7217 /* RecommendationTrace.swift */,
 				D27D7BB95B41E56D32D40385 /* ActivityContracts.swift */,
 				11EDFD2E14659115F91752CB /* CareQuantity.swift */,
@@ -535,6 +540,7 @@
 		8A47DFD989F74EC5A9A4B4E3 /* PackWiseTests */ = {
 			isa = PBXGroup;
 			children = (
+				A668756ACD1F8990F14B93CB /* TripTypeCompositionTests.swift */,
 				5C01AF49040DF67F8E845C18 /* WeatherNeedHardeningTests.swift */,
 				95E3886B07D48DB06DA4738B /* TripContextSnapshotTests.swift */,
 				D9C98258D3D5577E1A5DA655 /* RegenerationProvenanceTests.swift */,
@@ -911,6 +917,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				388A50B374A78BA2D3234C35 /* TripTypeContracts.swift in Sources */,
 				93030584B0F2EE4145F48254 /* TripContextSnapshot.swift in Sources */,
 				2A71AA6413F62B3A759E6351 /* RecommendationTrace.swift in Sources */,
 				DE7FACF43F2668884A6C6208 /* ActivityContracts.swift in Sources */,
@@ -980,6 +987,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCB34CE8A21DC56894291157 /* TripTypeCompositionTests.swift in Sources */,
 				31F2BEAED61DA79783B9196E /* WeatherNeedHardeningTests.swift in Sources */,
 				B13FF3D5CAAFEE365402E00B /* TripContextSnapshotTests.swift in Sources */,
 				034EB0C8C0E13CEB747F8E14 /* RegenerationProvenanceTests.swift in Sources */,
