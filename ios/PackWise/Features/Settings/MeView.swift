@@ -173,7 +173,7 @@ private struct MeContent: View {
     }
 
     private var preferredBagPicker: some View {
-        Picker("Preferred bag", selection: $prefs.preferredBagRaw) {
+        Picker("Preferred bag", selection: MePreferredBagSelection.binding(for: prefs)) {
             ForEach(BagType.allCases) { bag in
                 Text(bag.title).tag(bag.rawValue)
             }
@@ -280,5 +280,18 @@ private struct UnitsDetailView: View {
         .background(PackWiseColor.screen)
         .navigationTitle("Units")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Me's single-select preferred-bag picker selection (until Task 8's
+/// multi-select). Reads the legacy scalar the picker has always shown, but
+/// every edit dual-writes it with the V4 `preferredBagTypes` set, so Task 8
+/// can switch readers to V4 without resurrecting a stale migrated value.
+enum MePreferredBagSelection {
+    static func binding(for prefs: PackingPreferenceRecord) -> Binding<String> {
+        Binding(
+            get: { prefs.preferredBagRaw },
+            set: { prefs.setSingleSelectPreferredBag(BagType(rawValue: $0) ?? .notSure) }
+        )
     }
 }

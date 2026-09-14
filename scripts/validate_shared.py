@@ -79,6 +79,31 @@ def trip_context_errors(label: str, row: dict) -> list[str]:
     return errors
 
 
+def stale_script_commands() -> list[str]:
+    """Canonical instructions may only prescribe `python3 scripts/<name>.py`
+    commands that exist in this checkout.
+
+    Scope is the current source of truth: AGENTS.md, READMEs, top-level docs,
+    Cursor rules, CI workflows, the API package scripts, and every execution
+    plan AGENTS.md names as active. Dated records under docs/plans/ and
+    inactive plans are history and may describe tools that live elsewhere.
+    """
+    agents = ROOT / "AGENTS.md"
+    sources = [agents, ROOT / "README.md", ROOT / "api" / "README.md", ROOT / "api" / "package.json"]
+    sources += sorted((ROOT / "docs").glob("*.md"))
+    sources += sorted((ROOT / ".cursor" / "rules").glob("*.mdc"))
+    sources += sorted((ROOT / ".github" / "workflows").glob("*.yml"))
+    sources += [ROOT / plan for plan in sorted(set(re.findall(r"docs/superpowers/plans/[\w.-]+\.md", agents.read_text())))]
+    stale: list[str] = []
+    for source in sources:
+        if not source.exists():
+            continue
+        for name in sorted(set(re.findall(r"python3 (?:\.\./)?scripts/([\w-]+\.py)", source.read_text()))):
+            if not (ROOT / "scripts" / name).exists():
+                stale.append(f"{source.relative_to(ROOT)} prescribes missing scripts/{name}")
+    return stale
+
+
 def load(path: Path):
     return json.loads(path.read_text())
 
@@ -223,6 +248,8 @@ def main() -> int:
                 errors.append(f"combination {row['id']} unknown activities {unknown}")
     else:
         errors.append("missing shared/fixtures/contexts/product-v2-combinations.json")
+
+    errors.extend(stale_script_commands())
 
     if build_intelligence_schemas.main(["--check"]) != 0:
         errors.append("generated intelligence schemas are stale")

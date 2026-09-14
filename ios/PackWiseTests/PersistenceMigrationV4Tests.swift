@@ -656,4 +656,90 @@ struct PersistenceMigrationV4Tests {
             "a multi-value preferred-bag write must survive relaunch, not collapse to the compat scalar's single value"
         )
     }
+
+    // MARK: - Task 15.1: Me's single-select bag keeps V4 in sync
+
+    /// Me's picker stays single-select until Task 8, but every edit must
+    /// leave the V4 set correct, or Task 8's switch to `preferredBagTypes`
+    /// would resurrect whatever migration last wrote.
+    private static let expectedV4Bags: [BagType: Set<BagType>] = [
+        .personalItem: [.personalItem],
+        .carryOn: [.carryOn],
+        .checked: [.checked],
+        .backpack: [.backpack],
+        .notSure: [],
+        .roadTripLuggage: [],
+    ]
+
+    @Test @MainActor func migratedPreferenceThenMeEditUpdatesV4AndSurvivesRelaunch() throws {
+        let storeURL = try makeStoreDirectory().appendingPathComponent("packwise.store")
+
+        do {
+            let container = try openV4Container(url: storeURL)
+            let context = ModelContext(container)
+            let record = PackingPreferenceRecord(from: .deviceDefaults())
+            record.preferredBagRaw = BagType.carryOn.rawValue
+            record.preferredBagTypesRaw = "[]"
+            record.preferredBagTypesMigrated = false
+            context.insert(record)
+            try context.save()
+        }
+
+        do {
+            let container = try openV4Container(url: storeURL)
+            let context = ModelContext(container)
+            let record = try #require(try context.fetch(FetchDescriptor<PackingPreferenceRecord>()).first)
+            #expect(record.preferredBagTypes == [.carryOn], "precondition: migration backfilled the legacy scalar")
+
+            MePreferredBagSelection.binding(for: record).wrappedValue = BagType.checked.rawValue
+            try context.save()
+        }
+
+        for _ in 0..<2 {
+            let container = try openV4Container(url: storeURL)
+            let context = ModelContext(container)
+            let record = try #require(try context.fetch(FetchDescriptor<PackingPreferenceRecord>()).first)
+            #expect(record.preferredBagRaw == BagType.checked.rawValue)
+            #expect(record.preferredBagTypes == [.checked], "the Me edit, not the migrated value, must survive relaunch")
+        }
+    }
+
+    @Test @MainActor func everyMeBagChoiceKeepsLegacyAndV4RepresentationsSynchronized() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        let record = PackingPreferenceRecord(from: .deviceDefaults())
+        context.insert(record)
+        let selection = MePreferredBagSelection.binding(for: record)
+
+        #expect(Set(Self.expectedV4Bags.keys) == Set(BagType.allCases), "every choice the Me picker offers is covered")
+        for bag in BagType.allCases {
+            // Start from a different, non-empty V4 value so a missed write can't pass by accident.
+            record.apply({ var p = record.preferences; p.preferredBagTypes = [.backpack, .checked]; return p }())
+            selection.wrappedValue = bag.rawValue
+
+            #expect(selection.wrappedValue == bag.rawValue)
+            #expect(record.preferredBagRaw == bag.rawValue, "\(bag) legacy scalar")
+            #expect(record.preferredBagTypes == Self.expectedV4Bags[bag], "\(bag) V4 set")
+            #expect(record.preferredBagTypesMigrated)
+        }
+
+        selection.wrappedValue = BagType.notSure.rawValue
+        #expect(record.preferredBagTypesRaw == "[]")
+        selection.wrappedValue = BagType.roadTripLuggage.rawValue
+        #expect(record.preferredBagTypesRaw == "[]", "road-trip luggage is never a V4 bag")
+        selection.wrappedValue = BagType.carryOn.rawValue
+        #expect(record.preferredBagTypesRaw == #"["carryOn"]"#)
+    }
+
+    @Test @MainActor func freshSetupStillSeedsFromTheSingleSelectBagUntilTask8() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        let record = PackingPreferenceRecord(from: .deviceDefaults())
+        context.insert(record)
+
+        for bag in BagType.allCases {
+            MePreferredBagSelection.binding(for: record).wrappedValue = bag.rawValue
+            #expect(TripDraft.fresh(preferences: record.preferences).bagType == bag, "\(bag) setup default is unchanged")
+        }
+    }
 }

@@ -643,7 +643,7 @@ git commit -m "fix: repair and instrument current-trip WeatherKit"
 - Modify: `shared/fixtures/trips/*.json`, `shared/fixtures/golden/golden-fixtures.json`
 - Modify: `ios/PackWise/Data/{SharedResources.swift,Intelligence/IntelligenceDTO.swift}`
 - Modify: `api/src/{types,validation,canonical}.ts`, `api/src/model/inputs.ts`, affected tests
-- Regenerate: `api/generated/**` only through `scripts/build_intelligence_schemas.py` and `scripts/build_shared.py`
+- Regenerate: `api/generated/**` only through `scripts/build_intelligence_schemas.py` (the only generator; `shared/` JSON is hand-maintained source of truth, gated by `scripts/validate_shared.py`)
 - Modify: `AGENTS.md`, `.cursor/rules/{packwise-architecture,packwise-intelligence,packwise-scope,packwise-ux}.mdc`
 - Modify: `docs/{README,trip-creation,travelers-and-parties,packing-experience,navigation-and-onboarding,architecture,packing-engine,design-system,roadmap,implementation-decisions,device-pass-checklist,m3a2-verification-runbook}.md`
 
@@ -659,11 +659,10 @@ git commit -m "fix: repair and instrument current-trip WeatherKit"
 
 - [x] **Step 3: Update Swift DTO and TypeScript validation/model input shapes in the same change.** (`56c59bd`. The API accepts multi-value context per the Task 15 instruction; the fail-safe guards are the temporary `TripContext`/`TripRecord` singleton accessors, which resolve multi-value sets to `.other`/`.notSure`.) Add explicit temporary singleton/empty compatibility guards at unfinished engine call sites; multiple values return `unsupportedButSafe` and never choose a primary. Do not enable note enrichment or gap wiring.
 
-- [x] **Step 4: Regenerate artifacts using only the generators, then run validation/preflight/tests.** (`build_intelligence_schemas.py` → schema `2026-09-14`, build `43fc852c9f70f9f9`. `build_shared.py` is an unrunnable one-shot bootstrap whose inputs no longer exist; see the Task 15 record.)
+- [x] **Step 4: Regenerate artifacts using only the generators, then run validation/preflight/tests.** (`build_intelligence_schemas.py` → schema `2026-09-14`, build `43fc852c9f70f9f9`. `build_shared.py` was an unrunnable one-shot bootstrap whose inputs no longer exist; Task 15.1 removed it.)
 
 ```bash
 python3 scripts/build_intelligence_schemas.py
-python3 scripts/build_shared.py
 python3 scripts/validate_shared.py
 npm --prefix api test
 npm --prefix api run preflight

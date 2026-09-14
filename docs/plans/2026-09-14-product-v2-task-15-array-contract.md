@@ -93,7 +93,7 @@ All 17 goldens are untouched (`git diff ios/PackWiseTests/Goldens` is empty), an
 
 ## Deviations
 
-- **`scripts/build_shared.py` cannot run.** It is a one-shot bootstrap: it reads `shared/fixtures/packing-catalog.json` and three sibling inputs that its own first run deleted, so it raises `FileNotFoundError` before writing anything (on HEAD too). It is not a live generator. The only working generator is `build_intelligence_schemas.py`. Its stale singular literals are dead bootstrap history and were left alone. If they are ever revived, they would overwrite hand-maintained fixtures.
+- **`scripts/build_shared.py` cannot run.** *(Resolved in Task 15.1: removed, see the addendum below.)* It is a one-shot bootstrap: it reads `shared/fixtures/packing-catalog.json` and three sibling inputs that its own first run deleted, so it raises `FileNotFoundError` before writing anything (on HEAD too). It is not a live generator. The only working generator is `build_intelligence_schemas.py`. Its stale singular literals are dead bootstrap history and were left alone. If they are ever revived, they would overwrite hand-maintained fixtures.
 - **Plan wording vs. this task's instruction.** The plan's compatibility note says boundary adapters "return `unsupportedButSafe` for multiple values." The Task 15 instruction requires the API to accept multi-value context. The API does accept it, and the fail-safe guard lives at the engine accessors, which never choose a primary value.
 - **`trip-eval.schema.json` had never been enforced.** The new API test compiles it with Ajv and found `PreserveManualQuantity` missing the always-required `mustNotInclude`. The fixture gained `[]`, which every consumer already defaulted to.
 
@@ -114,3 +114,19 @@ All 17 goldens are untouched (`git diff ios/PackWiseTests/Goldens` is empty), an
 Tests added: 11 Swift tests (TripContext set authority and signature ×5, DTO contract ×6 including the combination round-trip), and 35 API tests (contract, canonicalization, model input, three endpoints ×2, 10 combination fixtures, eval schema).
 
 M3B/M3C and Phase 9 stay frozen. `ContextIntelligenceGate` is unchanged, so no intelligence output is newly wired into product behavior.
+
+## Addendum — Task 15.1 closure (2026-09-14)
+
+Both disclosed findings are closed before Task 3.
+
+**Me preferred bag.** The picker is still single-select and still displays the legacy scalar, but its binding (`MePreferredBagSelection`) now writes through `PackingPreferenceRecord.setSingleSelectPreferredBag`. That writer updates `preferredBagRaw` and `preferredBagTypesRaw` together. A physical bag becomes its singleton set, and `notSure`/`roadTripLuggage` become `[]`, the same mapping as the V3→V4 migration. A red run against the old scalar-only binding reproduced the stale case: after migration to `[carryOn]`, a Me edit to Checked left the V4 set at `[carryOn]` across relaunch. Fresh setup still seeds from the scalar, unchanged until Task 8. Task 8 removes this temporary writer along with the single-select picker.
+
+**`build_shared.py` audit → obsolete, removed.**
+- Its four inputs (`shared/fixtures/packing-catalog.json`, `packing-rules.json`, `destinations.json`, `weather-fixtures.json`) were never committed in any git history.
+- Nothing invokes it: not CI (`preflight.yml` runs `npm run preflight`), not `api/package.json`, AGENTS.md, rules, or READMEs. Its only prescription was this plan's Task 15 command list.
+- Everything it once emitted (catalog, rules, schemas, contract, test destinations, weather fixtures) is now hand-maintained source of truth that it would overwrite. Two of its outputs, `trip-context.schema.json` and `packing-suggestion.schema.json`, were already deleted from the repo.
+- `build_intelligence_schemas.py` is the only generator, and `validate_shared.py` is the gate. The existing `scripts/generate_shared_fixtures.py` deprecation stub already says so, and git history keeps the removed script.
+
+`validate_shared.py` now fails if a canonical instruction (AGENTS.md, READMEs, top-level docs, Cursor rules, CI workflows, `api/package.json`, or an execution plan AGENTS.md names as active) prescribes `python3 scripts/<name>.py` for a script this checkout does not have.
+
+**Out-of-scope observation for review:** the inactive `docs/superpowers/plans/2026-09-03-product-hardening-phase-1-and-next-phases.md` names `scripts/report_engine_goldens.py` and `scripts/audit_engine_inputs.py`. Those scripts exist only on the unmerged `product-hardening-phase1` branch. That branch carries 77 commits (Product Hardening Phases 1–8, including `RecommendationTrace`) that are in neither `main` nor `product-v2-stage-a`.

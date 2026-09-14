@@ -588,6 +588,18 @@ final class PackingPreferenceRecord {
         )
     }
 
+    /// TEMPORARY single-select writer for Me's one-bag picker (Task 15.1);
+    /// Task 8 replaces it with the four-bag multi-select. Writes the legacy
+    /// scalar and the V4 set together so the V4 value is never stale: a
+    /// physical bag becomes its singleton set, and `notSure`/`roadTripLuggage`
+    /// become the empty set (no bag preference) — the same mapping the V3→V4
+    /// migration applies.
+    func setSingleSelectPreferredBag(_ bag: BagType) {
+        preferredBagRaw = bag.rawValue
+        preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(BagType.stableOrder.contains(bag) ? [bag] : [])
+        preferredBagTypesMigrated = true
+    }
+
     func apply(_ preferences: TravelerPreferences) {
         homeCountryCode = preferences.homeCountryCode ?? ""
         homeCountrySourceRaw = preferences.homeCountrySource.rawValue
