@@ -7,11 +7,13 @@
 export type ModelTripShape = {
   destination: string;
   countryCode: string;
-  tripType: string;
+  /** Every selected trip type, canonical order. There is no primary type. */
+  tripTypes: string[];
   durationDays: number;
   activities: string[];
   contextChips: string[];
-  bagType: string;
+  /** Every selected physical bag, canonical order. Empty means not specified. */
+  bagTypes: string[];
   packingStyle: string;
   travelerCount: number;
   weatherSummary?: string;

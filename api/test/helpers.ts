@@ -44,10 +44,10 @@ export function tripContext(overrides: Partial<TripContextDTO> = {}): TripContex
     startDate: "2026-09-01",
     endDate: "2026-09-05",
     durationDays: 5,
-    tripType: "cityBreak",
+    tripTypes: ["cityBreak"],
     activities: ["sightseeing", "walking"],
     contextChips: [],
-    bagType: "carryOn",
+    bagTypes: ["carryOn"],
     packingStyle: "balanced",
     travelerCount: 1,
     ...overrides,
@@ -96,10 +96,13 @@ export function contextFromFixture(fixture: TripEvalFixture): TripContextDTO {
     startDate: "2026-09-01",
     endDate: "2026-09-05",
     durationDays: fixture.days,
-    tripType: fixture.tripType,
+    // TEMPORARY Task 15 bridge: the shared trip fixtures still carry the
+    // singular shape until the fixture-migration commit, which deletes this
+    // wrapping. It wraps the one stated value; it never picks among several.
+    tripTypes: [fixture.tripType],
     activities: fixture.activities,
     contextChips: fixture.chips ?? [],
-    bagType: fixture.bag,
+    bagTypes: fixture.bag === "notSure" ? [] : [fixture.bag],
     packingStyle: fixture.style,
     travelerCount: fixture.party?.travelers.length ?? fixture.travelerCount ?? 1,
   };

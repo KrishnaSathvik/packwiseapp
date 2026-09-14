@@ -85,11 +85,25 @@
         "destination",
         "startDate",
         "endDate",
-        "tripType",
+        "tripTypes",
         "activities",
-        "bagType",
+        "bagTypes",
         "packingStyle"
       ],
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "tripType"
+            ]
+          },
+          {
+            "required": [
+              "bagType"
+            ]
+          }
+        ]
+      },
       "properties": {
         "destination": {
           "$ref": "#/$defs/DestinationDTO"
@@ -106,20 +120,25 @@
           "type": "integer",
           "minimum": 1
         },
-        "tripType": {
-          "enum": [
-            "vacation",
-            "cityBreak",
-            "beach",
-            "business",
-            "outdoor",
-            "roadTrip",
-            "weddingEvent",
-            "skiSnow",
-            "festival",
-            "visitingFamily",
-            "other"
-          ]
+        "tripTypes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "vacation",
+              "cityBreak",
+              "beach",
+              "business",
+              "outdoor",
+              "roadTrip",
+              "weddingEvent",
+              "skiSnow",
+              "festival",
+              "visitingFamily",
+              "other"
+            ]
+          }
         },
         "activities": {
           "type": "array",
@@ -160,15 +179,17 @@
             ]
           }
         },
-        "bagType": {
-          "enum": [
-            "personalItem",
-            "carryOn",
-            "checked",
-            "backpack",
-            "roadTripLuggage",
-            "notSure"
-          ]
+        "bagTypes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "personalItem",
+              "carryOn",
+              "checked",
+              "backpack"
+            ]
+          }
         },
         "packingStyle": {
           "enum": [

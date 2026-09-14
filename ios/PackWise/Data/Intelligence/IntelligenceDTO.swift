@@ -16,10 +16,12 @@ enum IntelligenceDTO {
         var startDate: String
         var endDate: String
         var durationDays: Int
-        var tripType: String
+        /// Every selected trip type, stable order. Never a primary value.
+        var tripTypes: [String]
         var activities: [String]
         var contextChips: [String]
-        var bagType: String
+        /// Every selected physical bag, stable order. `[]` means not sure.
+        var bagTypes: [String]
         var packingStyle: String
         var transportation: String?
         var laundryAccess: String?
@@ -121,10 +123,10 @@ extension IntelligenceDTO {
             startDate: dateStyle.format(context.startDate),
             endDate: dateStyle.format(context.endDate),
             durationDays: max(1, context.durationDays),
-            tripType: context.tripType.rawValue,
+            tripTypes: StableRawValueSetCodec.orderedRawValues(context.tripTypes, order: TripType.stableOrder),
             activities: context.activities,
             contextChips: context.contextChips.map(\.rawValue).sorted(),
-            bagType: context.bagType.rawValue,
+            bagTypes: StableRawValueSetCodec.orderedRawValues(context.bagTypes, order: BagType.stableOrder),
             packingStyle: context.packingStyle.rawValue,
             transportation: context.transportation.rawValue,
             laundryAccess: context.laundryAccess.rawValue,

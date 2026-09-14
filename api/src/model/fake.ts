@@ -121,8 +121,8 @@ function gaps(input: GapsInput): ModelPackingGaps {
   if (inWater) {
     add("toiletries.aloe", "context.gap_activity", { activity: inWater }, 0.68, ["activity", "weather"]);
   }
-  if (trip.tripType === "weddingEvent") {
-    add("miscellaneous.wedding_card", "context.gap_trip_type", { tripType: trip.tripType }, 0.7, ["tripType"]);
+  if (trip.tripTypes.includes("weddingEvent")) {
+    add("miscellaneous.wedding_card", "context.gap_trip_type", { tripType: "weddingEvent" }, 0.7, ["tripType"]);
   }
   if (trip.durationDays >= 7 && trip.contextChips.includes("travelingInternationally")) {
     add(
@@ -145,7 +145,11 @@ function optimize(input: OptimizeInput): ModelPackingOptimizations {
   const optimizations: ModelOptimization[] = [];
 
   if (
-    SPACE_CONSTRAINED.has(trip.bagType) &&
+    // Conservative stand-in: only an all-compact bag selection counts as
+    // constrained, so a checked bag anywhere in the set suppresses the hint.
+    // Real multi-bag precedence belongs to the iOS luggage context (Task 5).
+    trip.bagTypes.length > 0 &&
+    trip.bagTypes.every((bag) => SPACE_CONSTRAINED.has(bag)) &&
     quantities.has("footwear.running_shoes") &&
     quantities.has("footwear.walking_shoes")
   ) {

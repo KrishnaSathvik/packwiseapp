@@ -163,6 +163,76 @@ struct IntelligenceServiceTests {
         #expect(!text.contains("medication details"))
     }
 
+    // MARK: - Multi-value trip context contract (Task 15)
+
+    private func encodedContext(_ context: TripContext) throws -> [String: Any] {
+        let data = try JSONEncoder().encode(IntelligenceDTO.payload(for: context))
+        return try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+    }
+
+    @Test func payloadSendsEveryTripTypeAndBagInStableOrderRegardlessOfInsertion() throws {
+        var a = try context()
+        a.tripTypes = [.beach, .vacation, .cityBreak]
+        a.bagTypes = [.checked, .personalItem, .carryOn]
+        var b = try context()
+        b.tripTypes = [.cityBreak, .beach, .vacation]
+        b.bagTypes = [.carryOn, .checked, .personalItem]
+
+        let encodedA = try encodedContext(a)
+        #expect(encodedA["tripTypes"] as? [String] == ["vacation", "cityBreak", "beach"])
+        #expect(encodedA["bagTypes"] as? [String] == ["personalItem", "carryOn", "checked"])
+        // Object key order is JSONEncoder's business; array order is ours.
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        #expect(try encoder.encode(IntelligenceDTO.payload(for: a))
+            == encoder.encode(IntelligenceDTO.payload(for: b)))
+    }
+
+    @Test func payloadOrderComesFromTheSharedStableOrderAuthority() throws {
+        var trip = try context()
+        trip.tripTypes = [.skiSnow, .outdoor]
+        trip.bagTypes = [.backpack, .checked]
+        let payload = IntelligenceDTO.payload(for: trip)
+        #expect(payload.tripTypes == StableRawValueSetCodec.orderedRawValues(trip.tripTypes, order: TripType.stableOrder))
+        #expect(payload.bagTypes == StableRawValueSetCodec.orderedRawValues(trip.bagTypes, order: BagType.stableOrder))
+    }
+
+    @Test func emptyBagSetEncodesAsAnEmptyArray() throws {
+        var trip = try context()
+        trip.bagTypes = []
+        #expect(try encodedContext(trip)["bagTypes"] as? [String] == [])
+    }
+
+    @Test func everyTripTypeSurvivesTheWireAndNoPrimaryIsInvented() throws {
+        var all = try context()
+        all.tripTypes = Set(TripType.stableOrder)
+        #expect(try encodedContext(all)["tripTypes"] as? [String] == TripType.stableOrder.map(\.rawValue))
+
+        var pair = try context()
+        pair.tripTypes = [.business, .beach]
+        let types = try #require(try encodedContext(pair)["tripTypes"] as? [String])
+        #expect(types == ["beach", "business"])
+        #expect(!types.contains("other"), "the compat fallback never reaches the wire")
+    }
+
+    @Test func legacyScalarContextFieldsAreAbsentFromTheRequest() async throws {
+        let service = try makeService(json: """
+        { \(metaJSON), "suggestions": [] }
+        """)
+        var trip = try context()
+        trip.tripTypes = [.vacation, .beach]
+        trip.bagTypes = []
+        _ = try await service.findPackingGaps(context: trip, items: [])
+
+        let body = try #require(StubURLProtocol.lastRequestBody)
+        let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+        let wireContext = try #require(json["context"] as? [String: Any])
+        #expect(wireContext["tripType"] == nil)
+        #expect(wireContext["bagType"] == nil)
+        #expect(wireContext["tripTypes"] as? [String] == ["vacation", "beach"])
+        #expect(wireContext["bagTypes"] as? [String] == [])
+    }
+
     @Test func gapsRejectAnItemThatIsNotInTheCatalog() async throws {
         let service = try makeService(json: """
         { \(metaJSON),

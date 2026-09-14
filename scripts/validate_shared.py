@@ -38,6 +38,14 @@ def swift_enum_cases(path: Path, name: str) -> set[str]:
     return set(re.findall(r"^\s*case (\w+)", match.group(1), re.M))
 
 
+def swift_stable_order(path: Path, name: str) -> list[str] | None:
+    """Read `static let stableOrder: [Name] = [.a, .b]` out of a Swift enum extension."""
+    match = re.search(rf"static let stableOrder: \[{name}\] = \[(.*?)\]", path.read_text(), re.S)
+    if not match:
+        return None
+    return re.findall(r"\.(\w+)", match.group(1))
+
+
 def load(path: Path):
     return json.loads(path.read_text())
 
@@ -125,6 +133,16 @@ def main() -> int:
             f"swift-only {sorted(swift_chips - chip_names)}, "
             f"rules-only {sorted(chip_names - swift_chips)}"
         )
+
+    # Swift's stableOrder is the one canonical-order authority; the API's
+    # generated vocabularies mirror it and must not drift in content or order.
+    for name, generated in (
+        ("TripType", build_intelligence_schemas.TRIP_TYPES),
+        ("BagType", build_intelligence_schemas.BAG_TYPES),
+    ):
+        swift_order = swift_stable_order(IOS / "Domain" / "TripTypes.swift", name)
+        if swift_order != generated:
+            errors.append(f"{name}.stableOrder drift: swift {swift_order}, generator {generated}")
 
     for path in sorted((SHARED / "fixtures" / "trips").glob("*.json")):
         trip = load(path)

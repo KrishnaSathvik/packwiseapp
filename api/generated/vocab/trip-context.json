@@ -1,0 +1,21 @@
+{
+  "tripTypes": [
+    "vacation",
+    "cityBreak",
+    "beach",
+    "business",
+    "outdoor",
+    "roadTrip",
+    "weddingEvent",
+    "skiSnow",
+    "festival",
+    "visitingFamily",
+    "other"
+  ],
+  "bagTypes": [
+    "personalItem",
+    "carryOn",
+    "checked",
+    "backpack"
+  ]
+}

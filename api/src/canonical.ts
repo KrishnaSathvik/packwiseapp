@@ -1,7 +1,9 @@
+import { IntelligenceError } from "./errors.ts";
 import {
   canonicalItemIDs,
   reasonCodes,
   requiredReasonArguments,
+  tripContextVocabulary,
   vocabulary,
 } from "./generated.ts";
 import type { ReasonArgumentPair } from "./types.ts";
@@ -126,4 +128,38 @@ export function filterVocabulary(
     kept.push(value);
   }
   return { kept, rejected: tally(rejections) };
+}
+
+/**
+ * Request canonicalization, unlike everything above, fails closed: a trip
+ * context is the client's own statement, already schema-validated, so an
+ * unknown, retired, or duplicated value here is a contract violation rather
+ * than one bad element to drop.
+ *
+ * A trip-type or bag selection is a set. Its canonical form is the stable
+ * vocabulary order, so equivalent selections are identical downstream no
+ * matter how the client ordered them.
+ */
+function canonicalSet(values: string[], order: string[], field: string): string[] {
+  const selected = new Set(values);
+  if (selected.size !== values.length) {
+    throw new IntelligenceError("invalid_request", `${field} must not repeat a value`);
+  }
+  const known = new Set(order);
+  if (values.some((value) => !known.has(value))) {
+    throw new IntelligenceError("invalid_request", `${field} contains an unknown value`);
+  }
+  return order.filter((value) => selected.has(value));
+}
+
+export function canonicalTripTypes(values: string[]): string[] {
+  if (values.length === 0) {
+    throw new IntelligenceError("invalid_request", "tripTypes must contain at least one value");
+  }
+  return canonicalSet(values, tripContextVocabulary().tripTypes, "tripTypes");
+}
+
+/** Zero bags is valid: luggage is not specified, which imposes no constraint. */
+export function canonicalBagTypes(values: string[]): string[] {
+  return canonicalSet(values, tripContextVocabulary().bagTypes, "bagTypes");
 }

@@ -182,7 +182,17 @@ components:
           type: string
     TripContextDTO:
       type: object
-      required: [destination, startDate, endDate, tripType, activities, bagType, packingStyle]
+      description: >
+        tripTypes and bagTypes are sets serialized as arrays. Order is not
+        significant on the wire; the server canonicalizes both to the stable
+        order (TripType.stableOrder / BagType.stableOrder) before use. The
+        retired singular tripType and bagType fields are rejected, never read
+        as a fallback.
+      required: [destination, startDate, endDate, tripTypes, activities, bagTypes, packingStyle]
+      not:
+        anyOf:
+          - required: [tripType]
+          - required: [bagType]
       properties:
         destination:
           $ref: "#/components/schemas/DestinationDTO"
@@ -192,14 +202,41 @@ components:
         endDate:
           type: string
           format: date
-        tripType:
-          type: string
+        tripTypes:
+          type: array
+          description: One or more known trip types. There is no primary trip type.
+          minItems: 1
+          uniqueItems: true
+          items:
+            enum:
+              - vacation
+              - cityBreak
+              - beach
+              - business
+              - outdoor
+              - roadTrip
+              - weddingEvent
+              - skiSnow
+              - festival
+              - visitingFamily
+              - other
         activities:
           type: array
           items:
             type: string
-        bagType:
-          type: string
+        bagTypes:
+          type: array
+          description: >
+            Zero or more physical bags. An empty array means "Not sure yet":
+            luggage is not specified and imposes no constraint. notSure and
+            roadTripLuggage are not bag values.
+          uniqueItems: true
+          items:
+            enum:
+              - personalItem
+              - carryOn
+              - checked
+              - backpack
         packingStyle:
           type: string
         transportation:

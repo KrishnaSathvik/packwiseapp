@@ -13,7 +13,8 @@ production never reaches sideways into `../shared` at runtime:
                                            numeric/string constraint keywords,
                                            optionality as a nullable type.
   vocab/*.json                             closed vocabularies: canonical item IDs,
-                                           context chips, activities, reason codes.
+                                           context chips, activities, reason codes,
+                                           and the stable trip-type/bag orders.
   manifest.json                            schemaVersion and a content buildHash.
 
 Closed vocabularies come from `shared/rules/`, so the model physically cannot
@@ -35,7 +36,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SHARED = ROOT / "shared"
 OUT_DIR = ROOT / "api" / "generated"
 
-SCHEMA_VERSION = "2026-08-29"
+# 2026-09-14: trip context became tripTypes[]/bagTypes[] (Product Experience V2,
+# Task 15). The singular request shape is no longer accepted.
+SCHEMA_VERSION = "2026-09-14"
 
 CAPABILITY_SCHEMAS = {
     "interpret": "TripInterpretation",
@@ -59,6 +62,10 @@ RECOMMENDATION_SIGNALS = [
     "party",
 ]
 
+# Stable canonical orders. These mirror `TripType.stableOrder` and
+# `BagType.stableOrder` in ios/PackWise/Domain/TripTypes.swift, which remain
+# the one authority; validate_shared.py fails if either list drifts. Order is
+# significant: it is the canonical serialization order at every boundary.
 TRIP_TYPES = [
     "vacation",
     "cityBreak",
@@ -73,7 +80,9 @@ TRIP_TYPES = [
     "other",
 ]
 
-BAG_TYPES = ["personalItem", "carryOn", "checked", "backpack", "roadTripLuggage", "notSure"]
+# Physical bags only. "Not sure yet" is an empty array; the retired
+# notSure/roadTripLuggage values are legacy persistence input, never request values.
+BAG_TYPES = ["personalItem", "carryOn", "checked", "backpack"]
 PACKING_STYLES = ["light", "balanced", "prepared"]
 TRANSPORTATION = ["flight", "drive", "train", "cruise", "other", "unknown"]
 LAUNDRY_ACCESS = ["none", "possible", "planned"]
@@ -152,20 +161,32 @@ def api_schema(vocab: dict[str, list[str]]) -> dict:
                     "destination",
                     "startDate",
                     "endDate",
-                    "tripType",
+                    "tripTypes",
                     "activities",
-                    "bagType",
+                    "bagTypes",
                     "packingStyle",
                 ],
+                # The retired singular fields are refused outright, even beside
+                # valid arrays, so no handler can ever read them as a fallback.
+                "not": {"anyOf": [{"required": ["tripType"]}, {"required": ["bagType"]}]},
                 "properties": {
                     "destination": {"$ref": "#/$defs/DestinationDTO"},
                     "startDate": {"type": "string", "format": "date"},
                     "endDate": {"type": "string", "format": "date"},
                     "durationDays": {"type": "integer", "minimum": 1},
-                    "tripType": {"enum": TRIP_TYPES},
+                    "tripTypes": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": True,
+                        "items": {"enum": TRIP_TYPES},
+                    },
                     "activities": {"type": "array", "items": {"enum": vocab["activities"]}},
                     "contextChips": {"type": "array", "items": {"enum": vocab["contextChips"]}},
-                    "bagType": {"enum": BAG_TYPES},
+                    "bagTypes": {
+                        "type": "array",
+                        "uniqueItems": True,
+                        "items": {"enum": BAG_TYPES},
+                    },
                     "packingStyle": {"enum": PACKING_STYLES},
                     "transportation": {"enum": TRANSPORTATION},
                     "laundryAccess": {"enum": LAUNDRY_ACCESS},
@@ -439,6 +460,7 @@ def render() -> dict[Path, str]:
     write("vocab/canonical-items.json", {"items": canonical_items()})
     write("vocab/context-chips.json", {"chips": vocab["contextChips"]})
     write("vocab/activities.json", {"activities": vocab["activities"]})
+    write("vocab/trip-context.json", {"tripTypes": TRIP_TYPES, "bagTypes": BAG_TYPES})
     reasons = load(SHARED / "rules" / "reasons.json")["templates"]
     write(
         "vocab/reason-codes.json",

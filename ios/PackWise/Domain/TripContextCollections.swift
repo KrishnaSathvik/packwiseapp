@@ -49,6 +49,17 @@ struct NormalizedSet<Value: Hashable & Sendable>: Equatable, Sendable {
 /// logically-equal sets always produce byte-identical output regardless of
 /// insertion or `Set` iteration order.
 enum StableRawValueSetCodec {
+    /// The raw values of `values`, ordered by position in `order` — the one
+    /// ordering primitive behind every stable boundary (persistence JSON,
+    /// API DTOs, signatures). A member absent from `order` is excluded, for
+    /// the same reason `encode` excludes it.
+    static func orderedRawValues<Value: RawRepresentable & Hashable>(
+        _ values: Set<Value>,
+        order: [Value]
+    ) -> [String] where Value.RawValue == String {
+        order.filter(values.contains).map(\.rawValue)
+    }
+
     /// Encodes `values` as a JSON array of raw strings, ordered by position
     /// in `order`. A member of `values` that does not appear in `order` is
     /// silently excluded: `order` is the definition of what is valid at
@@ -59,8 +70,7 @@ enum StableRawValueSetCodec {
         _ values: Set<Value>,
         order: [Value]
     ) throws -> String where Value.RawValue == String {
-        let orderedRawValues = order.filter(values.contains).map(\.rawValue)
-        let data = try JSONEncoder().encode(orderedRawValues)
+        let data = try JSONEncoder().encode(orderedRawValues(values, order: order))
         return String(decoding: data, as: UTF8.self)
     }
 

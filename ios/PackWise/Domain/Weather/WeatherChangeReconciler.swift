@@ -145,10 +145,12 @@ enum WeatherChangeProposalLifecycle {
         // keeps the old `notSure` token, so signatures already persisted on
         // pending proposals stay valid across the upgrade. The token is
         // fingerprint text only, never a bag value.
-        let tripTypes = TripType.stableOrder.filter(context.tripTypes.contains).map(\.rawValue).joined(separator: "+")
+        let tripTypes = StableRawValueSetCodec.orderedRawValues(context.tripTypes, order: TripType.stableOrder)
+            .joined(separator: "+")
         let bagTypes = context.bagTypes.isEmpty
             ? BagTypeLegacyRawValue.notSure.rawValue
-            : BagType.stableOrder.filter(context.bagTypes.contains).map(\.rawValue).joined(separator: "+")
+            : StableRawValueSetCodec.orderedRawValues(context.bagTypes, order: BagType.stableOrder)
+                .joined(separator: "+")
         return [
             destination,
             String(context.startDate.timeIntervalSince1970),
