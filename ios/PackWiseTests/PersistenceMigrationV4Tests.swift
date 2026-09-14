@@ -22,8 +22,13 @@ struct PersistenceMigrationV4Tests {
         return dir
     }
 
+    /// A current-shape store the tests then seed with V3-era *values*: legacy
+    /// scalars set and every V4 derived column reset to its untouched default.
+    /// This exercises the V4 data backfill. Genuine older store *shapes*
+    /// (frozen snapshots and real captured stores) are covered by
+    /// `StoreHistoryTests`.
     private func makeV3Container(url: URL) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: PackWiseSchemaV3.self)
+        let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
         let config = ModelConfiguration("packwise", schema: schema, url: url, cloudKitDatabase: .none)
         return try ModelContainer(for: schema, configurations: [config])
     }
@@ -34,7 +39,7 @@ struct PersistenceMigrationV4Tests {
     /// why the backfill is a separate, idempotent post-open step rather
     /// than a migration-stage callback.
     private func openV4Container(url: URL) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: PackWiseSchemaV4.self)
+        let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
         let config = ModelConfiguration("packwise", schema: schema, url: url, cloudKitDatabase: .none)
         let container = try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [config])
         try PackWiseSchemaV4Migration.migrateV3Records(in: ModelContext(container))
@@ -400,7 +405,7 @@ struct PersistenceMigrationV4Tests {
         try walBytes.write(to: walURL)
         try shmBytes.write(to: shmURL)
 
-        let schema = Schema(versionedSchema: PackWiseSchemaV4.self)
+        let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
         let config = ModelConfiguration("packwise", schema: schema, url: storeURL, cloudKitDatabase: .none)
 
         #expect(throws: (any Error).self, "an incompatible/corrupt store must surface its open error, not be silently repaired") {

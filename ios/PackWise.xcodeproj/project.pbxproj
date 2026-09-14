@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A6B7E7E75631C3D251190B47 /* SchemaHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D5827DF9D136A9C0D32851 /* SchemaHistory.swift */; };
+		BF05CB44B0C686E17E53BAA6 /* StoreHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3CDD73A39DAFCD7DF2BD22 /* StoreHistoryTests.swift */; };
 		040D9D6C87FE22095BCAE9FE /* GoldenEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E27BDF139EA12060F23F68 /* GoldenEngineTests.swift */; };
 		0B166F5B69F9A40904D8A584 /* CopyWarmthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B3C88021D1FC4408A8EF995 /* CopyWarmthTests.swift */; };
 		0B2F13F8BAE6AA985012F7AC /* CareQuantity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11EDFD2E14659115F91752CB /* CareQuantity.swift */; };
@@ -151,6 +153,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		43D5827DF9D136A9C0D32851 /* SchemaHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchemaHistory.swift; sourceTree = "<group>"; };
+		4D3CDD73A39DAFCD7DF2BD22 /* StoreHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreHistoryTests.swift; sourceTree = "<group>"; };
 		009E59948241C192C837B2C7 /* base.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = base.json; sourceTree = "<group>"; };
 		015867D7AAFB66AFAC31E37D /* RemoteContextIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteContextIntelligenceService.swift; sourceTree = "<group>"; };
 		026895DA8AD94D9E26C65186 /* travel-comfort.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "travel-comfort.json"; sourceTree = "<group>"; };
@@ -511,6 +515,7 @@
 		8A47DFD989F74EC5A9A4B4E3 /* PackWiseTests */ = {
 			isa = PBXGroup;
 			children = (
+				4D3CDD73A39DAFCD7DF2BD22 /* StoreHistoryTests.swift */,
 				A19D6F8D79EB38C152DEA6F4 /* ClothingQuantityTests.swift */,
 				1C0849A86554DFBBE2314AAC /* ConstraintTests.swift */,
 				453CAF1B6D79899AE5FF8909 /* ContextIntelligenceGateTests.swift */,
@@ -720,6 +725,7 @@
 		F9ECF0B94D1E10613B7D69DA /* Persistence */ = {
 			isa = PBXGroup;
 			children = (
+				43D5827DF9D136A9C0D32851 /* SchemaHistory.swift */,
 				E888E86C4D266D4C4AD14ECA /* Models.swift */,
 				FD44B8454240EBE0F41B79C3 /* SchemaV1.swift */,
 			);
@@ -878,6 +884,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A6B7E7E75631C3D251190B47 /* SchemaHistory.swift in Sources */,
 				9A99E0FD6BB9530E6A13B2A9 /* AppDependencies.swift in Sources */,
 				EC3F86D0EAF75C79A2AD2C54 /* AppIntegrityProvider.swift in Sources */,
 				0B2F13F8BAE6AA985012F7AC /* CareQuantity.swift in Sources */,
@@ -943,6 +950,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF05CB44B0C686E17E53BAA6 /* StoreHistoryTests.swift in Sources */,
 				2378744014C623FD843F0B79 /* ClothingQuantityTests.swift in Sources */,
 				75505C44F5798222CBCF13A3 /* ConstraintTests.swift in Sources */,
 				58092CC8619394C9498A3635 /* ContextIntelligenceGateTests.swift in Sources */,

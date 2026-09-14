@@ -72,6 +72,7 @@ M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `Tri
 - Destinations: MapKit in production; `shared/fixtures/test-destinations.json` is test/preview/weather-fixture matching only
 - WeatherKit attribution is mandatory wherever Apple weather is shown
 - Run `python3 scripts/validate_shared.py` after catalog/rule edits
+- Any change to a stored SwiftData property needs a new schema version: freeze the current shape in `ios/PackWise/Data/Persistence/SchemaHistory.swift` first. Versions that alias the live types share a checksum, and CoreData aborts every upgrade between them
 
 ## Implementation defaults
 

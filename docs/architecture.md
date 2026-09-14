@@ -240,7 +240,7 @@ archived
 
 ## Trip context
 
-`PackWiseSchemaV4` (Product Experience V2, Task 2) persists set-valued trip types, preferred bags, memory fingerprints, and structured provenance; the legacy scalar columns remain only as V3 migration input. Add a new schema version for every stored-model change; never delete the store to conceal migration failure.
+`PackWiseSchemaV4_1` (4.1.0) is the current store shape: Product Experience V2's set-valued trip types, preferred bags, memory fingerprints, and structured provenance, with the legacy scalar columns kept only as migration input. Only the newest schema may reference the live `@Model` types; every earlier version (V1–V4) is a frozen snapshot, pinned by `StoreHistoryTests` to real stores captured from old builds. To change a stored property: freeze the current shape as a new snapshot in `SchemaHistory.swift`, add a new newest version and a stage, and capture a real store fixture. Never edit a released shape in place, and never delete the store to conceal migration failure.
 
 `TripContext` carries `tripTypes` and `bagTypes` as sets (Task 15). Every boundary that serializes them — persistence, the Intelligence API DTO, fixtures, signatures — orders them through `StableRawValueSetCodec.orderedRawValues` with `TripType.stableOrder` / `BagType.stableOrder`, never `Set` iteration order. Until Tasks 3–5 land, engine and list code still read temporary singleton accessors that resolve a multi-value selection to `.other` / `.notSure` rather than a primary value.
 

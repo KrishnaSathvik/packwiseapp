@@ -1,3 +1,4 @@
+import CoreData
 import Foundation
 import SwiftData
 
@@ -717,23 +718,20 @@ final class PostTripFeedbackRecord {
     }
 }
 
-// Known limitation, pre-existing before Product Experience V2: unlike
-// `PackWiseSchemaV1` (`SchemaV1.swift`, a genuinely frozen snapshot type),
-// `PackWiseSchemaV2` and `PackWiseSchemaV3` below alias the same always-live
-// types this file currently declares, rather than freezing their own
-// historical shape. That has been safe so far because every V2→V3 change
-// was purely additive (new defaulted/optional columns, one new entity) and
-// `MigrationStage.lightweight` tolerates that. It does mean there is no
-// independent, testable model of "an actual V2/V3-shaped store" to migrate
-// against — only ever today's live types. A `.custom` stage (which needs
-// its two schema versions to be genuinely distinct models, not just
-// differently labeled) was tried for V3 → V4 and does not work under this
-// aliasing scheme; see `PackWiseSchemaV4`'s doc comment for what was used
-// instead. A real fix — frozen per-version snapshot types for V2/V3, the
-// same pattern `SchemaV1.swift` already uses — is a separate task; flagging
-// it here rather than re-attempting it under this one.
-enum PackWiseSchemaV2: VersionedSchema {
-    static var versionIdentifier: Schema.Version { Schema.Version(2, 0, 0) }
+/// The current store shape (4.1.0): the live `@Model` types declared in this
+/// file. It is the only version allowed to reference them — every earlier
+/// version is a frozen snapshot in `SchemaHistory.swift`, because versions
+/// that alias the same live types share a checksum and make CoreData abort
+/// any migration between them. `4.1.0` is the shape `main` has persisted since
+/// `c5c35bb` (V4 plus `preferredBagTypesMigrated`), even though those builds
+/// labeled it `4.0.0`; SwiftData matches stores by entity hashes, not labels.
+///
+/// Adding, removing, or retyping any stored property on these types changes
+/// this checksum. Such a change must first freeze the current shape as a new
+/// snapshot in `SchemaHistory.swift`, then add a new newest version and a
+/// migration stage — never edit a released shape in place.
+enum PackWiseSchemaV4_1: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(4, 1, 0) }
     static var models: [any PersistentModel.Type] {
         [
             TripRecord.self,
@@ -745,31 +743,9 @@ enum PackWiseSchemaV2: VersionedSchema {
             PostTripFeedbackRecord.self,
             TravelerRecord.self,
             BagRecord.self,
-            WeatherChangeProposalRecord.self
+            WeatherChangeProposalRecord.self,
+            PackingMemoryEventRecord.self
         ]
-    }
-}
-
-enum PackWiseSchemaV3: VersionedSchema {
-    static var versionIdentifier: Schema.Version { Schema.Version(3, 0, 0) }
-    static var models: [any PersistentModel.Type] {
-        PackWiseSchemaV2.models + [PackingMemoryEventRecord.self]
-    }
-}
-
-/// V4 adds no new `@Model` entity and no structural attribute SwiftData
-/// itself needs to migrate: every new V4 column (`tripTypesRaw`,
-/// `recommendationTraceRaw`, `preferredBagTypesRaw`, the memory-event stable
-/// arrays) is declared directly on the live types in this file with a
-/// default value, exactly like every additive column V2 → V3 already added
-/// this way. What genuinely needs "migrating" is the *data* — populating
-/// those columns from the legacy scalars — not the schema shape, so V4
-/// reuses `PackWiseSchemaV3.models` (see `PackWiseSchemaV4Migration` below
-/// for the data step, run from `PackWisePersistence.container`).
-enum PackWiseSchemaV4: VersionedSchema {
-    static var versionIdentifier: Schema.Version { Schema.Version(4, 0, 0) }
-    static var models: [any PersistentModel.Type] {
-        PackWiseSchemaV3.models
     }
 }
 
@@ -934,11 +910,11 @@ enum PackWiseSchemaV4Migration {
 
 enum PackWiseMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self, PackWiseSchemaV4.self]
+        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self, PackWiseSchemaV4.self, PackWiseSchemaV4_1.self]
     }
 
     static var stages: [MigrationStage] {
-        [migrateV1toV2, migrateV2toV3, migrateV3toV4]
+        [migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV4_1]
     }
 
     static let migrateV1toV2 = MigrationStage.lightweight(
@@ -946,26 +922,38 @@ enum PackWiseMigrationPlan: SchemaMigrationPlan {
         toVersion: PackWiseSchemaV2.self
     )
 
+    /// Adds the packing-memory event entity.
     static let migrateV2toV3 = MigrationStage.lightweight(
         fromVersion: PackWiseSchemaV2.self,
         toVersion: PackWiseSchemaV3.self
     )
 
-    /// Lightweight, not custom: `PackWiseSchemaV4.models` is exactly
-    /// `PackWiseSchemaV3.models` — the same live types, unchanged as a
-    /// schema graph — so there is no structural difference for a
-    /// `MigrationStage.custom` stage to act on. (A `.custom` stage requires
-    /// its `fromVersion`/`toVersion` model graphs to be genuinely distinct;
-    /// with identical graphs, SwiftData/CoreData raises "the current model
-    /// reference and the next model reference cannot be equal.") The actual
-    /// V4 *data* migration — populating the new stable-array columns from
-    /// their legacy scalars — is not a schema-shape change at all, so it
-    /// runs as an ordinary, idempotent post-open step from
-    /// `PackWisePersistence.container` instead. See `PackWiseSchemaV4Migration`.
+    /// Adds the V4 stable-array columns with their defaults. The *data*
+    /// backfill from the legacy scalars is not a shape change, so it runs as
+    /// an idempotent post-open step from `PackWisePersistence` — see
+    /// `PackWiseSchemaV4Migration`.
     static let migrateV3toV4 = MigrationStage.lightweight(
         fromVersion: PackWiseSchemaV3.self,
         toVersion: PackWiseSchemaV4.self
     )
+
+    /// Adds `PackingPreferenceRecord.preferredBagTypesMigrated` (default
+    /// `false`, so the post-open backfill still derives the preference set
+    /// once for every row that predates it).
+    static let migrateV4toV4_1 = MigrationStage.lightweight(
+        fromVersion: PackWiseSchemaV4.self,
+        toVersion: PackWiseSchemaV4_1.self
+    )
+}
+
+/// The schema the app opens. Always the last entry of `PackWiseMigrationPlan.schemas`.
+typealias PackWiseCurrentSchema = PackWiseSchemaV4_1
+
+enum PackWisePersistenceError: Error, Equatable {
+    /// The on-disk store's entity hashes match no schema in the migration
+    /// plan. Opening it anyway makes CoreData abort the process, so it is
+    /// refused untouched instead.
+    case unrecognizedStoreModel(storeVersionIdentifiers: [String])
 }
 
 enum PackWisePersistence {
@@ -974,22 +962,50 @@ enum PackWisePersistence {
     /// 6.3): PackWise must never delete `packwise.store`, its WAL, or SHM
     /// merely because migration failed.
     static func container(inMemory: Bool = false) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: PackWiseSchemaV4.self)
-        let config: ModelConfiguration
         if inMemory {
-            config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        } else {
-            let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-                ?? URL(fileURLWithPath: NSTemporaryDirectory())
-            try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
-            config = ModelConfiguration(
-                "packwise",
-                schema: schema,
-                url: support.appendingPathComponent("packwise.store"),
-                cloudKitDatabase: .none
-            )
+            let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
+            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            return try open(schema: schema, configuration: config)
         }
-        let container = try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [config])
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSTemporaryDirectory())
+        try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
+        return try container(storeURL: support.appendingPathComponent("packwise.store"))
+    }
+
+    /// Opens (and, if needed, migrates) the store at `storeURL`.
+    ///
+    /// An existing store whose shape no plan schema describes is refused
+    /// with `PackWisePersistenceError.unrecognizedStoreModel` before SwiftData
+    /// sees it: CoreData answers such a store with an uncatchable abort, not
+    /// a thrown error. The refused store is left byte-for-byte untouched.
+    static func container(storeURL: URL) throws -> ModelContainer {
+        try assertPlanDescribesStore(at: storeURL)
+        let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
+        let config = ModelConfiguration("packwise", schema: schema, url: storeURL, cloudKitDatabase: .none)
+        return try open(schema: schema, configuration: config)
+    }
+
+    private static func assertPlanDescribesStore(at storeURL: URL) throws {
+        guard FileManager.default.fileExists(atPath: storeURL.path),
+              let metadata = try? NSPersistentStoreCoordinator.metadataForPersistentStore(type: .sqlite, at: storeURL),
+              let storeHashes = metadata[NSStoreModelVersionHashesKey] as? [String: Data] else {
+            // No store yet, or not a readable CoreData store: SwiftData creates
+            // or rejects it through its own (throwing) path.
+            return
+        }
+        for schema in PackWiseMigrationPlan.schemas {
+            if NSManagedObjectModel.makeManagedObjectModel(for: schema.models)?.entityVersionHashesByName == storeHashes {
+                return
+            }
+        }
+        throw PackWisePersistenceError.unrecognizedStoreModel(
+            storeVersionIdentifiers: metadata[NSStoreModelVersionIdentifiersKey] as? [String] ?? []
+        )
+    }
+
+    private static func open(schema: Schema, configuration: ModelConfiguration) throws -> ModelContainer {
+        let container = try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [configuration])
         // The V3 → V4 *data* backfill (design Section 6.2) runs here rather
         // than as a migration-stage callback — see `migrateV3toV4` above.
         // It is safe to call on every open: each record is only ever
