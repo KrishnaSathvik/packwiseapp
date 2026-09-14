@@ -4,6 +4,21 @@ import Testing
 
 /// Coverage resolver tests — Engine V2 plan, Step 3 (footwear + outerwear).
 struct CoverageTests {
+    private func candidate(
+        _ canonicalItemID: String,
+        sourceSignals: [RecommendationSignal] = [.tripType]
+    ) -> PackingItemDraft {
+        PackingItemDraft(
+            canonicalItemID: canonicalItemID,
+            displayName: canonicalItemID,
+            category: canonicalItemID.hasPrefix("footwear.") ? .footwear : .clothing,
+            quantity: 1,
+            importance: .normal,
+            sourceSignals: sourceSignals,
+            reason: "Test"
+        )
+    }
+
     private func makeEngine() throws -> PackingEngine {
         PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
     }
@@ -50,7 +65,8 @@ struct CoverageTests {
         activities: [String] = ["sightseeing", "walking"],
         bag: BagType = .carryOn,
         style: PackingStyle = .balanced,
-        weather: TripWeatherContext? = nil
+        weather: TripWeatherContext? = nil,
+        party: TripParty? = nil
     ) -> TripContext {
         let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
         let end = Calendar.current.date(byAdding: .day, value: days - 1, to: start)!
@@ -71,19 +87,97 @@ struct CoverageTests {
             packingStyle: style,
             transportation: .unknown,
             laundryAccess: .none,
-            travelerCount: 1,
+            travelerCount: party?.travelers.count ?? 1,
             userNotes: "",
             contextChips: [],
             weather: weather,
-            preferences: prefs
+            preferences: prefs,
+            party: party ?? .solo()
         )
     }
 
-    /// The budget the vocabulary must not silently drift past: two families
-    /// use ten capabilities. Growing this number is a design decision — make
+    @Test func snapshotProjectionPreservesExistingCoverageNeeds() throws {
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let rainAndWind = weather(days: 5, start: start, highF: 55, lowF: 45, rain: 0.6, wind: 26)
+        var raw = context(
+            destination: try destination("Chicago"),
+            type: .business,
+            activities: ["running", "walking"],
+            weather: rainAndWind
+        )
+        raw.contextChips = [.needFormalOutfit]
+        let rules = try SharedLibrary.rules()
+        let snapshot = TripContextCompiler.compile(raw, rules: rules)
+        let projected = CoverageContext(snapshot: snapshot, thresholds: rules.weather.thresholds)
+
+        #expect(CoverageResolver.needs(context: projected) == [
+            .everydayWalking, .running, .formal, .rainShell, .windShell, .warmthLight, .warmthHeavy
+        ])
+    }
+
+    @Test func suppressionPairsEachCapabilityWithItsCoverer() {
+        let (kept, suppressions) = CoverageResolver.resolve(
+            items: [candidate("footwear.running_shoes"), candidate("footwear.walking_shoes")],
+            needs: [.running, .everydayWalking]
+        )
+
+        #expect(kept.compactMap(\.canonicalItemID) == ["footwear.running_shoes"])
+        #expect(suppressions == [CoverageSuppression(
+            travelerID: nil,
+            canonicalItemID: "footwear.walking_shoes",
+            covered: [CapabilityCoverage(
+                capability: .everydayWalking,
+                coveringItemID: "footwear.running_shoes"
+            )],
+            refutedCapabilities: []
+        )])
+    }
+
+    @Test func refutedSuppressionHasCapabilitiesButNoCoverer() {
+        let (_, suppressions) = CoverageResolver.resolve(
+            items: [candidate("clothing.rain_jacket", sourceSignals: [.weather])],
+            needs: [.everydayWalking]
+        )
+
+        #expect(suppressions == [CoverageSuppression(
+            travelerID: nil,
+            canonicalItemID: "clothing.rain_jacket",
+            covered: [],
+            refutedCapabilities: [.rainShell, .windShell]
+        )])
+    }
+
+    @Test func evidenceIsStableWhenCandidateInputIsReversed() {
+        let candidates = [candidate("footwear.running_shoes"), candidate("footwear.walking_shoes")]
+        let forward = CoverageResolver.resolve(items: candidates, needs: [.running, .everydayWalking])
+        let reverse = CoverageResolver.resolve(items: Array(candidates.reversed()), needs: [.running, .everydayWalking])
+
+        #expect(forward.kept.compactMap(\.canonicalItemID) == reverse.kept.compactMap(\.canonicalItemID))
+        #expect(forward.suppressions == reverse.suppressions)
+    }
+
+    @Test func partiallyUsefulCandidateStaysAndDoesNotReplaceExistingCoverer() {
+        let (kept, suppressions) = CoverageResolver.resolve(
+            items: [
+                candidate("footwear.hiking_shoes"),
+                candidate("footwear.running_shoes"),
+                candidate("footwear.walking_shoes")
+            ],
+            needs: [.hiking, .running, .everydayWalking]
+        )
+
+        #expect(kept.compactMap(\.canonicalItemID) == ["footwear.running_shoes", "footwear.hiking_shoes"])
+        #expect(suppressions.first?.covered == [CapabilityCoverage(
+            capability: .everydayWalking,
+            coveringItemID: "footwear.running_shoes"
+        )])
+    }
+
+    /// The budget the vocabulary must not silently drift past: three families
+    /// use twelve capabilities. Growing this number is a design decision — make
     /// it deliberately, then update this test in the same commit.
     @Test func capabilityVocabularyStaysClosed() {
-        #expect(PackingCapability.allCases.count == 10)
+        #expect(PackingCapability.allCases.count == 12)
         for id in CoverageResolver.priority {
             #expect(CoverageResolver.itemCapabilities[id]?.isEmpty == false, "\(id) is prioritized but has no capabilities")
         }
@@ -152,6 +246,102 @@ struct CoverageTests {
         #expect(ids.contains("footwear.boots"))
     }
 
+    @Test func skiGlovesCoverColdHandsWithoutAnIDPairRule() throws {
+        let dest = try destination("Denver")
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 12))!
+        let snowy = weather(days: 5, start: start, highF: 30, lowF: 14, rain: 0.1, wind: 18, snow: true)
+        let skiTrip = context(
+            destination: dest,
+            type: .skiSnow,
+            activities: ["sightseeing"],
+            bag: .checked,
+            style: .prepared,
+            weather: snowy
+        )
+        let generation = try makeEngine().generateDetailed(context: skiTrip)
+        let ids = Set(generation.items.compactMap(\.canonicalItemID))
+        #expect(ids.contains("activities.ski_gloves"))
+        #expect(!ids.contains("clothing.gloves"))
+        let suppression = try #require(generation.coverageSuppressions.first {
+            $0.canonicalItemID == "clothing.gloves"
+        })
+        #expect(suppression.covered == [
+            CapabilityCoverage(capability: .coldHands, coveringItemID: "activities.ski_gloves")
+        ])
+    }
+
+    @Test func coldNonSkiTripNeedsColdHandsButNotSnowSportHands() throws {
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 12))!
+        let cold = weather(days: 5, start: start, highF: 28, lowF: 12)
+        let raw = context(destination: try destination("Denver"), weather: cold)
+        let rules = try SharedLibrary.rules()
+        let projected = CoverageContext(
+            snapshot: TripContextCompiler.compile(raw, rules: rules),
+            thresholds: rules.weather.thresholds
+        )
+        let needs = CoverageResolver.needs(context: projected)
+        let resolution = CoverageResolver.resolve(
+            items: [candidate("clothing.gloves", sourceSignals: [.weather])],
+            needs: needs
+        )
+
+        #expect(needs.contains(.coldHands))
+        #expect(!needs.contains(.snowSportHands))
+        #expect(resolution.kept.compactMap(\.canonicalItemID) == ["clothing.gloves"])
+        #expect(resolution.suppressions.isEmpty)
+        // Phase 6: the candidate this test injects is no longer synthetic —
+        // the real engine now emits it on the same trip.
+        let real = Set(try makeEngine().generate(context: raw).compactMap(\.canonicalItemID))
+        #expect(real.contains("clothing.gloves"))
+    }
+
+    /// Decision: `clothing.gloves` reaches `sustainedCold` trips, not only
+    /// `snowExposure` ones. `sustainedCold` is the broader signal — `freezingCold`
+    /// is a strict subset of it in `WeatherSignalExtractor` — so this single
+    /// change also covers every `freezingCold` trip without a second row.
+    /// `coldEvenings` is deliberately NOT the gating signal: it fires on merely
+    /// cool evenings (min ≤ 62°F) that are not a cold-hands trip.
+    @Test func sustainedColdWithoutSnowProducesOrdinaryGlovesNotSkiGloves() throws {
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 12))!
+        let coldNoSnow = weather(days: 5, start: start, highF: 44, lowF: 28, rain: 0.1, wind: 12, snow: false)
+        let raw = context(destination: try destination("Denver"), type: .cityBreak, activities: ["sightseeing"], weather: coldNoSnow)
+        let generation = try makeEngine().generateDetailed(context: raw)
+        let ids = Set(generation.items.compactMap(\.canonicalItemID))
+        #expect(ids.contains("clothing.gloves"))
+        #expect(!ids.contains("activities.ski_gloves"))  // no ski intent on a city trip
+        let gloveRow = try #require(generation.items.first { $0.canonicalItemID == "clothing.gloves" })
+        #expect(gloveRow.reasonCode == "weather.sustained_cold")
+    }
+
+    /// A merely cool-evening trip (not sustained cold) still gets no gloves —
+    /// the gate is deliberately narrower than `coldEvenings`.
+    @Test func merelyCoolEveningsDoNotProduceGloves() throws {
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 5))!
+        let cool = weather(days: 5, start: start, highF: 70, lowF: 55, rain: 0.1)  // coldEvenings, not sustainedCold
+        let raw = context(destination: try destination("Chicago"), weather: cool)
+        let ids = Set(try makeEngine().generate(context: raw).compactMap(\.canonicalItemID))
+        #expect(!ids.contains("clothing.gloves"))
+    }
+
+    @Test func skiIntentResolvesHandOverlapWithoutForecastWeather() throws {
+        let skiTrip = context(
+            destination: try destination("Denver"),
+            type: .skiSnow,
+            activities: ["sightseeing"],
+            bag: .checked,
+            style: .prepared
+        )
+        let generation = try makeEngine().generateDetailed(context: skiTrip)
+        let ids = Set(generation.items.compactMap(\.canonicalItemID))
+        let suppression = generation.coverageSuppressions.first { $0.canonicalItemID == "clothing.gloves" }
+
+        #expect(ids.contains("activities.ski_gloves"))
+        #expect(!ids.contains("clothing.gloves"))
+        #expect(suppression?.covered == [
+            CapabilityCoverage(capability: .coldHands, coveringItemID: "activities.ski_gloves")
+        ])
+    }
+
     /// Running and hiking each keep their own shoe; the walking pair is the
     /// one that goes, and the suppression names its coverer.
     @Test func runningAndHikingKeepBothSuppressWalking() throws {
@@ -187,5 +377,218 @@ struct CoverageTests {
         let ids = generation.items.compactMap(\.canonicalItemID)
         #expect(ids.contains("footwear.running_shoes"))
         #expect(!ids.contains("footwear.walking_shoes"))
+    }
+
+    @Test func requiredOverlapMatrixProducesMinimalFocusedSetsDeterministically() throws {
+        struct CoverageCase {
+            var name: String
+            var context: TripContext
+            var kept: Set<String>
+            var suppressed: Set<String>
+        }
+
+        let dest = try destination("Denver")
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let rainWind = weather(days: 5, start: start, highF: 55, lowF: 45, rain: 0.6, wind: 26)
+        let winter = weather(days: 5, start: start, highF: 30, lowF: 14, snow: true)
+        let cases = [
+            CoverageCase(
+                name: "running + walking",
+                context: context(destination: dest, activities: ["running", "walking"]),
+                kept: ["footwear.running_shoes"],
+                suppressed: ["footwear.walking_shoes"]
+            ),
+            CoverageCase(
+                name: "hiking + walking",
+                context: context(destination: dest, type: .outdoor, activities: ["hiking", "walking"]),
+                kept: ["footwear.hiking_shoes"],
+                suppressed: ["footwear.walking_shoes"]
+            ),
+            // Phase 5: Camping declares no trail-footwear need, so it neither
+            // adds hiking shoes nor claims the hiking capability. Ordinary
+            // walking shoes survive a camping trip untouched.
+            CoverageCase(
+                name: "camping + walking",
+                context: context(destination: dest, type: .outdoor, activities: ["camping", "walking"]),
+                kept: ["footwear.walking_shoes"],
+                suppressed: []
+            ),
+            // Adding Camping to a hiking trip changes nothing about footwear:
+            // this row is identical to "hiking + walking" above, which is the
+            // point — the need is sourced by Hiking, never double-sourced.
+            CoverageCase(
+                name: "hiking + camping + walking",
+                context: context(destination: dest, type: .outdoor, activities: ["hiking", "camping", "walking"]),
+                kept: ["footwear.hiking_shoes"],
+                suppressed: ["footwear.walking_shoes"]
+            ),
+            CoverageCase(
+                name: "running + hiking + walking",
+                context: context(destination: dest, type: .outdoor, activities: ["running", "hiking", "walking"]),
+                kept: ["footwear.running_shoes", "footwear.hiking_shoes"],
+                suppressed: ["footwear.walking_shoes"]
+            ),
+            CoverageCase(
+                name: "formal business",
+                context: context(destination: dest, type: .business, activities: ["work"]),
+                kept: ["footwear.dress_shoes", "footwear.walking_shoes"],
+                suppressed: []
+            ),
+            CoverageCase(
+                name: "rain + wind",
+                context: context(destination: dest, weather: rainWind),
+                kept: ["clothing.rain_jacket", "clothing.light_sweater"],
+                suppressed: ["clothing.windbreaker"]
+            ),
+            CoverageCase(
+                name: "winter layering",
+                context: context(destination: dest, type: .outdoor, weather: winter),
+                kept: ["clothing.winter_coat", "clothing.light_sweater", "footwear.boots"],
+                suppressed: []
+            ),
+            CoverageCase(
+                name: "ski hands",
+                context: context(destination: dest, type: .skiSnow, weather: winter),
+                kept: ["activities.ski_gloves"],
+                suppressed: ["clothing.gloves"]
+            )
+        ]
+        let engine = try makeEngine()
+
+        for testCase in cases {
+            let first = engine.generateDetailed(context: testCase.context)
+            let second = engine.generateDetailed(context: testCase.context)
+            let focus = testCase.kept.union(testCase.suppressed)
+            let firstIDs = Set(first.items.compactMap(\.canonicalItemID))
+            let firstSuppressed = Set(first.coverageSuppressions.map(\.canonicalItemID))
+
+            #expect(firstIDs.intersection(focus) == testCase.kept, "\(testCase.name): kept set")
+            #expect(firstSuppressed.intersection(focus) == testCase.suppressed, "\(testCase.name): suppressed set")
+            #expect(first.items.compactMap(\.canonicalItemID).sorted() == second.items.compactMap(\.canonicalItemID).sorted(), "\(testCase.name): item determinism")
+            #expect(sortedSuppressions(first.coverageSuppressions) == sortedSuppressions(second.coverageSuppressions), "\(testCase.name): evidence determinism")
+        }
+    }
+
+    @Test func explicitMultifunctionItemsRemainAuthoritativeAndClaimCoverage() throws {
+        let primary = Traveler(id: UUID(), role: .self, ageGroup: .adult)
+        let party = TripParty(travelMode: .solo, travelers: [primary])
+        let runners = PackingItemDraft(
+            canonicalItemID: "footwear.running_shoes",
+            displayName: "My broken-in runners",
+            category: .footwear,
+            quantity: 2,
+            packedQuantity: 1,
+            importance: .important,
+            sourceSignals: [.userPreference],
+            reason: "Added by you",
+            isUserAdded: true,
+            ownershipType: .personal,
+            travelerID: primary.id,
+            assignedTravelerID: primary.id
+        )
+        let runnerGeneration = try makeEngine().generateDetailed(
+            context: context(destination: try destination("Chicago"), party: party),
+            existing: [runners]
+        )
+        let keptRunners = try #require(runnerGeneration.items.first { $0.id == runners.id })
+        #expect(keptRunners.quantity == 2)
+        #expect(keptRunners.packedQuantity == 1)
+        #expect(keptRunners.travelerID == primary.id)
+        #expect(keptRunners.assignedTravelerID == primary.id)
+        #expect(keptRunners.isUserAdded)
+        #expect(!runnerGeneration.items.contains { $0.canonicalItemID == "footwear.walking_shoes" })
+
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let rainWind = weather(days: 5, start: start, highF: 55, lowF: 45, rain: 0.6, wind: 26)
+        let shell = PackingItemDraft(
+            canonicalItemID: "clothing.rain_jacket",
+            displayName: "My shell",
+            category: .clothing,
+            quantity: 2,
+            packedQuantity: 1,
+            importance: .important,
+            sourceSignals: [.userPreference],
+            reason: "Edited by you",
+            isUserModified: true,
+            ownershipType: .personal,
+            travelerID: primary.id,
+            assignedTravelerID: primary.id
+        )
+        let shellGeneration = try makeEngine().generateDetailed(
+            context: context(destination: try destination("Seattle"), weather: rainWind, party: party),
+            existing: [shell]
+        )
+        let keptShell = try #require(shellGeneration.items.first { $0.id == shell.id })
+        #expect(keptShell.quantity == 2)
+        #expect(keptShell.packedQuantity == 1)
+        #expect(keptShell.travelerID == primary.id)
+        #expect(keptShell.assignedTravelerID == primary.id)
+        #expect(keptShell.isUserModified)
+        #expect(!shellGeneration.items.contains { $0.canonicalItemID == "clothing.windbreaker" })
+    }
+
+    @Test func coverageIsOwnerScopedAndUnassignedPartyItemsInferNothing() throws {
+        let primary = Traveler(id: UUID(), role: .self, ageGroup: .adult)
+        let partner = Traveler(id: UUID(), role: .partner, ageGroup: .adult)
+        let party = TripParty(travelMode: .couple, travelers: [primary, partner])
+        func runners(owner: UUID?) -> PackingItemDraft {
+            PackingItemDraft(
+                canonicalItemID: "footwear.running_shoes",
+                displayName: "Running shoes",
+                category: .footwear,
+                quantity: 1,
+                importance: .normal,
+                sourceSignals: [.userPreference],
+                reason: "Added by you",
+                isUserAdded: true,
+                ownershipType: .personal,
+                travelerID: owner,
+                assignedTravelerID: owner
+            )
+        }
+        let trip = context(destination: try destination("Chicago"), party: party)
+        let explicit = try makeEngine().generateDetailed(context: trip, existing: [runners(owner: primary.id)])
+        #expect(!explicit.items.contains { $0.travelerID == primary.id && $0.canonicalItemID == "footwear.walking_shoes" })
+        #expect(explicit.items.contains { $0.travelerID == partner.id && $0.canonicalItemID == "footwear.walking_shoes" })
+
+        let unassignedRunner = runners(owner: nil)
+        let ambiguous = try makeEngine().generateDetailed(context: trip, existing: [unassignedRunner])
+        #expect(ambiguous.items.contains { $0.travelerID == primary.id && $0.canonicalItemID == "footwear.walking_shoes" })
+        #expect(ambiguous.items.contains { $0.travelerID == partner.id && $0.canonicalItemID == "footwear.walking_shoes" })
+        let retained = try #require(ambiguous.items.first { $0.id == unassignedRunner.id })
+        #expect(retained.travelerID == nil)
+        #expect(retained.assignedTravelerID == nil)
+    }
+
+    // MARK: - Phase 8, Task 1: satisfiedCapabilities (Amendment 2)
+
+    /// The counterexample that motivated the satisfiedCapabilities redesign:
+    /// a rain jacket genuinely satisfies rainShell even though rainShell is
+    /// a single-item capability in CoverageResolver.itemCapabilities — no
+    /// other candidate can ever be suppressed for it. A design that derived
+    /// this fact by inverting coverageSuppressions could never populate it,
+    /// because nothing is ever suppressed for rainShell; the intersection
+    /// computed directly inside CoverageResolver.resolve's own loop must.
+    @Test func satisfiedCapabilitiesIncludesAGenuinelyMetNeedEvenWithoutAnyMatchingSuppression() throws {
+        let engine = try makeEngine()
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let rain = weather(days: 5, start: start, highF: 58, lowF: 46, rain: 0.7)
+        let generation = engine.generateDetailed(context: context(
+            destination: try destination("Seattle"), activities: ["sightseeing"], bag: .checked, style: .balanced, weather: rain
+        ))
+        let rainJacket = try #require(generation.items.first { $0.canonicalItemID == "clothing.rain_jacket" })
+        #expect(rainJacket.satisfiedCapabilities.contains(PackingCapability.rainShell.rawValue))
+        #expect(
+            !generation.coverageSuppressions.contains { $0.covered.contains { $0.capability == .rainShell } },
+            "no suppression exists for rainShell in this fixture — the fact must not depend on one"
+        )
+    }
+
+    private func sortedSuppressions(_ values: [CoverageSuppression]) -> [CoverageSuppression] {
+        values.sorted {
+            let lhs = "\($0.travelerID?.uuidString ?? ""):\($0.canonicalItemID)"
+            let rhs = "\($1.travelerID?.uuidString ?? ""):\($1.canonicalItemID)"
+            return lhs < rhs
+        }
     }
 }

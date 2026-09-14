@@ -39,6 +39,20 @@ enum PackingReasonPresentation {
     }
 }
 
+/// Phase 8, Task 6: presentation over `RecommendationTrace.Authority` —
+/// reads persisted trace only, never calls `PackingEngine`,
+/// `CoverageResolver`, `ConstraintResolver`, or `WeatherSignalExtractor`.
+enum PackingTracePresentation {
+    /// One short, honest line distinguishing a user's own decision from the
+    /// engine's — never invents provenance for a user-authority row.
+    static func authorityLine(_ authority: RecommendationTrace.Authority) -> String? {
+        if authority.isCustomItem { return "Added by you." }
+        if authority.isUserModified { return "You changed this." }
+        if authority.isUserAdded { return "Added by you." }
+        return nil
+    }
+}
+
 #if DEBUG
 enum PackingListDebugPresentation {
     case itemDetailMedium
@@ -780,6 +794,13 @@ struct ItemDetailView: View {
             PackWiseSectionHeader(title: "Why it's on your list")
             PackWiseCard {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                    if let authorityLine = PackingTracePresentation.authorityLine(
+                        RecommendationTrace.authority(for: item.draft)
+                    ) {
+                        Text(authorityLine)
+                            .font(.caption)
+                            .foregroundStyle(PackWiseColor.textSecondary)
+                    }
                     Text(item.reason.isEmpty ? "Added for this trip." : presentedReason)
                     if !item.quantityReason.isEmpty {
                         PackWiseRowDivider(inset: 0)

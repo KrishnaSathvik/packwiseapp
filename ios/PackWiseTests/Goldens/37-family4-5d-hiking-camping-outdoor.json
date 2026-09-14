@@ -1,0 +1,2654 @@
+{
+  "coverage" : [
+    {
+      "capabilities" : [
+        "footwear.everyday_walking"
+      ],
+      "coveredBy" : [
+        "footwear.hiking_shoes"
+      ],
+      "coveredCapabilities" : {
+        "footwear.everyday_walking" : "footwear.hiking_shoes"
+      },
+      "owner" : "child",
+      "suppressed" : "footwear.walking_shoes"
+    },
+    {
+      "capabilities" : [
+        "footwear.everyday_walking"
+      ],
+      "coveredBy" : [
+        "footwear.hiking_shoes"
+      ],
+      "coveredCapabilities" : {
+        "footwear.everyday_walking" : "footwear.hiking_shoes"
+      },
+      "owner" : "child-2",
+      "suppressed" : "footwear.walking_shoes"
+    },
+    {
+      "capabilities" : [
+        "footwear.everyday_walking"
+      ],
+      "coveredBy" : [
+        "footwear.hiking_shoes"
+      ],
+      "coveredCapabilities" : {
+        "footwear.everyday_walking" : "footwear.hiking_shoes"
+      },
+      "owner" : "partner",
+      "suppressed" : "footwear.walking_shoes"
+    },
+    {
+      "capabilities" : [
+        "footwear.everyday_walking"
+      ],
+      "coveredBy" : [
+        "footwear.hiking_shoes"
+      ],
+      "coveredCapabilities" : {
+        "footwear.everyday_walking" : "footwear.hiking_shoes"
+      },
+      "owner" : "primary",
+      "suppressed" : "footwear.walking_shoes"
+    }
+  ],
+  "engineVersion" : "v2",
+  "fixture" : "37-family4-5d-hiking-camping-outdoor",
+  "items" : [
+    {
+      "canonicalItemID" : "activities.daypack",
+      "carrier" : "primary",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 2,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 2,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "2 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 1,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "1 sleep set with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 6,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 6,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "6 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 6,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.15,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 6,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
+      "quantityReason" : "6 t-shirts for Child. 5 travel days plus extra changes for a child.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 7,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.1,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 7,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "7 underwear for Child. 5 travel days plus extra changes for a child.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.earbuds_case",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Earbuds",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Suggested for Child (child).",
+      "reasonArguments" : {
+        "ageGroup" : "child",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.keys",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Keys",
+      "importance" : "critical",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.phone",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Phone",
+      "importance" : "critical",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.sunglasses",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Sunglasses",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Seasonal sun is likely. The forecast will refine this closer to departure.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.seasonal_sun",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.wallet",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Wallet",
+      "importance" : "critical",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.hiking_shoes",
+      "carrier" : "primary",
+      "category" : "footwear",
+      "displayName" : "Hiking shoes",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking shoes can cover most walking days on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "substitution.hiking_covers_walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking",
+        "footwear.hiking"
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "hydration.water_bottle",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Water bottle",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.activities",
+      "carrier" : "primary",
+      "category" : "kids",
+      "displayName" : "Small activities",
+      "importance" : "optional",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Suggested for Child (child).",
+      "reasonArguments" : {
+        "ageGroup" : "child",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.snacks",
+      "carrier" : "primary",
+      "category" : "kids",
+      "displayName" : "Kid snacks",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Suggested for Child (child).",
+      "reasonArguments" : {
+        "ageGroup" : "child",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "miscellaneous.flashlight",
+      "carrier" : "primary",
+      "category" : "miscellaneous",
+      "displayName" : "Small flashlight",
+      "importance" : "optional",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You're camping on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.camping",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.compression_packing",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Packing cubes",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Toiletry bag",
+      "importance" : "important",
+      "owner" : "child",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "activities.daypack",
+      "carrier" : "primary",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 3,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.4,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 3,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "3 pants for Child. 5 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 1,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "1 sleep set with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential",
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 9,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.4,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 9,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "9 socks for Child. 5 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 9,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.75,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 9,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
+      "quantityReason" : "9 t-shirts for Child. 5 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 9,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.4,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 9,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "9 underwear for Child. 5 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.sunglasses",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Sunglasses",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Seasonal sun is likely. The forecast will refine this closer to departure.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.seasonal_sun",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.hiking_shoes",
+      "carrier" : "primary",
+      "category" : "footwear",
+      "displayName" : "Hiking shoes",
+      "importance" : "important",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking shoes can cover most walking days on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "substitution.hiking_covers_walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking",
+        "footwear.hiking"
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "hydration.water_bottle",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Water bottle",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.activities",
+      "carrier" : "primary",
+      "category" : "kids",
+      "displayName" : "Small activities",
+      "importance" : "optional",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.extra_outfits",
+      "carrier" : "primary",
+      "category" : "kids",
+      "displayName" : "Extra outfits",
+      "importance" : "important",
+      "owner" : "child-2",
+      "quantity" : 2,
+      "quantityReason" : "2 spare outfits for Child — spills and surprises happen.",
+      "quantityReasonArguments" : {
+        "name" : "Child",
+        "quantity" : "2"
+      },
+      "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.sippy",
+      "carrier" : "primary",
+      "category" : "kids",
+      "displayName" : "Sippy cup",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "kids.snacks",
+      "carrier" : "primary",
+      "category" : "kids",
+      "displayName" : "Kid snacks",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
+      "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "party"
+      ]
+    },
+    {
+      "canonicalItemID" : "miscellaneous.flashlight",
+      "carrier" : "primary",
+      "category" : "miscellaneous",
+      "displayName" : "Small flashlight",
+      "importance" : "optional",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You're camping on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.camping",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "child-2",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "activities.daypack",
+      "carrier" : "partner",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 2,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 2,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "2 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 1,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "1 sleep set with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 6,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 6,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "6 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 5,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 5,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
+      "quantityReason" : "Why 5 t-shirts? You're traveling for 5 days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "carrier" : "partner",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 6,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 6,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "6 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.id",
+      "carrier" : "partner",
+      "category" : "documents",
+      "displayName" : "Photo ID",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Easy to forget, hard to replace.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.documents",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "partner",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.keys",
+      "carrier" : "partner",
+      "category" : "essentials",
+      "displayName" : "Keys",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.phone",
+      "carrier" : "partner",
+      "category" : "essentials",
+      "displayName" : "Phone",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.sunglasses",
+      "carrier" : "partner",
+      "category" : "essentials",
+      "displayName" : "Sunglasses",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Seasonal sun is likely. The forecast will refine this closer to departure.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.seasonal_sun",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.wallet",
+      "carrier" : "partner",
+      "category" : "essentials",
+      "displayName" : "Wallet",
+      "importance" : "critical",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.hiking_shoes",
+      "carrier" : "partner",
+      "category" : "footwear",
+      "displayName" : "Hiking shoes",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking shoes can cover most walking days on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "substitution.hiking_covers_walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking",
+        "footwear.hiking"
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.blister_pads",
+      "carrier" : "partner",
+      "category" : "health",
+      "displayName" : "Blister pads",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "carrier" : "partner",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Better to have and not need.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.health",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "hydration.water_bottle",
+      "carrier" : "partner",
+      "category" : "essentials",
+      "displayName" : "Water bottle",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "miscellaneous.flashlight",
+      "carrier" : "partner",
+      "category" : "miscellaneous",
+      "displayName" : "Small flashlight",
+      "importance" : "optional",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You're camping on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.camping",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.deodorant",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Deodorant",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "partner",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.compression_packing",
+      "carrier" : "partner",
+      "category" : "travel_comfort",
+      "displayName" : "Packing cubes",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "carrier" : "partner",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "carrier" : "partner",
+      "category" : "travel_comfort",
+      "displayName" : "Toiletry bag",
+      "importance" : "important",
+      "owner" : "partner",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "activities.daypack",
+      "carrier" : "primary",
+      "category" : "activities",
+      "displayName" : "Daypack",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.pants",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 2,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 2,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "2 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 1,
+        "requiredUses" : 5,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "1 sleep set with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 6,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 6,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "6 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 5,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 5,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
+      "quantityReason" : "Why 5 t-shirts? You're traveling for 5 days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 6,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 6,
+        "requiredUses" : 5,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "6 for 5 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.id",
+      "carrier" : "primary",
+      "category" : "documents",
+      "displayName" : "Photo ID",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Easy to forget, hard to replace.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.documents",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.keys",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Keys",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.phone",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Phone",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.sunglasses",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Sunglasses",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Seasonal sun is likely. The forecast will refine this closer to departure.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "weather.seasonal_sun",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "weather"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.wallet",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Wallet",
+      "importance" : "critical",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.hiking_shoes",
+      "carrier" : "primary",
+      "category" : "footwear",
+      "displayName" : "Hiking shoes",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking shoes can cover most walking days on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "substitution.hiking_covers_walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking",
+        "footwear.hiking"
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.blister_pads",
+      "carrier" : "primary",
+      "category" : "health",
+      "displayName" : "Blister pads",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "carrier" : "primary",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Better to have and not need.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.health",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "hydration.water_bottle",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Water bottle",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "miscellaneous.flashlight",
+      "carrier" : "primary",
+      "category" : "miscellaneous",
+      "displayName" : "Small flashlight",
+      "importance" : "optional",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You're camping on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.camping",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.deodorant",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Deodorant",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.compression_packing",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Packing cubes",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Toiletry bag",
+      "importance" : "important",
+      "owner" : "primary",
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.first_aid",
+      "carrier" : "unassigned",
+      "category" : "health",
+      "displayName" : "Mini first-aid kit",
+      "importance" : "optional",
+      "owner" : "shared",
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "quantity" : "1",
+        "travelerCount" : "4"
+      },
+      "reason" : "Suggested for a outdoor trip.",
+      "reasonArguments" : {
+        "tripType" : "outdoor"
+      },
+      "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.insect_repellent",
+      "carrier" : "unassigned",
+      "category" : "toiletries",
+      "displayName" : "Insect repellent",
+      "importance" : "normal",
+      "owner" : "shared",
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "quantity" : "1",
+        "travelerCount" : "4"
+      },
+      "reason" : "You're camping on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.camping",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.sunscreen",
+      "carrier" : "unassigned",
+      "category" : "toiletries",
+      "displayName" : "Sunscreen",
+      "importance" : "important",
+      "owner" : "shared",
+      "quantity" : 2,
+      "quantityReason" : "2 for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "quantity" : "2",
+        "travelerCount" : "4"
+      },
+      "reason" : "You're camping on this trip.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.camping",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity"
+      ]
+    }
+  ]
+}

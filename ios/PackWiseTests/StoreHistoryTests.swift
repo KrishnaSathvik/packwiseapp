@@ -16,7 +16,7 @@ import Testing
 /// | `v2-a975eab`                     | 2.0.0 | 18d754d … a975eab (same shape)  |
 /// | `v3-791cf88`                     | 3.0.0 | d4ed374 … 791cf88 (pre-Task-2)  |
 /// | `v4.0-7a219ee`                   | 4.0.0 | 7a219ee (first Task 2 commit)   |
-/// | `v4.1-d7663a5`                   | 4.0.0 | c5c35bb … d7663a5 (main today)  |
+/// | `v4.1-d7663a5`                   | 4.0.0 | c5c35bb … d7663a5 (main before the Phase 8 merge) |
 /// | `unsupported-hardening-b302634`  | 3.0.0 | product-hardening-phase1 tip, never on main |
 ///
 /// SwiftData picks a store's source schema by entity version hashes, not by
@@ -98,7 +98,7 @@ struct StoreHistoryTests {
         let newestHashes = try Self.hashes(of: newest)
         let currentHashes = try Self.hashes(of: PackWiseCurrentSchema.self)
         #expect(newestHashes == currentHashes)
-        #expect(PackWiseCurrentSchema.versionIdentifier == Schema.Version(4, 1, 0))
+        #expect(PackWiseCurrentSchema.versionIdentifier == Schema.Version(5, 0, 0))
     }
 
     // MARK: - Real upgrades

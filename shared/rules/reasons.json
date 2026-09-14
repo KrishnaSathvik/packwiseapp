@@ -2,6 +2,7 @@
   "templates": {
     "activity.beachDays": "Beach days are on your plans.",
     "activity.boatTrip": "You're planning a boat trip.",
+    "activity.camping": "You're camping on this trip.",
     "activity.generic": "Based on what you'll be doing.",
     "activity.hiking": "Hiking is on your plans.",
     "activity.museums": "Museum visits are on your plans.",
@@ -63,7 +64,7 @@
     "impact.temperature_swing": "Large temperature swing",
     "impact.wind": "Windy conditions",
     "party.age_group": "Suggested for {name} ({ageGroup}).",
-    "party.shared": "One for the group — not one per person.",
+    "party.shared": "{quantityPhrase} for the group — not one per person.",
     "party.shared_umbrella": "Rain is expected on {rainDaysPhrase}. {umbrellaPhrase} should cover your group — no need to pack one each.",
     "preference.bringingLaptop": "You're bringing a laptop.",
     "preference.dailyMedication": "You take daily medication.",

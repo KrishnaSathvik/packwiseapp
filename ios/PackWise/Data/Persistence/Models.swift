@@ -263,6 +263,16 @@ final class PackingItemRecord {
     /// fields until Task 13 lands.
     var recommendationTraceRaw: String?
     var quantityReason: String
+    /// JSON-encoded ClothingQuantityEvidence — the one Phase 8 field whose
+    /// shape (typed numerics, an optional Int, a LaundryAccess enum) doesn't
+    /// fit the pipe/equals flattening the string-keyed fields use below.
+    /// ClothingQuantityEvidence is already Codable; this is that encoding,
+    /// not a new serialization scheme. Closes the gap the Catalog.swift
+    /// quantityEvidence doc comment named as deferred to Phase 8.
+    var quantityEvidenceRaw: String = ""
+    var quantityReasonArgumentsRaw: String = ""
+    var satisfiedCapabilitiesRaw: String = ""
+    var bagStyleConstraintFactRaw: String = ""
     var isUserAdded: Bool
     var isUserModified: Bool
     var ownershipTypeRaw: String = "personal"
@@ -286,6 +296,14 @@ final class PackingItemRecord {
         self.reasonCode = draft.reasonCode
         self.reasonArgumentsRaw = draft.reasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
         self.quantityReason = draft.quantityReason
+        if let evidence = draft.quantityEvidence, let data = try? JSONEncoder().encode(evidence) {
+            self.quantityEvidenceRaw = String(decoding: data, as: UTF8.self)
+        }
+        self.quantityReasonArgumentsRaw = draft.quantityReasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        self.satisfiedCapabilitiesRaw = draft.satisfiedCapabilities.joined(separator: ",")
+        if let fact = draft.bagStyleConstraintFact {
+            self.bagStyleConstraintFactRaw = "survivedByEssentialTagProtection=\(fact.survivedByEssentialTagProtection)|wouldTrimUnderKey=\(fact.wouldTrimUnderKey ?? "")"
+        }
         self.isUserAdded = draft.isUserAdded
         self.isUserModified = draft.isUserModified
         self.ownershipTypeRaw = draft.ownershipType.rawValue
@@ -303,6 +321,32 @@ final class PackingItemRecord {
     var isPacked: Bool { packedQuantity >= max(1, quantity) }
     var sourceSignals: [RecommendationSignal] {
         sourceSignalsRaw.split(separator: ",").compactMap { RecommendationSignal(rawValue: String($0)) }
+    }
+    var quantityEvidence: ClothingQuantityEvidence? {
+        guard !quantityEvidenceRaw.isEmpty else { return nil }
+        return try? JSONDecoder().decode(ClothingQuantityEvidence.self, from: Data(quantityEvidenceRaw.utf8))
+    }
+    var quantityReasonArguments: [String: String] {
+        Dictionary(uniqueKeysWithValues: quantityReasonArgumentsRaw.split(separator: "|").compactMap { pair in
+            let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2 else { return nil }
+            return (parts[0], parts[1])
+        })
+    }
+    var satisfiedCapabilities: [String] {
+        satisfiedCapabilitiesRaw.isEmpty ? [] : satisfiedCapabilitiesRaw.split(separator: ",").map(String.init)
+    }
+    var bagStyleConstraintFact: BagStyleConstraintFact? {
+        guard !bagStyleConstraintFactRaw.isEmpty else { return nil }
+        var protected = false
+        var wouldTrim: String?
+        for pair in bagStyleConstraintFactRaw.split(separator: "|") {
+            let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2 else { continue }
+            if parts[0] == "survivedByEssentialTagProtection" { protected = parts[1] == "true" }
+            if parts[0] == "wouldTrimUnderKey" { wouldTrim = parts[1].isEmpty ? nil : parts[1] }
+        }
+        return BagStyleConstraintFact(survivedByEssentialTagProtection: protected, wouldTrimUnderKey: wouldTrim)
     }
 
     var draft: PackingItemDraft {
@@ -323,6 +367,10 @@ final class PackingItemRecord {
                 return (parts[0], parts[1])
             }),
             quantityReason: quantityReason,
+            quantityEvidence: quantityEvidence,
+            quantityReasonArguments: quantityReasonArguments,
+            satisfiedCapabilities: satisfiedCapabilities,
+            bagStyleConstraintFact: bagStyleConstraintFact,
             isUserAdded: isUserAdded,
             isUserModified: isUserModified,
             ownershipType: ownershipType,
@@ -332,11 +380,41 @@ final class PackingItemRecord {
         )
     }
 
+    /// Refreshes the full causal unit a regeneration produces — reason,
+    /// reasonCode, sourceSignals, quantity, quantityReason, and every Phase
+    /// 8 trace field — from an already-correctly-merged draft (Phase 8,
+    /// Task 3). `TripRepository.applyDiff` is this method's real caller,
+    /// supplying `QuantityChangeSuggestion.fresh`.
+    ///
+    /// Deliberately never touched by this method: `packedQuantity` (explicit
+    /// user state — the merge-aware baseline already preserves the draft's
+    /// own packedQuantity, but this method does not additionally clamp or
+    /// reset it; the downward safety clamp when quantity decreases stays
+    /// `applyDiff`'s own responsibility, applied after this call).
+    /// `isUserAdded` never changes for a re-merged existing item.
+    /// `assignedTravelerID` is copied through as the already-correctly
+    /// preserved-or-defaulted value `resolve()` computed upstream, not
+    /// independently decided here. `bagID` is copied through unchanged; no
+    /// bag-reassignment logic exists in this phase.
     func apply(_ draft: PackingItemDraft) {
         quantity = draft.quantity
-        packedQuantity = draft.packedQuantity
         reason = draft.reason
+        reasonCode = draft.reasonCode
+        reasonArgumentsRaw = draft.reasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        sourceSignalsRaw = draft.sourceSignals.map(\.rawValue).joined(separator: ",")
         quantityReason = draft.quantityReason
+        if let evidence = draft.quantityEvidence, let data = try? JSONEncoder().encode(evidence) {
+            quantityEvidenceRaw = String(decoding: data, as: UTF8.self)
+        } else {
+            quantityEvidenceRaw = ""
+        }
+        quantityReasonArgumentsRaw = draft.quantityReasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        satisfiedCapabilitiesRaw = draft.satisfiedCapabilities.joined(separator: ",")
+        if let fact = draft.bagStyleConstraintFact {
+            bagStyleConstraintFactRaw = "survivedByEssentialTagProtection=\(fact.survivedByEssentialTagProtection)|wouldTrimUnderKey=\(fact.wouldTrimUnderKey ?? "")"
+        } else {
+            bagStyleConstraintFactRaw = ""
+        }
         isUserModified = draft.isUserModified
         ownershipTypeRaw = draft.ownershipType.rawValue
         travelerID = draft.travelerID
@@ -718,20 +796,21 @@ final class PostTripFeedbackRecord {
     }
 }
 
-/// The current store shape (4.1.0): the live `@Model` types declared in this
+/// The current store shape (5.0.0): the live `@Model` types declared in this
 /// file. It is the only version allowed to reference them — every earlier
 /// version is a frozen snapshot in `SchemaHistory.swift`, because versions
 /// that alias the same live types share a checksum and make CoreData abort
-/// any migration between them. `4.1.0` is the shape `main` has persisted since
-/// `c5c35bb` (V4 plus `preferredBagTypesMigrated`), even though those builds
-/// labeled it `4.0.0`; SwiftData matches stores by entity hashes, not labels.
+/// any migration between them. 5.0.0 is 4.1.0 plus Product Hardening Phase 8's
+/// persisted trace facts on `PackingItemRecord` (`quantityEvidenceRaw`,
+/// `quantityReasonArgumentsRaw`, `satisfiedCapabilitiesRaw`,
+/// `bagStyleConstraintFactRaw`), all defaulted to empty.
 ///
 /// Adding, removing, or retyping any stored property on these types changes
 /// this checksum. Such a change must first freeze the current shape as a new
 /// snapshot in `SchemaHistory.swift`, then add a new newest version and a
 /// migration stage — never edit a released shape in place.
-enum PackWiseSchemaV4_1: VersionedSchema {
-    static var versionIdentifier: Schema.Version { Schema.Version(4, 1, 0) }
+enum PackWiseSchemaV5: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(5, 0, 0) }
     static var models: [any PersistentModel.Type] {
         [
             TripRecord.self,
@@ -910,11 +989,11 @@ enum PackWiseSchemaV4Migration {
 
 enum PackWiseMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self, PackWiseSchemaV4.self, PackWiseSchemaV4_1.self]
+        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self, PackWiseSchemaV4.self, PackWiseSchemaV4_1.self, PackWiseSchemaV5.self]
     }
 
     static var stages: [MigrationStage] {
-        [migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV4_1]
+        [migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV4_1, migrateV4_1toV5]
     }
 
     static let migrateV1toV2 = MigrationStage.lightweight(
@@ -944,10 +1023,17 @@ enum PackWiseMigrationPlan: SchemaMigrationPlan {
         fromVersion: PackWiseSchemaV4.self,
         toVersion: PackWiseSchemaV4_1.self
     )
+
+    /// Adds Phase 8's four persisted trace-fact columns, each defaulted to
+    /// empty; existing items gain them on their next accepted regeneration.
+    static let migrateV4_1toV5 = MigrationStage.lightweight(
+        fromVersion: PackWiseSchemaV4_1.self,
+        toVersion: PackWiseSchemaV5.self
+    )
 }
 
 /// The schema the app opens. Always the last entry of `PackWiseMigrationPlan.schemas`.
-typealias PackWiseCurrentSchema = PackWiseSchemaV4_1
+typealias PackWiseCurrentSchema = PackWiseSchemaV5
 
 enum PackWisePersistenceError: Error, Equatable {
     /// The on-disk store's entity hashes match no schema in the migration

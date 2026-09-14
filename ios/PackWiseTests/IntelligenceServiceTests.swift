@@ -394,6 +394,24 @@ struct IntelligenceServiceTests {
         #expect(configuration.integrityProvider() is DevelopmentAppIntegrityProvider)
     }
 
+    // MARK: - Task 4: deterministic generation is decoupled from intelligence
+
+    /// The deterministic engine never consumes `ContextIntelligenceService` —
+    /// `PackingEngine.generate` doesn't even take one as a parameter. Proving
+    /// list generation succeeds right next to a service that just failed
+    /// (rather than merely asserting the failure) documents that decoupling
+    /// as current behavior, not just an API-shape observation.
+    @Test func deterministicGenerationSucceedsWhileIntelligenceServiceThrows() async throws {
+        let service = try makeService(status: 500, json: "{\"error\":\"down\",\"requestID\":\"r\"}")
+        await #expect(throws: IntelligenceError.unavailable) {
+            _ = try await service.findPackingGaps(context: try context(), items: [])
+        }
+
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let items = engine.generate(context: try context())
+        #expect(!items.isEmpty, "list generation must succeed even while the intelligence service is down")
+    }
+
     @Test func aRefusedAssertionNeverSendsTheRequest() async throws {
         StubURLProtocol.reset()
         StubURLProtocol.responder = { _ in (200, Data("{}".utf8)) }

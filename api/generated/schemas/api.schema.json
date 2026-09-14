@@ -146,6 +146,7 @@
             "enum": [
               "beachDays",
               "boatTrip",
+              "camping",
               "hiking",
               "museums",
               "niceDinner",
@@ -390,6 +391,7 @@
             "enum": [
               "beachDays",
               "boatTrip",
+              "camping",
               "hiking",
               "museums",
               "niceDinner",

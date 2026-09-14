@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2026-09-14",
-  "buildHash": "43fc852c9f70f9f9",
+  "buildHash": "027c646f44fc1430",
   "capabilities": {
     "interpret": {
       "schema": "schemas/model-output/interpret.schema.json",

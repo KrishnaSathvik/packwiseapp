@@ -119,4 +119,10 @@ struct ExistingEval: Codable, Sendable {
     var category: String
     var quantity: Int
     var isUserModified: Bool
+    /// Marks a genuinely user-added item — one no rule would ever suggest —
+    /// so the fixture can exercise `PackingEngine.resolve()`'s isUserAdded
+    /// pass-through path, distinct from `isUserModified` preserving an edit
+    /// to an otherwise rule-suggested item. Optional and defaults to false
+    /// so every fixture predating this field is unaffected.
+    var isUserAdded: Bool?
 }

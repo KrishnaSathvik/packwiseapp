@@ -20,6 +20,70 @@ enum PackingCapability: String, CaseIterable, Sendable {
     case windShell = "outerwear.wind_shell"
     case warmthLight = "outerwear.warmth_light"
     case warmthHeavy = "outerwear.warmth_heavy"
+    case coldHands = "hand_protection.cold"
+    case snowSportHands = "hand_protection.snow_sport"
+}
+
+/// The normalized context surface the capability-coverage **and activity**
+/// families are allowed to read — one projection of the snapshot, shared, so
+/// neither family derives a second set of signals from raw `TripContext`.
+/// Weather signals and the seasonal fallback deliberately reproduce the
+/// pre-Phase-4 resolver semantics; Phase 6 owns weather interpretation.
+///
+/// The name is Phase 4's and is deliberately kept: renaming it would be
+/// cosmetic churn across every Phase 4 file, and is routed forward if a third
+/// family ever joins.
+struct CoverageContext: Hashable, Sendable {
+    var tripType: TripType
+    var activityIDs: Set<String>
+    var contextChips: Set<ContextChip>
+    var weatherSignals: Set<WeatherSignal>
+    var hasForecastWeather: Bool
+    var usesColdMinimumHeavyWarmth: Bool
+    var usesSeasonalWarmthFallback: Bool
+    var party: TripParty
+
+    init(snapshot: TripContextSnapshot, thresholds: WeatherThresholds) {
+        tripType = snapshot.tripType
+        activityIDs = Set(snapshot.knownActivityIDs)
+        contextChips = snapshot.contextChips
+        party = snapshot.party
+
+        let outdoor = !activityIDs.isDisjoint(with: ["hiking", "sightseeing", "walking", "running", "beachDays"])
+        let month = Calendar.current.component(.month, from: snapshot.startDate)
+        let latitude = snapshot.destination.latitude
+        let northWinter = latitude >= 0 && [12, 1, 2].contains(month)
+        let southWinter = latitude < 0 && [6, 7, 8].contains(month)
+        let seasonalWarmthEligible = (northWinter || southWinter) && abs(latitude) > 30
+
+        switch snapshot.weatherQuality {
+        case .complete, .partial:
+            // weatherQuality is derived from snapshot.weather, so a non-nil value
+            // here is guaranteed by construction (TripContextSnapshot.swift:201).
+            let forecast = snapshot.weather ?? .seasonal()
+            weatherSignals = WeatherSignalExtractor.extract(
+                weather: forecast, thresholds: thresholds,
+                outdoorActivities: outdoor, tripDays: snapshot.durationDays
+            ).signals
+            hasForecastWeather = true
+            usesColdMinimumHeavyWarmth = forecast.minTemperatureF <= thresholds.coldMaxF
+            usesSeasonalWarmthFallback = {
+                if case .partial = snapshot.weatherQuality { return seasonalWarmthEligible }
+                return false  // .complete never falls back
+            }()
+        case .seasonalOnly, .missing:
+            weatherSignals = []
+            hasForecastWeather = false
+            usesColdMinimumHeavyWarmth = false
+            usesSeasonalWarmthFallback = seasonalWarmthEligible
+        }
+    }
+}
+
+/// One capability-to-item fact behind a suppression decision.
+struct CapabilityCoverage: Hashable, Sendable {
+    var capability: PackingCapability
+    var coveringItemID: String
 }
 
 /// One suppression decision, recorded from the start so the ledger says which
@@ -28,11 +92,18 @@ enum PackingCapability: String, CaseIterable, Sendable {
 struct CoverageSuppression: Hashable, Sendable {
     var travelerID: UUID?
     var canonicalItemID: String
-    /// The capabilities the item would have contributed, as raw values.
-    var capabilities: [String]
-    /// Items already covering those needs. Empty means the need itself was
-    /// absent (e.g. a rain shell on a hot trip).
-    var coveredBy: [String]
+    var covered: [CapabilityCoverage]
+    var refutedCapabilities: [PackingCapability]
+
+    /// Stable compatibility views retained while the golden schema migrates.
+    var capabilities: [String] {
+        Set(covered.map(\.capability)).union(refutedCapabilities)
+            .map(\.rawValue).sorted()
+    }
+
+    var coveredBy: [String] {
+        Set(covered.map(\.coveringItemID)).sorted()
+    }
 }
 
 /// Greedy coverage for footwear and outerwear. Set cover is NP-hard in
@@ -54,7 +125,9 @@ enum CoverageResolver {
         "clothing.rain_jacket",
         "clothing.light_sweater",
         "clothing.light_jacket",
-        "clothing.windbreaker"
+        "clothing.windbreaker",
+        "activities.ski_gloves",
+        "clothing.gloves"
     ]
 
     /// A winter coat deliberately does not claim `warmthLight`: a coat is not
@@ -72,22 +145,27 @@ enum CoverageResolver {
         "clothing.rain_jacket": [.rainShell, .windShell],
         "clothing.light_sweater": [.warmthLight],
         "clothing.light_jacket": [.warmthLight, .windShell],
-        "clothing.windbreaker": [.windShell]
+        "clothing.windbreaker": [.windShell],
+        "activities.ski_gloves": [.snowSportHands, .coldHands],
+        "clothing.gloves": [.coldHands]
     ]
 
     /// Needs derive from trip signals, never from which items happened to be
     /// emitted — deriving them from item capabilities would let a versatile
     /// item manufacture the need that justifies itself.
-    static func needs(context: TripContext, thresholds: WeatherThresholds) -> Set<PackingCapability> {
+    static func needs(context: CoverageContext) -> Set<PackingCapability> {
         var needs: Set<PackingCapability> = [.everydayWalking]
-        let activities = Set(context.activities)
+        let activities = context.activityIDs
 
         if activities.contains("running") || context.contextChips.contains(.runWhileTraveling) {
             needs.insert(.running)
         }
-        if activities.contains("hiking") {
-            needs.insert(.hiking)
-        }
+        // Derived from the typed activity contract rather than the literal id
+        // `"hiking"`: the rule is that trail footwear implies the hiking
+        // capability, which generalizes to any contract that declares the
+        // need. Today Hiking is the only one that does, so this is
+        // behaviour-identical to the string test it replaces.
+        needs.formUnion(ActivityContracts.capabilities(for: ActivityContracts.needs(for: activities)))
         if context.tripType == .beach
             || !activities.isDisjoint(with: ["swimming", "beachDays", "snorkeling", "boatTrip"]) {
             needs.insert(.beach)
@@ -97,47 +175,41 @@ enum CoverageResolver {
             || context.contextChips.contains(.needFormalOutfit) {
             needs.insert(.formal)
         }
+        if context.tripType == .skiSnow {
+            needs.insert(.coldHands)
+            needs.insert(.snowSportHands)
+        }
 
-        if let weather = context.weather, weather.isPreciseForecast || !weather.dailyForecast.isEmpty {
-            let conditions = WeatherSignalExtractor.extract(
-                weather: weather,
-                thresholds: thresholds,
-                outdoorActivities: context.outdoorActivities,
-                tripDays: context.durationDays
-            )
-            let rain = !conditions.signals.isDisjoint(with: [.meaningfulRain, .persistentRain, .coldRain])
-            let hot = conditions.signals.contains(.hotOutdoorExposure)
-            let coldRain = conditions.signals.contains(.coldRain)
+        if context.hasForecastWeather {
+            let rain = !context.weatherSignals.isDisjoint(with: [.meaningfulRain, .persistentRain, .coldRain])
+            let hot = context.weatherSignals.contains(.hotOutdoorExposure)
+            let coldRain = context.weatherSignals.contains(.coldRain)
             // Warm rain is umbrella weather, not shell weather: nobody wears
             // a rain jacket at 90°F, so the wearable-shell need only exists
             // when the rain isn't hot (or is cold outright).
             if rain && (!hot || coldRain) {
                 needs.insert(.rainShell)
             }
-            if conditions.signals.contains(.coldEvenings)
-                || conditions.signals.contains(.largeTemperatureSwing)
+            if context.weatherSignals.contains(.coldEvenings)
+                || context.weatherSignals.contains(.largeTemperatureSwing)
                 || coldRain {
                 needs.insert(.warmthLight)
             }
-            if conditions.signals.contains(.snowExposure)
-                || weather.minTemperatureF <= thresholds.coldMaxF {
+            if context.weatherSignals.contains(.snowExposure)
+                || context.usesColdMinimumHeavyWarmth {
                 needs.insert(.warmthHeavy)
             }
-            if conditions.signals.contains(.highWindExposure) {
+            if context.weatherSignals.contains(.highWindExposure) {
                 needs.insert(.windShell)
             }
-            if conditions.signals.contains(.snowExposure) {
+            if context.weatherSignals.contains(.snowExposure) {
                 needs.insert(.coldFootwear)
             }
-        } else {
-            // Mirror the seasonal fallback: winter at meaningful latitude
-            // suggests a warm layer even without a forecast.
-            let month = Calendar.current.component(.month, from: context.startDate)
-            let lat = context.destination.latitude
-            let winter = lat >= 0 ? [12, 1, 2].contains(month) : [6, 7, 8].contains(month)
-            if winter && abs(lat) > 30 {
-                needs.insert(.warmthLight)
+            if !context.weatherSignals.isDisjoint(with: [.snowExposure, .sustainedCold, .freezingCold]) {
+                needs.insert(.coldHands)
             }
+        } else if context.usesSeasonalWarmthFallback {
+            needs.insert(.warmthLight)
         }
         return needs
     }
@@ -172,7 +244,9 @@ enum CoverageResolver {
             }
             let needed = capabilities.intersection(needs)
             if item.isUserAdded || item.isUserModified {
-                kept.append(item)
+                var copy = item
+                copy.satisfiedCapabilities = needed.map(\.rawValue).sorted()
+                kept.append(copy)
                 for capability in needed where covered[capability] == nil {
                     covered[capability] = canonical
                 }
@@ -183,25 +257,35 @@ enum CoverageResolver {
                     suppressions.append(CoverageSuppression(
                         travelerID: item.travelerID,
                         canonicalItemID: canonical,
-                        capabilities: capabilities.map(\.rawValue).sorted(),
-                        coveredBy: []
+                        covered: [],
+                        refutedCapabilities: capabilities.sorted { $0.rawValue < $1.rawValue }
                     ))
                 } else {
-                    kept.append(item)
+                    kept.append(item)   // satisfiedCapabilities stays empty — correct
                 }
                 continue
             }
             if needed.allSatisfy({ covered[$0] != nil }) {
-                let coverers = Set(needed.compactMap { covered[$0] })
+                let coverage = needed.compactMap { capability -> CapabilityCoverage? in
+                    guard let coveringItemID = covered[capability] else { return nil }
+                    return CapabilityCoverage(capability: capability, coveringItemID: coveringItemID)
+                }.sorted {
+                    if $0.capability.rawValue != $1.capability.rawValue {
+                        return $0.capability.rawValue < $1.capability.rawValue
+                    }
+                    return $0.coveringItemID < $1.coveringItemID
+                }
                 suppressions.append(CoverageSuppression(
                     travelerID: item.travelerID,
                     canonicalItemID: canonical,
-                    capabilities: needed.map(\.rawValue).sorted(),
-                    coveredBy: coverers.sorted()
+                    covered: coverage,
+                    refutedCapabilities: []
                 ))
                 continue
             }
-            kept.append(item)
+            var copy = item
+            copy.satisfiedCapabilities = needed.map(\.rawValue).sorted()
+            kept.append(copy)
             for capability in needed where covered[capability] == nil {
                 covered[capability] = canonical
             }

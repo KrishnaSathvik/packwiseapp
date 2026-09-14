@@ -74,7 +74,16 @@ struct GoldenEngineTests {
             GoldenFixtureFile.self,
             from: Data(contentsOf: Self.fixturesFile)
         )
-        #expect(file.fixtures.count == 17)
+        let manifestIDs = Set(file.fixtures.map(\.id))
+        let goldenIDs = Set(
+            try FileManager.default.contentsOfDirectory(at: Self.goldensDirectory, includingPropertiesForKeys: nil)
+                .filter { $0.pathExtension == "json" }
+                .map { $0.deletingPathExtension().lastPathComponent }
+        )
+        #expect(
+            manifestIDs == goldenIDs,
+            "Fixture manifest and golden files must match 1:1. Manifest-only: \(manifestIDs.subtracting(goldenIDs)); golden-only: \(goldenIDs.subtracting(manifestIDs))."
+        )
         let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
         let destinations = try SharedLibrary.testDestinations()
         let weatherFixtures = try SharedLibrary.weatherFixtures()
@@ -113,15 +122,375 @@ struct GoldenEngineTests {
         }
     }
 
+    /// The schema carries stable evidence beyond the rendered reason string:
+    /// who is on the hook to carry an item (distinct from who owns it), and
+    /// the structured arguments the reason template was filled with.
+    @Test func goldenSchemaCapturesCarrierReasonsAndClothingQuantityEvidence() throws {
+        let output = try renderFixture(id: "11-couple-5d-rain")
+        // Fixture 11 is a couple trip where every personal item is
+        // self-carried; sorted-first non-shared item is the partner's
+        // daypack, so the golden slug must resolve to "partner" exactly —
+        // not merely "non-empty", which a hardcoded "unassigned" would
+        // also satisfy.
+        let firstOwned = try #require(output.items.first { $0.owner != "shared" })
+        #expect(firstOwned.owner == "partner")
+        #expect(firstOwned.carrier == "partner")
+        #expect(output.items.contains { !$0.reasonArguments.isEmpty })
+        #expect(output.items.contains { $0.category == "clothing" && $0.quantityEvidence != nil })
+    }
+
+    @Test func phase3RequiredFixturesHoldClothingQuantityContracts() throws {
+        func item(_ id: String, owner: String = "primary", in output: GoldenOutput) throws -> GoldenItem {
+            try #require(output.items.first { $0.owner == owner && $0.canonicalItemID == id })
+        }
+
+        let planned15 = try renderFixture(id: "02b-tokyo-15d-light-laundry-planned")
+        let none15 = try renderFixture(id: "03-tokyo-15d-light-laundry-none")
+        let planned30 = try renderFixture(id: "05-tokyo-30d-light-laundry-planned")
+        for id in ["clothing.pants", "clothing.sleepwear", "clothing.socks", "clothing.tshirt", "clothing.underwear"] {
+            let fifteen = try item(id, in: planned15)
+            let thirty = try item(id, in: planned30)
+            let noLaundry = try item(id, in: none15)
+            #expect(abs(thirty.quantity - fifteen.quantity) <= 1, "\(id) must plateau once the planned wash cycle dominates")
+            #expect(fifteen.quantity <= noLaundry.quantity, "\(id) planned laundry must not exceed no laundry")
+            #expect(fifteen.quantityEvidence?.laundryPlan == .planned)
+            if id != "clothing.sleepwear" {
+                #expect(fifteen.quantityEvidence?.laundryReduced == true)
+            }
+        }
+
+        let longPlanned = try renderFixture(id: "18-reykjavik-64d-roadtrip-camping-seasonal")
+        #expect(try item("clothing.underwear", in: longPlanned).quantity == 8)
+        #expect(try item("clothing.tshirt", in: longPlanned).quantity == 7)
+
+        let oneDay = try renderFixture(id: "10-one-day-trip")
+        #expect(try item("clothing.underwear", in: oneDay).quantity == 2)
+        #expect(try item("clothing.tshirt", in: oneDay).quantity == 2)
+
+        let miami = try renderFixture(id: "06-miami-5d-beach-personal-item")
+        let swimsuit = try item("clothing.swimsuit", in: miami)
+        #expect(swimsuit.quantity == 2)
+        #expect(swimsuit.quantityEvidence?.basis == "dryingRotation")
+
+        let chicago = try renderFixture(id: "07-chicago-5d-business-checked")
+        let businessTop = try item("clothing.tshirt", in: chicago)
+        #expect(businessTop.quantity == 4)
+        #expect(businessTop.quantityEvidence?.appearanceOffsetUses == 3)
+
+        let runningBusiness = try renderFixture(id: "22-chicago-5d-business-running-overlap")
+        #expect(try item("clothing.workout_top", in: runningBusiness).quantity == 2)
+        #expect(try item("clothing.workout_bottom", in: runningBusiness).quantity == 2)
+
+        let family = try renderFixture(id: "12-family-toddler-7d-seasonal")
+        #expect(try item("clothing.tshirt", owner: "child", in: family).quantityEvidence?.ageMultiplier == 1.75)
+
+        let manual = try renderFixture(id: "14-manual-quantity-survives-refresh")
+        let manualTop = try item("clothing.tshirt", in: manual)
+        #expect(manualTop.quantity == 3)
+        #expect(manualTop.userModified == true)
+        #expect(manualTop.quantityEvidence == nil)
+    }
+
+    // MARK: - Phase 8, Task 1: generation-time trace capture
+
+    @Test func warmLayerQuantityArgumentsSurviveOntoTheDraft() throws {
+        let output = try renderFixture(id: "15-minneapolis-6d-deep-winter")
+        let sweater = try item("clothing.light_sweater", owner: "primary", in: output)
+        #expect(sweater.quantityReasonArguments["quantity"] == "\(sweater.quantity)")
+        #expect(sweater.quantityReasonArguments["days"] != nil)
+    }
+
+    @Test func sharedUmbrellaQuantityArgumentsCaptureQuantityAndRainDays() throws {
+        let output = try renderFixture(id: "38-couple-5d-seattle-shared-umbrella")
+        let umbrella = try item("essentials.umbrella_compact", owner: "shared", in: output)
+        #expect(umbrella.quantityReasonArguments["quantity"] == "\(umbrella.quantity)")
+        #expect(umbrella.quantityReasonArguments["rainDays"] != nil)
+    }
+
+    @Test func sharedGenericQuantityArgumentsCaptureQuantityAndTravelerCount() throws {
+        // toiletries.sunscreen is the family's generic (non-umbrella)
+        // scaleByParty shared item: ceil(4/3) = 2.
+        let output = try renderFixture(id: "37-family4-5d-hiking-camping-outdoor")
+        let sunscreen = try item("toiletries.sunscreen", owner: "shared", in: output)
+        #expect(sunscreen.quantity == 2)
+        #expect(sunscreen.quantityReasonArguments["quantity"] == "2")
+        #expect(sunscreen.quantityReasonArguments["travelerCount"] == "4")
+    }
+
+    @Test func fixedSingletonsCarryEmptyQuantityReasonArguments() throws {
+        let output = try renderFixture(id: "01-chicago-5d-city-balanced")
+        let toothbrush = try item("toiletries.toothbrush", owner: "primary", in: output)
+        #expect(toothbrush.quantityReasonArguments.isEmpty)
+    }
+
+    @Test func satisfiedCapabilitiesNamesWhatASurvivingItemCovers() throws {
+        // Hiking shoes cover walking (substitution.hiking_covers_walking,
+        // fixture 29) — the same fact CoverageSuppression already records on
+        // the *suppressed* walking-shoes row now also lands directly on the
+        // surviving hiking-shoes row, computed once inside
+        // CoverageResolver.resolve, not by inverting the suppression.
+        let output = try renderFixture(id: "29-yellowstone-4d-hiking-camping")
+        let hikingShoes = try item("footwear.hiking_shoes", owner: "primary", in: output)
+        #expect(hikingShoes.satisfiedCapabilities.contains(PackingCapability.everydayWalking.rawValue))
+    }
+
+    @Test func bagStyleConstraintFactIsNilWhenTheRulingNeverLeftItsNoOpGuard() throws {
+        // A checked bag never constrains space — every optional item's
+        // ruling is trivial, so the fact stays nil for all of them.
+        let output = try renderFixture(id: "04-tokyo-15d-prepared-checked")
+        let book = try item("travel_comfort.book", owner: "primary", in: output)
+        #expect(book.bagStyleConstraintFact == nil)
+    }
+
+    @Test func quantityReasonArgumentsNeverWritesAKeyOutsideTheClosedVocabulary() throws {
+        let allowed: Set<String> = ["quantity", "days", "rate", "name", "travelerCount", "rainDays"]
+        for output in try allGoldenFixtures() {
+            for item in output.items {
+                for key in item.quantityReasonArguments.keys {
+                    #expect(
+                        allowed.contains(key),
+                        "\(output.fixture): \(item.canonicalItemID) wrote unlisted quantityReasonArguments key \(key)"
+                    )
+                }
+            }
+        }
+    }
+
+    @Test func phase4RequiredFixturesHoldCoverageContracts() throws {
+        func ids(_ output: GoldenOutput) -> Set<String> {
+            Set(output.items.map(\.canonicalItemID))
+        }
+        func coverage(_ suppressed: String, in output: GoldenOutput) throws -> GoldenCoverageEntry {
+            try #require(output.coverage?.first { $0.suppressed == suppressed })
+        }
+
+        let running = try renderFixture(id: "08-running-sightseeing-footwear")
+        #expect(ids(running).contains("footwear.running_shoes"))
+        #expect(!ids(running).contains("footwear.walking_shoes"))
+        #expect(try coverage("footwear.walking_shoes", in: running).coveredCapabilities == [
+            PackingCapability.everydayWalking.rawValue: "footwear.running_shoes"
+        ])
+
+        let hiking = try renderFixture(id: "18-reykjavik-64d-roadtrip-camping-seasonal")
+        #expect(ids(hiking).contains("footwear.hiking_shoes"))
+        #expect(!ids(hiking).contains("footwear.walking_shoes"))
+        #expect(try coverage("footwear.walking_shoes", in: hiking).coveredCapabilities == [
+            PackingCapability.everydayWalking.rawValue: "footwear.hiking_shoes"
+        ])
+
+        let business = try renderFixture(id: "07-chicago-5d-business-checked")
+        #expect(ids(business).isSuperset(of: ["footwear.dress_shoes", "footwear.walking_shoes"]))
+
+        let rain = try renderFixture(id: "09-seattle-rain-layering")
+        #expect(ids(rain).isSuperset(of: ["clothing.rain_jacket", "clothing.light_sweater"]))
+        #expect(ids(rain).isDisjoint(with: ["clothing.windbreaker", "clothing.light_jacket"]))
+
+        let ski = try renderFixture(id: "21-aspen-5d-skisnow-checked-prepared-snow")
+        #expect(ids(ski).isSuperset(of: [
+            "activities.ski_gloves", "clothing.winter_coat", "clothing.light_sweater", "footwear.boots"
+        ]))
+        #expect(!ids(ski).contains("clothing.gloves"))
+        #expect(try coverage("clothing.gloves", in: ski).coveredCapabilities == [
+            PackingCapability.coldHands.rawValue: "activities.ski_gloves"
+        ])
+
+        let existingShell = try renderFixture(id: "26-seattle-5d-existing-rain-shell")
+        let shellRows = existingShell.items.filter { $0.canonicalItemID == "clothing.rain_jacket" }
+        #expect(shellRows.count == 1)
+        #expect(shellRows.first?.userModified == true)
+        #expect(!ids(existingShell).contains("clothing.windbreaker"))
+    }
+
+    private func ids(_ output: GoldenOutput) -> Set<String> {
+        Set(output.items.map(\.canonicalItemID))
+    }
+
+    /// The five Camping fixtures, read against the Camping V1 boundary.
+    @Test func campingFixturesProveTheV1Contract() throws {
+        let mild = try renderFixture(id: "28-yellowstone-4d-camping-mild")
+        let mildIDs = ids(mild)
+        #expect(mildIDs.isSuperset(of: [
+            "hydration.water_bottle", "miscellaneous.flashlight",
+            "toiletries.insect_repellent", "toiletries.sunscreen"
+        ]))
+        // Camping declares no trail-footwear need: the baseline walking shoes
+        // stay and no hiking shoes appear on a camping-only trip.
+        #expect(mildIDs.contains("footwear.walking_shoes"))
+        #expect(!mildIDs.contains("footwear.hiking_shoes"))
+        #expect(!mildIDs.contains("clothing.rain_jacket"))
+        #expect(!mildIDs.contains("clothing.thermal_top"))
+        #expect(mildIDs.isDisjoint(with: [
+            "activities.tent", "activities.sleeping_bag", "activities.sleeping_pad",
+            "activities.camp_stove", "activities.camp_fuel", "activities.cookware",
+            "activities.food_storage", "activities.camp_chair"
+        ]))
+
+        // Fixtures 28 and 29 differ by exactly one activity, so the difference
+        // between them is exactly Hiking's contribution — trail footwear
+        // included. That attribution is the point of the pair.
+        let composed = try renderFixture(id: "29-yellowstone-4d-hiking-camping")
+        let composedIDs = ids(composed)
+        #expect(composed.items.filter { $0.canonicalItemID == "hydration.water_bottle" }.count == 1)
+        #expect(composed.items.filter { $0.canonicalItemID == "footwear.hiking_shoes" }.count == 1)
+        #expect(composedIDs.subtracting(mildIDs).contains("footwear.hiking_shoes"))
+        #expect(!composedIDs.contains("footwear.walking_shoes"))
+
+        let rain = try renderFixture(id: "30-seattle-5d-camping-rain")
+        #expect(rain.items.filter { $0.canonicalItemID == "clothing.rain_jacket" }.count == 1)
+
+        let hot = try renderFixture(id: "31-phoenix-5d-camping-hot")
+        #expect(hot.items.filter { $0.canonicalItemID == "toiletries.sunscreen" }.count == 1)
+        #expect(!ids(hot).contains("clothing.thermal_top"))
+
+        let cold = try renderFixture(id: "32-denver-5d-camping-cold")
+        #expect(ids(cold).contains("clothing.thermal_top"))
+    }
+
+    /// The long trip must improve because Camping has a general contract —
+    /// not because Reykjavik or 64 days is special-cased. Its footwear is
+    /// Hiking's doing, exactly as at the Phase 4 baseline.
+    @Test func theLongRoadTripImprovesThroughTheGeneralCampingContract() throws {
+        let long = try renderFixture(id: "18-reykjavik-64d-roadtrip-camping-seasonal")
+        let longIDs = ids(long)
+        #expect(longIDs.isSuperset(of: [
+            "miscellaneous.flashlight", "toiletries.insect_repellent", "toiletries.sunscreen"
+        ]))
+        #expect(long.items.filter { $0.canonicalItemID == "hydration.water_bottle" }.count == 1)
+        #expect(!longIDs.contains("clothing.thermal_top"))   // August: no cold signal
+
+        // Fixture 18 is roadTrip + hiking + camping. Its trail footwear comes
+        // from Hiking and must be unchanged from the Phase 4 baseline — if
+        // this fixture's footwear moves at all, Camping has overreached.
+        #expect(long.items.filter { $0.canonicalItemID == "footwear.hiking_shoes" }.count == 1)
+        for row in long.items where row.canonicalItemID == "footwear.hiking_shoes" {
+            // Whichever of the two hiking-attributed codes the baseline
+            // recorded (`applyCoverage` rewrites the coverer to the
+            // substitution copy when it absorbs the walking need), Camping
+            // must never own this row.
+            #expect(row.reasonCode != "activity.camping")
+            #expect(["activity.hiking", "substitution.hiking_covers_walking"].contains(row.reasonCode))
+        }
+    }
+
+    /// Full-ledger proof that `TripContextCompiler` compiles every real,
+    /// fixture-derived trip in the golden ledger deterministically and
+    /// without crashing. Every one of the 32 fixtures is a real, well-formed
+    /// trip, so none should produce an "unsupportedButSafe" `dates` or
+    /// `party` diagnostic. Fixture 25 (cosplayConvention) is EXPECTED to
+    /// carry an "activities" diagnostic — an unknown id must stay inert
+    /// rather than be mapped onto a known activity. Fixture 18 no longer
+    /// does: Phase 5 closed the camping finding by giving camping a real
+    /// contract, so it is now a known activity like any other.
+    @Test func everyGoldenFixtureCompilesToADeterministicSnapshot() throws {
+        let file = try JSONDecoder().decode(
+            GoldenFixtureFile.self,
+            from: Data(contentsOf: Self.fixturesFile)
+        )
+        let rules = try SharedLibrary.rules()
+        let destinations = try SharedLibrary.testDestinations()
+        let weatherFixtures = try SharedLibrary.weatherFixtures()
+
+        for fixture in file.fixtures {
+            let context = try buildContext(fixture: fixture, destinations: destinations, weatherFixtures: weatherFixtures)
+            let first = TripContextCompiler.compile(context, rules: rules)
+            let second = TripContextCompiler.compile(context, rules: rules)
+            #expect(first == second, "\(fixture.id): compilation must be deterministic")
+            let unexpectedDiagnostics = first.diagnostics.filter { $0.field != "activities" }
+            #expect(unexpectedDiagnostics.isEmpty, "\(fixture.id): unexpected diagnostic \(unexpectedDiagnostics)")
+        }
+    }
+
+    /// Renders one fixture by ID, decoded back into the golden schema — for
+    /// schema-focused tests that don't need the full matrix comparison.
+    func renderFixture(id: String) throws -> GoldenOutput {
+        let file = try JSONDecoder().decode(
+            GoldenFixtureFile.self,
+            from: Data(contentsOf: Self.fixturesFile)
+        )
+        guard let fixture = file.fixtures.first(where: { $0.id == id }) else {
+            throw ResourceError.missing("fixture \(id)")
+        }
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let destinations = try SharedLibrary.testDestinations()
+        let weatherFixtures = try SharedLibrary.weatherFixtures()
+        let json = try render(
+            fixture: fixture,
+            engineVersion: file.engineVersion,
+            engine: engine,
+            destinations: destinations,
+            weatherFixtures: weatherFixtures
+        )
+        return try JSONDecoder().decode(GoldenOutput.self, from: Data(json.utf8))
+    }
+
+    /// Renders every fixture in the manifest — the Swift-side equivalent of
+    /// `scripts/audit_recommendation_traces.py`'s own fixture sweep, scoped
+    /// to invariants a single Swift test wants to check across all 38.
+    func allGoldenFixtures() throws -> [GoldenOutput] {
+        let file = try JSONDecoder().decode(
+            GoldenFixtureFile.self,
+            from: Data(contentsOf: Self.fixturesFile)
+        )
+        return try file.fixtures.map { try renderFixture(id: $0.id) }
+    }
+
+    /// Shared lookup for tests that only need one item out of one rendered
+    /// fixture — the same shape `phase3RequiredFixturesHoldClothingQuantityContracts`
+    /// already defines locally; kept here too so file-scope tests can reuse
+    /// it without duplicating the lookup.
+    func item(_ id: String, owner: String = "primary", in output: GoldenOutput) throws -> GoldenItem {
+        try #require(output.items.first { $0.owner == owner && $0.canonicalItemID == id })
+    }
+
+    /// Renders one fixture by ID into real `PackingItemDraft` values — for
+    /// `RecommendationTrace` facet tests, which read `PackingItemDraft`
+    /// fields directly and have no use for the JSON-flattened `GoldenItem`
+    /// schema `renderFixture` produces. Reuses the same `buildContext`
+    /// construction and the same `existing`/`overrides` replay `render`
+    /// does, never a second rendering path — several fixtures (14, 27) are
+    /// only meaningful with their `existing`/`overrides` rows applied.
+    func engineDrafts(for id: String) throws -> [PackingItemDraft] {
+        let file = try JSONDecoder().decode(
+            GoldenFixtureFile.self,
+            from: Data(contentsOf: Self.fixturesFile)
+        )
+        guard let fixture = file.fixtures.first(where: { $0.id == id }) else {
+            throw ResourceError.missing("fixture \(id)")
+        }
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let destinations = try SharedLibrary.testDestinations()
+        let weatherFixtures = try SharedLibrary.weatherFixtures()
+        let context = try buildContext(fixture: fixture, destinations: destinations, weatherFixtures: weatherFixtures)
+        let existing = (fixture.existing ?? []).map { row in
+            PackingItemDraft(
+                canonicalItemID: row.canonicalItemID,
+                displayName: row.displayName,
+                category: PackingCategory(rawValue: row.category) ?? .miscellaneous,
+                quantity: row.quantity,
+                importance: .normal,
+                sourceSignals: [],
+                reason: "",
+                isUserAdded: row.isUserAdded ?? false,
+                isUserModified: row.isUserModified
+            )
+        }
+        let overrides = (fixture.overrides ?? []).map {
+            RecommendationOverrideDraft(canonicalItemID: $0.canonicalItemID, action: $0.action)
+        }
+        return engine.generate(context: context, existing: existing, overrides: overrides)
+    }
+
     // MARK: - Context construction
 
-    private func render(
+    /// Builds the `TripContext` a given fixture describes — the same
+    /// construction `render` feeds into `engine.generateDetailed`, factored
+    /// out so other tests (e.g. the full-ledger snapshot-compilation test)
+    /// can reuse it without duplicating destination/weather/party resolution.
+    private func buildContext(
         fixture: GoldenFixture,
-        engineVersion: String,
-        engine: PackingEngine,
         destinations: [Destination],
         weatherFixtures: [String: WeatherFixture]
-    ) throws -> String {
+    ) throws -> TripContext {
         guard let destination = destinations.first(where: { $0.city == fixture.destination }) else {
             throw ResourceError.missing("destination \(fixture.destination)")
         }
@@ -142,7 +511,7 @@ struct GoldenEngineTests {
         prefs.homeCountrySource = .userConfirmed
 
         let party = Self.party(from: fixture.party)
-        let context = TripContext(
+        return TripContext(
             destination: destination,
             startDate: start,
             endDate: end,
@@ -162,6 +531,16 @@ struct GoldenEngineTests {
             preferences: prefs,
             party: party ?? .solo()
         )
+    }
+
+    private func render(
+        fixture: GoldenFixture,
+        engineVersion: String,
+        engine: PackingEngine,
+        destinations: [Destination],
+        weatherFixtures: [String: WeatherFixture]
+    ) throws -> String {
+        let context = try buildContext(fixture: fixture, destinations: destinations, weatherFixtures: weatherFixtures)
 
         let existing = (fixture.existing ?? []).map { row in
             PackingItemDraft(
@@ -172,6 +551,7 @@ struct GoldenEngineTests {
                 importance: .normal,
                 sourceSignals: [],
                 reason: "",
+                isUserAdded: row.isUserAdded ?? false,
                 isUserModified: row.isUserModified
             )
         }
@@ -224,8 +604,15 @@ struct GoldenEngineTests {
     /// Everything the diff should see, nothing volatile. UUIDs become stable
     /// role-derived owner slugs; signals are sorted because the engine builds
     /// them in dictionary-iteration order.
-    private struct GoldenItem: Codable {
+    struct GoldenItem: Codable {
         var owner: String
+        /// Who is responsible for bringing the item — distinct from `owner`,
+        /// which is whose item it is. "unassigned" when no traveler is
+        /// assigned (e.g. shared items); "unknown" if a traveler is
+        /// assigned but the ID doesn't resolve to a slug — a dangling
+        /// reference that should surface in the diff, not be silently
+        /// folded into "unassigned". Never a raw UUID.
+        var carrier: String
         var canonicalItemID: String
         var displayName: String
         var category: String
@@ -233,30 +620,50 @@ struct GoldenEngineTests {
         var importance: String
         var signals: [String]
         var reasonCode: String
+        /// The structured values the reason template was filled with (e.g.
+        /// rain day counts). Empty when the reason carries no arguments.
+        var reasonArguments: [String: String]
         var reason: String
         var quantityReason: String
+        var quantityEvidence: ClothingQuantityEvidence?
+        /// Structured arguments behind quantityReason for the non-clothing
+        /// quantity families (Phase 8) — the same role reasonArguments plays
+        /// for the inclusion reason. Closed key vocabulary; empty for fixed
+        /// singletons and for the clothing family (quantityEvidence covers
+        /// it there).
+        var quantityReasonArguments: [String: String]
+        /// itemCapabilities ∩ activeNeeds for this surviving item (Phase 8)
+        /// — computed inside CoverageResolver.resolve's own loop, not by
+        /// inverting coverageSuppressions.
+        var satisfiedCapabilities: [String]
+        /// Whether this item's survival on a space-constrained bag was
+        /// contingent on essentialOptionalTags protection (Phase 8). Nil
+        /// when the bag/style ruling never left its no-op guard.
+        var bagStyleConstraintFact: BagStyleConstraintFact?
         var userModified: Bool?
     }
 
     /// One coverage suppression: the needs the item would have covered and
     /// what covered them instead (empty `coveredBy` = the need was absent).
-    private struct GoldenCoverageEntry: Codable {
+    struct GoldenCoverageEntry: Codable {
         var owner: String
         var suppressed: String
         var capabilities: [String]
         var coveredBy: [String]
+        var coveredCapabilities: [String: String]?
+        var refutedCapabilities: [String]?
     }
 
     /// One recorded constraint resolution: the machine key, the one-sentence
     /// user-terms summary, and the canonical IDs it removed.
-    private struct GoldenConstraintEntry: Codable {
+    struct GoldenConstraintEntry: Codable {
         var owner: String
         var constraint: String
         var summary: String
         var items: [String]
     }
 
-    private struct GoldenOutput: Codable {
+    struct GoldenOutput: Codable {
         var fixture: String
         var engineVersion: String
         var items: [GoldenItem]
@@ -286,6 +693,11 @@ struct GoldenEngineTests {
             return slugs[id] ?? "unknown"
         }
 
+        func carrier(_ item: PackingItemDraft) -> String {
+            guard let id = item.assignedTravelerID else { return "unassigned" }
+            return slugs[id] ?? "unknown"
+        }
+
         let golden = GoldenOutput(
             fixture: fixtureID,
             engineVersion: engineVersion,
@@ -293,6 +705,7 @@ struct GoldenEngineTests {
                 .map { item in
                     GoldenItem(
                         owner: owner(item),
+                        carrier: carrier(item),
                         canonicalItemID: item.canonicalItemID ?? "custom:\(item.displayName)",
                         displayName: item.displayName,
                         category: item.category.rawValue,
@@ -300,8 +713,13 @@ struct GoldenEngineTests {
                         importance: item.importance.rawValue,
                         signals: item.sourceSignals.map(\.rawValue).sorted(),
                         reasonCode: item.reasonCode,
+                        reasonArguments: item.reasonArguments,
                         reason: item.reason,
                         quantityReason: item.quantityReason,
+                        quantityEvidence: item.quantityEvidence,
+                        quantityReasonArguments: item.quantityReasonArguments,
+                        satisfiedCapabilities: item.satisfiedCapabilities,
+                        bagStyleConstraintFact: item.bagStyleConstraintFact,
                         userModified: item.isUserModified ? true : nil
                     )
                 }
@@ -315,7 +733,14 @@ struct GoldenEngineTests {
                         owner: suppression.travelerID.flatMap { slugs[$0] } ?? "primary",
                         suppressed: suppression.canonicalItemID,
                         capabilities: suppression.capabilities,
-                        coveredBy: suppression.coveredBy
+                        coveredBy: suppression.coveredBy,
+                        coveredCapabilities: suppression.covered.isEmpty ? nil : Dictionary(
+                            uniqueKeysWithValues: suppression.covered.map {
+                                ($0.capability.rawValue, $0.coveringItemID)
+                            }
+                        ),
+                        refutedCapabilities: suppression.refutedCapabilities.isEmpty ? nil : suppression
+                            .refutedCapabilities.map(\.rawValue).sorted()
                     )
                 }
                 .sorted {

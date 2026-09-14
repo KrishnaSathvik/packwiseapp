@@ -39,7 +39,7 @@ struct WeatherChangeProposal: Identifiable, Equatable, Codable, Sendable {
     var previewNames: [String] {
         let adds = diff.add.map(\.displayName)
         let quantities = diff.quantityChanges.map { change in
-            "\(change.item.displayName) ×\(change.item.quantity) → ×\(change.suggestedQuantity)"
+            "\(change.existing.displayName) ×\(change.existing.quantity) → ×\(change.suggestedQuantity)"
         }
         return Array((adds + quantities).prefix(4))
     }
@@ -195,9 +195,14 @@ enum WeatherChangeProposalLifecycle {
             return true
         }
         let removeCandidates = diff.removeCandidates.filter { existingIDs.contains($0.id) }
+        // Widened (Phase 8, Task 3) from a quantity-only check to the full
+        // causal predicate: left narrow, this would silently drop a
+        // causal-only (quantity-unchanged) refresh proposed through the
+        // weather-change path — the same staleness bug the direct-edit path
+        // fixes, reintroduced through a second entry point.
         let quantityChanges = diff.quantityChanges.filter { change in
-            guard let current = existing.first(where: { $0.id == change.item.id }) else { return false }
-            return !current.isUserModified && current.quantity != change.suggestedQuantity
+            guard let current = existing.first(where: { $0.id == change.existing.id }) else { return false }
+            return !current.isUserModified && current.causallyDiffers(from: change.fresh)
         }
         return RecommendationDiff(
             id: diff.id,
@@ -249,7 +254,7 @@ enum WeatherChangeProposalLifecycle {
         let adds = diff.add.map(\.recommendationKey).sorted().joined(separator: ",")
         let removes = diff.removeCandidates.map(\.recommendationKey).sorted().joined(separator: ",")
         let quantities = diff.quantityChanges
-            .map { "\($0.item.recommendationKey):\($0.suggestedQuantity)" }
+            .map { "\($0.existing.recommendationKey):\($0.suggestedQuantity)" }
             .sorted()
             .joined(separator: ",")
         return [adds, removes, quantities].joined(separator: "|")

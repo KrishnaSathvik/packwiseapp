@@ -1,5 +1,5 @@
 {
-  "comment": "Golden-harness fixtures for the packing engine (Engine V2 plan, Step 1). Dates are frozen absolute values so output never depends on the run date; weather is always the named fixture from weather/named-fixtures.json, injected directly — never fetched. A null weatherFixture deliberately exercises the seasonal-only path (month + latitude). Fixture 02b is constructible at the TripContext level but no shipped control emits laundry 'possible' vs 'planned' yet; the three-way control lands with Step 2's LaundryPlan migration.",
+  "comment": "Golden-harness fixtures for the packing engine (Engine V2 plan, Step 1). Dates are frozen absolute values so output never depends on the run date; weather is always the named fixture from weather/named-fixtures.json, injected directly — never fetched. A null weatherFixture deliberately exercises the seasonal-only path (month + latitude). Fixture 02b is constructible at the TripContext level but no shipped control emits laundry 'possible' vs 'planned' yet; the three-way control lands with Step 2's LaundryPlan migration. Fixtures 18-27 (Phase 1 hardening ledger, Task 3) record realistic-but-exceptional combinations as-is, current behavior included — they are not assertions of correctness, and defects they expose are findings for a later phase, not fixes made here. Fixture 18 uses Reykjavik in place of the plan's 'Anchorage' because Anchorage is not in test-destinations.json and adding a destination was out of this task's authorized file list; Reykjavik is a higher-latitude stand-in that preserves the same seasonal/high-latitude/long-duration intent. Fixture 27 needed an additive 'isUserAdded' field on ExistingEval (GoldenEngineTests.swift / SharedResources.swift), authorized as a narrow test-harness-only extension of Task 3's scope — it defaults to false, so fixtures 1-26 are unaffected.",
   "engineVersion": "v2",
   "fixtures": [
     {
@@ -272,6 +272,343 @@
           { "role": "self", "ageGroup": "adult" },
           { "role": "partner", "ageGroup": "adult" },
           { "role": "child", "ageGroup": "toddler", "needs": ["diapers", "stroller", "comfortItem"] }
+        ]
+      }
+    },
+    {
+      "id": "18-reykjavik-64d-roadtrip-camping-seasonal",
+      "proves": "Plateau at an extreme duration, camping's absent activity rule (stands in for the plan's Anchorage — see file comment), and seasonal-layer choices on the seasonal-only weather path, together on one long road trip",
+      "destination": "Reykjavik",
+      "weatherFixture": null,
+      "startDate": "2027-08-15",
+      "days": 64,
+      "tripTypes": ["roadTrip"],
+      "activities": ["hiking", "camping"],
+      "bagTypes": [],
+      "style": "balanced",
+      "laundry": "planned",
+      "homeCountryCode": "IS"
+    },
+    {
+      "id": "19-phoenix-5d-city-walking-hot",
+      "proves": "Hot, dry city trip must not pull in cold-weather or rain gear",
+      "destination": "Phoenix",
+      "weatherFixture": "PhoenixHotDry",
+      "startDate": "2026-07-20",
+      "days": 5,
+      "tripTypes": ["cityBreak"],
+      "activities": ["walking"],
+      "bagTypes": ["carryOn"],
+      "style": "light",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "20-seattle-5d-vacation-rain-sufficiency",
+      "proves": "Rain gear sufficiency and duplication under sustained wet weather on a vacation (not city-break) trip type",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripTypes": ["vacation"],
+      "activities": ["walking", "sightseeing"],
+      "bagTypes": ["carryOn"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "21-aspen-5d-skisnow-checked-prepared-snow",
+      "proves": "Cold-category completeness for a dedicated ski/snow trip type, which has no ski-specific activity rule to lean on",
+      "destination": "Aspen",
+      "weatherFixture": "AspenSkiSnow",
+      "startDate": "2027-01-10",
+      "days": 5,
+      "tripTypes": ["skiSnow"],
+      "activities": ["sightseeing"],
+      "bagTypes": ["checked"],
+      "style": "prepared",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "22-chicago-5d-business-running-overlap",
+      "proves": "Formal business wear and fitness/running gear must coexist without either crowding out the other",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 5,
+      "tripTypes": ["business"],
+      "activities": ["work", "running"],
+      "bagTypes": ["checked"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "23-cancun-7d-international-beach-personal-item",
+      "proves": "International beach trip in the smallest bag — documents, unmistakable beach identity, and compactness together",
+      "destination": "Cancun",
+      "weatherFixture": "MiamiHotBeach",
+      "startDate": "2026-06-20",
+      "days": 7,
+      "tripTypes": ["beach"],
+      "activities": ["swimming", "beachDays"],
+      "bagTypes": ["personalItem"],
+      "style": "light",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "24-miami-6d-family-infant-no-needs",
+      "proves": "An infant on the party with no declared needs must not trigger diaper/formula/stroller inference — contrast with fixture 12's toddler, which declares needs explicitly",
+      "destination": "Miami",
+      "weatherFixture": "MiamiHotBeach",
+      "startDate": "2026-07-06",
+      "days": 6,
+      "tripTypes": ["vacation"],
+      "activities": ["sightseeing", "walking"],
+      "bagTypes": ["checked"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "party": {
+        "travelMode": "family",
+        "travelers": [
+          { "role": "self", "ageGroup": "adult" },
+          { "role": "partner", "ageGroup": "adult" },
+          { "role": "child", "ageGroup": "infant", "needs": [] }
+        ]
+      }
+    },
+    {
+      "id": "25-chicago-5d-unknown-activity-cosplay",
+      "proves": "A genuinely unknown activity ID must degrade inertly — no crash, no invented items. Identical to fixture 01 with one unknown activity appended, so the diff against 01 isolates its effect",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 5,
+      "tripTypes": ["cityBreak"],
+      "activities": ["sightseeing", "walking", "cosplayConvention"],
+      "bagTypes": ["carryOn"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "26-seattle-5d-existing-rain-shell",
+      "proves": "A user-added rain shell already on the list before regeneration should be recognized as covering the rain need, not duplicated. Identical to fixture 09 except the rain jacket pre-exists as user-modified",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripTypes": ["cityBreak"],
+      "activities": ["sightseeing", "walking"],
+      "bagTypes": ["carryOn"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "existing": [
+        {
+          "canonicalItemID": "clothing.rain_jacket",
+          "displayName": "Rain jacket",
+          "category": "clothing",
+          "quantity": 1,
+          "isUserModified": true
+        }
+      ]
+    },
+    {
+      "id": "27-chicago-5d-custom-item-survives-regeneration",
+      "proves": "A genuinely off-catalog, user-added item (one no rule would ever suggest) survives regeneration unchanged via the isUserAdded pass-through — distinct from fixture 14's isUserModified proxy, which only preserves an edit to an item the rules would already suggest. Identical to fixture 01 plus one custom item",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2026-09-14",
+      "days": 5,
+      "tripTypes": ["cityBreak"],
+      "activities": ["sightseeing", "walking"],
+      "bagTypes": ["carryOn"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "existing": [
+        {
+          "canonicalItemID": "custom.lucky_travel_journal",
+          "displayName": "Lucky travel journal",
+          "category": "miscellaneous",
+          "quantity": 1,
+          "isUserModified": false,
+          "isUserAdded": true
+        }
+      ]
+    },
+    {
+      "id": "28-yellowstone-4d-camping-mild",
+      "proves": "Camping's V1 contract in isolation on the no-signal weather path: no forecast, and an August start at 44.4N so no seasonal warmth fallback, which leaves the gated overnightWarmth need unresolved. Camping declares no trail-footwear need, so ordinary walking shoes survive and no hiking shoes appear. The outdoor trip type already supplies water and repellent and the seasonal-sun path already supplies sunscreen, so the Camping-attributable new row here is the flashlight and the rest is de-duplication",
+      "destination": "Yellowstone",
+      "weatherFixture": null,
+      "startDate": "2027-08-15",
+      "days": 4,
+      "tripTypes": ["outdoor"],
+      "activities": ["camping"],
+      "bagTypes": [],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "29-yellowstone-4d-hiking-camping",
+      "proves": "Hiking and Camping compose into one trip rather than two concatenated checklists: the hydration need both contracts declare yields exactly one water bottle. Identical to fixture 28 plus hiking, so the diff between them is exactly Hiking's contribution — the trail footwear and the walking-shoe suppression included, proving that footwear is Hiking's doing and never Camping's",
+      "destination": "Yellowstone",
+      "weatherFixture": null,
+      "startDate": "2027-08-15",
+      "days": 4,
+      "tripTypes": ["outdoor"],
+      "activities": ["hiking", "camping"],
+      "bagTypes": [],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "30-seattle-5d-camping-rain",
+      "proves": "Camping never manufactures weather: a rain shell on a camping trip comes from the existing rain signals exactly as it does on any other trip, producing exactly one shell and no camping-specific rain item",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripTypes": ["outdoor"],
+      "activities": ["camping"],
+      "bagTypes": ["checked"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "31-phoenix-5d-camping-hot",
+      "proves": "Camping on a hot, sunny trip: sun protection resolves to one row even though Camping's sunProtection need and the hot/UV weather path both want it, and the cold-gated overnightWarmth need stays unresolved",
+      "destination": "Phoenix",
+      "weatherFixture": "PhoenixHotDry",
+      "startDate": "2026-07-13",
+      "days": 5,
+      "tripTypes": ["outdoor"],
+      "activities": ["camping"],
+      "bagTypes": ["checked"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "32-denver-5d-camping-cold",
+      "proves": "The one weather-gated need, resolving: a cold signal is already present in the forecast, so overnightWarmth produces a thermal top. Camping made the need relevant; it did not invent the cold. Hiking is also selected, so the trail footwear here is attributable to Hiking as in fixture 29",
+      "destination": "Denver",
+      "weatherFixture": "DenverColdOutdoor",
+      "startDate": "2026-11-09",
+      "days": 5,
+      "tripTypes": ["outdoor"],
+      "activities": ["hiking", "camping"],
+      "bagTypes": ["checked"],
+      "style": "prepared",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "33-chicago-10d-partial-forecast-seasonal-remainder",
+      "proves": "Byte-stable regression pin of a 10-day Chicago vacation against ChicagoRainyFall. Deviation recorded in the Phase 6 exit report: GoldenEngineTests.buildContext builds weather via MockWeatherService.context(from:start:end:fixtureID:), which tiles a named fixture's days cyclically to fill the full requested span and always reports forecastAvailableForWholeTrip: true — so this fixture resolves to .complete WeatherQuality, not .partial, and does not itself exercise the partial-forecast/seasonal-remainder blend. The blend is proven directly by WeatherNeedHardeningTests.partialForecastBlendsCoveredSignalsWithSeasonalRemainder and .seasonalRemainderNeverDowngradesAPreciseDayItem, which build a genuinely partial TripWeatherContext via WeatherForecastNormalizer.context. Extending the golden fixture schema/pipeline to express a weather fixture shorter than trip days is routed as a follow-up, not in Task 2's authorized file list",
+      "destination": "Chicago",
+      "weatherFixture": "ChicagoRainyFall",
+      "startDate": "2027-07-05",
+      "days": 10,
+      "tripTypes": ["vacation"],
+      "activities": ["walking", "sightseeing"],
+      "bagTypes": ["checked"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "34-reykjavik-5d-cold-windy-no-snow",
+      "proves": "Sustained cold without snow produces ordinary gloves, not ski gloves; coldRain still forces a rain shell that also covers the wind need",
+      "destination": "Reykjavik",
+      "weatherFixture": "ReykjavikColdWindy",
+      "startDate": "2026-11-09",
+      "days": 5,
+      "tripTypes": ["cityBreak"],
+      "activities": ["sightseeing", "walking"],
+      "bagTypes": ["carryOn"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "35-denver-5d-business-snow",
+      "proves": "Snow and business trip-type needs compose without footwear conflict; cold-without-snow gloves, Task 3, also apply here",
+      "destination": "Denver",
+      "weatherFixture": "DenverColdOutdoor",
+      "startDate": "2026-01-12",
+      "days": 5,
+      "tripTypes": ["business"],
+      "activities": ["work"],
+      "bagTypes": ["checked"],
+      "style": "prepared",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "36-seattle-5d-rain-hiking",
+      "proves": "Hiking's activity-contract needs and the weather rain shell compose without duplication; footwear suppression is unchanged from Phase 4/5's evidence",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripTypes": ["outdoor"],
+      "activities": ["hiking"],
+      "bagTypes": ["checked"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "37-family4-5d-hiking-camping-outdoor",
+      "proves": "F-5: flashlight stays personal-per-traveler for a family (four rows, not one shared); sunscreen and insect repellent scale by sharingPolicies; owner and carrier remain distinct for the toddler's items",
+      "destination": "Yellowstone",
+      "weatherFixture": null,
+      "startDate": "2027-08-15",
+      "days": 5,
+      "tripTypes": ["outdoor"],
+      "activities": ["hiking", "camping"],
+      "bagTypes": ["checked"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "party": {
+        "travelMode": "family",
+        "travelers": [
+          {"role": "self", "ageGroup": "adult"},
+          {"role": "partner", "ageGroup": "adult"},
+          {"role": "child", "ageGroup": "child"},
+          {"role": "child", "ageGroup": "toddler"}
+        ]
+      }
+    },
+    {
+      "id": "38-couple-5d-seattle-shared-umbrella",
+      "proves": "A couple with rain in the forecast shares one umbrella (scaleByParty, per:2) rather than one each; personal rain jackets remain per-traveler",
+      "destination": "Seattle",
+      "weatherFixture": "SeattleWetCity",
+      "startDate": "2026-10-05",
+      "days": 5,
+      "tripTypes": ["vacation"],
+      "activities": ["walking", "sightseeing"],
+      "bagTypes": ["carryOn"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US",
+      "party": {
+        "travelMode": "couple",
+        "travelers": [
+          {"role": "self", "ageGroup": "adult"},
+          {"role": "partner", "ageGroup": "adult"}
         ]
       }
     }

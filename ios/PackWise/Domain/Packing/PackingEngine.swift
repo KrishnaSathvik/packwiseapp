@@ -8,6 +8,11 @@ struct EngineGeneration: Sendable {
     var items: [PackingItemDraft]
     var coverageSuppressions: [CoverageSuppression]
     var constraintDecisions: [ConstraintDecision]
+    /// Diagnostics from compiling a `TripContextSnapshot` for this
+    /// generation — validation/observability only. No decision logic in this
+    /// file reads from the snapshot; it is compiled purely to attach these
+    /// diagnostics to the return value. Not serialized into golden JSON.
+    var contextDiagnostics: [ContextDiagnostic]
 }
 
 /// Raw constraint drops collected during resolution, aggregated into
@@ -31,14 +36,30 @@ struct PackingEngine: Sendable {
         existing: [PackingItemDraft] = [],
         overrides: [RecommendationOverrideDraft] = []
     ) -> EngineGeneration {
+        // Compiled once. Phase 3 passes the normalized snapshot only to the
+        // clothing quantity family; every other decision family remains on
+        // raw TripContext until its own hardening phase.
+        let snapshot = TripContextCompiler.compile(context, rules: rules)
         let party = context.effectiveParty
         let generated = party.usesSimpleList
-            ? generateSimple(context: context, existing: existing, overrides: overrides)
-            : generateForParty(context: context, existing: existing, overrides: overrides)
+            ? generateSimple(context: context, snapshot: snapshot, existing: existing, overrides: overrides)
+            : generateForParty(context: context, snapshot: snapshot, existing: existing, overrides: overrides)
         return EngineGeneration(
-            items: generated.items.map { PartyInvariants.normalize($0, in: party) },
+            items: generated.items.map { item in
+                // Ambiguous explicit party items stay unassigned. Coverage
+                // has already isolated them from every traveler group; do
+                // not undo that fail-safe by guessing the primary here.
+                if !party.usesSimpleList,
+                   item.ownershipType == .personal,
+                   item.travelerID == nil,
+                   (item.isUserAdded || item.isUserModified) {
+                    return item
+                }
+                return PartyInvariants.normalize(item, in: party)
+            },
             coverageSuppressions: generated.suppressions,
-            constraintDecisions: ConstraintResolver.decisions(from: generated.drops)
+            constraintDecisions: ConstraintResolver.decisions(from: generated.drops),
+            contextDiagnostics: snapshot.diagnostics
         )
     }
 
@@ -47,7 +68,13 @@ struct PackingEngine: Sendable {
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
     ) -> RecommendationDiff {
-        let generated = generate(context: context, existing: [], overrides: overrides)
+        // Merge-aware baseline (Phase 8, Task 3): reuses resolve()'s
+        // already-correct existing-item merge branch instead of diffing
+        // against a from-scratch generation that discards it. This is not
+        // new decision logic — every other caller of generate() already
+        // passes real existing drafts; recommendationDiff was the one place
+        // that wasn't.
+        let generated = generate(context: context, existing: existing, overrides: overrides)
         if context.effectiveParty.usesSimpleList {
             return simpleDiff(generated: generated, existing: existing)
         }
@@ -60,8 +87,8 @@ struct PackingEngine: Sendable {
         for item in existing where !item.isUserAdded && !item.isUserModified {
             if !generatedKeys.contains(item.recommendationKey) {
                 removeCandidates.append(item)
-            } else if let fresh = generatedByKey[item.recommendationKey], fresh.quantity != item.quantity {
-                quantityChanges.append(QuantityChangeSuggestion(item: item, suggestedQuantity: fresh.quantity))
+            } else if let fresh = generatedByKey[item.recommendationKey], item.causallyDiffers(from: fresh) {
+                quantityChanges.append(QuantityChangeSuggestion(existing: item, fresh: fresh))
             }
         }
         return RecommendationDiff(add: add, removeCandidates: removeCandidates, quantityChanges: quantityChanges)
@@ -88,8 +115,8 @@ struct PackingEngine: Sendable {
             guard let id = item.canonicalItemID else { continue }
             if !generatedIDs.contains(id) {
                 removeCandidates.append(item)
-            } else if let fresh = generatedByID[id], fresh.quantity != item.quantity {
-                quantityChanges.append(QuantityChangeSuggestion(item: item, suggestedQuantity: fresh.quantity))
+            } else if let fresh = generatedByID[id], item.causallyDiffers(from: fresh) {
+                quantityChanges.append(QuantityChangeSuggestion(existing: item, fresh: fresh))
             }
         }
         return RecommendationDiff(add: add, removeCandidates: removeCandidates, quantityChanges: quantityChanges)
@@ -97,11 +124,12 @@ struct PackingEngine: Sendable {
 
     private func generateSimple(
         context: TripContext,
+        snapshot: TripContextSnapshot,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
     ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
         var drops: ConstraintDrops = []
-        let suggestions = ruleSuggestions(for: context)
+        let suggestions = ruleSuggestions(for: context, snapshot: snapshot)
         let resolved = resolve(
             suggestions: suggestions,
             context: context,
@@ -112,22 +140,28 @@ struct PackingEngine: Sendable {
             assignedTravelerID: context.effectiveParty.primary.id,
             drops: &drops
         )
-        let (covered, suppressions) = applyCoverage(resolved, context: context)
+        let (covered, suppressions) = applyCoverage(resolved, snapshot: snapshot)
         let completed = addCompanions(covered, context: context, overrides: overrides)
-        return (applyQuantities(completed, context: context), suppressions, drops)
+        return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops)
     }
 
     private func generateForParty(
         context: TripContext,
+        snapshot: TripContextSnapshot,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
     ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
         var drops: ConstraintDrops = []
         let party = context.effectiveParty
-        let sharedIDs = Set(rules.party.sharedByDefault)
         // Weather and trip-wide activity signals are computed once, then split
         // into personal vs shared effects so rain does not become 4 umbrellas.
-        let tripSuggestions = ruleSuggestions(for: tripWideContext(context))
+        // Activities are trip-scoped, so the trip-wide snapshot is compiled
+        // once here and never per traveler.
+        let tripContext = tripWideContext(context)
+        let tripSuggestions = ruleSuggestions(
+            for: tripContext,
+            snapshot: TripContextCompiler.compile(tripContext, rules: rules)
+        )
         var sharedCollected: [String: RuleSuggestion] = [:]
         var result: [PackingItemDraft] = existing.filter(\.isUserAdded)
 
@@ -140,7 +174,7 @@ struct PackingEngine: Sendable {
             var personal: [RuleSuggestion] = []
             for suggestion in collected.values {
                 if shouldSkip(suggestion.canonicalItemID, for: traveler) { continue }
-                if sharedIDs.contains(suggestion.canonicalItemID) {
+                if ConstraintResolver.sharingResolution(for: suggestion.canonicalItemID, rules: rules.party, context: context, party: party).isShared {
                     mergeSuggestion(suggestion, into: &sharedCollected)
                 } else {
                     personal.append(suggestion)
@@ -172,9 +206,9 @@ struct PackingEngine: Sendable {
 
         var seen = Set<UUID>()
         result = result.filter { seen.insert($0.id).inserted }
-        let (covered, suppressions) = applyCoverage(result, context: context)
+        let (covered, suppressions) = applyCoverage(result, snapshot: snapshot)
         let completed = addCompanions(covered, context: context, overrides: overrides)
-        return (applyQuantities(completed, context: context), suppressions, drops)
+        return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops)
     }
 
     private func tripWideContext(_ context: TripContext) -> TripContext {
@@ -347,7 +381,10 @@ struct PackingEngine: Sendable {
         ReasonRenderer.render(code: code, arguments: arguments, templates: rules.reasons.templates, category: category, fallback: fallback)
     }
 
-    private func ruleSuggestions(for context: TripContext) -> [RuleSuggestion] {
+    private func ruleSuggestions(
+        for context: TripContext,
+        snapshot: TripContextSnapshot
+    ) -> [RuleSuggestion] {
         var collected: [String: RuleSuggestion] = [:]
 
         func add(_ ids: [String], signal: RecommendationSignal, code: String, arguments: [String: String] = [:], fallback: String) {
@@ -394,6 +431,11 @@ struct PackingEngine: Sendable {
             }
         }
 
+        // Phase 5: typed activity contracts. Needs and the JSON `add` rows
+        // above flow into the same `collected` dictionary, so composition and
+        // de-duplication are structural rather than asserted afterwards.
+        addActivityNeeds(context: context, snapshot: snapshot, into: &collected)
+
         for chip in context.contextChips {
             if let ids = rules.contextChips[chip.rawValue] {
                 add(ids, signal: .userPreference, code: "preference.\(chip.rawValue)", fallback: chipReason(chip))
@@ -428,7 +470,7 @@ struct PackingEngine: Sendable {
             )
         }
 
-        addWeather(context: context, into: &collected)
+        addWeather(context: context, snapshot: snapshot, into: &collected)
 
         if context.bagType == .carryOn || context.bagType == .personalItem || context.transportation == .flight {
             add(
@@ -442,8 +484,51 @@ struct PackingEngine: Sendable {
         return Array(collected.values)
     }
 
-    private func addWeather(context: TripContext, into collected: inout [String: RuleSuggestion]) {
-        guard let weather = context.weather, weather.isPreciseForecast || !weather.dailyForecast.isEmpty else {
+    /// Resolves the trip's composed `Set<ActivityNeed>` into candidate items.
+    ///
+    /// The weather boundary lives here: an activity may participate in
+    /// existing weather logic but may never manufacture weather, so a
+    /// weather-gated need resolves to nothing unless the projection already
+    /// carries a cold signal. Needs are emitted in sorted order so emission
+    /// never depends on set iteration.
+    private func addActivityNeeds(
+        context: TripContext,
+        snapshot: TripContextSnapshot,
+        into collected: inout [String: RuleSuggestion]
+    ) {
+        let ordered = snapshot.knownActivityIDs
+        let activityNeeds = ActivityContracts.needs(for: ordered)
+        guard !activityNeeds.isEmpty else { return }
+
+        let coverageContext = CoverageContext(snapshot: snapshot, thresholds: rules.weather.thresholds)
+        let coldSignals: Set<WeatherSignal> = [.snowExposure, .sustainedCold, .freezingCold, .coldEvenings]
+        let hasColdSignal = !coverageContext.weatherSignals.isDisjoint(with: coldSignals)
+
+        for need in activityNeeds.sorted(by: { $0.rawValue < $1.rawValue }) {
+            // The weather boundary: a gated need never creates its own weather.
+            if need.isWeatherGated && !hasColdSignal { continue }
+            guard let origin = ActivityContracts.originatingActivity(for: need, in: ordered) else { continue }
+            addIDs(
+                ActivityContracts.needCandidates[need] ?? [],
+                signal: .activity,
+                code: "activity.\(origin)",
+                arguments: ["destination": context.destination.displayName],
+                fallback: activityReason(origin, destination: context.destination.displayName),
+                context: context,
+                into: &collected
+            )
+        }
+    }
+
+    private func addWeather(context: TripContext, snapshot: TripContextSnapshot, into collected: inout [String: RuleSuggestion]) {
+        switch snapshot.weatherQuality {
+        case .missing, .seasonalOnly:
+            addSeasonal(context: context, into: &collected)
+            return
+        case .partial, .complete:
+            break
+        }
+        guard let weather = context.weather else {
             addSeasonal(context: context, into: &collected)
             return
         }
@@ -532,6 +617,14 @@ struct PackingEngine: Sendable {
                 fallback: "Temperatures may drop more than \(conditions.swing)° between afternoon and evening."
             )
         }
+
+        // Task 2: a partial forecast's uncovered remainder gets the same
+        // conservative seasonal check a fully-unforecast trip already gets.
+        // Safe by construction — addSeasonal only fills `collected[id] == nil`
+        // gaps, so it can never overwrite or duplicate a precise-day item.
+        if case .partial = snapshot.weatherQuality {
+            addSeasonal(context: context, into: &collected)
+        }
     }
 
     private func addSeasonal(context: TripContext, into collected: inout [String: RuleSuggestion]) {
@@ -593,13 +686,13 @@ struct PackingEngine: Sendable {
         }
 
         for suggestion in suggestions {
-            if isRemoved(suggestion.canonicalItemID, ownership: ownership, travelerID: travelerID, overrides: overrides) {
+            if ConstraintResolver.isExplicitlyRemoved(suggestion.canonicalItemID, ownership: ownership, travelerID: travelerID, overrides: overrides) {
                 continue
             }
             let key = recommendationKey(canonical: suggestion.canonicalItemID, ownership: ownership, travelerID: travelerID)
             let existingItem = existingByKey[key] ?? existingByKey["canonical:\(suggestion.canonicalItemID)"]
             if let existingItem {
-                if existingItem.isUserModified || existingItem.isUserAdded {
+                if ConstraintResolver.hasUserAuthority(existingItem) {
                     if !result.contains(where: { $0.id == existingItem.id }) {
                         result.append(existingItem)
                     }
@@ -649,6 +742,12 @@ struct PackingEngine: Sendable {
                     reason: suggestion.reason,
                     reasonCode: suggestion.reasonCode,
                     reasonArguments: suggestion.reasonArguments,
+                    bagStyleConstraintFact: ruling.wasConstraintLive
+                        ? BagStyleConstraintFact(
+                            survivedByEssentialTagProtection: ruling.essentialTagProtected,
+                            wouldTrimUnderKey: ruling.wouldTrimUnderKey
+                          )
+                        : nil,
                     ownershipType: ownership,
                     travelerID: travelerID,
                     assignedTravelerID: assignedTravelerID
@@ -666,20 +765,6 @@ struct PackingEngine: Sendable {
         }
     }
 
-    private func isRemoved(
-        _ canonicalItemID: String,
-        ownership: PackingOwnership,
-        travelerID: UUID?,
-        overrides: [RecommendationOverrideDraft]
-    ) -> Bool {
-        overrides.contains { override in
-            guard override.action == "removed", override.canonicalItemID == canonicalItemID else { return false }
-            if let overrideTraveler = override.travelerID, overrideTraveler != travelerID { return false }
-            if let overrideOwnership = override.ownershipType, overrideOwnership != ownership { return false }
-            return true
-        }
-    }
-
     /// Companions are first-class dependencies: an item on the list pulls in
     /// what it can't work without (laptop → charger, contact solution → case),
     /// including for user-added triggers — with a reason naming the trigger,
@@ -692,7 +777,6 @@ struct PackingEngine: Sendable {
         overrides: [RecommendationOverrideDraft]
     ) -> [PackingItemDraft] {
         var result = items
-        let sharedIDs = Set(rules.party.sharedByDefault)
         var presentShared = Set(items.filter { $0.ownershipType == .shared }.compactMap(\.canonicalItemID))
         var presentByGroup = Dictionary(
             grouping: items.compactMap { item in item.canonicalItemID.map { (substitutionGroup(item), $0) } },
@@ -704,14 +788,15 @@ struct PackingEngine: Sendable {
                   let catalogItem = catalog.item(id: canonical) else { continue }
             for companionID in catalogItem.companions {
                 guard let companion = catalog.item(id: companionID) else { continue }
-                let sharedCompanion = sharedIDs.contains(companionID) && !context.effectiveParty.usesSimpleList
+                let sharedCompanion = !context.effectiveParty.usesSimpleList
+                    && ConstraintResolver.sharingResolution(for: companionID, rules: rules.party, context: context, party: context.effectiveParty).isShared
                 let ownership: PackingOwnership = sharedCompanion ? .shared : item.ownershipType
                 let travelerID = sharedCompanion ? nil : item.travelerID
                 let group = "\(ownership.rawValue):\(travelerID?.uuidString ?? "shared")"
                 if presentShared.contains(companionID) || presentByGroup[group]?.contains(companionID) == true {
                     continue
                 }
-                if isRemoved(companionID, ownership: ownership, travelerID: travelerID, overrides: overrides) {
+                if ConstraintResolver.isExplicitlyRemoved(companionID, ownership: ownership, travelerID: travelerID, overrides: overrides) {
                     continue
                 }
                 let arguments = ["item": item.displayName.lowercased()]
@@ -752,17 +837,18 @@ struct PackingEngine: Sendable {
     /// suppression is recorded rather than silently dropped.
     private func applyCoverage(
         _ items: [PackingItemDraft],
-        context: TripContext
+        snapshot: TripContextSnapshot
     ) -> ([PackingItemDraft], [CoverageSuppression]) {
-        let needs = CoverageResolver.needs(context: context, thresholds: rules.weather.thresholds)
+        let context = CoverageContext(snapshot: snapshot, thresholds: rules.weather.thresholds)
+        let needs = CoverageResolver.needs(context: context)
         // A solo list has one owner, so user-added items (nil travelerID)
         // fold into the primary's group and can claim coverage. In a party
         // list an unassigned item stays its own group — guessing whose it is
         // would be inference, and ambiguous inference resolves to don't.
-        let primaryID = context.effectiveParty.primary.id
+        let primaryID = context.party.primary.id
         let groups = Dictionary(grouping: items) { (item: PackingItemDraft) -> String in
             if item.ownershipType == .shared { return "shared" }
-            let owner = item.travelerID ?? (context.effectiveParty.usesSimpleList ? primaryID : nil)
+            let owner = item.travelerID ?? (context.party.usesSimpleList ? primaryID : nil)
             return "personal:\(owner?.uuidString ?? "unassigned")"
         }
         var keptAll: [PackingItemDraft] = []
@@ -772,7 +858,9 @@ struct PackingEngine: Sendable {
             // The versatile shoe that absorbed the walking need keeps V1's
             // substitution copy until Step 4's trace-driven reasons land.
             for suppression in suppressions where suppression.canonicalItemID == "footwear.walking_shoes" {
-                guard let coverer = suppression.coveredBy.first,
+                guard let coverer = suppression.covered.first(where: {
+                    $0.capability == .everydayWalking
+                })?.coveringItemID,
                       let index = kept.firstIndex(where: { $0.canonicalItemID == coverer })
                 else { continue }
                 let code = coverer == "footwear.hiking_shoes"
@@ -791,37 +879,59 @@ struct PackingEngine: Sendable {
         "\(item.ownershipType.rawValue):\(item.travelerID?.uuidString ?? "shared")"
     }
 
-    private func applyQuantities(_ items: [PackingItemDraft], context: TripContext) -> [PackingItemDraft] {
+    private func applyQuantities(
+        _ items: [PackingItemDraft],
+        context: TripContext,
+        snapshot: TripContextSnapshot
+    ) -> [PackingItemDraft] {
         let engine = QuantityEngine(policies: rules.quantities.policies, reasons: rules.reasons)
         let clothingEngine = ClothingQuantityEngine(reasons: rules.reasons)
-        let party = context.effectiveParty
+        let clothingContext = ClothingQuantityContext(snapshot: snapshot)
+        let party = snapshot.party
 
-        // Formal tops satisfy daily-top uses, so their counts resolve first,
-        // per traveler: two dress shirts on a five-day business trip leave
-        // three days for t-shirts, not seven t-shirts beside them.
-        var formalTopUnits: [String: Int] = [:]
+        // Appearance garments satisfy daily-top uses. Resolve each canonical
+        // garment once per owner group; overlapping source signals never add
+        // phantom units.
+        let outfitIDs: Set<String> = ["clothing.formal_outfit", "clothing.nice_outfit"]
+        var appearanceUnits: [String: Int] = [:]
         for item in items {
             guard let canonical = item.canonicalItemID,
                   let catalogItem = catalog.item(id: canonical),
-                  catalogItem.quantityKind == "formal_top" else { continue }
+                  catalogItem.quantityKind == "formal_top" || outfitIDs.contains(canonical) else { continue }
             let value = item.isUserModified
                 ? item.quantity
-                : engine.quantity(kind: "formal_top", context: context, itemName: catalogItem.displayName).value
-            formalTopUnits[substitutionGroup(item), default: 0] += value
+                : engine.quantity(kind: catalogItem.quantityKind, context: context, itemName: catalogItem.displayName).value
+            appearanceUnits[substitutionGroup(item), default: 0] += value
         }
         return items.map { item in
             var copy = item
             guard let canonical = item.canonicalItemID, let catalogItem = catalog.item(id: canonical) else {
                 return copy
             }
-            if item.isUserModified { return copy }
+            if ConstraintResolver.hasUserAuthority(item) { return copy }
 
             if item.ownershipType == .shared {
-                let policy = rules.party.sharingPolicies[canonical]
-                    ?? SharingPolicyRule(policy: .singlePerParty, per: nil, min: 1, value: 1)
-                if policy.policy != .personalOnly {
-                    copy.quantity = sharedQuantity(policy, context: context, party: party)
-                    copy.quantityReason = sharedQuantityReason(canonical, quantity: copy.quantity, context: context, party: party)
+                let resolution = ConstraintResolver.sharingResolution(for: canonical, rules: rules.party, context: context, party: party)
+                if case .shared(let quantity, let fallback) = resolution {
+                    copy.quantity = quantity
+                    if canonical == "essentials.umbrella_compact", let weather = context.weather, weather.rainDays > 0 {
+                        let rainDaysPhrase = weather.rainDays == 1 ? "1 day" : "\(weather.rainDays) days"
+                        let umbrellaPhrase = quantity == 1 ? "One umbrella" : "\(quantity) umbrellas"
+                        copy.quantityReason = render(
+                            "party.shared_umbrella",
+                            ["rainDaysPhrase": rainDaysPhrase, "umbrellaPhrase": umbrellaPhrase],
+                            fallback: fallback
+                        )
+                        copy.quantityReasonArguments = ["quantity": "\(quantity)", "rainDays": "\(weather.rainDays)"]
+                    } else {
+                        let quantityPhrase = quantity == 1 ? "One" : "\(quantity)"
+                        copy.quantityReason = render(
+                            "party.shared",
+                            ["quantityPhrase": quantityPhrase],
+                            fallback: fallback
+                        )
+                        copy.quantityReasonArguments = ["quantity": "\(quantity)", "travelerCount": "\(party.travelers.count)"]
+                    }
                     return copy
                 }
             }
@@ -834,6 +944,7 @@ struct PackingEngine: Sendable {
             if let care = CareQuantityEngine.quantity(canonicalID: canonical, days: context.durationDays, traveler: traveler) {
                 copy.quantity = care.value
                 copy.quantityReason = render(care.reasonCode, care.arguments, fallback: care.fallback)
+                copy.quantityReasonArguments = care.arguments
                 return copy
             }
 
@@ -847,30 +958,36 @@ struct PackingEngine: Sendable {
             ) {
                 copy.quantity = warm.value
                 copy.quantityReason = render(warm.reasonCode, warm.arguments, fallback: warm.fallback)
+                copy.quantityReasonArguments = warm.arguments
                 return copy
             }
 
             let multipliers = traveler.flatMap { rules.party.ageGroups[$0.ageGroup.rawValue]?.quantityMultipliers } ?? [:]
             // The clothing family runs on the needs-based V2 model; every
             // other kind stays on the legacy policy file untouched.
-            let result = ClothingQuantityEngine.handles(catalogItem.quantityKind)
-                ? clothingEngine.quantity(
+            if ClothingQuantityEngine.handles(catalogItem.quantityKind) {
+                let result = clothingEngine.quantity(
                     kind: catalogItem.quantityKind,
-                    context: context,
+                    context: clothingContext,
                     itemName: catalogItem.displayName,
                     traveler: traveler,
                     multipliers: multipliers,
-                    formalTopUnits: formalTopUnits[substitutionGroup(item)] ?? 0
+                    appearanceUnits: appearanceUnits[substitutionGroup(item)] ?? 0
                 )
-                : engine.quantity(
+                copy.quantity = result.value
+                copy.quantityReason = result.reason
+                copy.quantityEvidence = result.evidence
+            } else {
+                let result = engine.quantity(
                     kind: catalogItem.quantityKind,
                     context: context,
                     itemName: catalogItem.displayName,
                     traveler: traveler,
                     multipliers: multipliers
                 )
-            copy.quantity = result.value
-            copy.quantityReason = result.reason
+                copy.quantity = result.value
+                copy.quantityReason = result.reason
+            }
             // Diapers satisfy most underwear uses — partial coverage, keyed
             // to the explicit diapers need and never the age alone, and a
             // few pairs stay for the potty-training case.
@@ -885,6 +1002,11 @@ struct PackingEngine: Sendable {
                     ["quantity": "\(copy.quantity)", "name": traveler.displayName],
                     fallback: "\(traveler.displayName) is mostly in diapers — \(copy.quantity) pairs as backup."
                 )
+                if var evidence = copy.quantityEvidence {
+                    evidence.basis = "diaperedBackup"
+                    evidence.quantity = copy.quantity
+                    copy.quantityEvidence = evidence
+                }
             }
             return copy
         }
@@ -898,46 +1020,11 @@ struct PackingEngine: Sendable {
         }
     }
 
-    private func sharedQuantity(_ rule: SharingPolicyRule, context: TripContext, party: TripParty) -> Int {
-        let minimum = rule.min ?? 1
-        let per = max(1, rule.per ?? 1)
-        switch rule.policy {
-        case .singlePerParty, .personalOnly:
-            return rule.value ?? 1
-        case .scaleByParty:
-            return max(minimum, Int((Double(party.travelers.count) / Double(per)).rounded(.up)))
-        case .scaleByDevices:
-            return max(minimum, Int((Double(max(1, party.adults.count)) / Double(per)).rounded(.up)))
-        case .scaleByDurationAndParty:
-            return max(minimum, Int((Double(party.travelers.count * context.durationDays) / Double(per)).rounded(.up)))
-        }
-    }
-
-    private func sharedQuantityReason(_ canonical: String, quantity: Int, context: TripContext, party: TripParty) -> String {
-        if canonical == "essentials.umbrella_compact", let weather = context.weather, weather.rainDays > 0 {
-            // Templates can't pluralize, so the phrases arrive pre-built:
-            // never "1 days", never "1 umbrellas", and a couple is a group,
-            // not a "family".
-            let rainDaysPhrase = weather.rainDays == 1 ? "1 day" : "\(weather.rainDays) days"
-            let umbrellaPhrase = quantity == 1 ? "One umbrella" : "\(quantity) umbrellas"
-            return render(
-                "party.shared_umbrella",
-                ["rainDaysPhrase": rainDaysPhrase, "umbrellaPhrase": umbrellaPhrase],
-                fallback: "Rain is expected on \(rainDaysPhrase). \(umbrellaPhrase) should cover your group — no need to pack one each."
-            )
-        }
-        return render(
-            "party.shared",
-            ["quantity": "\(quantity)", "partySize": "\(party.travelers.count)"],
-            fallback: quantity == 1
-                ? "One for the group — not one per person."
-                : "\(quantity) for the group — not one per person."
-        )
-    }
 
     private func activityReason(_ activity: String, destination: String) -> String {
         switch activity {
         case "hiking": "Hiking is on your plans."
+        case "camping": "You're camping on this trip."
         case "running": "You plan to run."
         case "sightseeing": "You'll have sightseeing days in \(destination)."
         default: "Based on what you'll be doing."

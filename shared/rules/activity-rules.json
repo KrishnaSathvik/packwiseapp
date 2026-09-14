@@ -11,12 +11,8 @@
       "health.motion_sickness",
       "toiletries.sunscreen"
     ],
-    "hiking": [
-      "footwear.hiking_shoes",
-      "activities.daypack",
-      "hydration.water_bottle",
-      "health.blister_pads"
-    ],
+    "camping": [],
+    "hiking": [],
     "museums": [
       "clothing.light_sweater"
     ],

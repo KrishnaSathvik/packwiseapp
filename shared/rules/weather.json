@@ -36,7 +36,8 @@
     ],
     "sustainedCold": [
       "clothing.light_sweater",
-      "clothing.hoodie"
+      "clothing.hoodie",
+      "clothing.gloves"
     ],
     "freezingCold": [
       "clothing.thermal_top",
