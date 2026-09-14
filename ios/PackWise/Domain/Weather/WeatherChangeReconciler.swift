@@ -139,13 +139,23 @@ enum WeatherChangeProposalLifecycle {
             .map { "\($0.role.rawValue):\($0.ageGroup.rawValue):\($0.packingResponsibility.rawValue)" }
             .sorted()
             .joined(separator: ",")
+        // Full stable-ordered selections, never the compat scalars: two
+        // different multi-type trips must not share a signature. A singleton
+        // renders exactly as the pre-V2 scalar did, and the empty bag set
+        // keeps the old `notSure` token, so signatures already persisted on
+        // pending proposals stay valid across the upgrade. The token is
+        // fingerprint text only, never a bag value.
+        let tripTypes = TripType.stableOrder.filter(context.tripTypes.contains).map(\.rawValue).joined(separator: "+")
+        let bagTypes = context.bagTypes.isEmpty
+            ? BagTypeLegacyRawValue.notSure.rawValue
+            : BagType.stableOrder.filter(context.bagTypes.contains).map(\.rawValue).joined(separator: "+")
         return [
             destination,
             String(context.startDate.timeIntervalSince1970),
             String(context.endDate.timeIntervalSince1970),
-            context.tripType.rawValue,
+            tripTypes,
             activities,
-            context.bagType.rawValue,
+            bagTypes,
             context.packingStyle.rawValue,
             context.userNotes,
             chips,

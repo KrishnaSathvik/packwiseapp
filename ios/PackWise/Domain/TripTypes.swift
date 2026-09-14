@@ -405,10 +405,14 @@ struct TripContext: Hashable, Sendable {
     var endDate: Date
     var durationDays: Int
     var durationNights: Int
-    var tripType: TripType
+    /// Every selected trip type — the authoritative V2 trip context (never
+    /// empty for a real trip). Serialize only through `TripType.stableOrder`.
+    var tripTypes: Set<TripType>
     var activities: [String]
     var datedActivities: [DatedActivity]
-    var bagType: BagType
+    /// Every selected physical bag. Empty means "Not sure yet": no luggage
+    /// constraint. Serialize only through `BagType.stableOrder`.
+    var bagTypes: Set<BagType>
     var packingStyle: PackingStyle
     var transportation: Transportation
     var laundryAccess: LaundryAccess
@@ -418,6 +422,24 @@ struct TripContext: Hashable, Sendable {
     var weather: TripWeatherContext?
     var preferences: TravelerPreferences
     var party: TripParty = .solo()
+
+    /// TEMPORARY engine compatibility accessor — Tasks 3/4 replace every
+    /// reader with typed needs composed from `tripTypes`. Mirrors
+    /// `TripRecord.tripType`: a singleton resolves to its value; a genuine
+    /// multi-selection fails safe to `.other` (no typed needs) instead of
+    /// promoting one selected type to primary.
+    var tripType: TripType {
+        guard tripTypes.count == 1, let only = tripTypes.first else { return .other }
+        return only
+    }
+
+    /// TEMPORARY engine compatibility accessor — Task 5's `LuggageContext`
+    /// replaces every reader. A singleton resolves to its bag; empty or
+    /// multi-bag fails safe to `.notSure` (no bag constraint).
+    var bagType: BagType {
+        guard bagTypes.count == 1, let only = bagTypes.first else { return .notSure }
+        return only
+    }
 
     var effectiveParty: TripParty {
         party.travelers.isEmpty ? .solo() : party

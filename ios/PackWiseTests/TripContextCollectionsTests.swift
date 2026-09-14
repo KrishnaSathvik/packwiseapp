@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import Testing
 @testable import PackWise
 
@@ -155,6 +156,101 @@ struct TripContextCollectionsTests {
         // an error, unlike an empty trip-type selection.
         let normalized = try BagType.normalizedSet(fromStableJSON: "[]")
         #expect(normalized.values.isEmpty)
+    }
+
+    // MARK: - TripContext carries the full selection (Task 15)
+
+    private func context(tripTypes: Set<TripType>, bagTypes: Set<BagType>) throws -> TripContext {
+        let destination = try #require(try SharedLibrary.testDestinations().first { $0.city == "Chicago" })
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 14))!
+        let end = Calendar.current.date(byAdding: .day, value: 4, to: start)!
+        return TripContext(
+            destination: destination,
+            startDate: start,
+            endDate: end,
+            durationDays: 5,
+            durationNights: 4,
+            tripTypes: tripTypes,
+            activities: ["sightseeing"],
+            datedActivities: [],
+            bagTypes: bagTypes,
+            packingStyle: .balanced,
+            transportation: .unknown,
+            laundryAccess: .none,
+            travelerCount: 1,
+            userNotes: "",
+            contextChips: [],
+            weather: nil,
+            preferences: .deviceDefaults()
+        )
+    }
+
+    @Test func singletonContextSetsExposeTheSameCompatScalarsTheEngineReadsToday() throws {
+        let ctx = try context(tripTypes: [.beach], bagTypes: [.carryOn])
+        #expect(ctx.tripType == .beach)
+        #expect(ctx.bagType == .carryOn)
+        #expect(try self.context(tripTypes: [.business], bagTypes: []).bagType == .notSure,
+                "an empty bag set is the not-sure/no-constraint state")
+    }
+
+    @Test func multiValueContextNeverResolvesAPrimaryValue() throws {
+        let ctx = try context(tripTypes: [.vacation, .cityBreak, .beach], bagTypes: [.personalItem, .checked])
+        #expect(ctx.tripTypes == [.vacation, .cityBreak, .beach], "the context keeps every selected trip type")
+        #expect(ctx.bagTypes == [.personalItem, .checked], "the context keeps every selected bag")
+        #expect(ctx.tripType == .other, "a multi-type selection must fail safe, never pick the first stable value")
+        #expect(ctx.bagType == .notSure, "a multi-bag selection must fail safe to no bag constraint")
+    }
+
+    @Test @MainActor func tripRecordContextCarriesTheFullStoredSelection() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let modelContext = ModelContext(container)
+        let repo = TripRepository(context: modelContext)
+        let destination = try #require(try SharedLibrary.testDestinations().first { $0.city == "Chicago" })
+        let trip = TripRecord(
+            destination: destination, startDate: .now, endDate: .now.addingTimeInterval(2 * 86400),
+            durationDays: 2, durationNights: 1, tripType: .vacation, activities: [], bagType: .notSure,
+            packingStyle: .balanced
+        )
+        modelContext.insert(trip)
+        try repo.applyTripTypes([.beach, .vacation], on: trip)
+        try repo.applyBagTypes([.checked], on: trip)
+
+        let ctx = trip.context(preferences: .deviceDefaults(), weather: nil)
+        #expect(ctx.tripTypes == [.vacation, .beach])
+        #expect(ctx.bagTypes == [.checked])
+    }
+
+    @Test func tripContextSignatureIsByteIdenticalForSingletonSelections() throws {
+        // Pending weather proposals persist this signature. A singleton
+        // selection must keep producing the exact pre-Task-15 segment, so
+        // upgrading never invalidates an existing proposal.
+        let signature = WeatherChangeProposalLifecycle.tripContextSignature(
+            try context(tripTypes: [.beach], bagTypes: [.carryOn])
+        )
+        let segments = signature.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+        #expect(segments[3] == "beach")
+        #expect(segments[5] == "carryOn")
+        let notSure = WeatherChangeProposalLifecycle.tripContextSignature(
+            try context(tripTypes: [.business], bagTypes: [])
+        ).split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+        #expect(notSure[5] == "notSure", "an empty bag set keeps the pre-V2 fingerprint token")
+    }
+
+    @Test func tripContextSignatureDistinguishesMultiValueSelectionsAndIgnoresInsertionOrder() throws {
+        let a = WeatherChangeProposalLifecycle.tripContextSignature(
+            try context(tripTypes: [.beach, .vacation], bagTypes: [.checked, .carryOn])
+        )
+        let b = WeatherChangeProposalLifecycle.tripContextSignature(
+            try context(tripTypes: [.vacation, .beach], bagTypes: [.carryOn, .checked])
+        )
+        let c = WeatherChangeProposalLifecycle.tripContextSignature(
+            try context(tripTypes: [.cityBreak, .vacation], bagTypes: [.carryOn, .checked])
+        )
+        #expect(a == b)
+        #expect(a != c, "two different multi-type selections must not collapse to the same signature")
+        let segments = a.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+        #expect(segments[3] == "vacation+beach")
+        #expect(segments[5] == "carryOn+checked")
     }
 }
 
