@@ -126,7 +126,7 @@ Seventeen states at standard and accessibility-large (iPhone 17 Pro, iOS 26.3), 
 
 1. **Look Around tier is implemented but off.** The brief lists Look Around "where useful". The only evidence (Chicago → glass doors) shows it is not useful by default, so the provider and gate exist behind `DestinationVisualPolicy` (tests cover both settings) and production skips to the map.
 2. **Satellite, not the standard map style.** Labels collide with the destination title and contrast fails on the standard style.
-3. **Trip Detail's progress card no longer overlaps the hero.** The attribution licensing requirement wins over the visual stitch. This is the only Detail layout change.
+3. **Trip Detail's progress card no longer overlaps the hero.** The attribution licensing requirement wins over the visual stitch. This is the only Detail layout change. Krishna approved it as the final layout in Task 9.1.
 4. **Design contract change.** The earlier rule "never a map snapshot" (2026-08-31) is superseded by the brief. `docs/design-system.md` is updated.
 
 ## Findings (not fixed)

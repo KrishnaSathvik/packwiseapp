@@ -2,7 +2,7 @@
 
 Visual source of truth: the 10-screen sheet at [design/ui-flow-overview.png](../design/ui-flow-overview.png). It is the only sheet; where it is silent, derive from its rules rather than inventing.
 
-> **Ruling (2026-08-31):** the app matches the sheet exactly. The palette is the fixed hex set in `ios/PackWise/DesignSystem/PackWiseTheme.swift` and the app renders light-only (`.preferredColorScheme(.light)`). Dark Mode is a later project with its own reference sheet — do not approximate one. The "semantic colors / Dark Mode from day one" guidance below this line is superseded where it conflicts.
+> **Ruling (2026-08-31):** the app matches the sheet exactly. The palette is the fixed hex set in `ios/PackWise/DesignSystem/PackWiseTheme.swift` and the app renders light-only (`UIUserInterfaceStyle = Light` in Info.plist since Task 9.1 — a root `.preferredColorScheme` would override per-screen status-bar requests). Dark Mode is a later project with its own reference sheet — do not approximate one. The "semantic colors / Dark Mode from day one" guidance below this line is superseded where it conflicts.
 
 ## Direction
 
@@ -107,8 +107,14 @@ Review, the Trips Home card, and Trip Detail are sizes of one primitive,
   above the text and below any hero controls. The marker hides rather than
   cover text at large sizes.
 - Apple's imagery attribution sits in the bottom-left corner. It is a
-  licensing requirement: hero text keeps a constant clearance above it, and no
-  card overlaps the hero's bottom edge.
+  licensing requirement: hero text keeps a constant clearance above it,
+  imagery fills from the bottom-leading corner so no aspect crops it
+  (`AttributionSafeImage`), and no card overlaps the hero — Trip Detail's
+  progress card sits below the hero as the final layout (Task 9.1).
+- Trip Detail requests light status-bar glyphs through its clear navigation
+  bar while the hero is under the status bar. Light-only comes from
+  `UIUserInterfaceStyle` in Info.plist; a root `.preferredColorScheme` would
+  override that request.
 - Increase Contrast strengthens the scrim.
 
 ## Motion
