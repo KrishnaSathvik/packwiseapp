@@ -110,7 +110,8 @@ struct FamilySharingTests {
         #expect(items.allSatisfy { $0.assignedTravelerID == nil || $0.ownershipType == .personal }, "no shared item gets a guessed carrier")
         #expect(Self.rows(items, "documents.passport").count == 4, "passports stay personal")
         #expect(Self.rows(items, "documents.travel_insurance").map(\.ownershipType) == [.shared])
-        #expect(Self.rows(items, "electronics.travel_adapter").first?.quantity == 2, "scaleByDevices per 2: four device owners → 2")
+        #expect(Self.rows(items, "electronics.travel_adapter").first?.quantity == 1,
+                "scaleByDevices per 2 (Task 7.2): only You's phone is evidenced; three adults with no device signal add nothing")
         #expect(Self.rows(items, "toiletries.shampoo").first?.quantity == 1)
     }
 
@@ -214,7 +215,83 @@ struct FamilySharingTests {
         let items = Self.engine.generate(context: try Self.context(city: "Tokyo", party: Self.group))
         let adapter = try #require(Self.rows(items, "electronics.travel_adapter").first)
         #expect(adapter.quantityReasonArguments["sharingPolicy"] == SharingPolicy.scaleByDevices.rawValue)
-        #expect(adapter.quantityReasonArguments["deviceCount"] == "4" && adapter.quantityReasonArguments["eligibleConsumerCount"] == nil)
+        #expect(adapter.quantityReasonArguments["deviceCount"] == "1" && adapter.quantityReasonArguments["eligibleConsumerCount"] == nil)
+    }
+
+    /// Task 7.2: the adapter's device count is resolved device ownership —
+    /// the declared devices on the list — never adults plus teens. The
+    /// formula (per 2, min 1) is unchanged.
+    @Test func travelAdapterCountsEvidencedDevicesNotAdultsAndTeens() throws {
+        let you = Traveler.primarySelf()
+        let adult = Traveler(role: .otherAdult, ageGroup: .adult)
+        let laptopAdult = Traveler(role: .otherAdult, ageGroup: .adult, chips: [.bringingLaptop])
+        let teen = Traveler(role: .child, ageGroup: .teen, guardianTravelerID: you.id)
+        struct Row {
+            var name: String
+            var party: TripParty
+            var laptopPreference = false
+            var addedTabletFor: Traveler? = nil
+            var devices: Int
+            var quantity: Int
+        }
+        let rows = [
+            Row(name: "You (phone only) + Adult 1 with no device signal", party: TripParty(travelMode: .group, travelers: [you, adult]), devices: 1, quantity: 1),
+            Row(name: "You phone + laptop", party: TripParty(travelMode: .group, travelers: [you, adult]), laptopPreference: true, devices: 2, quantity: 1),
+            Row(name: "You phone + laptop, Adult 1 explicit laptop", party: TripParty(travelMode: .group, travelers: [you, laptopAdult]),
+                laptopPreference: true, devices: 3, quantity: 2),
+            Row(name: "You phone + laptop, user-added tablet for Adult 1", party: TripParty(travelMode: .group, travelers: [you, adult]),
+                laptopPreference: true, addedTabletFor: adult, devices: 3, quantity: 2),
+            Row(name: "You + teen with no device signal", party: TripParty(travelMode: .family, travelers: [you, teen]), devices: 1, quantity: 1),
+            Row(name: "four adults, only You evidenced (was 4 adults → 2)", party: Self.group, devices: 1, quantity: 1),
+        ]
+        for row in rows {
+            var context = try Self.context(city: "Tokyo", party: row.party)
+            context.preferences.usuallyBringLaptop = row.laptopPreference
+            let existing = row.addedTabletFor.map { traveler in
+                [PackingItemDraft(canonicalItemID: "electronics.tablet", displayName: "Tablet", category: .electronics, quantity: 1,
+                                  importance: .normal, sourceSignals: [], reason: "", isUserAdded: true,
+                                  ownershipType: .personal, travelerID: traveler.id)]
+            } ?? []
+            let items = Self.engine.generate(context: context, existing: existing)
+            let adapter = try #require(Self.rows(items, "electronics.travel_adapter").first, "\(row.name)")
+            #expect(adapter.ownershipType == .shared)
+            #expect(adapter.quantityReasonArguments["deviceCount"] == "\(row.devices)", "\(row.name): \(adapter.quantityReasonArguments)")
+            #expect(adapter.quantity == row.quantity, "\(row.name): quantity \(adapter.quantity)")
+        }
+    }
+
+    /// F1 (Task 7.2): sharing never knows what an infant is. The consumer
+    /// count is exactly the travelers the eligibility metadata passes — so
+    /// changing only the metadata changes the count, with sharing untouched.
+    @Test func eligibleConsumerCountFollowsEligibilityMetadataOnly() throws {
+        let you = Traveler.primarySelf()
+        let party = TripParty(travelMode: .family, travelers: [
+            you, Traveler(role: .partner, ageGroup: .adult),
+            Traveler(role: .child, ageGroup: .child, guardianTravelerID: you.id),
+            Traveler(role: .child, ageGroup: .infant, guardianTravelerID: you.id)
+        ])
+        let context = try Self.context(city: "Miami", party: party, weatherFixture: "MiamiHotBeach")
+        func sunscreen(_ rules: PackingRulesFile) throws -> (row: PackingItemDraft, expectedConsumers: Int) {
+            let catalog = try SharedLibrary.catalog()
+            let items = PackingEngine(catalog: catalog, rules: rules).generate(context: context)
+            let expected = party.travelers.filter {
+                TravelerEligibilityResolver.evaluate(canonicalItemID: "toiletries.sunscreen", traveler: $0, explicitNeeds: $0.needs, signals: [],
+                                                     catalog: catalog, rules: rules.party.eligibility).isEligible
+            }.count
+            return (try #require(items.first { $0.canonicalItemID == "toiletries.sunscreen" }), expected)
+        }
+
+        let current = try sunscreen(Self.rules)
+        #expect(current.row.quantityReasonArguments["eligibleConsumerCount"] == "\(current.expectedConsumers)", "matches today's metadata")
+        #expect(current.row.quantity == max(1, (current.expectedConsumers + 2) / 3))
+
+        var excluding = Self.rules
+        excluding.party.eligibility.families["toiletries.sunscreen"] = .ageSpecific([.adult, .teen, .child, .toddler])
+        let changed = try sunscreen(excluding)
+        #expect(changed.expectedConsumers == 3)
+        #expect(changed.row.quantityReasonArguments["eligibleConsumerCount"] == "3", "metadata alone moved the count")
+        #expect(changed.row.quantityReasonArguments["travelerCount"] == "4")
+        #expect(changed.row.quantity == 1, "scaleByParty per 3 from 3 consumers, not 4 travelers → 2")
     }
 
     /// Manual quantity, Not Needed, owner, and carrier all survive the
@@ -274,7 +351,7 @@ struct FamilySharingTests {
                 let per = try #require(args["per"].flatMap(Int.init))
                 let days = args["days"].flatMap(Int.init) ?? 1
                 #expect(item.quantity == max(1, (consumers * days + per - 1) / per), "quantity scales from eligible consumers")
-            case .scaleByDevices: #expect(args["deviceCount"] == "3" && args["per"] != nil)
+            case .scaleByDevices: #expect(args["deviceCount"] != nil && args["per"] != nil)
             case .singlePerParty, .personalOnly: Issue.record("\(item.canonicalItemID ?? ""): \(policy) resolved above one")
             }
             #expect(item.quantityReason.contains("\(item.quantity)"), "\(item.quantityReason)")

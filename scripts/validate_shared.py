@@ -110,10 +110,14 @@ def load(path: Path):
 
 
 ELIGIBILITY_FAMILIES = {
-    "universal", "adultOrTeen", "ageSpecific", "explicitChildNeed",
+    "universal", "adultOrTeen", "ageSpecific", "explicitChildNeed", "phoneOwnership",
     "deviceSignalRequired", "travelerSignalRequired", "travelerDocument",
 }
 RETIRED_PARTY_KEYS = ("skipForYoungChildren", "skipForInfantsAndToddlers")
+# Task 7.2: the implicit primary-phone signal proves a phone and its charger,
+# nothing else.
+PHONE_OWNERSHIP_ITEMS = {"essentials.phone", "electronics.phone_charger"}
+DEVICE_FAMILIES = {"phoneOwnership", "deviceSignalRequired"}
 
 
 def eligibility_eligible(entry: dict, age: str, needs: set, chips: set) -> bool:
@@ -132,6 +136,8 @@ def eligibility_eligible(entry: dict, age: str, needs: set, chips: set) -> bool:
         return age in entry["ageGroups"]
     if family == "explicitChildNeed":
         return entry["need"] in needs
+    if family == "phoneOwnership":
+        return False
     if family == "deviceSignalRequired":
         return entry.get("signal") is not None and entry["signal"] in chips
     if family == "travelerSignalRequired":
@@ -183,6 +189,20 @@ def eligibility_errors(party: dict, catalog: set, chip_names: set) -> list:
             errors.append(f"eligibility {item_id}: unknown travelers {entry.get('travelers')}")
         if family == "travelerDocument" and not item_id.startswith("documents."):
             errors.append(f"eligibility {item_id}: travelerDocument outside documents")
+    phone_family = {item_id for item_id, entry in table.items() if entry.get("family") == "phoneOwnership"}
+    if phone_family != PHONE_OWNERSHIP_ITEMS:
+        errors.append(f"eligibility phoneOwnership must be exactly {sorted(PHONE_OWNERSHIP_ITEMS)}, got {sorted(phone_family)}")
+    # Device scaling counts resolved device rows, never travelers by age.
+    for item_id, rule in party.get("sharingPolicies", {}).items():
+        devices = rule.get("devices")
+        if rule.get("policy") == "scaleByDevices":
+            if not devices:
+                errors.append(f"party policy {item_id}: scaleByDevices must declare devices")
+            for device in devices or []:
+                if table.get(device, {}).get("family") not in DEVICE_FAMILIES:
+                    errors.append(f"party policy {item_id}: {device} is not a device-ownership item")
+        elif devices is not None:
+            errors.append(f"party policy {item_id}: devices only applies to scaleByDevices")
     # Sensitive families must never be classified permissively.
     for item_id in sorted(table):
         if item_id.startswith("kids.") and table[item_id].get("family") in ("universal", "adultOrTeen"):

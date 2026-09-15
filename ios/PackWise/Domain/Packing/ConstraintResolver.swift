@@ -168,7 +168,9 @@ extension ConstraintResolver {
         /// `scaleByDurationAndParty` scale by. A traveler eligibility removed
         /// is never counted.
         var eligibleConsumerCount: Int
-        /// What `scaleByDevices` scales by (unchanged Phase 7 semantics).
+        /// What `scaleByDevices` scales by (Task 7.2): device rows actually
+        /// on the list — ownership eligibility already resolved them — never
+        /// a count of adults and teens. The formula is unchanged.
         var deviceCount: Int
     }
 

@@ -165,7 +165,14 @@
     "electronics.travel_adapter": {
       "policy": "scaleByDevices",
       "per": 2,
-      "min": 1
+      "min": 1,
+      "devices": [
+        "essentials.phone",
+        "electronics.laptop",
+        "electronics.tablet",
+        "electronics.kindle",
+        "electronics.camera"
+      ]
     },
     "essentials.umbrella_compact": {
       "policy": "scaleByParty",
@@ -355,7 +362,7 @@
     "documents.copies": {"family": "adultOrTeen"},
     "documents.itinerary": {"family": "adultOrTeen"},
     "documents.emergency_contacts": {"family": "adultOrTeen"},
-    "electronics.phone_charger": {"family": "deviceSignalRequired"},
+    "electronics.phone_charger": {"family": "phoneOwnership"},
     "electronics.power_bank": {"family": "deviceSignalRequired"},
     "electronics.laptop": {"family": "deviceSignalRequired", "signal": "bringingLaptop"},
     "electronics.laptop_charger": {"family": "deviceSignalRequired", "signal": "bringingLaptop"},
@@ -375,7 +382,7 @@
     "electronics.power_strip": {"family": "adultOrTeen"},
     "electronics.sim_ejector": {"family": "adultOrTeen"},
     "essentials.wallet": {"family": "adultOrTeen"},
-    "essentials.phone": {"family": "deviceSignalRequired"},
+    "essentials.phone": {"family": "phoneOwnership"},
     "essentials.keys": {"family": "adultOrTeen"},
     "essentials.home_keys": {"family": "adultOrTeen"},
     "essentials.sunglasses": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},

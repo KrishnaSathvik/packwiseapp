@@ -68,10 +68,17 @@
     },
     {
       "items" : [
-        "electronics.headphones",
         "electronics.phone_charger",
-        "electronics.power_bank",
         "essentials.phone"
+      ],
+      "owner" : "child",
+      "reason" : "device_signal.phone",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.headphones",
+        "electronics.power_bank"
       ],
       "owner" : "child",
       "reason" : "device_signal_required",
@@ -79,10 +86,17 @@
     },
     {
       "items" : [
-        "electronics.headphones",
         "electronics.phone_charger",
-        "electronics.power_bank",
         "essentials.phone"
+      ],
+      "owner" : "partner",
+      "reason" : "device_signal.phone",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.headphones",
+        "electronics.power_bank"
       ],
       "owner" : "partner",
       "reason" : "device_signal_required",

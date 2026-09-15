@@ -223,7 +223,7 @@ struct TravelerEligibilityTests {
             canonicalItemID: "electronics.phone_charger", traveler: child, explicitNeeds: [], signals: [.bringingLaptop],
             catalog: Self.catalog, rules: Self.rules.party.eligibility
         )
-        #expect(phone == .requiresExplicitSignal(.device(nil)), "a laptop signal is not a phone signal")
+        #expect(phone == .requiresExplicitSignal(.phone), "a laptop signal is not a phone signal")
     }
 
     // MARK: - Device ownership (Task 7.1)
@@ -269,7 +269,7 @@ struct TravelerEligibilityTests {
         }
     }
 
-    @Test func unsignaledDevicesReachOnlyThePrimaryTraveler() throws {
+    @Test func phoneAndInterimDevicesReachOnlyThePrimaryTraveler() throws {
         let partner = Traveler(role: .partner, ageGroup: .adult)
         let (party, teen) = { () -> (TripParty, Traveler) in
             let you = Traveler.primarySelf()
@@ -287,7 +287,36 @@ struct TravelerEligibilityTests {
             canonicalItemID: "essentials.phone", traveler: partner, explicitNeeds: [], signals: [],
             catalog: Self.catalog, rules: Self.rules.party.eligibility
         )
-        #expect(decision == .requiresExplicitSignal(.device(nil)))
+        #expect(decision == .requiresExplicitSignal(.phone))
+    }
+
+    /// D1 (Task 7.2): PackWise running on the primary traveler's phone is an
+    /// implicit phone-ownership signal — a phone and its charger, nothing
+    /// more. It is not generic device ownership: the primary's headphones and
+    /// power bank are an interim carryover pending the Task 8 device model,
+    /// and a laptop still needs its own signal.
+    @Test func implicitPrimaryPhoneIsNotGenericDeviceOwnership() {
+        let phoneFamily = Set(Self.rules.party.eligibility.families.filter { $0.value == .phoneOwnership }.keys)
+        #expect(phoneFamily == ["essentials.phone", "electronics.phone_charger"])
+
+        func decide(_ id: String, _ traveler: Traveler, signals: Set<ContextChip> = []) -> EligibilityDecision {
+            TravelerEligibilityResolver.evaluate(canonicalItemID: id, traveler: traveler, explicitNeeds: [], signals: signals,
+                                                 catalog: Self.catalog, rules: Self.rules.party.eligibility)
+        }
+        let you = Traveler.primarySelf()
+        #expect(decide("essentials.phone", you) == .eligible(.implicitPrimaryPhone))
+        #expect(decide("electronics.phone_charger", you) == .eligible(.implicitPrimaryPhone), "the charger follows the owned phone")
+        for id in ["electronics.headphones", "electronics.power_bank", "electronics.tablet", "electronics.camera"] {
+            #expect(decide(id, you) == .eligible(.primaryTravelerInterim), "\(id) is not proven by the phone")
+        }
+        #expect(decide("electronics.laptop", you) == .requiresExplicitSignal(.device(.bringingLaptop)), "a phone never proves a laptop on a party list")
+
+        for traveler in [Traveler(role: .partner, ageGroup: .adult), Traveler(role: .otherAdult, ageGroup: .adult),
+                         Traveler(role: .child, ageGroup: .teen), Traveler(role: .child, ageGroup: .child)] {
+            #expect(decide("essentials.phone", traveler) == .requiresExplicitSignal(.phone), "\(traveler.role)/\(traveler.ageGroup)")
+            #expect(decide("electronics.phone_charger", traveler) == .requiresExplicitSignal(.phone))
+            #expect(decide("electronics.headphones", traveler) == .requiresExplicitSignal(.device(nil)))
+        }
     }
 
     @Test func aTeensOwnLaptopSignalIsHonoredWithoutAddingOtherDevices() throws {
@@ -385,9 +414,11 @@ struct TravelerEligibilityTests {
         let (party, toddler) = Self.family(child: Traveler(role: .child, ageGroup: .toddler))
         let generation = Self.engine.generateDetailed(context: try Self.context(party: party))
         let entries = generation.eligibilityDecisions.filter { $0.travelerID == toddler.id }
+        let phone = try #require(entries.first { $0.reason == "device_signal.phone" })
+        #expect(phone.result == .requiresExplicitSignal)
+        #expect(phone.items == ["electronics.phone_charger", "essentials.phone"])
         let device = try #require(entries.first { $0.reason == "device_signal_required" })
-        #expect(device.result == .requiresExplicitSignal)
-        #expect(device.items.contains("electronics.phone_charger"))
+        #expect(device.items.contains("electronics.power_bank"))
         #expect(entries.contains { $0.reason == "adult_or_teen_only" && $0.items.contains("essentials.wallet") })
         #expect(generation.eligibilityDecisions.allSatisfy { $0.travelerID != party.primary.id }, "adults lose nothing")
     }

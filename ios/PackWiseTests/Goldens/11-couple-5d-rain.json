@@ -3,8 +3,15 @@
     {
       "items" : [
         "electronics.phone_charger",
-        "electronics.power_bank",
         "essentials.phone"
+      ],
+      "owner" : "partner",
+      "reason" : "device_signal.phone",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.power_bank"
       ],
       "owner" : "partner",
       "reason" : "device_signal_required",

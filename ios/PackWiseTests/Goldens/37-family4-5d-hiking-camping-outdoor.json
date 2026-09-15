@@ -73,7 +73,7 @@
         "essentials.phone"
       ],
       "owner" : "child",
-      "reason" : "device_signal_required",
+      "reason" : "device_signal.phone",
       "result" : "requiresExplicitSignal"
     },
     {
@@ -108,7 +108,7 @@
         "essentials.phone"
       ],
       "owner" : "child-2",
-      "reason" : "device_signal_required",
+      "reason" : "device_signal.phone",
       "result" : "requiresExplicitSignal"
     },
     {
@@ -117,7 +117,7 @@
         "essentials.phone"
       ],
       "owner" : "partner",
-      "reason" : "device_signal_required",
+      "reason" : "device_signal.phone",
       "result" : "requiresExplicitSignal"
     }
   ],

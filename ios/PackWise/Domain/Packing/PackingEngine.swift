@@ -994,13 +994,17 @@ struct PackingEngine: Sendable {
     /// The counts a shared row's quantity scales from. Consumers are the
     /// travelers eligibility passed the item for during generation; a shared
     /// companion (never generated per traveler) asks the eligibility
-    /// authority directly. The device count keeps Phase 7's adult/teen
-    /// semantics, computed here so sharing itself reads no age.
+    /// authority directly. The device count (Task 7.2) is the number of the
+    /// policy's declared devices on the resolved list: ownership eligibility
+    /// already decided who has them, explicit user rows count, and a
+    /// traveler with no device evidence contributes nothing. Sharing itself
+    /// receives numbers only.
     private func sharingBasis(
         for canonical: String,
         context: TripContext,
         party: TripParty,
-        sharedConsumers: [String: Set<UUID>]
+        sharedConsumers: [String: Set<UUID>],
+        items: [PackingItemDraft]
     ) -> ConstraintResolver.SharingBasis {
         let consumers = sharedConsumers[canonical]?.count ?? party.travelers.filter { traveler in
             TravelerEligibilityResolver.evaluate(
@@ -1012,10 +1016,11 @@ struct PackingEngine: Sendable {
                 rules: rules.party.eligibility
             ).isEligible
         }.count
+        let devices = Set(rules.party.sharingPolicies[canonical]?.devices ?? [])
         return ConstraintResolver.SharingBasis(
             partyTravelerCount: party.travelers.count,
             eligibleConsumerCount: max(1, consumers),
-            deviceCount: party.adults.count
+            deviceCount: devices.isEmpty ? 0 : items.filter { $0.canonicalItemID.map(devices.contains) == true }.count
         )
     }
 
@@ -1052,7 +1057,7 @@ struct PackingEngine: Sendable {
             if ConstraintResolver.hasUserAuthority(item) { return copy }
 
             if item.ownershipType == .shared {
-                let basis = sharingBasis(for: canonical, context: context, party: party, sharedConsumers: sharedConsumers)
+                let basis = sharingBasis(for: canonical, context: context, party: party, sharedConsumers: sharedConsumers, items: items)
                 let resolution = ConstraintResolver.sharingResolution(for: canonical, rules: rules.party, context: context, basis: basis)
                 if case .shared(let quantity, let fallback) = resolution {
                     copy.quantity = quantity

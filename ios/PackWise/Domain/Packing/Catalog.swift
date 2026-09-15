@@ -315,6 +315,10 @@ struct SharingPolicyRule: Codable, Sendable {
     var per: Int?
     var min: Int?
     var value: Int?
+    /// `scaleByDevices` only (Task 7.2): the canonical devices that count
+    /// toward `SharingBasis.deviceCount` when their rows are on the list —
+    /// resolved device ownership, never an age-based approximation.
+    var devices: [String]? = nil
 }
 
 struct PackingRulesFile: Sendable {

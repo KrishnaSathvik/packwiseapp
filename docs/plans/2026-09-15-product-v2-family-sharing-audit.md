@@ -1,4 +1,4 @@
-# Product Experience V2, Tasks 6–7.1 — family eligibility and sharing audit
+# Product Experience V2, Tasks 6–7.2 — family eligibility and sharing audit
 
 Date: 2026-09-15 · Branch: `product-v2-stage-a` · Baselines: `744c02e` (Task 5 closed), `3ca4bf3` (Task 6)
 
@@ -20,7 +20,8 @@ Eligibility never decides quantity, sharing, carrier, or coverage. Sharing reads
 | `744c02e` | Task 5 decisions closed as approved semantics |
 | `3ca4bf3` | Task 6: eligibility authority, metadata for all 202 items, validator, eligibility ledger |
 | `df38dd5` | Task 7: sharing policies, scaling evidence, report trace fields, this audit |
-| Task 7.1 | Device ownership needs evidence, child formal outfit, infant sun hat, eligible-consumer scaling ([section](#task-71--family-eligibility-and-sharing-refinement)) |
+| `9291841`, `ac956fa` | Task 7.1: device ownership needs evidence, child formal outfit, infant sun hat, eligible-consumer scaling ([section](#task-71--family-eligibility-and-sharing-refinement)) |
+| Task 7.2 | Implicit primary-phone signal, adapter scales by evidenced devices, consumer count pinned to metadata ([section](#task-72--device-ownership-consistency-cleanup)) |
 
 ## Task 6 — eligibility
 
@@ -41,7 +42,8 @@ Every catalog item has exactly one family in `shared/rules/party.json` `eligibil
 | `adultOrTeen` | adult or teen | `ineligible: adult_or_teen_only` | wallet, keys, deodorant, pain reliever, blazer, dress shoes |
 | `ageSpecific` | traveler's age is listed | `ineligible: not_for_age_group` | ordinary clothing and footwear (not infant); daypack, book, flashlight (school-age+); burp cloths (infant) |
 | `explicitChildNeed` | the traveler's own need is selected | `requiresExplicitSignal: child_need.<need>` | diapers, wipes, stroller, car seat, carrier, formula, child medication, comfort item |
-| `deviceSignalRequired` | named signal: the traveler's own chip or preference, or a solo list's own trip context; unnamed: the primary traveler only (Task 7.1) | `requiresExplicitSignal: device_signal_required` / `device_signal.<chip>` | phone, phone charger, power bank, headphones; laptop (signal `bringingLaptop`) |
+| `phoneOwnership` | the primary traveler's implicit phone signal (PackWise runs on their phone); anyone else needs an explicit phone signal (Task 7.2) | `requiresExplicitSignal: device_signal.phone` | phone, phone charger — exactly these two (validator) |
+| `deviceSignalRequired` | named signal: the traveler's own chip or preference, or a solo list's own trip context; unnamed: the primary traveler as an interim carryover, not phone evidence (Tasks 7.1–7.2) | `requiresExplicitSignal: device_signal_required` / `device_signal.<chip>` | power bank, headphones, tablet, camera; laptop (signal `bringingLaptop`) |
 | `travelerSignalRequired` | the traveler's own signal, at any age | `requiresExplicitSignal: traveler_signal.<chip>` | daily medication, prescription copy (`dailyMedication`); contacts (`wearContacts`) |
 | `travelerDocument` | `all`, or `adultOrTeen` by age | `ineligible: adult_or_teen_only` | passport, visa (all); photo ID (adult/teen) |
 
@@ -544,3 +546,58 @@ Customer prose is unchanged ("One for the group — not one per person."). `shar
 - **7.1-F1.** Universal sunscreen still counts infants as consumers. No infant sun-care product was added or inferred, per the task scope.
 - **7.1-F2.** `scaleByDevices` keeps Phase 7's adult/teen `deviceCount` ("existing semantics"). It is not a device-ownership claim, but it no longer matches the stricter ownership model. Revisit if adapters should follow evidenced device owners.
 - **7.1-F3.** A per-traveler device setup signal (phone or laptop for Adult 1 or a teen) would restore companion devices with evidence. It belongs to setup (Task 8+), not the engine.
+
+## Task 7.2 — device ownership consistency cleanup
+
+Baseline: `ac956fa`. The review approved D1 (as an implicit phone signal), D2, and F1, and asked for an F2 fix.
+
+### D1: implicit primary phone, not generic device ownership
+
+- **New family.** `phoneOwnership` covers exactly `essentials.phone` and `electronics.phone_charger`; `validate_shared.py` enforces the pair.
+  - The primary traveler is eligible as `implicit_primary_phone`: PackWise is running on their phone. The charger follows the owned phone.
+  - Every other traveler, at any age, is `requiresExplicitSignal: device_signal.phone` until traveler details collect a phone (Task 8).
+- **Other devices.** Headphones, power bank, earbuds, tablet, e-reader and camera stay `deviceSignalRequired`.
+  - The primary keeps them as `primary_traveler_interim`, a carryover so solo lists don't churn. The implicit phone signal explicitly doesn't justify them.
+  - **Follow-up 7.2-F1:** Task 8's traveler device model should replace the interim branch with real per-traveler inputs.
+- **Laptop.** Still needs its own signal. A phone never proves a laptop.
+- **Tests:** `implicitPrimaryPhoneIsNotGenericDeviceOwnership`, `phoneAndInterimDevicesReachOnlyThePrimaryTraveler`.
+
+### D2 kept
+
+- **Solo:** Business/Work is the solo traveler's laptop signal.
+- **Party:** Business/Work names no one.
+- **Test:** `deviceOwnershipRequiresATravelerScopedSignal`, unchanged.
+
+### F2 fixed: adapter scales by evidenced devices
+
+- **Declared devices.** The adapter's `scaleByDevices` row now declares the devices that count: phone, laptop, tablet, e-reader, camera. These are the chargeable devices; headphones and power bank are left out.
+- **Device count.** `SharingBasis.deviceCount` is the number of those rows on the resolved list. Ownership eligibility already decided who has them, explicit user rows count, and a traveler with no device evidence adds zero.
+- **No age anywhere.** `party.adults` is gone from the engine's sharing basis, and `ConstraintResolver` still receives only numbers.
+- **Formula unchanged:** ceil(devices / 2), min 1.
+- **Validator.** `scaleByDevices` must declare device-ownership items, and `devices` is rejected on any other policy.
+
+| Scenario (Tokyo) | deviceCount | Adapters |
+| --- | --- | --- |
+| You (phone) + Adult 1 with no device signal | 1 | 1 |
+| You phone + laptop | 2 | 1 |
+| You phone + laptop, Adult 1 own laptop chip | 3 | 2 |
+| You phone + laptop, user-added tablet for Adult 1 | 3 | 2 |
+| You + teen with no device signal | 1 | 1 |
+| Four adults, only You evidenced | 1 | 1 (was 2 from four adults) |
+
+Test: `travelAdapterCountsEvidencedDevicesNotAdultsAndTeens`.
+
+### F1 pinned
+
+`eligibleConsumerCountFollowsEligibilityMetadataOnly` checks the sunscreen consumer count two ways:
+
+- **Current metadata.** On a two-adult, child and infant Miami trip, the recorded count equals the travelers `TravelerEligibilityResolver` passes. Sunscreen is `universal`, so that's 4 and ×2.
+- **Changed metadata only.** Excluding infants in the metadata moves it to 3 and ×1, with sharing untouched.
+
+No infant sun-care behavior changed.
+
+### Golden diff (vs `ac956fa`)
+
+- **Recommendations:** zero changes to rows, quantities, traces, coverage or constraints in all 52 fixtures.
+- **Eligibility ledger:** 22 changes across the 6 party fixtures. Every withheld phone and phone charger (partner and children) is now recorded as `device_signal.phone` instead of `device_signal_required`. The same items are withheld from the same travelers.
+- **Adapters:** no golden has an international party, so no golden adapter row changed. The scenario table is the evidence.
