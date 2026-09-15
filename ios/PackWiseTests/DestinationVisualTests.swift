@@ -233,18 +233,108 @@ struct DestinationVisualTests {
         #expect(DestinationVisualLayout.showsMarker(at: detailPoint, bandHeight: detailBand, top: top), "\(detailPoint) band \(detailBand)")
     }
 
+    /// Apple's attribution is in the imagery's bottom-leading corner; no
+    /// hero aspect may crop it.
+    @Test func imageryFillKeepsTheBottomLeadingCorner() {
+        for purpose in DestinationVisualPurpose.allCases {
+            for frame in [CGSize(width: 370, height: 150), CGSize(width: 370, height: 320), CGSize(width: 402, height: 270),
+                          CGSize(width: 402, height: 520), CGSize(width: 56, height: 56), CGSize(width: 800, height: 120)] {
+                let rect = DestinationVisualLayout.attributionSafeRect(imageSize: purpose.size, frame: frame)
+                #expect(rect.minX == 0, "\(purpose) \(frame)")
+                #expect(abs(rect.maxY - frame.height) < 0.001, "\(purpose) \(frame)")
+                #expect(rect.width >= frame.width - 0.001 && rect.height >= frame.height - 0.001, "fills: \(purpose) \(frame)")
+            }
+        }
+    }
+
+    @Test func statusBarRequestsLightGlyphsOnlyWhileTheHeroIsUnderIt() {
+        #expect(StatusBarOverHero.heroIsUnderStatusBar(scrolledBy: 0, heroHeight: PackWiseSize.heroHeight))
+        #expect(StatusBarOverHero.heroIsUnderStatusBar(scrolledBy: 120, heroHeight: PackWiseSize.heroHeight))
+        #expect(!StatusBarOverHero.heroIsUnderStatusBar(scrolledBy: PackWiseSize.heroHeight, heroHeight: PackWiseSize.heroHeight),
+                "white content under the status bar gets dark glyphs")
+    }
+
     // MARK: Destination step
 
     @Test func destinationStepShowsOneStateAtATime() {
         let recents = [Self.chicago]
-        #expect(DestinationStepPhase.resolve(selected: Self.khammam, query: "Kham", isSearching: false, results: [Self.khammam], recents: recents)
+        #expect(DestinationStepPhase.resolve(selected: Self.khammam, query: "Kham", outcome: .results([Self.khammam]), recents: recents)
                 == .selected(Self.khammam), "a selection replaces the results — stated once")
-        #expect(DestinationStepPhase.resolve(selected: nil, query: "  ", isSearching: false, results: [], recents: recents) == .empty(recents: recents))
-        #expect(DestinationStepPhase.resolve(selected: nil, query: "", isSearching: false, results: [], recents: []) == .empty(recents: []))
-        #expect(DestinationStepPhase.resolve(selected: nil, query: "Kham", isSearching: true, results: [], recents: recents) == .searching)
-        #expect(DestinationStepPhase.resolve(selected: nil, query: "Chi", isSearching: false, results: [Self.chicago], recents: recents) == .results([Self.chicago]))
-        #expect(DestinationStepPhase.resolve(selected: nil, query: " Zzq ", isSearching: false, results: [], recents: recents) == .noResults(query: "Zzq"),
-                "offline search fails gracefully into the same message")
+        #expect(DestinationStepPhase.resolve(selected: nil, query: "  ", outcome: .idle, recents: recents) == .empty(recents: recents))
+        #expect(DestinationStepPhase.resolve(selected: nil, query: "", outcome: .idle, recents: []) == .empty(recents: []))
+        #expect(DestinationStepPhase.resolve(selected: nil, query: "Kham", outcome: .searching, recents: recents) == .searching)
+        #expect(DestinationStepPhase.resolve(selected: nil, query: "Kham", outcome: .idle, recents: recents) == .searching, "debounce pending")
+        #expect(DestinationStepPhase.resolve(selected: nil, query: "Chi", outcome: .results([Self.chicago]), recents: recents) == .results([Self.chicago]))
+        #expect(DestinationStepPhase.resolve(selected: nil, query: " Zzq ", outcome: .noMatches(query: "Zzq"), recents: recents) == .noMatches(query: "Zzq"))
+        #expect(DestinationStepPhase.resolve(selected: nil, query: "Kham", outcome: .unavailable(query: "Kham"), recents: recents) == .unavailable(query: "Kham"))
+    }
+
+    // MARK: Destination search states (Task 9.1)
+
+    actor SearchScript {
+        private var steps: [Result<[Destination], DestinationSearchError>]
+        private(set) var calls = 0
+        init(_ steps: [Result<[Destination], DestinationSearchError>]) { self.steps = steps }
+        func next() throws -> [Destination] {
+            calls += 1
+            let step = steps.count > 1 ? steps.removeFirst() : steps[0]
+            return try step.get()
+        }
+    }
+
+    struct ScriptedSearch: DestinationSearching {
+        var script: SearchScript
+        func search(query: String) async throws -> [Destination] { try await script.next() }
+    }
+
+    @MainActor
+    @Test func successfulEmptySearchIsNoMatchesNotAFailure() async {
+        let model = DestinationSearchModel(provider: ScriptedSearch(script: SearchScript([.success([])])))
+        await model.search("Zzqxv")
+        #expect(model.outcome == .noMatches(query: "Zzqxv"))
+    }
+
+    @MainActor
+    @Test func thrownProviderErrorIsUnavailable() async {
+        let model = DestinationSearchModel(provider: ScriptedSearch(script: SearchScript([.failure(.unavailable)])))
+        await model.search(" Khammam ")
+        #expect(model.outcome == .unavailable(query: "Khammam"))
+    }
+
+    @MainActor
+    @Test func retryAfterFailureRecovers() async {
+        let script = SearchScript([.failure(.unavailable), .success([Self.khammam])])
+        let model = DestinationSearchModel(provider: ScriptedSearch(script: script)) { var d = $0; d.fixtureID = "prepared"; return d }
+        await model.search("Khammam")
+        #expect(model.outcome == .unavailable(query: "Khammam"))
+        await model.search("Khammam")
+        var prepared = Self.khammam
+        prepared.fixtureID = "prepared"
+        #expect(model.outcome == .results([prepared]))
+        #expect(await script.calls == 2)
+    }
+
+    @MainActor
+    @Test func selectedDestinationSurvivesSearchFailure() async {
+        let model = DestinationSearchModel(provider: ScriptedSearch(script: SearchScript([.failure(.unavailable)])))
+        let selected: Destination? = Self.chicago
+        // Change: the search runs while Chicago stays selected.
+        await model.search("Khammam")
+        #expect(selected == Self.chicago, "the search model never touches the selection")
+        #expect(DestinationStepPhase.resolve(selected: selected, isChanging: true, query: "Khammam", outcome: model.outcome, recents: [])
+                == .unavailable(query: "Khammam"))
+        // Keep: the confirmed state returns with the same destination.
+        #expect(DestinationStepPhase.resolve(selected: selected, isChanging: false, query: "Khammam", outcome: model.outcome, recents: [])
+                == .selected(Self.chicago))
+    }
+
+    @MainActor
+    @Test func emptyQueryResetsToIdleWithoutSearching() async {
+        let script = SearchScript([.success([Self.chicago])])
+        let model = DestinationSearchModel(provider: ScriptedSearch(script: script))
+        await model.search("   ")
+        #expect(model.outcome == .idle)
+        #expect(await script.calls == 0)
     }
 
     @Test func recentsComeOnlyFromTripsNewestFirstWithoutRepeats() {

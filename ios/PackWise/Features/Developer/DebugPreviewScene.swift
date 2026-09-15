@@ -43,11 +43,25 @@ enum DebugPreviewScreen: String {
     case setupDestinationKhammam
     case setupDestinationLong
     case setupDestinationOffline
+    /// Task 9.1 search states: a successful search with no matches, a failed
+    /// search, and a failed search while changing a selected destination.
+    case setupDestinationNoMatch
+    case setupDestinationUnavailable
+    case setupDestinationUnavailableKept
     /// Review's destination hero on a map (Khammam) and offline (graphical).
     case setupReviewMap
     case setupReviewOffline
     /// Trip Detail's hero with the map provider failing.
     case tripDetailOffline
+    /// Task 9.1 status bar: Trip Detail over a trusted photo and while the
+    /// visual is still loading; then after popping back to, and pushing on
+    /// to, light screens.
+    case tripDetailTrusted
+    case tripDetailLoading
+    case statusBarAfterPop
+    case statusBarAfterPush
+    /// Task 9.1 weather line: a long destination with no forecast yet.
+    case tripsHomeLong
     case setupDates
     case setupTravelers
     case setupTravelersFamily
@@ -119,8 +133,17 @@ struct DebugPreviewScene: View {
                     .modelContainer(DebugTripSeed.emptyContainer)
             case .setupDestinationRecents:
                 TripSetupView()
+            case .setupDestinationNoMatch:
+                TripSetupView(captureSearch: DebugDestinationSearch(mode: .noMatches), captureQuery: "Zzqxv")
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationUnavailable:
+                TripSetupView(captureSearch: DebugDestinationSearch(mode: .fails), captureQuery: "Khammam")
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationUnavailableKept:
+                TripSetupView(captureSearch: DebugDestinationSearch(mode: .fails), captureQuery: "Khammam",
+                              captureDestination: DebugDestinationSearch.chicago, captureChanging: true)
             case .setupDestinationSearching:
-                TripSetupView(captureSearch: DebugDestinationSearch(suspends: true), captureQuery: "Kham")
+                TripSetupView(captureSearch: DebugDestinationSearch(mode: .suspends), captureQuery: "Kham")
                     .modelContainer(DebugTripSeed.emptyContainer)
             case .setupDestinationResults:
                 TripSetupView(captureSearch: DebugDestinationSearch(), captureQuery: "Chi")
@@ -142,6 +165,19 @@ struct DebugPreviewScene: View {
             case .tripDetailOffline:
                 NavigationStack { TripDetailView(trip: seed.trip) }
                     .environment(\.destinationVisuals, DebugTripSeed.offlineVisuals)
+            case .tripDetailTrusted:
+                NavigationStack { TripDetailView(trip: seed.trip) }
+                    .environment(\.destinationVisuals, DebugTripSeed.trustedVisuals)
+            case .tripDetailLoading:
+                NavigationStack { TripDetailView(trip: seed.trip) }
+                    .environment(\.destinationVisuals, DebugTripSeed.loadingVisuals)
+            case .statusBarAfterPop:
+                DebugStatusBarNavigation(trip: seed.trip, pushesOnward: false)
+            case .statusBarAfterPush:
+                DebugStatusBarNavigation(trip: seed.trip, pushesOnward: true)
+            case .tripsHomeLong:
+                TripsHomeView()
+                    .modelContainer(DebugTripSeed.longDestinationContainer)
             case .setupDates:
                 setup(.dates)
             case .setupTravelers:
@@ -259,7 +295,8 @@ struct DebugPreviewScene: View {
 /// coordinates, returned without the network, or never (to hold the
 /// searching state on screen).
 struct DebugDestinationSearch: DestinationSearching {
-    var suspends = false
+    enum Mode: Sendable { case results, suspends, noMatches, fails }
+    var mode: Mode = .results
 
     static let chicago = Destination(
         displayName: "Chicago", city: "Chicago", region: "IL", country: "United States", countryCode: "US",
@@ -275,10 +312,17 @@ struct DebugDestinationSearch: DestinationSearching {
         mapKitIdentifier: nil, fixtureID: nil
     )
 
-    func search(query: String) async -> [Destination] {
-        if suspends {
-            try? await Task.sleep(for: .seconds(3600))
+    func search(query: String) async throws -> [Destination] {
+        switch mode {
+        case .suspends:
+            try await Task.sleep(for: .seconds(3600))
             return []
+        case .noMatches:
+            return []
+        case .fails:
+            throw DestinationSearchError.unavailable
+        case .results:
+            break
         }
         return [
             Self.chicago,
@@ -289,6 +333,44 @@ struct DebugDestinationSearch: DestinationSearching {
             Destination(displayName: "Chiang Mai", city: "Chiang Mai", region: "Chiang Mai", country: "Thailand", countryCode: "TH",
                         latitude: 18.7883, longitude: 98.9853, timeZone: "Asia/Bangkok", mapKitIdentifier: nil, fixtureID: nil),
         ]
+    }
+}
+
+/// Walks a navigation stack for the status-bar check: Trip Detail opens on a
+/// light root, then pops back to it, or pushes on to a light screen.
+struct DebugStatusBarNavigation: View {
+    let trip: TripRecord
+    var pushesOnward: Bool
+    @State private var path: [String] = []
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            List { Text(pushesOnward ? "Root" : "Root after popping Trip Detail") }
+                .navigationTitle("Trips")
+                .navigationDestination(for: String.self) { step in
+                    if step == "detail" {
+                        TripDetailView(trip: trip)
+                    } else {
+                        Text("A light screen pushed after Trip Detail")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(PackWiseColor.screen)
+                            .navigationTitle("Light")
+                    }
+                }
+        }
+        .task {
+            path = ["detail"]
+            try? await Task.sleep(for: .seconds(1.5))
+            if pushesOnward { path.append("light") } else { path.removeAll() }
+        }
+    }
+}
+
+/// A map provider that never answers, holding the loading state.
+struct DebugSuspendedMapSnapshots: DestinationMapSnapshotting {
+    func snapshot(for request: DestinationMapRequest) async throws -> UIImage {
+        try await Task.sleep(for: .seconds(3600))
+        throw CancellationError()
     }
 }
 
@@ -322,6 +404,47 @@ final class DebugTripSeed {
         trusted: { _ in nil },
         mapSnapshots: DebugOfflineMapSnapshots()
     )
+
+    /// A trusted photo for every destination, to check the hero over a bright
+    /// image (the onboarding photograph has a pale sky at its top).
+    static let trustedVisuals = MapKitDestinationVisualService(
+        directory: nil,
+        trusted: { _ in UIImage(named: PackWiseImageSlot.welcome) },
+        mapSnapshots: DebugOfflineMapSnapshots()
+    )
+
+    static let loadingVisuals = MapKitDestinationVisualService(
+        directory: nil,
+        trusted: { _ in nil },
+        mapSnapshots: DebugSuspendedMapSnapshots()
+    )
+
+    /// One upcoming trip with a long destination name and no forecast yet.
+    static let longDestinationContainer: ModelContainer = {
+        let container = try! PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        context.insert(PackingPreferenceRecord(from: .deviceDefaults()))
+        let start = Calendar.current.date(byAdding: .day, value: 5, to: Calendar.current.startOfDay(for: .now))!
+        let trip = TripRecord(
+            destination: DebugDestinationSearch.longName,
+            startDate: start,
+            endDate: Calendar.current.date(byAdding: .day, value: 6, to: start)!,
+            durationDays: 7,
+            durationNights: 6,
+            tripType: .vacation,
+            activities: ["sightseeing"],
+            bagType: .carryOn,
+            packingStyle: .balanced,
+            status: .planning
+        )
+        context.insert(trip)
+        let repository = TripRepository(context: context)
+        for item in items().prefix(10) {
+            repository.addItem(item.draft, to: trip, syncWeatherChange: false)
+        }
+        try? context.save()
+        return container
+    }()
 
     /// For the empty Trips Home. Trips Home reads its own @Query, so an empty
     /// state needs a store with nothing in it.

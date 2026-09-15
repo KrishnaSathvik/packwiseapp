@@ -3,7 +3,7 @@ import SwiftUI
 /// The palette, verbatim from the 10-screen reference sheet.
 ///
 /// The sheet is drawn light-only and the app now renders light-only to match
-/// (`.preferredColorScheme(.light)` at the root). Nothing outside this file
+/// (`UIUserInterfaceStyle = Light` in Info.plist). Nothing outside this file
 /// may introduce a raw color; a hue that is not here is not in the design.
 enum PackWiseColor {
     /// Buttons, selection, links, the active tab.

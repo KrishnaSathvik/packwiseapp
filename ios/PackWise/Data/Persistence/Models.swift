@@ -1037,53 +1037,53 @@ enum PackWiseMigrationPlan: SchemaMigrationPlan {
 /// The schema the app opens. Always the last entry of `PackWiseMigrationPlan.schemas`.
 typealias PackWiseCurrentSchema = PackWiseSchemaV5
 
-/// Task 8.2's one data step: Me's "I usually bring a laptop" stopped being
-/// engine input and became a new-trip prefill. A trip saved before that
-/// boundary may owe its laptop to the preference alone, with no
-/// `bringingLaptop` choice of its own — regenerating it would silently
-/// drop the laptop, or later re-add it because Me changed.
+/// The data step for Tasks 8.2–9.1: Me's habits (work out, laptop, contacts,
+/// medication) stopped being engine input and became new-trip prefills. A
+/// trip saved before that boundary may owe rows to a habit alone, with no
+/// About you choice of its own — regenerating it would silently drop them,
+/// or later re-add them because Me changed.
 ///
-/// The trip's own saved list is the evidence of what it was: a generated
-/// laptop row for You whose recorded cause is the laptop preference, and no
-/// laptop choice anywhere on the trip, becomes You's saved choice. Nothing
-/// is inferred from the current preference value. Idempotent: once the
-/// choice exists the trip is skipped, so it runs on every open. No schema
-/// change — it writes only existing chip columns.
-enum LaptopChoiceBackfill {
-    static let preferenceReasonCode = "preference.bringingLaptop"
-
+/// The trip's own saved list is the evidence of what it was: a generated row
+/// for You whose recorded cause is a habit's reason code, with no matching
+/// choice anywhere on the trip, becomes You's saved choice. Nothing is
+/// inferred from the current preference values. Idempotent: once the choice
+/// exists the trip is skipped, so it runs on every open. No schema change —
+/// it writes only existing chip columns.
+enum MeHabitChoiceBackfill {
     @discardableResult
     static func run(in context: ModelContext) throws -> Int {
         var materialized = 0
-        for trip in try context.fetch(FetchDescriptor<TripRecord>()) where materialize(trip) {
-            materialized += 1
+        for trip in try context.fetch(FetchDescriptor<TripRecord>()) {
+            materialized += materialize(trip).count
         }
         if materialized > 0 { try context.save() }
         return materialized
     }
 
-    /// Returns true when the trip gained You's laptop choice.
-    static func materialize(_ trip: TripRecord) -> Bool {
+    /// The choices the trip gained.
+    @discardableResult
+    static func materialize(_ trip: TripRecord) -> Set<ContextChip> {
         let primary = trip.party.primary
-        guard !trip.contextChips.contains(.bringingLaptop), !primary.chips.contains(.bringingLaptop) else { return false }
-        let owedToPreference = trip.items.contains { item in
-            item.canonicalItemID == "electronics.laptop"
-                && !item.isUserAdded
-                && (item.travelerID == nil || item.travelerID == primary.id)
-                && (item.reasonCode == preferenceReasonCode
-                    || item.draft.provenance.contains { $0.reasonCode == preferenceReasonCode }
-                    || (item.recommendationTraceRaw?.contains(preferenceReasonCode) ?? false))
+        let existing = Set(trip.contextChips).union(primary.chips)
+        let generatedForYou = trip.items.filter { !$0.isUserAdded && ($0.travelerID == nil || $0.travelerID == primary.id) }
+        var gained: Set<ContextChip> = []
+        for chip in MeDefaultChoices.habits.map(\.chip) where !existing.contains(chip) {
+            let code = MeDefaultChoices.reasonCode(chip)
+            let owed = generatedForYou.contains { item in
+                item.reasonCode == code
+                    || item.draft.provenance.contains { $0.reasonCode == code }
+                    || (item.recommendationTraceRaw?.contains("\"\(code)\"") ?? false)
+            }
+            if owed { gained.insert(chip) }
         }
-        guard owedToPreference else { return false }
-        var chips = trip.contextChips
-        chips.append(.bringingLaptop)
-        trip.contextChipsRaw = chips.map(\.rawValue).joined(separator: ",")
+        guard !gained.isEmpty else { return [] }
+        trip.contextChipsRaw = (trip.contextChips + ContextChip.allCases.filter(gained.contains)).map(\.rawValue).joined(separator: ",")
         if let record = trip.travelers.first(where: { $0.id == primary.id }) {
             var traveler = record.domain
-            traveler.chips.insert(.bringingLaptop)
+            traveler.chips.formUnion(gained)
             record.apply(traveler)
         }
-        return true
+        return gained
     }
 }
 
@@ -1152,7 +1152,7 @@ enum PackWisePersistence {
         // converges a store to the V4 shape once and then does
         // near-zero-cost work on every subsequent launch.
         let diagnostics = try PackWiseSchemaV4Migration.migrateV3Records(in: ModelContext(container))
-        try LaptopChoiceBackfill.run(in: ModelContext(container))
+        try MeHabitChoiceBackfill.run(in: ModelContext(container))
         #if DEBUG
         if !diagnostics.isEmpty {
             print("[PackWise] V4 migration normalized \(diagnostics.count) legacy value(s): \(diagnostics)")

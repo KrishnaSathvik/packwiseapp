@@ -1,14 +1,23 @@
 import Foundation
 import MapKit
 
+/// Task 9.1: a search either succeeds — possibly with zero matches — or
+/// fails. The two are different product states, so failure throws instead of
+/// returning an empty list.
 protocol DestinationSearching: Sendable {
-    func search(query: String) async -> [Destination]
+    /// `[]` means the search ran and nothing matched. Throws when the search
+    /// could not run (offline, provider or server failure).
+    func search(query: String) async throws -> [Destination]
+}
+
+enum DestinationSearchError: Error, Equatable {
+    case unavailable
 }
 
 struct FixtureDestinationSearch: DestinationSearching {
     var destinations: [Destination]
 
-    func search(query: String) async -> [Destination] {
+    func search(query: String) async throws -> [Destination] {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { return Array(destinations.prefix(12)) }
         return destinations.filter {
@@ -80,14 +89,24 @@ enum DestinationNormalizer {
 }
 
 struct MapKitDestinationSearch: DestinationSearching {
-    func search(query: String) async -> [Destination] {
+    func search(query: String) async throws -> [Destination] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed.count >= 2 else { return [] }
 
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = trimmed
         let search = MKLocalSearch(request: request)
-        guard let response = try? await search.start() else { return [] }
+        let response: MKLocalSearch.Response
+        do {
+            response = try await search.start()
+        } catch let error as MKError where error.code == .placemarkNotFound {
+            // MapKit's "no results" is an error; it is a successful empty search.
+            return []
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw DestinationSearchError.unavailable
+        }
 
         return response.mapItems.prefix(8).compactMap { item in
             DestinationNormalizer.destination(from: item, query: trimmed)

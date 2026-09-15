@@ -220,6 +220,7 @@ struct M1LoopTests {
             "setupDestinationEmpty", "setupDestinationRecents", "setupDestinationSearching", "setupDestinationResults",
             "setupDestinationChicago", "setupDestinationKhammam", "setupDestinationLong", "setupDestinationOffline",
             "setupReview", "setupReviewMap", "setupReviewOffline", "tripsHome", "tripDetail", "tripDetailOffline",
+            "setupDestinationNoMatch", "setupDestinationUnavailable", "setupDestinationUnavailableKept",
         ]
         for id in required {
             #expect(DebugPreviewScreen(rawValue: id) != nil, "missing Task 9 state \(id)")

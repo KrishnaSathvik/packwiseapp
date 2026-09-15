@@ -255,6 +255,7 @@ struct HeroTripCard: View {
     let trip: TripRecord
     var usesFahrenheit: Bool
     var rainThreshold: Double
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var forecast: TripWeatherContext? {
         guard let weather = trip.weatherSnapshots.first?.weatherContext,
@@ -324,22 +325,26 @@ struct HeroTripCard: View {
         .accessibilityElement(children: .combine)
     }
 
+    /// Task 9.1: the weather line wraps instead of truncating. At
+    /// accessibility sizes the range and the detail take a line each; the
+    /// text has layout priority over the spacer and chevron.
     @ViewBuilder
     private var weatherRow: some View {
-        HStack(spacing: PackWiseSpacing.snug) {
+        HStack(alignment: .center, spacing: PackWiseSpacing.snug) {
             if let forecast {
                 Image(systemName: forecast.headlineSymbol(rainThreshold: rainThreshold))
                     .font(.title3)
                     .weatherGlyphStyle(forecast.headlineSymbol(rainThreshold: rainThreshold))
-                if let detail = forecast.detailLine(rainThreshold: rainThreshold) {
-                    Text("\(forecast.highLowLabel(usesFahrenheit: usesFahrenheit)) · \(detail)")
-                } else {
-                    Text(forecast.highLowLabel(usesFahrenheit: usesFahrenheit))
-                }
+                weatherText(
+                    range: forecast.highLowLabel(usesFahrenheit: usesFahrenheit),
+                    detail: forecast.detailLine(rainThreshold: rainThreshold)
+                )
             } else {
                 Image(systemName: "calendar")
                     .foregroundStyle(PackWiseColor.textSecondary)
                 Text("Forecast closer to departure")
+                    .fixedSize(horizontal: false, vertical: true)
+                    .layoutPriority(1)
             }
             Spacer(minLength: PackWiseSpacing.snug)
             Image(systemName: "chevron.right")
@@ -348,6 +353,24 @@ struct HeroTripCard: View {
         }
         .font(.subheadline)
         .foregroundStyle(PackWiseColor.textSecondary)
+    }
+
+    @ViewBuilder
+    private func weatherText(range: String, detail: String?) -> some View {
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(range)
+                    if let detail { Text(detail) }
+                }
+            } else if let detail {
+                Text("\(range) · \(detail)")
+            } else {
+                Text(range)
+            }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .layoutPriority(1)
     }
 
     private var dateLine: String {

@@ -1,6 +1,19 @@
 import SwiftData
 import SwiftUI
 
+/// Which status-bar appearance Trip Detail requests: light glyphs while any
+/// part of the dark hero's top band is under the status bar, which holds for
+/// every hero state — trusted photo and map under the shared top shade, the
+/// brand-blue fallback, and the brand-blue loading surface.
+enum StatusBarOverHero {
+    /// The status region plus the navigation bar, in points.
+    static let chromeHeight: CGFloat = 100
+
+    static func heroIsUnderStatusBar(scrolledBy offset: CGFloat, heroHeight: CGFloat) -> Bool {
+        offset < heroHeight - chromeHeight
+    }
+}
+
 /// Trip overview.
 ///
 /// Understanding the trip and doing the packing are separate jobs, so this
@@ -22,23 +35,14 @@ struct TripDetailView: View {
     @State private var editing = false
     @State private var openList: PackingListDestination?
     @State private var showingTripOptions = false
+    /// True while the dark destination hero is under the status bar.
+    @State private var heroUnderStatusBar = true
 
     var body: some View {
         GeometryReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    ZStack(alignment: .topLeading) {
-                        hero
-                        HStack {
-                            heroBackButton
-                            Spacer()
-                            heroOptionsMenu
-                        }
-                        .frame(width: proxy.size.width - (PackWiseSpacing.comfortable * 2))
-                        .padding(.horizontal, PackWiseSpacing.comfortable)
-                        .padding(.top, PackWiseSize.heroControlTopInset)
-                        .zIndex(2)
-                    }
+                    hero
                     VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
                         progress
                         weatherChanged
@@ -57,10 +61,26 @@ struct TripDetailView: View {
                 .frame(width: proxy.size.width, alignment: .leading)
                 .padding(.bottom, PackWiseSpacing.section)
             }
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                StatusBarOverHero.heroIsUnderStatusBar(
+                    scrolledBy: geometry.contentOffset.y + geometry.contentInsets.top,
+                    heroHeight: PackWiseSize.heroHeight
+                )
+            } action: { _, underHero in
+                heroUnderStatusBar = underHero
+            }
         }
         .ignoresSafeArea(edges: .top)
         .background(PackWiseColor.screen)
-        .toolbar(.hidden, for: .navigationBar)
+        // Task 9.1: status-bar appearance is requested through the navigation
+        // bar. The bar is present but clear, so the hero shows through and
+        // the back and options controls are its items; its color scheme sets
+        // light status-bar glyphs over the dark hero, and dark ones once the
+        // white content scrolls under it. Other screens keep their own bars.
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.clear, for: .navigationBar)
+        .toolbarColorScheme(heroUnderStatusBar ? .dark : .light, for: .navigationBar)
+        .toolbar { heroToolbar }
         // A pushed screen with a full-bleed hero. The root tabs floating over
         // it belong to the root experience, not to one trip.
         .toolbar(.hidden, for: .tabBar)
@@ -102,6 +122,22 @@ struct TripDetailView: View {
     }
 
     // MARK: - Hero
+
+    // As in the setup shell: on iOS 26 a toolbar item is wrapped in Liquid
+    // Glass unless its shared background is hidden, and the hero controls
+    // draw their own disc.
+    @ToolbarContentBuilder
+    private var heroToolbar: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarItem(placement: .topBarLeading) { heroBackButton }
+                .sharedBackgroundVisibility(.hidden)
+            ToolbarItem(placement: .topBarTrailing) { heroOptionsMenu }
+                .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) { heroBackButton }
+            ToolbarItem(placement: .topBarTrailing) { heroOptionsMenu }
+        }
+    }
 
     private var heroBackButton: some View {
         Button {

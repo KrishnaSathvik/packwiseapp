@@ -8,21 +8,78 @@ enum DestinationStepPhase: Equatable {
     case empty(recents: [Destination])
     case searching
     case results([Destination])
-    case noResults(query: String)
+    /// The search ran and nothing matched.
+    case noMatches(query: String)
+    /// The search could not run. Any selected destination is untouched.
+    case unavailable(query: String)
     case selected(Destination)
 
+    /// - Parameter isChanging: the user tapped Change. The selected
+    ///   destination stays selected until another result is chosen, so a
+    ///   failed search never loses it.
     static func resolve(
         selected: Destination?,
+        isChanging: Bool = false,
         query: String,
-        isSearching: Bool,
-        results: [Destination],
+        outcome: DestinationSearchOutcome,
         recents: [Destination]
     ) -> DestinationStepPhase {
-        if let selected { return .selected(selected) }
+        if let selected, !isChanging { return .selected(selected) }
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty { return .empty(recents: recents) }
-        if isSearching { return .searching }
-        return results.isEmpty ? .noResults(query: trimmed) : .results(results)
+        switch outcome {
+        case .results(let destinations): return .results(destinations)
+        case .noMatches: return .noMatches(query: trimmed)
+        case .unavailable: return .unavailable(query: trimmed)
+        case .idle, .searching: return .searching
+        }
+    }
+}
+
+/// The outcome of the latest destination search.
+enum DestinationSearchOutcome: Equatable {
+    case idle
+    case searching
+    case results([Destination])
+    case noMatches(query: String)
+    case unavailable(query: String)
+}
+
+/// Runs destination searches for the step and records a truthful outcome.
+/// It never reads or writes the selected destination.
+@MainActor
+@Observable
+final class DestinationSearchModel {
+    private(set) var outcome: DestinationSearchOutcome = .idle
+    private let provider: any DestinationSearching
+    private let prepare: (Destination) -> Destination
+
+    init(provider: any DestinationSearching, prepare: @escaping (Destination) -> Destination = { $0 }) {
+        self.provider = provider
+        self.prepare = prepare
+    }
+
+    /// Debounces, then searches. A cancelled search (the query changed)
+    /// records nothing.
+    func search(_ query: String, debounce: Duration = .zero) async {
+        let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else {
+            outcome = .idle
+            return
+        }
+        outcome = .searching
+        if debounce > .zero {
+            try? await Task.sleep(for: debounce)
+        }
+        guard !Task.isCancelled else { return }
+        do {
+            let found = try await provider.search(query: text)
+            guard !Task.isCancelled else { return }
+            outcome = found.isEmpty ? .noMatches(query: text) : .results(found.map(prepare))
+        } catch {
+            guard !Task.isCancelled, !(error is CancellationError) else { return }
+            outcome = .unavailable(query: text)
+        }
     }
 }
 
@@ -105,17 +162,31 @@ struct DestinationStepContent: View {
     @Binding var selected: Destination?
     @Binding var query: String
     var recents: [Destination]
-    var search: any DestinationSearching
-    /// Attaches test/weather fixtures to a live result (see `TripSetupView`).
-    var prepare: (Destination) -> Destination
-
-    @State private var results: [Destination] = []
-    @State private var isSearching = false
+    @State private var model: DestinationSearchModel
+    @State private var isChanging = false
+    @State private var retryToken = 0
     @FocusState private var fieldFocused: Bool
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    /// - Parameter prepare: attaches test/weather fixtures to a live result
+    ///   (see `TripSetupView`).
+    init(
+        selected: Binding<Destination?>,
+        query: Binding<String>,
+        recents: [Destination],
+        search: any DestinationSearching,
+        prepare: @escaping (Destination) -> Destination,
+        startsChanging: Bool = false
+    ) {
+        _selected = selected
+        _query = query
+        self.recents = recents
+        _model = State(initialValue: DestinationSearchModel(provider: search, prepare: prepare))
+        _isChanging = State(initialValue: startsChanging)
+    }
+
     private var phase: DestinationStepPhase {
-        .resolve(selected: selected, query: query, isSearching: isSearching, results: results, recents: recents)
+        .resolve(selected: selected, isChanging: isChanging, query: query, outcome: model.outcome, recents: recents)
     }
 
     var body: some View {
@@ -123,6 +194,9 @@ struct DestinationStepContent: View {
             if case .selected(let destination) = phase {
                 confirmed(destination)
             } else {
+                if isChanging, let kept = selected {
+                    keepRow(kept)
+                }
                 searchField
                 switch phase {
                 case .empty(let recents) where !recents.isEmpty:
@@ -133,29 +207,22 @@ struct DestinationStepContent: View {
                     searchingRow
                 case .results(let destinations):
                     rowGroup(title: nil, destinations: destinations, symbol: "mappin.and.ellipse")
-                case .noResults(let text):
-                    noResults(text)
+                case .noMatches:
+                    message(symbol: "magnifyingglass", title: "No matches",
+                            detail: "We couldn't find that destination. Try another city, region, or country.")
+                case .unavailable:
+                    message(symbol: "wifi.exclamationmark", title: "Can't search right now",
+                            detail: "Check your connection and try again.", retry: true)
                 case .selected:
                     EmptyView()
                 }
             }
         }
-        // Re-runs on Change too, so an edited trip's prefilled name searches.
-        .task(id: "\(query)|\(selected == nil)") {
-            let text = query.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard selected == nil else { return }
-            guard !text.isEmpty else {
-                results = []
-                isSearching = false
-                return
-            }
-            isSearching = true
-            try? await Task.sleep(for: .milliseconds(280))
-            guard !Task.isCancelled else { return }
-            let found = await search.search(query: text)
-            guard !Task.isCancelled else { return }
-            results = found.map(prepare)
-            isSearching = false
+        // Re-runs on Change and Try Again too, so an edited trip's
+        // prefilled name searches.
+        .task(id: "\(query)|\(selected == nil || isChanging)|\(retryToken)") {
+            guard selected == nil || isChanging else { return }
+            await model.search(query, debounce: .milliseconds(280))
         }
     }
 
@@ -259,21 +326,53 @@ struct DestinationStepContent: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func noResults(_ text: String) -> some View {
+    private func message(symbol: String, title: String, detail: String, retry: Bool = false) -> some View {
         HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
-            PackWiseIconBadge(symbol: "magnifyingglass", tint: .gray)
+            PackWiseIconBadge(symbol: symbol, tint: .gray)
             VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                Text("No places found for “\(text)”")
+                Text(title)
                     .font(PackWiseFont.rowTitle)
                     .foregroundStyle(PackWiseColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Check the spelling, or try again when you're online.")
+                Text(detail)
                     .font(PackWiseFont.rowSubtitle)
                     .foregroundStyle(PackWiseColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+                if retry {
+                    Button("Try Again") { retryToken += 1 }
+                        .font(PackWiseFont.rowTitle)
+                        .foregroundStyle(PackWiseColor.accent)
+                        .frame(minHeight: PackWiseSize.tapTarget)
+                        .buttonStyle(.plain)
+                }
             }
+            Spacer(minLength: 0)
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
+    }
+
+    /// While changing, the current destination stays selected and one tap
+    /// keeps it.
+    private func keepRow(_ destination: Destination) -> some View {
+        HStack(spacing: PackWiseSpacing.snug) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(PackWiseColor.accent)
+                .accessibilityHidden(true)
+            Text("Selected: \(destination.presentationTitle)")
+                .font(PackWiseFont.rowSubtitle)
+                .foregroundStyle(PackWiseColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: PackWiseSpacing.snug)
+            Button("Keep") {
+                isChanging = false
+                fieldFocused = false
+            }
+            .font(PackWiseFont.rowTitle)
+            .foregroundStyle(PackWiseColor.accent)
+            .frame(minWidth: PackWiseSize.tapTarget, minHeight: PackWiseSize.tapTarget)
+            .buttonStyle(.plain)
+            .accessibilityLabel("Keep \(destination.presentationTitle)")
+        }
     }
 
     /// No recents yet: what the destination is used for, in three quiet
@@ -345,7 +444,7 @@ struct DestinationStepContent: View {
                 }
                 if !stacked { Spacer(minLength: 0) }
                 Button("Change") {
-                    selected = nil
+                    isChanging = true
                     fieldFocused = true
                 }
                 .font(PackWiseFont.rowTitle)
@@ -359,6 +458,7 @@ struct DestinationStepContent: View {
 
     private func choose(_ destination: Destination) {
         selected = destination
+        isChanging = false
         fieldFocused = false
         AccessibilityNotification.Announcement("\(destination.accessibilityName) selected").post()
     }

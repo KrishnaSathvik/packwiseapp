@@ -244,6 +244,55 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
     }
 }
 
+/// A Me "Usually true for me" habit and the About you choice it prefills on
+/// a new trip.
+enum MeHabit: CaseIterable, Sendable {
+    case workOut
+    case laptop
+    case contacts
+    case medication
+
+    var chip: ContextChip {
+        switch self {
+        case .workOut: .usuallyWorkOut
+        case .laptop: .bringingLaptop
+        case .contacts: .wearContacts
+        case .medication: .dailyMedication
+        }
+    }
+
+    func isOn(in preferences: TravelerPreferences) -> Bool {
+        switch self {
+        case .workOut: preferences.usuallyWorkOut
+        case .laptop: preferences.usuallyBringLaptop
+        case .contacts: preferences.wearContacts
+        case .medication: preferences.alwaysBringMedication
+        }
+    }
+
+    func set(_ on: Bool, in preferences: inout TravelerPreferences) {
+        switch self {
+        case .workOut: preferences.usuallyWorkOut = on
+        case .laptop: preferences.usuallyBringLaptop = on
+        case .contacts: preferences.wearContacts = on
+        case .medication: preferences.alwaysBringMedication = on
+        }
+    }
+}
+
+/// The one mapping for prefill, the pre-9.1 backfill, and their tests.
+enum MeDefaultChoices {
+    static let habits = MeHabit.allCases
+
+    static func chips(for preferences: TravelerPreferences) -> Set<ContextChip> {
+        Set(habits.filter { $0.isOn(in: preferences) }.map(\.chip))
+    }
+
+    /// The reason code a habit-caused row carried when the engine still read
+    /// Me directly — identical to the trip-choice code.
+    static func reasonCode(_ chip: ContextChip) -> String { "preference.\(chip.rawValue)" }
+}
+
 enum ItemImportance: String, Codable, CaseIterable, Sendable {
     case critical
     case important
@@ -381,12 +430,12 @@ struct TravelerPreferences: Codable, Hashable, Sendable {
     var preferredBagTypes: Set<BagType> = []
     var usesFahrenheit: Bool
     var usesImperial: Bool
+    /// The four "Usually true for me" habits are defaults, never engine input
+    /// (Tasks 8.2–9.1). Each seeds a *new* trip's About you choice through
+    /// `MeDefaultChoices`; from then on that trip's own saved choice is its
+    /// only authority, so changing Me never changes an existing trip. The
+    /// stored names predate the boundary and stay for store compatibility.
     var usuallyWorkOut: Bool
-    /// A default, never engine input (Task 8.2). It seeds a *new* trip's
-    /// About you → Laptop choice (`TripDraft.fresh`); from then on that
-    /// trip's own `bringingLaptop` choice is its only laptop authority, so
-    /// changing Me never changes an existing trip. The stored name predates
-    /// the boundary and stays for store compatibility.
     var usuallyBringLaptop: Bool
     var wearContacts: Bool
     var alwaysBringMedication: Bool

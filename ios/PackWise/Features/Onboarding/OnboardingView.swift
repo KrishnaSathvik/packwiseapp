@@ -73,7 +73,6 @@ struct OnboardingView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) { controls }
         .background(PackWiseColor.screen)
-        .preferredColorScheme(.light)
         .onAppear { page = initialPage }
     }
 

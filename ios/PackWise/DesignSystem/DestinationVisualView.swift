@@ -46,14 +46,10 @@ struct DestinationVisualView: View {
         ZStack {
             switch resolvedID == taskID ? visual : nil {
             case .trusted(let image), .lookAround(let image):
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
+                AttributionSafeImage(image: image)
                     .transition(.opacity)
             case .map(let image):
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
+                AttributionSafeImage(image: image)
                     .overlay { mapMarker(imageSize: image.size) }
                     .transition(.opacity)
             case .graphical:
@@ -98,6 +94,24 @@ extension DestinationVisualView {
                     .position(point)
             }
         }
+    }
+}
+
+/// Fills its frame like `scaledToFill`, but crops only from the top and the
+/// trailing edge: Apple's imagery attribution sits in the bottom-leading
+/// corner and must survive any aspect a hero grows to (Task 9.1).
+struct AttributionSafeImage: View {
+    var image: UIImage
+
+    var body: some View {
+        GeometryReader { proxy in
+            let rect = DestinationVisualLayout.attributionSafeRect(imageSize: image.size, frame: proxy.size)
+            Image(uiImage: image)
+                .resizable()
+                .frame(width: rect.width, height: rect.height)
+                .offset(x: rect.minX, y: rect.minY)
+        }
+        .clipped()
     }
 }
 
@@ -156,13 +170,20 @@ enum DestinationVisualLayout {
     /// Marker radius including its halo.
     static let markerRadius: CGFloat = 17
 
-    /// Where `scaledToFill` puts a point that sits horizontally centered at
-    /// `heightFraction` of the image.
-    static func markerPoint(imageSize: CGSize, frame: CGSize, heightFraction: Double) -> CGPoint {
-        guard imageSize.width > 0, imageSize.height > 0 else { return CGPoint(x: frame.width / 2, y: frame.height / 2) }
+    /// The filled image's rectangle, anchored bottom-leading: overflow is
+    /// cropped from the top and the trailing edge only.
+    static func attributionSafeRect(imageSize: CGSize, frame: CGSize) -> CGRect {
+        guard imageSize.width > 0, imageSize.height > 0 else { return CGRect(origin: .zero, size: frame) }
         let scale = max(frame.width / imageSize.width, frame.height / imageSize.height)
-        let offsetY = (frame.height - imageSize.height * scale) / 2
-        return CGPoint(x: frame.width / 2, y: offsetY + imageSize.height * scale * heightFraction)
+        let size = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        return CGRect(x: 0, y: frame.height - size.height, width: size.width, height: size.height)
+    }
+
+    /// Where the fill puts a point horizontally centered at `heightFraction`
+    /// of the image.
+    static func markerPoint(imageSize: CGSize, frame: CGSize, heightFraction: Double) -> CGPoint {
+        let rect = attributionSafeRect(imageSize: imageSize, frame: frame)
+        return CGPoint(x: rect.minX + rect.width / 2, y: rect.minY + rect.height * heightFraction)
     }
 
     /// Without a band (thumbnails carry no text) the marker always shows.
@@ -255,8 +276,9 @@ struct DestinationScrim: View {
                 endPoint: .bottom
             )
             if topShade {
+                // Dark enough under light status-bar glyphs for any photo.
                 LinearGradient(
-                    colors: [.black.opacity(strong ? 0.5 : 0.32), .clear],
+                    colors: [.black.opacity(strong ? 0.6 : 0.45), .clear],
                     startPoint: .top,
                     endPoint: .center
                 )

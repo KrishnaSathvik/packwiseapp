@@ -183,9 +183,7 @@ struct TravelerEligibilityTests {
 
     @Test func primaryLaptopAndMedicationNeverReachTheChild() throws {
         let (party, toddler) = Self.family(child: Traveler(role: .child, ageGroup: .toddler))
-        let items = Self.engine.generate(context: try Self.context(party: party, chips: [.bringingLaptop, .dailyMedication, .wearContacts]) {
-            $0.alwaysBringMedication = true
-        })
+        let items = Self.engine.generate(context: try Self.context(party: party, chips: [.bringingLaptop, .dailyMedication, .wearContacts]))
         let primary = Self.ids(items, for: party.primary)
         #expect(primary.isSuperset(of: ["electronics.laptop", "electronics.laptop_charger", "health.daily_medication"]))
         let child = Self.ids(items, for: toddler)

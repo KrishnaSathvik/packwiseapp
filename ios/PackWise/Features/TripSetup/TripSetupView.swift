@@ -12,6 +12,7 @@ struct TripSetupView: View {
     var captureSearch: (any DestinationSearching)? = nil
     var captureQuery: String? = nil
     var captureDestination: Destination? = nil
+    var captureChanging = false
 
     @Environment(AppDependencies.self) private var dependencies
     @Environment(\.modelContext) private var modelContext
@@ -122,7 +123,8 @@ struct TripSetupView: View {
             query: $search,
             recents: DestinationRecents.recents(from: trips.filter { $0.id != existingTrip?.id }.map { ($0.destination, $0.createdAt) }),
             search: captureSearch ?? dependencies.destinationSearch,
-            prepare: attachFixture
+            prepare: attachFixture,
+            startsChanging: captureChanging
         )
     }
 

@@ -258,22 +258,16 @@ struct PackingEngine: Sendable {
     private func tripWideContext(_ context: TripContext) -> TripContext {
         var copy = context
         copy.contextChips = context.contextChips.intersection(ContextChip.tripLevel)
-        copy.preferences.usuallyWorkOut = false
-        copy.preferences.wearContacts = false
-        copy.preferences.alwaysBringMedication = false
         return copy
     }
 
     private func travelerChips(_ traveler: Traveler, context: TripContext) -> Set<ContextChip> {
         var chips = traveler.chips
         if traveler.role == .self {
+            // Me's habits are never read here (Tasks 8.2–9.1): they only
+            // prefill a new draft (`MeDefaultChoices`). The trip's own saved
+            // choices are the one authority for every About you signal.
             chips.formUnion(context.contextChips.subtracting(ContextChip.tripLevel))
-            // Laptop is deliberately absent (Task 8.2): Me's "I usually bring
-            // a laptop" only prefills a new draft's `bringingLaptop` choice.
-            // The trip's own saved choice is the one laptop authority.
-            if context.preferences.usuallyWorkOut { chips.insert(.usuallyWorkOut) }
-            if context.preferences.wearContacts { chips.insert(.wearContacts) }
-            if context.preferences.alwaysBringMedication { chips.insert(.dailyMedication) }
         }
         return chips
     }
@@ -511,16 +505,6 @@ struct PackingEngine: Sendable {
             if let ids = rules.contextChips[chip.rawValue] {
                 add(ids, signal: .userPreference, code: "preference.\(chip.rawValue)", fallback: chipReason(chip))
             }
-        }
-
-        if context.preferences.usuallyWorkOut {
-            add(rules.contextChips[ContextChip.usuallyWorkOut.rawValue] ?? [], signal: .userPreference, code: "preference.usuallyWorkOut", fallback: "You usually work out while traveling.")
-        }
-        if context.preferences.wearContacts {
-            add(rules.contextChips[ContextChip.wearContacts.rawValue] ?? [], signal: .userPreference, code: "preference.wearContacts", fallback: "You wear contacts.")
-        }
-        if context.preferences.alwaysBringMedication {
-            add(rules.contextChips[ContextChip.dailyMedication.rawValue] ?? [], signal: .userPreference, code: "preference.dailyMedication", fallback: "You take daily medication.")
         }
 
         if context.isInternationalConfirmed {
