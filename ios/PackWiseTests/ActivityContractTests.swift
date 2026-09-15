@@ -359,8 +359,8 @@ struct ActivityContractTests {
     /// Scope guard: this decides sharing only — a flashlight is not
     /// `singlePerParty`. It does not decide traveler/age eligibility (whether
     /// every traveler class, including an infant or toddler, independently
-    /// receives one); that is Family Hardening's (Phase 10) call via
-    /// `skipForYoungChildren`/`skipForInfantsAndToddlers`, not this phase's.
+    /// receives one); that is `TravelerEligibilityResolver`'s call (Product
+    /// Experience V2, Task 6: flashlight is school-age and up), not this one.
     @Test func aPartyCampingTripKeepsFlashlightsPersonalPerTraveler() throws {
         let engine = try makeEngine()
         let party = family(of: 4)

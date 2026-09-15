@@ -629,76 +629,6 @@
       ]
     },
     {
-      "canonicalItemID" : "toiletries.body_wash",
-      "carrier" : "primary",
-      "category" : "toiletries",
-      "displayName" : "Body wash",
-      "importance" : "normal",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.shampoo",
-      "carrier" : "primary",
-      "category" : "toiletries",
-      "displayName" : "Shampoo",
-      "importance" : "normal",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "toiletries.toothbrush",
       "carrier" : "primary",
       "category" : "toiletries",
@@ -734,80 +664,10 @@
       ]
     },
     {
-      "canonicalItemID" : "toiletries.toothpaste",
-      "carrier" : "primary",
-      "category" : "toiletries",
-      "displayName" : "Toothpaste",
-      "importance" : "important",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "travel_comfort.compression_packing",
       "carrier" : "primary",
       "category" : "travel_comfort",
       "displayName" : "Packing cubes",
-      "importance" : "normal",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.travel_comfort",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Keeps a full bag livable.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.travel_comfort",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "travel_comfort.laundry_bag",
-      "carrier" : "primary",
-      "category" : "travel_comfort",
-      "displayName" : "Laundry bag",
       "importance" : "normal",
       "owner" : "child",
       "provenance" : [
@@ -1349,115 +1209,10 @@
       ]
     },
     {
-      "canonicalItemID" : "toiletries.body_wash",
-      "carrier" : "primary",
-      "category" : "toiletries",
-      "displayName" : "Body wash",
-      "importance" : "normal",
-      "owner" : "child-2",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.shampoo",
-      "carrier" : "primary",
-      "category" : "toiletries",
-      "displayName" : "Shampoo",
-      "importance" : "normal",
-      "owner" : "child-2",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "toiletries.toothbrush",
       "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Toothbrush",
-      "importance" : "important",
-      "owner" : "child-2",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.toothpaste",
-      "carrier" : "primary",
-      "category" : "toiletries",
-      "displayName" : "Toothpaste",
       "importance" : "important",
       "owner" : "child-2",
       "provenance" : [
@@ -2020,87 +1775,6 @@
       ]
     },
     {
-      "canonicalItemID" : "health.blister_pads",
-      "carrier" : "partner",
-      "category" : "health",
-      "displayName" : "Blister pads",
-      "importance" : "normal",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Yellowstone"
-          },
-          "reasonCode" : "activity.hiking",
-          "sourceSignals" : [
-            "activity"
-          ]
-        },
-        {
-          "reasonArguments" : {
-            "tripType" : "outdoor"
-          },
-          "reasonCode" : "trip_type.generic",
-          "sourceSignals" : [
-            "tripType"
-          ],
-          "tripType" : "outdoor"
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Hiking is on your plans.",
-      "reasonArguments" : {
-        "destination" : "Yellowstone"
-      },
-      "reasonCode" : "activity.hiking",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity",
-        "tripType"
-      ]
-    },
-    {
-      "canonicalItemID" : "health.pain_reliever",
-      "carrier" : "partner",
-      "category" : "health",
-      "displayName" : "Pain reliever",
-      "importance" : "normal",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.health",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Better to have and not need.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.health",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "hydration.water_bottle",
       "carrier" : "partner",
       "category" : "essentials",
@@ -2182,81 +1856,11 @@
       ]
     },
     {
-      "canonicalItemID" : "toiletries.body_wash",
-      "carrier" : "partner",
-      "category" : "toiletries",
-      "displayName" : "Body wash",
-      "importance" : "normal",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "toiletries.deodorant",
       "carrier" : "partner",
       "category" : "toiletries",
       "displayName" : "Deodorant",
       "importance" : "important",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.shampoo",
-      "carrier" : "partner",
-      "category" : "toiletries",
-      "displayName" : "Shampoo",
-      "importance" : "normal",
       "owner" : "partner",
       "provenance" : [
         {
@@ -2322,80 +1926,10 @@
       ]
     },
     {
-      "canonicalItemID" : "toiletries.toothpaste",
-      "carrier" : "partner",
-      "category" : "toiletries",
-      "displayName" : "Toothpaste",
-      "importance" : "important",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "travel_comfort.compression_packing",
       "carrier" : "partner",
       "category" : "travel_comfort",
       "displayName" : "Packing cubes",
-      "importance" : "normal",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.travel_comfort",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Keeps a full bag livable.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.travel_comfort",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "travel_comfort.laundry_bag",
-      "carrier" : "partner",
-      "category" : "travel_comfort",
-      "displayName" : "Laundry bag",
       "importance" : "normal",
       "owner" : "partner",
       "provenance" : [
@@ -2993,87 +2527,6 @@
       ]
     },
     {
-      "canonicalItemID" : "health.blister_pads",
-      "carrier" : "primary",
-      "category" : "health",
-      "displayName" : "Blister pads",
-      "importance" : "normal",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Yellowstone"
-          },
-          "reasonCode" : "activity.hiking",
-          "sourceSignals" : [
-            "activity"
-          ]
-        },
-        {
-          "reasonArguments" : {
-            "tripType" : "outdoor"
-          },
-          "reasonCode" : "trip_type.generic",
-          "sourceSignals" : [
-            "tripType"
-          ],
-          "tripType" : "outdoor"
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Hiking is on your plans.",
-      "reasonArguments" : {
-        "destination" : "Yellowstone"
-      },
-      "reasonCode" : "activity.hiking",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity",
-        "tripType"
-      ]
-    },
-    {
-      "canonicalItemID" : "health.pain_reliever",
-      "carrier" : "primary",
-      "category" : "health",
-      "displayName" : "Pain reliever",
-      "importance" : "normal",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.health",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Better to have and not need.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.health",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "hydration.water_bottle",
       "carrier" : "primary",
       "category" : "essentials",
@@ -3155,41 +2608,6 @@
       ]
     },
     {
-      "canonicalItemID" : "toiletries.body_wash",
-      "carrier" : "primary",
-      "category" : "toiletries",
-      "displayName" : "Body wash",
-      "importance" : "normal",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "toiletries.deodorant",
       "carrier" : "primary",
       "category" : "toiletries",
@@ -3225,80 +2643,10 @@
       ]
     },
     {
-      "canonicalItemID" : "toiletries.shampoo",
-      "carrier" : "primary",
-      "category" : "toiletries",
-      "displayName" : "Shampoo",
-      "importance" : "normal",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "toiletries.toothbrush",
       "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Toothbrush",
-      "importance" : "important",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.toiletries",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.toiletries",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.toothpaste",
-      "carrier" : "primary",
-      "category" : "toiletries",
-      "displayName" : "Toothpaste",
       "importance" : "important",
       "owner" : "primary",
       "provenance" : [
@@ -3365,41 +2713,6 @@
       ]
     },
     {
-      "canonicalItemID" : "travel_comfort.laundry_bag",
-      "carrier" : "primary",
-      "category" : "travel_comfort",
-      "displayName" : "Laundry bag",
-      "importance" : "normal",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.travel_comfort",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Keeps a full bag livable.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.travel_comfort",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "travel_comfort.toiletry_bag",
       "carrier" : "primary",
       "category" : "travel_comfort",
@@ -3432,6 +2745,54 @@
       ],
       "signals" : [
         "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.blister_pads",
+      "carrier" : "unassigned",
+      "category" : "health",
+      "displayName" : "Blister pads",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "quantity" : "1",
+        "sharingPolicy" : "singlePerParty",
+        "travelerCount" : "4"
+      },
+      "reason" : "Hiking is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Yellowstone"
+      },
+      "reasonCode" : "activity.hiking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity",
+        "tripType"
       ]
     },
     {
@@ -3457,6 +2818,7 @@
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
         "quantity" : "1",
+        "sharingPolicy" : "singlePerParty",
         "travelerCount" : "4"
       },
       "reason" : "Suggested for a outdoor trip.",
@@ -3469,6 +2831,81 @@
       ],
       "signals" : [
         "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "carrier" : "unassigned",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.health",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "quantity" : "1",
+        "sharingPolicy" : "singlePerParty",
+        "travelerCount" : "4"
+      },
+      "reason" : "Better to have and not need.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.health",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "unassigned",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "per" : "4",
+        "quantity" : "1",
+        "sharingPolicy" : "scaleByParty",
+        "travelerCount" : "4"
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
       ]
     },
     {
@@ -3503,6 +2940,7 @@
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
         "quantity" : "1",
+        "sharingPolicy" : "singlePerParty",
         "travelerCount" : "4"
       },
       "reason" : "You're camping on this trip.",
@@ -3516,6 +2954,44 @@
       "signals" : [
         "activity",
         "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "unassigned",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "per" : "4",
+        "quantity" : "1",
+        "sharingPolicy" : "scaleByParty",
+        "travelerCount" : "4"
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
       ]
     },
     {
@@ -3539,7 +3015,9 @@
       "quantity" : 2,
       "quantityReason" : "2 for the group — not one per person.",
       "quantityReasonArguments" : {
+        "per" : "3",
         "quantity" : "2",
+        "sharingPolicy" : "scaleByParty",
         "travelerCount" : "4"
       },
       "reason" : "You're camping on this trip.",
@@ -3552,6 +3030,82 @@
       ],
       "signals" : [
         "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "unassigned",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "per" : "4",
+        "quantity" : "1",
+        "sharingPolicy" : "scaleByParty",
+        "travelerCount" : "4"
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "carrier" : "unassigned",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 2,
+      "quantityReason" : "2 for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "per" : "3",
+        "quantity" : "2",
+        "sharingPolicy" : "scaleByParty",
+        "travelerCount" : "4"
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
       ]
     }
   ],

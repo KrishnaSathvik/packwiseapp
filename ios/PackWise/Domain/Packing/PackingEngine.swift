@@ -1027,7 +1027,8 @@ struct PackingEngine: Sendable {
                             ["rainDaysPhrase": rainDaysPhrase, "umbrellaPhrase": umbrellaPhrase],
                             fallback: fallback
                         )
-                        copy.quantityReasonArguments = ["quantity": "\(quantity)", "rainDays": "\(weather.rainDays)"]
+                        copy.quantityReasonArguments = (ConstraintResolver.sharingEvidence(for: canonical, rules: rules.party, context: context, party: party) ?? [:])
+                            .merging(["rainDays": "\(weather.rainDays)"]) { current, _ in current }
                     } else {
                         let quantityPhrase = quantity == 1 ? "One" : "\(quantity)"
                         copy.quantityReason = render(
@@ -1035,7 +1036,7 @@ struct PackingEngine: Sendable {
                             ["quantityPhrase": quantityPhrase],
                             fallback: fallback
                         )
-                        copy.quantityReasonArguments = ["quantity": "\(quantity)", "travelerCount": "\(party.travelers.count)"]
+                        copy.quantityReasonArguments = ConstraintResolver.sharingEvidence(for: canonical, rules: rules.party, context: context, party: party) ?? [:]
                     }
                     return copy
                 }

@@ -8,11 +8,36 @@
     "essentials.snacks",
     "electronics.camera",
     "electronics.camera_charger",
-    "activities.beach_towel",
     "toiletries.insect_repellent",
     "kids.stroller",
     "kids.carrier",
-    "kids.wipes"
+    "kids.wipes",
+    "health.pain_reliever",
+    "health.blister_pads",
+    "health.motion_sickness",
+    "toiletries.laundry_sheets",
+    "documents.travel_insurance",
+    "documents.hotel_confirmation",
+    "documents.itinerary",
+    "documents.copies",
+    "documents.emergency_contacts",
+    "electronics.memory_card",
+    "electronics.power_strip",
+    "electronics.outlet_splitter",
+    "electronics.extension_cord",
+    "essentials.reusable_bag",
+    "activities.binoculars",
+    "miscellaneous.car_charger",
+    "miscellaneous.car_snacks",
+    "miscellaneous.gift",
+    "miscellaneous.wedding_card",
+    "kids.sunscreen",
+    "toiletries.toothpaste",
+    "toiletries.shampoo",
+    "toiletries.conditioner",
+    "toiletries.body_wash",
+    "travel_comfort.laundry_bag",
+    "activities.dry_bag"
   ],
   "ageGroups": {
     "infant": {
@@ -159,6 +184,111 @@
       "policy": "singlePerParty"
     },
     "kids.carrier": {
+      "policy": "singlePerParty"
+    },
+    "health.pain_reliever": {
+      "policy": "singlePerParty"
+    },
+    "health.blister_pads": {
+      "policy": "singlePerParty"
+    },
+    "health.motion_sickness": {
+      "policy": "singlePerParty"
+    },
+    "toiletries.laundry_sheets": {
+      "policy": "singlePerParty"
+    },
+    "documents.travel_insurance": {
+      "policy": "singlePerParty"
+    },
+    "documents.hotel_confirmation": {
+      "policy": "singlePerParty"
+    },
+    "documents.itinerary": {
+      "policy": "singlePerParty"
+    },
+    "documents.copies": {
+      "policy": "singlePerParty"
+    },
+    "documents.emergency_contacts": {
+      "policy": "singlePerParty"
+    },
+    "electronics.memory_card": {
+      "policy": "singlePerParty"
+    },
+    "electronics.power_strip": {
+      "policy": "singlePerParty"
+    },
+    "electronics.outlet_splitter": {
+      "policy": "singlePerParty"
+    },
+    "electronics.extension_cord": {
+      "policy": "singlePerParty"
+    },
+    "essentials.reusable_bag": {
+      "policy": "singlePerParty"
+    },
+    "activities.binoculars": {
+      "policy": "singlePerParty"
+    },
+    "miscellaneous.car_charger": {
+      "policy": "singlePerParty"
+    },
+    "miscellaneous.car_snacks": {
+      "policy": "singlePerParty"
+    },
+    "miscellaneous.gift": {
+      "policy": "singlePerParty"
+    },
+    "miscellaneous.wedding_card": {
+      "policy": "singlePerParty"
+    },
+    "kids.sunscreen": {
+      "policy": "singlePerParty"
+    },
+    "toiletries.toothpaste": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "toiletries.shampoo": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "toiletries.conditioner": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "toiletries.body_wash": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "travel_comfort.laundry_bag": {
+      "policy": "scaleByParty",
+      "per": 3,
+      "min": 1
+    },
+    "activities.dry_bag": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "health.bandages": {
+      "policy": "singlePerParty"
+    },
+    "electronics.camera": {
+      "policy": "singlePerParty"
+    },
+    "electronics.camera_charger": {
+      "policy": "singlePerParty"
+    },
+    "toiletries.insect_repellent": {
+      "policy": "singlePerParty"
+    },
+    "kids.wipes": {
       "policy": "singlePerParty"
     }
   },

@@ -178,6 +178,40 @@ extension ConstraintResolver {
         return .shared(quantity: quantity, reason: reason)
     }
 
+    /// The structured scaling basis behind a shared quantity (Product
+    /// Experience V2, Task 7), written into the item's
+    /// `quantityReasonArguments` — the one Phase 8 quantity trace. Names the
+    /// policy and exactly the counts that policy reads: travelers for party
+    /// scaling, device owners for device scaling, and days as well for
+    /// duration scaling. Nil for personal items.
+    static func sharingEvidence(
+        for canonicalItemID: String,
+        rules: PartyRulesFile,
+        context: TripContext,
+        party: TripParty
+    ) -> [String: String]? {
+        guard case .shared(let quantity, _) = sharingResolution(for: canonicalItemID, rules: rules, context: context, party: party) else {
+            return nil
+        }
+        let rule = rules.sharingPolicies[canonicalItemID] ?? SharingPolicyRule(policy: .singlePerParty, per: nil, min: 1, value: 1)
+        var evidence = ["quantity": "\(quantity)", "sharingPolicy": rule.policy.rawValue]
+        switch rule.policy {
+        case .singlePerParty, .personalOnly:
+            evidence["travelerCount"] = "\(party.travelers.count)"
+        case .scaleByParty:
+            evidence["travelerCount"] = "\(party.travelers.count)"
+            evidence["per"] = "\(max(1, rule.per ?? 1))"
+        case .scaleByDevices:
+            evidence["deviceCount"] = "\(max(1, party.adults.count))"
+            evidence["per"] = "\(max(1, rule.per ?? 1))"
+        case .scaleByDurationAndParty:
+            evidence["travelerCount"] = "\(party.travelers.count)"
+            evidence["days"] = "\(context.durationDays)"
+            evidence["per"] = "\(max(1, rule.per ?? 1))"
+        }
+        return evidence
+    }
+
     private static func sharedQuantity(_ rule: SharingPolicyRule, context: TripContext, party: TripParty) -> Int {
         let minimum = rule.min ?? 1
         let per = max(1, rule.per ?? 1)

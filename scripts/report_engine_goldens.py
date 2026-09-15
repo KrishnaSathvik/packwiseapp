@@ -71,6 +71,9 @@ _TRACE_FIELDS = (
     "reason",
     "quantity_reason",
     "quantity_evidence",
+    "quantity_reason_arguments",
+    "satisfied_capabilities",
+    "bag_style_constraint_fact",
     "provenance",
     "user_modified",
 )
@@ -86,6 +89,9 @@ _TRACE_FIELD_JSON_NAMES = {
     "reason": "reason",
     "quantity_reason": "quantityReason",
     "quantity_evidence": "quantityEvidence",
+    "quantity_reason_arguments": "quantityReasonArguments",
+    "satisfied_capabilities": "satisfiedCapabilities",
+    "bag_style_constraint_fact": "bagStyleConstraintFact",
     "provenance": "provenance",
     "user_modified": "userModified",
 }
@@ -110,6 +116,10 @@ class GoldenItem:
     # V2, Task 4). Absent in goldens recorded before provenance existed.
     provenance: Optional[str]
     user_modified: object
+    # Phase 8 fields; empty/None in goldens recorded before they existed.
+    quantity_reason_arguments: Tuple[Tuple[str, str], ...] = ()
+    satisfied_capabilities: Tuple[str, ...] = ()
+    bag_style_constraint_fact: Optional[str] = None
 
     @property
     def key(self) -> ItemKey:
@@ -141,6 +151,13 @@ class GoldenItem:
                 else None
             ),
             user_modified=raw.get("userModified"),
+            quantity_reason_arguments=tuple(sorted((raw.get("quantityReasonArguments") or {}).items())),
+            satisfied_capabilities=tuple(raw.get("satisfiedCapabilities") or []),
+            bag_style_constraint_fact=(
+                json.dumps(raw["bagStyleConstraintFact"], sort_keys=True, separators=(",", ":"))
+                if raw.get("bagStyleConstraintFact") is not None
+                else None
+            ),
         )
 
 

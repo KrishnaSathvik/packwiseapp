@@ -243,7 +243,7 @@ struct GoldenEngineTests {
     }
 
     @Test func quantityReasonArgumentsNeverWritesAKeyOutsideTheClosedVocabulary() throws {
-        let allowed: Set<String> = ["quantity", "days", "rate", "name", "travelerCount", "rainDays"]
+        let allowed: Set<String> = ["quantity", "days", "rate", "name", "travelerCount", "rainDays", "sharingPolicy", "per", "deviceCount"]
         for output in try allGoldenFixtures() {
             for item in output.items {
                 for key in item.quantityReasonArguments.keys {
