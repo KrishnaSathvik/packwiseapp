@@ -24,6 +24,7 @@ Task 4  Multi-trip-type engine composition
 Task 5  Multi-bag luggage semantics
 Task 6  Traveler eligibility, including documents
 Task 7  Catalog-wide sharing audit
+Task 7.1 Family eligibility and sharing refinement (device evidence, child formal, infant sun hat, eligible-consumer scaling)
 Checkpoint V  One contact sheet for all major V2 reference states
 Tasks 8–13 Production UX wiring and recommendation naming
 Tasks 16–18 Authority, full automation, and physical-device exit gate

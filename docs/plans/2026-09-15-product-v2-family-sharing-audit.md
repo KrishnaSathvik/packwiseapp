@@ -1,4 +1,4 @@
-# Product Experience V2, Tasks 6–7 — family eligibility and sharing audit
+# Product Experience V2, Tasks 6–7.1 — family eligibility and sharing audit
 
 Date: 2026-09-15 · Branch: `product-v2-stage-a` · Baselines: `744c02e` (Task 5 closed), `3ca4bf3` (Task 6)
 
@@ -19,7 +19,8 @@ Eligibility never decides quantity, sharing, carrier, or coverage. Sharing reads
 | --- | --- |
 | `744c02e` | Task 5 decisions closed as approved semantics |
 | `3ca4bf3` | Task 6: eligibility authority, metadata for all 202 items, validator, eligibility ledger |
-| Task 7 | Sharing policies, scaling evidence, report trace fields, this audit |
+| `df38dd5` | Task 7: sharing policies, scaling evidence, report trace fields, this audit |
+| Task 7.1 | Device ownership needs evidence, child formal outfit, infant sun hat, eligible-consumer scaling ([section](#task-71--family-eligibility-and-sharing-refinement)) |
 
 ## Task 6 — eligibility
 
@@ -37,14 +38,14 @@ Every catalog item has exactly one family in `shared/rules/party.json` `eligibil
 | Family | Eligible when | Otherwise | Examples |
 | --- | --- | --- | --- |
 | `universal` | always | — | sunscreen, first aid, travel adapter, beach towel |
-| `adultOrTeen` | adult or teen | `ineligible: adult_or_teen_only` | wallet, keys, deodorant, pain reliever, formal clothing |
+| `adultOrTeen` | adult or teen | `ineligible: adult_or_teen_only` | wallet, keys, deodorant, pain reliever, blazer, dress shoes |
 | `ageSpecific` | traveler's age is listed | `ineligible: not_for_age_group` | ordinary clothing and footwear (not infant); daypack, book, flashlight (school-age+); burp cloths (infant) |
 | `explicitChildNeed` | the traveler's own need is selected | `requiresExplicitSignal: child_need.<need>` | diapers, wipes, stroller, car seat, carrier, formula, child medication, comfort item |
-| `deviceSignalRequired` | adult or teen (presumed device owner), or the traveler's own device signal | `requiresExplicitSignal: device_signal_required` / `device_signal.<chip>` | phone, phone charger, power bank, headphones; laptop (signal `bringingLaptop`) |
+| `deviceSignalRequired` | named signal: the traveler's own chip or preference, or a solo list's own trip context; unnamed: the primary traveler only (Task 7.1) | `requiresExplicitSignal: device_signal_required` / `device_signal.<chip>` | phone, phone charger, power bank, headphones; laptop (signal `bringingLaptop`) |
 | `travelerSignalRequired` | the traveler's own signal, at any age | `requiresExplicitSignal: traveler_signal.<chip>` | daily medication, prescription copy (`dailyMedication`); contacts (`wearContacts`) |
 | `travelerDocument` | `all`, or `adultOrTeen` by age | `ineligible: adult_or_teen_only` | passport, visa (all); photo ID (adult/teen) |
 
-- **Signals are attributed, never inferred.** A traveler's signals are their own chips; the primary's also include their preferences. Trip-wide context (a Work activity, a Business or Leisure trip type) is no one's signal, so it never makes a child eligible for a device.
+- **Signals are attributed, never inferred.** A traveler's signals are their own chips; the primary's also include their preferences. On a party list, trip-wide context (a Work activity, a Business or Leisure trip type) is no one's signal, so it makes no traveler of any age eligible for a laptop. On a solo list that context can only be the traveler's own.
 - **Missing metadata resolves conservatively:** eligible for an adult, `ineligible: missing_eligibility_metadata` for anyone younger.
 - **Explicit user rows are never evaluated.** An added or edited row for a traveler passes the gate untouched, so eligibility controls generated recommendations only. Companions follow their trigger: a laptop the user adds for a child still brings its charger.
 
@@ -208,7 +209,7 @@ Generated from `shared/rules/party.json` and `shared/catalog/*.json`. "Generated
 | `activities.beach_towel` | Beach towel | universal | personalOnly | one per eligible traveler | Was a single shared towel for any party size (an undercount); one per traveler. | FamilySharingTests.flashlight…BeachTowels; goldens 06,23,39,41 |
 | `activities.binoculars` | Binoculars | ageSpecific: adult/teen/child | singlePerParty | 1 for the party | One pair shared on a wildlife day. | FamilySharingTests.auditedTripExtras… |
 | `activities.daypack` | Daypack | ageSpecific: adult/teen/child | personalOnly | one per eligible traveler | A bag the traveler carries; school-age and up. | TravelerEligibilityTests.infant…, fixtures 12/16/24/37; goldens 01,08,09,10,11,12… |
-| `activities.dry_bag` | Dry bag | ageSpecific: adult/teen/child | scaleByParty | ceil(travelers / 4) | Protects the party's valuables; one per four travelers. | FamilySharingTests.auditedTripExtras… |
+| `activities.dry_bag` | Dry bag | ageSpecific: adult/teen/child | scaleByParty | ceil(eligible consumers / 4) | Protects the party's valuables; one per four eligible travelers. | FamilySharingTests.auditedTripExtras… |
 | `activities.festival_earplugs` | High-fidelity earplugs | universal | personalOnly | one per eligible traveler | Appropriate for any traveler. | goldens 47 |
 | `activities.goggles` | Swim goggles | ageSpecific: adult/teen/child | personalOnly | one per eligible traveler | Age-appropriate by group. | none (see findings) |
 | `activities.running_belt` | Running belt | adultOrTeen | personalOnly | one per eligible traveler | Adult/teen item by age. | none (see findings) |
@@ -220,9 +221,9 @@ Generated from `shared/rules/party.json` and `shared/catalog/*.json`. "Generated
 | `clothing.blazer` | Blazer | adultOrTeen | personalOnly | one per eligible traveler | Adult/teen item by age. | goldens 07,22,35,42,43 |
 | `clothing.coverup` | Swim cover-up | ageSpecific: adult/teen/child/toddler | personalOnly | one per eligible traveler | Age-appropriate by group. | goldens 39,41 |
 | `clothing.dress_shirt` | Dress shirts | adultOrTeen | personalOnly | personal `formal_top` policy | Adult/teen item by age. | goldens 07,22,35,42,43 |
-| `clothing.formal_outfit` | Formal outfit | adultOrTeen | personalOnly | one per eligible traveler | Adults/teens (unchanged child exclusion; see finding). | goldens 46 |
+| `clothing.formal_outfit` | Formal outfit | ageSpecific: adult/teen/child/toddler | personalOnly | one per eligible traveler | Task 7.1: size-agnostic event outfit, so children and toddlers at a formal event get one; infants keep the infant clothing model. Copy is a Task 13 naming item. | TravelerEligibilityTests.childrenAtAWedding…; goldens 46 |
 | `clothing.gloves` | Gloves | ageSpecific: adult/teen/child/toddler | personalOnly | one per eligible traveler | Age-appropriate by group. | goldens 15,16,32,34,35 |
-| `clothing.hat_sun` | Sun hat | ageSpecific: adult/teen/child/toddler | personalOnly | one per eligible traveler | Age-appropriate by group. | goldens 06,19,23,24,31,39… |
+| `clothing.hat_sun` | Sun hat | ageSpecific: all ages | personalOnly | one per eligible traveler | Task 7.1: infants included; still only from sun context (hot weather, sun-exposure need). | TravelerEligibilityTests.sunnyInfantTrips…; goldens 06,19,23,24,31,39… |
 | `clothing.hoodie` | Hoodie | ageSpecific: adult/teen/child/toddler | personalOnly | personal `layer` policy | Age-appropriate by group. | goldens 15,16,21,32,34,35… |
 | `clothing.light_jacket` | Light jacket | ageSpecific: adult/teen/child/toddler | personalOnly | personal `layer` policy | Age-appropriate by group. | none (see findings) |
 | `clothing.light_sweater` | Light sweater | ageSpecific: adult/teen/child/toddler | personalOnly | personal `layer` policy | Age-appropriate by group. | goldens 01,02,03,04,05,07… |
@@ -250,16 +251,16 @@ Generated from `shared/rules/party.json` and `shared/catalog/*.json`. "Generated
 | `electronics.camera_charger` | Camera charger | deviceSignalRequired | singlePerParty | 1 for the party | Follows the one party camera. | goldens 52 |
 | `electronics.earbuds_case` | Earbuds | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device; removed from the child age rule (age is not device evidence). | TravelerEligibilityTests.schoolAge… |
 | `electronics.headphones` | Headphones | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device. | TravelerEligibilityTests, PackingEngineTests.schoolAgeChild…; goldens 02,03,04,05,07,12… |
-| `electronics.laptop` | Laptop | deviceSignalRequired: bringingLaptop | personalOnly | one per eligible traveler | Personal device: adults/teens presumed; younger travelers need their own signal. | TravelerEligibilityTests.primaryLaptop…, unattributedDevice…; goldens 07,22,35,42,43 |
-| `electronics.laptop_charger` | Laptop charger | deviceSignalRequired: bringingLaptop | personalOnly | one per eligible traveler | Companion of the owner's laptop only. | TravelerEligibilityTests.primaryLaptop…; goldens 07,22,35,42,43 |
+| `electronics.laptop` | Laptop | deviceSignalRequired: bringingLaptop | personalOnly | one per eligible traveler | Task 7.1: only the traveler's own laptop signal (or a solo trip's own context); Business/Work never gives every adult a laptop. | TravelerEligibilityTests.deviceOwnershipRequires…, primaryLaptop…, aTeensOwnLaptop…; goldens 07,22,35,42,43 |
+| `electronics.laptop_charger` | Laptop charger | deviceSignalRequired: bringingLaptop | personalOnly | one per eligible traveler | Companion of the owner's laptop only. | TravelerEligibilityTests.deviceOwnershipRequires…, explicitlyAdded…; goldens 07,22,35,42,43 |
 | `electronics.memory_card` | Memory card | deviceSignalRequired | singlePerParty | 1 for the party | Was personal while the camera was shared — now follows the one party camera. | goldens 52 |
-| `electronics.phone_charger` | Phone charger | deviceSignalRequired | personalOnly | one per eligible traveler | Tied to device ownership: adults/teens presumed; never multiplied by children. | FamilySharingTests.couple…, TravelerEligibilityTests.toddler…; goldens 01,02,03,04,05,06… |
+| `electronics.phone_charger` | Phone charger | deviceSignalRequired | personalOnly | one per eligible traveler | Task 7.1: the primary traveler only; no companion has device evidence. | FamilySharingTests.couple…, TravelerEligibilityTests.unsignaledDevices…; goldens 01,02,03,04,05,06… |
 | `electronics.power_bank` | Portable charger | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device. | TravelerEligibilityTests.toddler…, fixtures 12/16/24; goldens 01,08,09,10,11,12… |
-| `electronics.travel_adapter` | Travel adapter | universal | scaleByDevices | ceil(device owners / 2) | Unchanged: scales with device owners, never party size. | FamilySharingTests.groupOfAdults…; goldens 02,03,04,05,13,14… |
+| `electronics.travel_adapter` | Travel adapter | universal | scaleByDevices | ceil(deviceCount / 2) | Unchanged Phase 7 basis: `deviceCount` is adults and teens, now computed by the engine so sharing reads no age (see finding 7.1-F2). | FamilySharingTests.groupOfAdults…, travelAdapterScales…; goldens 02,03,04,05,13,14… |
 | `essentials.cash` | Local cash | adultOrTeen | personalOnly | one per eligible traveler | Adults/teens carry their own cash. | goldens 02,03,04,05,13,14… |
 | `essentials.hand_sanitizer` | Hand sanitizer | universal | personalOnly | one per eligible traveler | Appropriate for any traveler. | goldens 47 |
 | `essentials.keys` | Keys | adultOrTeen | personalOnly | one per eligible traveler | Adults/teens. | TravelerEligibilityTests.toddler…; goldens 01,02,03,04,05,06… |
-| `essentials.phone` | Phone | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device; adults/teens presumed. | TravelerEligibilityTests.schoolAge…Teen; goldens 01,02,03,04,05,06… |
+| `essentials.phone` | Phone | deviceSignalRequired | personalOnly | one per eligible traveler | Task 7.1: the primary traveler only. | TravelerEligibilityTests.unsignaledDevices…, schoolAge…Teen; goldens 01,02,03,04,05,06… |
 | `essentials.reusable_bag` | Reusable tote | adultOrTeen | singlePerParty | 1 for the party | One shopping bag for the party. | FamilySharingTests.auditedTripExtras…; goldens 50 |
 | `essentials.snacks` | Travel snacks | universal | scaleByDurationAndParty | ceil(travelers × days / 4) | Unchanged: scales with party and duration. | goldens 18 |
 | `essentials.sunglasses` | Sunglasses | ageSpecific: adult/teen/child/toddler | personalOnly | one per eligible traveler | Sun protection; not for infants. | TravelerEligibilityTests.infant…; goldens 01,02,03,04,05,06… |
@@ -314,11 +315,11 @@ Generated from `shared/rules/party.json` and `shared/catalog/*.json`. "Generated
 | `toiletries.shampoo` | Shampoo | ageSpecific: adult/teen/child/toddler | scaleByParty | ceil(travelers / 4) | Hotel-style shared bottle; one per four travelers. | FamilySharingTests; goldens 01,02,03,04,05,06… |
 | `toiletries.sunscreen` | Sunscreen | universal | scaleByParty | ceil(travelers / 3) | Unchanged Phase 7 policy: one bottle per three travelers. | goldens 02,03,04,05,06,12… |
 | `toiletries.toothbrush` | Toothbrush | ageSpecific: adult/teen/child/toddler | personalOnly | one per eligible traveler | Personal; not for infants. | FamilySharingTests.couple…, TravelerEligibilityTests.infant…; goldens 01,02,03,04,05,06… |
-| `toiletries.toothpaste` | Toothpaste | ageSpecific: adult/teen/child/toddler | scaleByParty | ceil(travelers / 4) | A tube serves several people; per-traveler rows were the device-pass duplication. Toddler use counts toward the party, not a second tube. | FamilySharingTests (couple, family, larger family, solo); goldens 01,02,03,04,05,06… |
+| `toiletries.toothpaste` | Toothpaste | ageSpecific: adult/teen/child/toddler | scaleByParty | ceil(eligible consumers / 4) | A tube serves several people; per-traveler rows were the device-pass duplication. An infant is not a consumer. | FamilySharingTests (couple, family, larger family, solo, eligible consumers); goldens 01,02,03,04,05,06… |
 | `travel_comfort.book` | Book or magazine | ageSpecific: adult/teen/child | personalOnly | one per eligible traveler | Each reader brings their own; school-age and up. | goldens 04,12,16,20,24,33… |
 | `travel_comfort.compression_packing` | Packing cubes | ageSpecific: adult/teen/child | personalOnly | one per eligible traveler | Organizes one traveler's own clothing; school-age and up (younger children's clothes go in a guardian's cubes). | goldens 01,02,03,04,05,06… |
 | `travel_comfort.empty_security_bottle` | Empty security bottle | ageSpecific: adult/teen/child | personalOnly | one per eligible traveler | Age-appropriate by group. | goldens 01,02,03,05,06,08… |
-| `travel_comfort.laundry_bag` | Laundry bag | ageSpecific: adult/teen/child | scaleByParty | ceil(travelers / 3) | Collects dirty clothes for two to three people's luggage; four travelers → 2. | FamilySharingTests.largerFamily…; goldens 01,02,03,04,05,06… |
+| `travel_comfort.laundry_bag` | Laundry bag | ageSpecific: adult/teen/child | scaleByParty | ceil(eligible consumers / 3) | Collects dirty clothes for two to three people's luggage; fixture 37's toddler is not a consumer, so ×1. | FamilySharingTests.sharedQuantitiesScaleFromEligibleConsumers, largerFamily…; goldens 01,02,03,04,05,06… |
 | `travel_comfort.toiletry_bag` | Toiletry bag | ageSpecific: adult/teen/child | personalOnly | one per eligible traveler | Holds the traveler's personal toiletries (toothbrush, deodorant, razor); shared tubes don't make it shared. | goldens 01,02,03,04,05,06… |
 
 ### Catalog items no rule generates (87)
@@ -352,14 +353,14 @@ These appear only when a user adds them, and user rows are never evaluated. Thei
 | `documents.hotel_confirmation` | Hotel confirmation | adultOrTeen | singlePerParty | 1 for the party | Adult/teen item by age. | none (see findings) |
 | `documents.itinerary` | Printed itinerary | adultOrTeen | singlePerParty | 1 for the party | Adult/teen item by age. | none (see findings) |
 | `electronics.extension_cord` | Short extension cord | adultOrTeen | singlePerParty | 1 for the party | Adult/teen item by age. | none (see findings) |
-| `electronics.hdmi` | HDMI cable | deviceSignalRequired: bringingLaptop | personalOnly | one per eligible traveler | Personal device: adults/teens presumed; younger travelers need their own signal. | none (see findings) |
-| `electronics.kindle` | E-reader | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device: adults/teens presumed; younger travelers need their own signal. | none (see findings) |
-| `electronics.mouse` | Travel mouse | deviceSignalRequired: bringingLaptop | personalOnly | one per eligible traveler | Personal device: adults/teens presumed; younger travelers need their own signal. | none (see findings) |
+| `electronics.hdmi` | HDMI cable | deviceSignalRequired: bringingLaptop | personalOnly | one per eligible traveler | Follows the traveler's own laptop signal. | none (see findings) |
+| `electronics.kindle` | E-reader | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device: the primary traveler only. | none (see findings) |
+| `electronics.mouse` | Travel mouse | deviceSignalRequired: bringingLaptop | personalOnly | one per eligible traveler | Follows the traveler's own laptop signal. | none (see findings) |
 | `electronics.outlet_splitter` | USB hub / splitter | adultOrTeen | singlePerParty | 1 for the party | Adult/teen item by age. | none (see findings) |
 | `electronics.power_strip` | Travel power strip | adultOrTeen | singlePerParty | 1 for the party | Not generated; one per party if emitted. | none (see findings) |
 | `electronics.sim_ejector` | SIM ejector | adultOrTeen | personalOnly | one per eligible traveler | Adult/teen item by age. | none (see findings) |
-| `electronics.tablet` | Tablet | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device: adults/teens presumed; younger travelers need their own signal. | none (see findings) |
-| `electronics.watch_charger` | Watch charger | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device: adults/teens presumed; younger travelers need their own signal. | none (see findings) |
+| `electronics.tablet` | Tablet | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device: the primary traveler only. | TravelerEligibilityTests.explicitlyAdded… (user row) |
+| `electronics.watch_charger` | Watch charger | deviceSignalRequired | personalOnly | one per eligible traveler | Personal device: the primary traveler only. | none (see findings) |
 | `essentials.home_keys` | House keys | adultOrTeen | personalOnly | one per eligible traveler | Adult/teen item by age. | none (see findings) |
 | `essentials.lip_balm` | Lip balm | ageSpecific: adult/teen/child/toddler | personalOnly | one per eligible traveler | Age-appropriate by group. | none (see findings) |
 | `essentials.notebook` | Small notebook | adultOrTeen | personalOnly | one per eligible traveler | Adult/teen item by age. | none (see findings) |
@@ -417,10 +418,129 @@ These appear only when a user adds them, and user rows are never evaluated. Thei
 
 ## Decisions and findings
 
-1. **Adults and teens are presumed device owners.** Trip-wide device context (Business, Work, Leisure headphones) still reaches every adult and teen, as it did before, and never a child. This keeps adult lists unchanged. Attributing a work laptop to one specific adult would need a per-traveler work signal, which setup doesn't collect.
+Findings 1, 3, 4, and 5 below are the Task 6–7 review calls. Task 7.1 resolved them; see the next section.
+
+1. **Superseded by Task 7.1 — adults and teens were presumed device owners.** Trip-wide device context (Business, Work, Leisure headphones) still reaches every adult and teen, as it did before, and never a child. This keeps adult lists unchanged. Attributing a work laptop to one specific adult would need a per-traveler work signal, which setup doesn't collect.
 2. **Sippy cup is age-specific (toddler), not formula/feeding equipment.** It is a drinking cup; bottles and formula require the `formula` need, which setup offers only for infants.
-3. **Formal clothing stays adult/teen**, which preserves the old child exclusion. A child attending a wedding therefore gets nothing formal. This is a missing-dimension candidate for review, not changed here.
-4. **Infant sun protection:** the infant clothing model (extra outfits and sleep sack) has no sun hat. Fixture `24`'s Miami infant now has 3 personal rows, all appropriate, but no sun hat. Recorded, not invented.
-5. **Party scaling counts every traveler, infants included** (for example, toothpaste per 4). Counting only eligible users would move eligibility into sharing, which the architecture forbids. The effect is at most one extra shared tube in large parties with infants.
+3. **Superseded by Task 7.1 — formal clothing stayed adult/teen**, which preserves the old child exclusion. A child attending a wedding therefore gets nothing formal. This is a missing-dimension candidate for review, not changed here.
+4. **Superseded by Task 7.1 — infant sun protection:** the infant clothing model (extra outfits and sleep sack) has no sun hat. Fixture `24`'s Miami infant now has 3 personal rows, all appropriate, but no sun hat. Recorded, not invented.
+5. **Superseded by Task 7.1 — party scaling counted every traveler, infants included** (for example, toothpaste per 4). Counting only eligible users would move eligibility into sharing, which the architecture forbids. The effect is at most one extra shared tube in large parties with infants.
 6. **No shared naming helper exists.** The fallback labels "You / Adult 1 / Adult 2 / Child 1 / Shared" belong to Task 8/11. The engine and goldens use role slugs.
 7. **Test coverage gap:** 16 generated items have no golden row and no explicit Task 6/7 test: goggles, running belt, snorkel, yoga mat, light jacket, windbreaker, flip-flops, water shoes, eye drops, prescription copy, bottles, changing pad, formula, pacifiers, swim diapers, and contact case. Several are exercised by other suites (coverage and multi-bag tests emit flip-flops and shells). All are personal, and their eligibility is enforced by the validator's metadata and age-rule checks.
+
+## Task 7.1 — family eligibility and sharing refinement
+
+Baseline: `68990b5` (Tasks 6–7). Four review calls, one pass.
+
+### Device ownership needs evidence
+
+Age answers "can this traveler use it?", never "does this traveler own it?".
+
+| Device kind | Eligible when | Otherwise |
+| --- | --- | --- |
+| Named signal (`bringingLaptop`: laptop, laptop charger, HDMI, mouse) | the traveler's own chip or preference; on a solo list, also the trip's own context | `requiresExplicitSignal: device_signal.bringingLaptop` |
+| No named signal (phone, phone charger, power bank, headphones, earbuds, tablet, e-reader, camera…) | the primary traveler (`role == self`) | `requiresExplicitSignal: device_signal_required` |
+
+- **Primary traveler (decision for review, 7.1-D1).** Setup collects no per-traveler phone signal. The one traveler with evidence is the primary, who runs PackWise on their own phone. Without this, adding a partner would remove your own phone from your list.
+- **Solo context (7.1-D2).** A solo trip's Business type or Work activity can only belong to its traveler, so the solo laptop is unchanged. On a party list the same context names no one, and nobody gets a laptop without their own signal.
+- **Teen age rule.** The teen age rule no longer adds earbuds or a phone charger. `validate_shared.py` now rejects any age-group add of a device, because its mirror evaluates a companion with no device evidence.
+- **User authority.** Explicit rows are never evaluated. A user-added laptop for Adult 1 keeps its charger companion. A user-added child tablet survives. An edited Adult 1 phone-charger row keeps its quantity, owner, and carrier.
+
+| Scenario | Result | Test |
+| --- | --- | --- |
+| Solo adult + Laptop | laptop + charger | `deviceOwnershipRequiresATravelerScopedSignal` |
+| Solo Business, no preference | laptop + charger (sole-traveler context) | same |
+| Business party of 2 adults, only You has Laptop | You: laptop + charger; Adult 1: none | same |
+| Business party, no signal anywhere | nobody; You's withheld laptop is recorded as `device_signal.bringingLaptop` | same; `soloRecordsNoEligibilityDecisionsAndAdultPartiesOnlyWithheldDevices` |
+| Partner and teen with no device signal | no phone, charger, power bank, headphones, earbuds, or laptop; You keep phone + charger | `unsignaledDevicesReachOnlyThePrimaryTraveler`, `schoolAgeChildAndTeenFollowAgeWithoutDeviceInference` |
+| Teen with own `bringingLaptop` chip | laptop + charger, still no phone items; never propagates to You | `aTeensOwnLaptopSignalIsHonoredWithoutAddingOtherDevices` |
+| User-added child tablet, Adult 1 laptop | both survive; laptop brings its charger; never offered for removal | `explicitlyAddedChildAndCompanionElectronicsSurvive` |
+
+### Formal events
+
+- **Outfit.** `clothing.formal_outfit` is now `ageSpecific` for adults, teens, children, and toddlers, so a child or toddler at a wedding gets an event outfit.
+- **Accessories stay adult/teen.** Dress shoes, blazer, dress shirt, and tie never reach a child.
+- **Infants.** An infant keeps the infant clothing model.
+- **No formal context.** Without one, no child gets an outfit.
+- **Naming.** "Formal outfit" wording for children goes to Task 13.
+- **Test:** `childrenAtAWeddingGetAFormalOutfitButNoAdultAccessories`.
+
+### Infant sun hat
+
+- **Eligibility.** `clothing.hat_sun` now includes infants. Its only sources are hot-weather signals and the beach `sunExposure` need, so a hat still needs sun context. Hot Miami or a beach trip adds it; wet Seattle does not.
+- **No new infant sun care.** Sunglasses stay excluded and nothing adds kids' sunscreen.
+- **Existing gap, unchanged.** `toiletries.sunscreen` remains `universal`, so it still counts an infant consumer. No infant sunscreen *product* is inferred. This is recorded as finding 7.1-F1.
+- **Test:** `sunnyInfantTripsAddASunHatOnlyWithSunContext`.
+
+### Eligible-consumer scaling
+
+```text
+candidate × traveler → TravelerEligibilityResolver → eligible travelers per shared item
+  → PackingEngine.sharingBasis → SharingBasis(partyTravelerCount, eligibleConsumerCount, deviceCount)
+  → ConstraintResolver.sharingResolution → quantity + evidence
+```
+
+- **Scaling basis.** `scaleByParty` and `scaleByDurationAndParty` now scale by `eligibleConsumerCount`: the travelers eligibility passed the item for during generation. A shared companion is never generated per traveler, so it asks the resolver directly. Policy names are unchanged.
+- **No age in sharing.** `ConstraintResolver` receives counts only. Membership is now its own `isShared(_:rules:)`. The adapter's adult/teen `deviceCount` moved out to the engine, and the source guard also forbids `.adults`, `.travelers`, `.children`, and `TripParty`.
+- **Evidence.** Keys are unchanged, and one key is added to the closed vocabulary (Swift and `audit_recommendation_traces.py`).
+
+| Asked for | Key |
+| --- | --- |
+| policy | `sharingPolicy` |
+| partyTravelerCount | `travelerCount` (the whole party; existing key, kept to avoid churn) |
+| eligibleConsumerCount | `eligibleConsumerCount` (new) |
+| deviceCount | `deviceCount` (`scaleByDevices` only) |
+| divisor | `per` |
+| resolvedQuantity | `quantity` |
+
+Customer prose is unchanged ("One for the group — not one per person."). `sharedQuantitiesScaleFromEligibleConsumers` forbids eligibility and age words in it.
+
+| Scenario | Party / consumers | Quantity |
+| --- | --- | --- |
+| You + Adult 1 + infant — toothpaste | 3 / 2 | 1 |
+| You + Adult 1 + toddler — body wash | 3 / 3 | 1 |
+| Four-person family with infant — body wash | 4 / 3 | 1 |
+| Four-person family with infant — sunscreen (universal) | 4 / 4 | 2 |
+| Four adults + infant — toothpaste per 4 | 5 / 4 | **1** (was 2) |
+| Two adults + child + toddler — laundry bag per 3 | 4 / 3 | **1** (was 2) |
+| Three adults + child — laundry bag per 3 | 4 / 4 | 2 |
+| Six-person party — dry bag per 4 | 6 / 4 | **1** (was 2) |
+| Group of four adults — travel adapter | deviceCount 4 | 2 (unchanged) |
+
+### Golden diff (vs `68990b5`)
+
+- **Solo fixtures (46):** zero changes of any kind.
+- **Party fixtures (6):** 21 rows removed, 1 added, 1 quantity change, 48 evidence-only trace changes, 7 eligibility ledger changes.
+- **Other categories:** no coverage or constraint changes.
+
+| Fixture | Identity | Change | Eligibility reason | Sharing reason | Quantity |
+| --- | --- | --- | --- | --- | --- |
+| `11` couple | partner | − phone, phone charger, power bank | `requiresExplicitSignal: device_signal_required` | personal | 1 → — |
+| `38` couple | partner | − phone, phone charger, power bank, headphones | same | personal | 1 → — |
+| `12` toddler family | partner | − phone, phone charger, power bank, headphones | same | personal | 1 → — |
+| `16` winter family | partner | − phone, phone charger, power bank, headphones | same | personal | 1 → — |
+| `24` infant family | partner | − phone, phone charger, power bank, headphones | same | personal | 1 → — |
+| `24` infant family | child (infant) | + sun hat | now eligible (was `ineligible: not_for_age_group`); hot Miami weather | personal | — → 1 |
+| `37` family of four | partner | − phone, phone charger | `requiresExplicitSignal: device_signal_required` | personal | 1 → — |
+| `37` family of four | shared | laundry bag | toddler not a consumer (adult/teen/child item) | `scaleByParty` per 3: consumers 3, party 4 | 2 → 1 |
+| all six | shared | every shared row gains `eligibleConsumerCount` | — | evidence only | unchanged |
+
+- **Primary rows:** You never lose a row.
+- **Children:** they lose nothing, because they already had no devices.
+
+| Fixture | After Task 7 | After Task 7.1 |
+| --- | --- | --- |
+| `11` | 49 | 46 (21 + 18, shared 7) |
+| `38` | 51 | 47 (22 + 18, shared 7) |
+| `12` | 63 | 59 (20 + 16 + toddler 14, shared 9) |
+| `16` | 86 | 82 (28 + 24 + toddler 22, shared 8) |
+| `24` | 55 | 52 (22 + 18 + infant 4, shared 8) |
+| `37` | 74 | 72 (19 + 17 + 15 + 12, shared 9) |
+
+### Findings
+
+- **7.1-D1 (decision for review).** Unnamed-signal devices go to the primary traveler only. The alternative is strict "no signal → nobody", which removes You's own phone from every party list while a solo list keeps it.
+- **7.1-D2 (decision for review).** A solo list's trip context is its traveler's own laptop signal. Solo fixtures are unchanged.
+- **7.1-F1.** Universal sunscreen still counts infants as consumers. No infant sun-care product was added or inferred, per the task scope.
+- **7.1-F2.** `scaleByDevices` keeps Phase 7's adult/teen `deviceCount` ("existing semantics"). It is not a device-ownership claim, but it no longer matches the stricter ownership model. Revisit if adapters should follow evidenced device owners.
+- **7.1-F3.** A per-traveler device setup signal (phone or laptop for Adult 1 or a teen) would restore companion devices with evidence. It belongs to setup (Task 8+), not the engine.
