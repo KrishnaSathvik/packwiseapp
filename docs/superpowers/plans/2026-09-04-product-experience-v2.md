@@ -309,17 +309,17 @@ git commit -m "feat: apply deterministic multi-bag capacity semantics"
 - Produces: `TravelerEligibilityResolver.evaluate(...) -> EligibilityDecision` and closed eligibility metadata.
 - Replaces: distributed `shouldSkip` decisions as the final eligibility authority; temporary adapters may feed the resolver during migration.
 
-- [ ] **Step 1: Write failing toddler tests.** With no explicit signal, exclude phone, phone charger, headphones, deodorant, medication, laptop, and Photo ID while retaining tops, sleepwear, socks, and suitable shoes. With explicit diapers/stroller/car-seat/medication/comfort needs, include only the selected need families. Never implement a category-wide Documents exclusion.
+- [x] **Step 1: Write failing toddler tests.** (2026-09-15: `TravelerEligibilityTests`; record `docs/plans/2026-09-15-product-v2-family-sharing-audit.md`.) With no explicit signal, exclude phone, phone charger, headphones, deodorant, medication, laptop, and Photo ID while retaining tops, sleepwear, socks, and suitable shoes. With explicit diapers/stroller/car-seat/medication/comfort needs, include only the selected need families. Never implement a category-wide Documents exclusion.
 
-- [ ] **Step 2: Write attribution tests.** A primary traveler’s medication/laptop chip cannot make the child eligible; an unassigned note/chip cannot claim coverage for anyone.
+- [x] **Step 2: Write attribution tests.** A primary traveler’s medication/laptop chip cannot make the child eligible; an unassigned note/chip cannot claim coverage for anyone.
 
-- [ ] **Step 3: Write the approved travel-document matrix tests from design Section 9.3.** On a confirmed international family trip, every traveler including a toddler receives a personal passport and traveler-specific Visa/entry docs; Photo ID follows adult/teen eligibility and is not blindly assigned to the toddler; Travel insurance info resolves once as shared/single-per-party.
+- [x] **Step 3: Write the approved travel-document matrix tests from design Section 9.3.** On a confirmed international family trip, every traveler including a toddler receives a personal passport and traveler-specific Visa/entry docs; Photo ID follows adult/teen eligibility and is not blindly assigned to the toddler; Travel insurance info resolves once as shared/single-per-party.
 
-- [ ] **Step 4: Add closed eligibility metadata and validator coverage.** Missing metadata for sensitive families and each canonical document family fails validation rather than defaulting permissively.
+- [x] **Step 4: Add closed eligibility metadata and validator coverage.** Missing metadata for sensitive families and each canonical document family fails validation rather than defaulting permissively.
 
-- [ ] **Step 5: Insert eligibility before quantity/sharing, record suppressions in the audit ledger, delete redundant skip branching, and run focused tests.**
+- [x] **Step 5: Insert eligibility before quantity/sharing, record suppressions in the audit ledger, delete redundant skip branching, and run focused tests.**
 
-- [ ] **Step 6: Commit the eligibility layer.**
+- [x] **Step 6: Commit the eligibility layer.** (`3ca4bf3`)
 
 ```bash
 git add ios/PackWise/Domain/Packing/TravelerEligibilityResolver.swift ios/PackWise/Domain/Packing/Catalog.swift \
@@ -341,13 +341,13 @@ git commit -m "feat: enforce traveler eligibility before recommendation"
 
 - Produces: reviewed eligibility/sharing classification table for every relevant canonical ID and executable rule coverage.
 
-- [ ] **Step 1: Inventory every canonical item and write the audit table.** Explicitly adjudicate Passport, Photo ID, Visa/entry docs, Travel insurance info, toothpaste, shampoo, body wash, pain reliever, laundry bag, packing cubes, toiletry bag, chargers, adapters, sunscreen, umbrellas, medicines, books, and electronics across eligibility and sharing axes.
+- [x] **Step 1: Inventory every canonical item and write the audit table.** (all 202 items; same record.) Explicitly adjudicate Passport, Photo ID, Visa/entry docs, Travel insurance info, toothpaste, shampoo, body wash, pain reliever, laundry bag, packing cubes, toiletry bag, chargers, adapters, sunscreen, umbrellas, medicines, books, and electronics across eligibility and sharing axes.
 
-- [ ] **Step 2: Add failing tests for shared toiletries, personal clothing, personal footwear, shared umbrella, device-scaled adapters/chargers, and party/duration-scaled consumables.** Include solo, couple, family with two other adults+toddler, and group with three additional adults.
+- [x] **Step 2: Add failing tests for shared toiletries, personal clothing, personal footwear, shared umbrella, device-scaled adapters/chargers, and party/duration-scaled consumables.** Include solo, couple, family with two other adults+toddler, and group with three additional adults.
 
-- [ ] **Step 3: Update rules and central shared-quantity semantics.** Do not store policy on generated item records; preserve owner/carrier invariants.
+- [x] **Step 3: Update rules and central shared-quantity semantics.** Do not store policy on generated item records; preserve owner/carrier invariants.
 
-- [ ] **Step 4: Run shared validation, party invariants, engine tests, and commit the audit plus rule changes.**
+- [x] **Step 4: Run shared validation, party invariants, engine tests, and commit the audit plus rule changes.** (`df38dd5`)
 
 ```bash
 python3 scripts/validate_shared.py
