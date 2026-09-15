@@ -229,24 +229,25 @@ struct FamilySharingTests {
         struct Row {
             var name: String
             var party: TripParty
-            var laptopPreference = false
+            /// You's own About you → Laptop choice (Task 8.2: never the Me preference).
+            var youChoseLaptop = false
             var addedTabletFor: Traveler? = nil
             var devices: Int
             var quantity: Int
         }
         let rows = [
             Row(name: "You (phone only) + Adult 1 with no device signal", party: TripParty(travelMode: .group, travelers: [you, adult]), devices: 1, quantity: 1),
-            Row(name: "You phone + laptop", party: TripParty(travelMode: .group, travelers: [you, adult]), laptopPreference: true, devices: 2, quantity: 1),
+            Row(name: "You phone + laptop", party: TripParty(travelMode: .group, travelers: [you, adult]), youChoseLaptop: true, devices: 2, quantity: 1),
             Row(name: "You phone + laptop, Adult 1 explicit laptop", party: TripParty(travelMode: .group, travelers: [you, laptopAdult]),
-                laptopPreference: true, devices: 3, quantity: 2),
+                youChoseLaptop: true, devices: 3, quantity: 2),
             Row(name: "You phone + laptop, user-added tablet for Adult 1", party: TripParty(travelMode: .group, travelers: [you, adult]),
-                laptopPreference: true, addedTabletFor: adult, devices: 3, quantity: 2),
+                youChoseLaptop: true, addedTabletFor: adult, devices: 3, quantity: 2),
             Row(name: "You + teen with no device signal", party: TripParty(travelMode: .family, travelers: [you, teen]), devices: 1, quantity: 1),
             Row(name: "four adults, only You evidenced (was 4 adults → 2)", party: Self.group, devices: 1, quantity: 1),
         ]
         for row in rows {
             var context = try Self.context(city: "Tokyo", party: row.party)
-            context.preferences.usuallyBringLaptop = row.laptopPreference
+            if row.youChoseLaptop { context.contextChips.insert(.bringingLaptop) }
             let existing = row.addedTabletFor.map { traveler in
                 [PackingItemDraft(canonicalItemID: "electronics.tablet", displayName: "Tablet", category: .electronics, quantity: 1,
                                   importance: .normal, sourceSignals: [], reason: "", isUserAdded: true,
@@ -302,7 +303,7 @@ struct FamilySharingTests {
         let infant = Traveler(role: .child, ageGroup: .infant, guardianTravelerID: you.id)
         let party = TripParty(travelMode: .family, travelers: [you, partner, infant])
         var context = try Self.context(party: party)
-        context.preferences.usuallyBringLaptop = true
+        context.contextChips.insert(.bringingLaptop)
         var existing = Self.engine.generate(context: context)
 
         let toothpaste = try #require(existing.firstIndex { $0.canonicalItemID == "toiletries.toothpaste" })

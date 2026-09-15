@@ -329,6 +329,136 @@ struct TripSetupDraftTests {
         #expect(trip.contextChips.allSatisfy { !ContextChip.travelerDeviceSignals.contains($0) })
     }
 
+    // MARK: - Me laptop default (Task 8.2)
+
+    private static let laptopRows: Set<String> = ["electronics.laptop", "electronics.laptop_charger"]
+
+    private static func meLaptop(_ on: Bool) -> TravelerPreferences {
+        var prefs = Self.preferences()
+        prefs.usuallyBringLaptop = on
+        return prefs
+    }
+
+    private static func soloVacation(_ prefs: TravelerPreferences) throws -> TripDraft {
+        var draft = TripDraft.fresh(preferences: prefs)
+        draft.destination = try Self.destination()
+        draft.toggleTripType(.vacation)
+        draft.toggleActivity("sightseeing")
+        return draft
+    }
+
+    /// Saves the draft and generates its list with `prefs` as the Me state at
+    /// generation time — which may differ from the Me state that seeded it.
+    private static func saveAndGenerate(_ draft: TripDraft, prefs: TravelerPreferences) throws -> (TripRecord, [PackingItemDraft], ModelContext) {
+        let context = ModelContext(try PackWisePersistence.container(inMemory: true))
+        let trip = try Self.save(draft, in: context)
+        return (trip, Self.engine.generate(context: trip.context(preferences: prefs, weather: nil)), context)
+    }
+
+    @Test func meLaptopDefaultPrefillsYouOnAFreshTrip() throws {
+        #expect(TripDraft.fresh(preferences: Self.meLaptop(true)).chips == [.bringingLaptop])
+        #expect(TripDraft.fresh(preferences: Self.meLaptop(false)).chips.isEmpty)
+
+        let (trip, items, _) = try Self.saveAndGenerate(try Self.soloVacation(Self.meLaptop(true)), prefs: Self.meLaptop(true))
+        #expect(trip.party.primary.chips.contains(.bringingLaptop), "the prefill is saved as You's own choice")
+        #expect(Set(items.compactMap(\.canonicalItemID)).isSuperset(of: Self.laptopRows))
+    }
+
+    @Test func deselectingThePrefilledLaptopSavesATripWithNoLaptop() throws {
+        let me = Self.meLaptop(true)
+        var draft = try Self.soloVacation(me)
+        #expect(draft.chips.contains(.bringingLaptop))
+        draft.chips.remove(.bringingLaptop)
+
+        let (trip, items, _) = try Self.saveAndGenerate(draft, prefs: me)
+        #expect(Set(items.compactMap(\.canonicalItemID)).isDisjoint(with: Self.laptopRows),
+                "Me still says laptop; this trip's choice wins")
+        #expect(!trip.contextChips.contains(.bringingLaptop) && !trip.party.primary.chips.contains(.bringingLaptop))
+        #expect(me.usuallyBringLaptop, "deselecting on a trip never edits Me")
+        #expect(TripDraft.fresh(preferences: me).chips.contains(.bringingLaptop), "the next new trip is prefilled again")
+    }
+
+    @Test func meLaptopDefaultPrefillsOnlyYouOnAPartyTrip() throws {
+        let me = Self.meLaptop(true)
+        var draft = try Self.soloVacation(me)
+        draft.setTravelMode(.group)
+        draft.setOtherAdultCount(2)
+        #expect(draft.otherAdults.allSatisfy { $0.chips.isEmpty })
+
+        let (trip, items, _) = try Self.saveAndGenerate(draft, prefs: me)
+        let travelers = trip.party.travelers
+        #expect(travelers.count == 3)
+        func laptop(_ traveler: Traveler) -> Set<String> {
+            Set(items.filter { $0.travelerID == traveler.id }.compactMap(\.canonicalItemID)).intersection(Self.laptopRows)
+        }
+        #expect(travelers[0].role == .self && laptop(travelers[0]) == Self.laptopRows)
+        #expect(laptop(travelers[1]).isEmpty && laptop(travelers[2]).isEmpty, "Adult 1 and Adult 2 receive nothing")
+        #expect(travelers[1].chips.isEmpty && travelers[2].chips.isEmpty)
+        #expect(!items.contains { $0.ownershipType == .shared && Self.laptopRows.contains($0.canonicalItemID ?? "") })
+    }
+
+    @Test func changingMeNeverChangesAnExistingTripsLaptop() throws {
+        // Saved with Laptop off; Me later turns it on.
+        let (offTrip, _, _) = try Self.saveAndGenerate(try Self.soloVacation(Self.meLaptop(false)), prefs: Self.meLaptop(false))
+        #expect(!TripDraft.from(trip: offTrip).chips.contains(.bringingLaptop), "edit restores the trip's own off state")
+        let offLater = Self.engine.generate(context: offTrip.context(preferences: Self.meLaptop(true), weather: nil))
+        #expect(Set(offLater.compactMap(\.canonicalItemID)).isDisjoint(with: Self.laptopRows))
+
+        // Saved with Laptop on; Me later turns it off.
+        let (onTrip, _, _) = try Self.saveAndGenerate(try Self.soloVacation(Self.meLaptop(true)), prefs: Self.meLaptop(true))
+        #expect(TripDraft.from(trip: onTrip).chips.contains(.bringingLaptop), "edit restores the trip's own on state")
+        let onLater = Self.engine.generate(context: onTrip.context(preferences: Self.meLaptop(false), weather: nil))
+        #expect(Set(onLater.compactMap(\.canonicalItemID)).isSuperset(of: Self.laptopRows))
+    }
+
+    @Test func laptopHasOneCauseAndThePreferenceIsNotEngineInput() throws {
+        let me = Self.meLaptop(true)
+        let (_, items, _) = try Self.saveAndGenerate(try Self.soloVacation(me), prefs: me)
+        for id in Self.laptopRows {
+            let row = try #require(items.first { $0.canonicalItemID == id })
+            let laptopFacts = RecommendationTrace.provenance(for: row).filter { $0.reasonCode.localizedCaseInsensitiveContains("laptop") }
+            #expect(laptopFacts.count == 1, "\(id): \(laptopFacts)")
+        }
+
+        // The preference alone, with no trip choice, is not a cause.
+        var context = try Self.soloVacation(me)
+        context.chips.remove(.bringingLaptop)
+        let (_, withoutChoice, _) = try Self.saveAndGenerate(context, prefs: me)
+        #expect(Set(withoutChoice.compactMap(\.canonicalItemID)).isDisjoint(with: Self.laptopRows))
+    }
+
+    /// Trips saved before Task 8.2 may owe their laptop to the preference
+    /// alone. Their own saved list, not today's Me value, decides.
+    @Test func legacyPreferenceLaptopBecomesTheTripsOwnChoiceOnce() throws {
+        let context = ModelContext(try PackWisePersistence.container(inMemory: true))
+        let repo = TripRepository(context: context)
+        func legacyTrip(laptopReason: String?, userAdded: Bool = false) throws -> TripRecord {
+            let trip = try Self.save(try Self.soloVacation(Self.meLaptop(false)), in: context)
+            var rows = Self.engine.generate(context: trip.context(preferences: Self.preferences(), weather: nil))
+            if let laptopReason {
+                rows.append(PackingItemDraft(
+                    canonicalItemID: "electronics.laptop", displayName: "Laptop", category: .electronics, quantity: 1,
+                    importance: .important, sourceSignals: [.userPreference], reason: "", reasonCode: laptopReason,
+                    isUserAdded: userAdded, ownershipType: .personal, travelerID: trip.party.primary.id
+                ))
+            }
+            repo.replaceItems(on: trip, with: rows)
+            try context.save()
+            return trip
+        }
+        let owed = try legacyTrip(laptopReason: LaptopChoiceBackfill.preferenceReasonCode)
+        let noLaptop = try legacyTrip(laptopReason: nil)
+        let typedByUser = try legacyTrip(laptopReason: "user.added", userAdded: true)
+
+        #expect(try LaptopChoiceBackfill.run(in: context) == 1)
+        #expect(owed.party.primary.chips.contains(.bringingLaptop) && TripDraft.from(trip: owed).chips.contains(.bringingLaptop))
+        let regenerated = Self.engine.generate(context: owed.context(preferences: Self.meLaptop(false), weather: nil))
+        #expect(Set(regenerated.compactMap(\.canonicalItemID)).isSuperset(of: Self.laptopRows), "Me off later cannot drop it")
+        #expect(!noLaptop.party.primary.chips.contains(.bringingLaptop))
+        #expect(!typedByUser.party.primary.chips.contains(.bringingLaptop), "a user-added row is not a preference cause")
+        #expect(try LaptopChoiceBackfill.run(in: context) == 0, "idempotent")
+    }
+
     @Test func travelerEditorHeadingsAreStructuralWhileNamesIdentifyEverywhereElse() {
         var draft = TripDraft()
         draft.setTravelMode(.family)

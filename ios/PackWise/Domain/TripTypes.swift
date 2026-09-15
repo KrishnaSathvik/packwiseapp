@@ -382,6 +382,11 @@ struct TravelerPreferences: Codable, Hashable, Sendable {
     var usesFahrenheit: Bool
     var usesImperial: Bool
     var usuallyWorkOut: Bool
+    /// A default, never engine input (Task 8.2). It seeds a *new* trip's
+    /// About you → Laptop choice (`TripDraft.fresh`); from then on that
+    /// trip's own `bringingLaptop` choice is its only laptop authority, so
+    /// changing Me never changes an existing trip. The stored name predates
+    /// the boundary and stays for store compatibility.
     var usuallyBringLaptop: Bool
     var wearContacts: Bool
     var alwaysBringMedication: Bool

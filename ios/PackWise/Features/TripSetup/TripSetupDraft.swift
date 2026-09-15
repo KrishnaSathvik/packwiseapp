@@ -141,6 +141,10 @@ struct TripDraft {
         var draft = TripDraft()
         draft.packingStyle = preferences.packingStyle
         draft.bagTypes = preferences.preferredBagTypes
+        // Me's laptop habit is a prefill for You only (Task 8.2). Deselecting
+        // it here changes this trip, never the preference; companions start
+        // with no device choice regardless.
+        if preferences.usuallyBringLaptop { draft.chips.insert(.bringingLaptop) }
         return draft
     }
 

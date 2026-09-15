@@ -259,7 +259,6 @@ struct PackingEngine: Sendable {
         var copy = context
         copy.contextChips = context.contextChips.intersection(ContextChip.tripLevel)
         copy.preferences.usuallyWorkOut = false
-        copy.preferences.usuallyBringLaptop = false
         copy.preferences.wearContacts = false
         copy.preferences.alwaysBringMedication = false
         return copy
@@ -269,8 +268,10 @@ struct PackingEngine: Sendable {
         var chips = traveler.chips
         if traveler.role == .self {
             chips.formUnion(context.contextChips.subtracting(ContextChip.tripLevel))
+            // Laptop is deliberately absent (Task 8.2): Me's "I usually bring
+            // a laptop" only prefills a new draft's `bringingLaptop` choice.
+            // The trip's own saved choice is the one laptop authority.
             if context.preferences.usuallyWorkOut { chips.insert(.usuallyWorkOut) }
-            if context.preferences.usuallyBringLaptop { chips.insert(.bringingLaptop) }
             if context.preferences.wearContacts { chips.insert(.wearContacts) }
             if context.preferences.alwaysBringMedication { chips.insert(.dailyMedication) }
         }
@@ -514,9 +515,6 @@ struct PackingEngine: Sendable {
 
         if context.preferences.usuallyWorkOut {
             add(rules.contextChips[ContextChip.usuallyWorkOut.rawValue] ?? [], signal: .userPreference, code: "preference.usuallyWorkOut", fallback: "You usually work out while traveling.")
-        }
-        if context.preferences.usuallyBringLaptop {
-            add(rules.contextChips[ContextChip.bringingLaptop.rawValue] ?? [], signal: .userPreference, code: "preference.bringingLaptop", fallback: "You usually bring a laptop.")
         }
         if context.preferences.wearContacts {
             add(rules.contextChips[ContextChip.wearContacts.rawValue] ?? [], signal: .userPreference, code: "preference.wearContacts", fallback: "You wear contacts.")

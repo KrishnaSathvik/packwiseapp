@@ -184,7 +184,6 @@ struct TravelerEligibilityTests {
     @Test func primaryLaptopAndMedicationNeverReachTheChild() throws {
         let (party, toddler) = Self.family(child: Traveler(role: .child, ageGroup: .toddler))
         let items = Self.engine.generate(context: try Self.context(party: party, chips: [.bringingLaptop, .dailyMedication, .wearContacts]) {
-            $0.usuallyBringLaptop = true
             $0.alwaysBringMedication = true
         })
         let primary = Self.ids(items, for: party.primary)
@@ -240,24 +239,25 @@ struct TravelerEligibilityTests {
             var name: String
             var party: TripParty
             var tripTypes: Set<TripType>
-            var laptopPreference: Bool
+            /// You's own Laptop choice (Task 8.2: never the Me preference).
+            var youChoseLaptop: Bool
             /// Role → whether that traveler gets the laptop and its charger.
             var expected: [(TravelerRole, AgeGroup, Bool)]
         }
         let rows = [
-            Row(name: "solo adult + Laptop", party: .solo(), tripTypes: [.vacation], laptopPreference: true,
+            Row(name: "solo adult + Laptop", party: .solo(), tripTypes: [.vacation], youChoseLaptop: true,
                 expected: [(.self, .adult, true)]),
-            Row(name: "solo Business, no preference: the trip is the traveler's own", party: .solo(), tripTypes: [.business], laptopPreference: false,
+            Row(name: "solo Business, no preference: the trip is the traveler's own", party: .solo(), tripTypes: [.business], youChoseLaptop: false,
                 expected: [(.self, .adult, true)]),
-            Row(name: "Business party, only You has Laptop", party: businessFamily, tripTypes: [.business], laptopPreference: true,
+            Row(name: "Business party, only You has Laptop", party: businessFamily, tripTypes: [.business], youChoseLaptop: true,
                 expected: [(.self, .adult, true), (.otherAdult, .adult, false)]),
-            Row(name: "Business party, no signal anywhere → nobody", party: businessFamily, tripTypes: [.business], laptopPreference: false,
+            Row(name: "Business party, no signal anywhere → nobody", party: businessFamily, tripTypes: [.business], youChoseLaptop: false,
                 expected: [(.self, .adult, false), (.otherAdult, .adult, false)]),
         ]
         for row in rows {
-            let items = Self.engine.generate(context: try Self.context(party: row.party, tripTypes: row.tripTypes, activities: ["work"]) {
-                $0.usuallyBringLaptop = row.laptopPreference
-            })
+            let items = Self.engine.generate(context: try Self.context(
+                party: row.party, tripTypes: row.tripTypes, activities: ["work"], chips: row.youChoseLaptop ? [.bringingLaptop] : []
+            ))
             for (role, age, gets) in row.expected {
                 let traveler = try #require(row.party.travelers.first { $0.role == role && $0.ageGroup == age })
                 let mine = row.party.usesSimpleList

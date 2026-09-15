@@ -1037,6 +1037,56 @@ enum PackWiseMigrationPlan: SchemaMigrationPlan {
 /// The schema the app opens. Always the last entry of `PackWiseMigrationPlan.schemas`.
 typealias PackWiseCurrentSchema = PackWiseSchemaV5
 
+/// Task 8.2's one data step: Me's "I usually bring a laptop" stopped being
+/// engine input and became a new-trip prefill. A trip saved before that
+/// boundary may owe its laptop to the preference alone, with no
+/// `bringingLaptop` choice of its own — regenerating it would silently
+/// drop the laptop, or later re-add it because Me changed.
+///
+/// The trip's own saved list is the evidence of what it was: a generated
+/// laptop row for You whose recorded cause is the laptop preference, and no
+/// laptop choice anywhere on the trip, becomes You's saved choice. Nothing
+/// is inferred from the current preference value. Idempotent: once the
+/// choice exists the trip is skipped, so it runs on every open. No schema
+/// change — it writes only existing chip columns.
+enum LaptopChoiceBackfill {
+    static let preferenceReasonCode = "preference.bringingLaptop"
+
+    @discardableResult
+    static func run(in context: ModelContext) throws -> Int {
+        var materialized = 0
+        for trip in try context.fetch(FetchDescriptor<TripRecord>()) where materialize(trip) {
+            materialized += 1
+        }
+        if materialized > 0 { try context.save() }
+        return materialized
+    }
+
+    /// Returns true when the trip gained You's laptop choice.
+    static func materialize(_ trip: TripRecord) -> Bool {
+        let primary = trip.party.primary
+        guard !trip.contextChips.contains(.bringingLaptop), !primary.chips.contains(.bringingLaptop) else { return false }
+        let owedToPreference = trip.items.contains { item in
+            item.canonicalItemID == "electronics.laptop"
+                && !item.isUserAdded
+                && (item.travelerID == nil || item.travelerID == primary.id)
+                && (item.reasonCode == preferenceReasonCode
+                    || item.draft.provenance.contains { $0.reasonCode == preferenceReasonCode }
+                    || (item.recommendationTraceRaw?.contains(preferenceReasonCode) ?? false))
+        }
+        guard owedToPreference else { return false }
+        var chips = trip.contextChips
+        chips.append(.bringingLaptop)
+        trip.contextChipsRaw = chips.map(\.rawValue).joined(separator: ",")
+        if let record = trip.travelers.first(where: { $0.id == primary.id }) {
+            var traveler = record.domain
+            traveler.chips.insert(.bringingLaptop)
+            record.apply(traveler)
+        }
+        return true
+    }
+}
+
 enum PackWisePersistenceError: Error, Equatable {
     /// The on-disk store's entity hashes match no schema in the migration
     /// plan. Opening it anyway makes CoreData abort the process, so it is
@@ -1102,6 +1152,7 @@ enum PackWisePersistence {
         // converges a store to the V4 shape once and then does
         // near-zero-cost work on every subsequent launch.
         let diagnostics = try PackWiseSchemaV4Migration.migrateV3Records(in: ModelContext(container))
+        try LaptopChoiceBackfill.run(in: ModelContext(container))
         #if DEBUG
         if !diagnostics.isEmpty {
             print("[PackWise] V4 migration normalized \(diagnostics.count) legacy value(s): \(diagnostics)")

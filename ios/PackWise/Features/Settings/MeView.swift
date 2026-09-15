@@ -199,7 +199,16 @@ private struct MeContent: View {
         section("Usually true for me") {
             Toggle("I usually work out while traveling", isOn: $prefs.usuallyWorkOut)
             PackWiseRowDivider(inset: 0)
-            Toggle("I usually bring a laptop", isOn: $prefs.usuallyBringLaptop)
+            // A default for new trips only (Task 8.2): each trip keeps its
+            // own About you → Laptop choice.
+            Toggle(isOn: $prefs.usuallyBringLaptop) {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                    Text("I usually bring a laptop")
+                    Text("Selected for you when you start a new trip.")
+                        .font(PackWiseFont.rowSubtitle)
+                        .foregroundStyle(PackWiseColor.textSecondary)
+                }
+            }
             PackWiseRowDivider(inset: 0)
             Toggle("I wear contacts", isOn: $prefs.wearContacts)
             PackWiseRowDivider(inset: 0)
