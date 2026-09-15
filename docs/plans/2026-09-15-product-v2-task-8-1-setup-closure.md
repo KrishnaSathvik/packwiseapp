@@ -31,7 +31,7 @@ Date: 2026-09-15 · Branch: `product-v2-stage-a` · Baseline: `cefc52b` (Task 8)
   - `electronics.power_bank` ×19;
   - `electronics.camera`, `camera_charger`, and `memory_card` ×1 (fixture 52).
 - **Everything else:** 0 added, 0 quantity changes, 0 trace, coverage, or constraint changes.
-- **Eligibility ledger (67 changes):**
+- **Eligibility ledger** (the report counts 67 changes; by entry):
   - 47 new You records: `device_signal.bringingHeadphones` ×24, `.bringingPowerBank` ×19, `.bringingCamera` ×1 group covering the camera, charger, and card;
   - 9 partner and 6 child records now name the specific headphones or power-bank signal;
   - 8 older generic `device_signal_required` entries were removed.
