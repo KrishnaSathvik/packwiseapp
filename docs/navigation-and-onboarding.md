@@ -60,43 +60,34 @@ No location permission.
 
 No subscription wall.
 
-### Screen 1 — Welcome
+All three screens share one shell (Task 9): the PackWise mark in the same
+place, a framed hero, the title and supporting copy, then page dots and the
+primary action pinned to the bottom safe area. Only the hero differs. Type
+follows Dynamic Type; at accessibility sizes the hero yields height so the copy
+stays on screen.
 
-**PackWise**
+Copy describes what PackWise does today. Do not advertise memory-driven
+personalization until the post-trip memory product ships, and never say AI.
 
-**Pack what this trip actually needs.**
+### Screen 1 — Pack for the trip you're actually taking
 
-Weather, activities, trip length and the way you travel — all considered.
+> Destination, dates, weather and plans shape your list.
 
-CTA: **Get Started**
-
-Visual: large suitcase mark, scenic destination photography behind the headline. See [design/ui-flow-overview.png](../design/ui-flow-overview.png).
+Hero: travel photograph with four input pills — Destination, Dates, Weather,
+Plans. CTA: **Continue**
 
 ### Screen 2 — One trip can be many things
 
-Example visual:
+> Beach, city, business, activities and luggage work together.
 
-```text
-Chicago
-5 days · City trip
-Rain Saturday
-
-↓
-
-Rain jacket
-Light layer
-Walking shoes
-5-day quantities
-```
-
-Show that beach, city, business, activities, and luggage compose into one specific list rather than separate templates.
+Hero: one trip card with Beach, City Break, and Business selected, its
+activities, and its bags. CTA: **Continue**
 
 ### Screen 3 — Your choices stay yours
 
 > Change quantities, skip items and add your own without losing your decisions.
 
-All three screens share one logo/wordmark position, typography hierarchy, margins, visual frame, CTA position, and pagination position. Do not advertise memory-driven personalization until the post-trip memory product ships.
-
+Hero: a changed quantity, a skipped item, and an added item.
 CTA: **Create My First Trip**
 
 ## Home — Trips
