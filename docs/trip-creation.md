@@ -79,11 +79,14 @@ Group
 
 **Just me** adds no extra fields. Internally this is a `TripParty` with one adult.
 
-**Me + partner** asks for an optional name and only the differences that matter (medication, contacts, workout, formal, cold, note).
+**Me + partner**, **Family**, and **Group** share one traveler-details card per person besides you:
 
-**Family** asks for adult count, child count, and each child's age group (teen / child / toddler / infant). Optional first names. No birth dates.
+- **Adults** (the partner, or each other adult): optional name, **Devices** (Phone / Laptop / Tablet), the differences that matter (medication, contacts, workout, formal, cold), and a note.
+- **Children**: optional name, age group (teen / child / toddler / infant), and the needs for that age. Only a **teen** is offered **Devices**; younger children never get device choices by default. No birth dates.
 
-**Group** asks for an **Other adults** count because the current user is implicit. One device manages the list. Invites and realtime sync are later.
+**Family** counts **Other adults** and **Children**; **Group** counts **Other adults** (at least one). You are implicit, so the count never includes you. Review reads unambiguously, e.g. `You + 3 adults` or `You + 1 adult, 2 children`. Empty names display stable positional labels — You, Adult 1, Adult 2, Child 1 — which never overwrite a name.
+
+Device choices are traveler-scoped signals (`bringingPhone`, `bringingLaptop`, `bringingTablet`). PackWise never infers a device from age, from a Business trip, or from another traveler: you own a phone implicitly because PackWise runs on it; everyone else brings only what their card says. One device manages the list. Invites and realtime sync are later.
 
 Shared trip context (destination, dates, weather, activities, bag, style) is not re-asked per person.
 
@@ -148,7 +151,7 @@ Free text is supported. Example: `Sunrise wildlife photography`.
 
 PackWise interprets free-text activities internally. Do not require every activity to be a manually built enum.
 
-Selected activities appear in a **Your activities** list.
+Suggestions are the stable union of every selected trip type's contract suggestions, shown as multi-select cards; a selection outside them stays visible. Only a tap changes the activities — changing trip types never adds or removes one, and an unselected suggestion has no effect on the list. **Add something** stores a typed activity; a known keyword normalizes to its activity, anything else stays inert.
 
 ## Step 6 — Bags
 
@@ -208,20 +211,16 @@ Optional.
 
 Headline: **Anything PackWise should know?**
 
-Suggested chips:
+Chips, grouped:
 
 ```text
-I take daily medication
-I wear contacts
-I'm bringing a laptop
-I usually work out
-I run while traveling
-I need a formal outfit
-I'm traveling internationally
-I get cold easily
+Health              Daily medication · Contacts
+Devices & work      Laptop
+Clothing & comfort  Work out · Running · Formal outfit · Get cold easily
+This trip           International
 ```
 
-Then: **Add a note**
+Traveler device signals for other people live in their traveler cards, never here. Setup does not collect a free-text note today; an existing trip's note is kept.
 
 Example: `I'll probably do laundry halfway through.`
 

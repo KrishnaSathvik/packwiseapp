@@ -808,13 +808,14 @@ struct PackingEngineTests {
     /// The engine's activity vocabulary is `rules.activities`' keys — the
     /// surfaced vocabulary every id resolves against. Since Phase 5, camping
     /// is a real key like any other, so no id needs adding by hand here.
-    /// `TripType.suggestedActivityIDs` is a subset of those keys, so covering
+    /// Every trip-type contract's suggested activities are a subset of those
+    /// keys (setup reads only the contracts since Task 8), so covering
     /// the rule vocabulary covers every suggested-chip activity too.
     @Test func surfacedInputContractCoversEverySuggestedActivity() throws {
         let records = try loadSurfacedInputContracts()
         let rules = try SharedLibrary.rules()
 
-        let suggestedChipActivities = Set(TripType.allCases.flatMap(\.suggestedActivityIDs))
+        let suggestedChipActivities = Set(TripType.allCases.flatMap { rules.tripTypeContracts.contract(for: $0).suggestedActivityIDs })
         let engineActivityVocabulary = Set(rules.activities.keys)
         let unmatched = suggestedChipActivities.subtracting(engineActivityVocabulary)
         #expect(

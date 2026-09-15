@@ -413,19 +413,19 @@ git commit -m "test: establish product v2 visual reference"
 - Produces: nine-step `SetupStep`, set-valued `TripDraft`, reusable `TripSetupShell`, reusable `MultiSelectionCard`/grid.
 - Consumes: repository set APIs and stable ordering.
 
-- [ ] **Step 1: Add state tests for fresh/edit drafts.** Assert multi-bag preference prefill, legacy-empty bags, multi-type round trip, family ID reuse, and review summaries. Assert suggested activities remain absent from `TripContext.activities` until tapped and selected activities remain byte-for-byte stable when trip types change.
+- [x] **Step 1: Add state tests for fresh/edit drafts.** Assert multi-bag preference prefill, legacy-empty bags, multi-type round trip, family ID reuse, and review summaries. Assert suggested activities remain absent from `TripContext.activities` until tapped and selected activities remain byte-for-byte stable when trip types change.
 
-- [ ] **Step 2: Change `TripDraft` to `tripTypes`/`bagTypes` and split the nine logical steps.** Require at least one trip type; allow empty bags.
+- [x] **Step 2: Change `TripDraft` to `tripTypes`/`bagTypes` and split the nine logical steps.** Require at least one trip type; allow empty bags.
 
-- [ ] **Step 3: Implement the shared shell with bottom safe-area action.** Remove confirmation-action Next from the toolbar; retain native Back/cancel and accessible “Step n of 9.” Verify keyboard avoidance and Dynamic Type.
+- [x] **Step 3: Implement the shared shell with bottom safe-area action.** Remove confirmation-action Next from the toolbar; retain native Back/cancel and accessible “Step n of 9.” Verify keyboard avoidance and Dynamic Type.
 
-- [ ] **Step 4: Implement related multi-select surfaces for trip types, activities, and bags.** Suggested activities are the stable union from selected trip types and affect display/order only. Only a user tap changes `draft.activities`; changing trip types never auto-adds or removes an activity.
+- [x] **Step 4: Implement related multi-select surfaces for trip types, activities, and bags.** Suggested activities are the stable union from selected trip types and affect display/order only. Only a user tap changes `draft.activities`; changing trip types never auto-adds or removes an activity.
 
-- [ ] **Step 5: Implement unambiguous traveler counts/labels, the combined style/laundry screen, and the matching Me default-bags multi-select.** Family and Group both count Other adults because You is implicit; Family separately counts Children. Review renders one interpretation (`You + 3 adults` or `4 adults`). Derived labels are stable and distinct.
+- [x] **Step 5: Implement unambiguous traveler counts/labels, the combined style/laundry screen, and the matching Me default-bags multi-select.** Family and Group both count Other adults because You is implicit; Family separately counts Children. Review renders one interpretation (`You + 3 adults` or `4 adults`). Derived labels are stable and distinct.
 
-- [ ] **Step 6: Update Review with separate wrapping sections for all context values and run focused tests/build.**
+- [x] **Step 6: Update Review with separate wrapping sections for all context values and run focused tests/build.**
 
-- [ ] **Step 7: Capture all nine setup screens on the simulator, compare as one flow, fix only systemic shell/primitive issues, and commit.**
+- [x] **Step 7: Capture all nine setup screens on the simulator, compare as one flow, fix only systemic shell/primitive issues, and commit.**
 
 ```bash
 git add ios/PackWise/Features/TripSetup ios/PackWise/Features/Settings/MeView.swift ios/PackWise/DesignSystem/PackWisePrimitives.swift \

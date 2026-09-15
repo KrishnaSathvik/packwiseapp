@@ -187,6 +187,8 @@ extension ContextChip {
         case .travelingInternationally: "airplane"
         case .getColdEasily: "thermometer.snowflake"
         case .laundryAvailable: "washer"
+        case .bringingPhone: "iphone"
+        case .bringingTablet: "ipad"
         }
     }
 
@@ -201,6 +203,8 @@ extension ContextChip {
         case .travelingInternationally: .blue
         case .getColdEasily: .teal
         case .laundryAvailable: .purple
+        case .bringingPhone: .blue
+        case .bringingTablet: .indigo
         }
     }
 
@@ -217,6 +221,8 @@ extension ContextChip {
         case .travelingInternationally: "International"
         case .getColdEasily: "Get cold easily"
         case .laundryAvailable: "Laundry"
+        case .bringingPhone: "Phone"
+        case .bringingTablet: "Tablet"
         }
     }
 }

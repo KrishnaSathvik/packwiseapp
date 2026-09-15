@@ -366,7 +366,7 @@
     "electronics.power_bank": {"family": "deviceSignalRequired"},
     "electronics.laptop": {"family": "deviceSignalRequired", "signal": "bringingLaptop"},
     "electronics.laptop_charger": {"family": "deviceSignalRequired", "signal": "bringingLaptop"},
-    "electronics.tablet": {"family": "deviceSignalRequired"},
+    "electronics.tablet": {"family": "deviceSignalRequired", "signal": "bringingTablet"},
     "electronics.headphones": {"family": "deviceSignalRequired"},
     "electronics.earbuds_case": {"family": "deviceSignalRequired"},
     "electronics.travel_adapter": {"family": "universal"},

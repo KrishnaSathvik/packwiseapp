@@ -33,7 +33,7 @@ struct MemoryEventTests {
         // V4: `bagTypes` derives from the `BagRecord` relationship, not the
         // legacy `bagTypeRaw` scalar — set up via the same repository call
         // real trip creation uses, so the fingerprint below sees a bag.
-        repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
+        repo.replaceParty(.solo(), bagTypes: [.carryOn], on: trip)
 
         // Generation: two engine suggestions.
         repo.replaceItems(on: trip, with: [

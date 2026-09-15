@@ -158,7 +158,8 @@ struct ActivityContractTests {
         let vocabulary = Set(try rules().activities.keys)
         #expect(Set(ActivityContracts.all.keys) == vocabulary)
         #expect(vocabulary.contains("camping"))
-        let suggested = Set(TripType.allCases.flatMap(\.suggestedActivityIDs))
+        let contracts = try rules().tripTypeContracts
+        let suggested = Set(TripType.allCases.flatMap { contracts.contract(for: $0).suggestedActivityIDs })
         #expect(suggested.isSubset(of: vocabulary))
     }
 

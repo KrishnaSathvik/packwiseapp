@@ -598,6 +598,32 @@
       "iconContract": "washer",
       "ownerScope": "trip",
       "note": "rules.contextChips['laundryAvailable'] adds toiletries.laundry_sheets. Trip-level (in ContextChip.tripLevel), but TripSetupView.extrasStep explicitly filters it out of the 'About this trip' chip field ('Laundry moved to the bag-and-style step as a three-way control; the boolean chip stays in the enum for old trips') — it is not user-toggleable in the current UI, only reachable via legacy trip data, the same 'real enum case, not currently reachable from a fresh trip' status the camping activity record above documents. No golden fixture sets it (fixtures exercise LaundryAccess instead, at 02/02b/03); deterministic and currently untested."
+    },
+    {
+      "kind": "contextChip",
+      "id": "bringingPhone",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "testIDs": [
+        "TripSetupDraftTests.swift::companionDeviceChoicesBecomeTravelerScopedEngineSignals"
+      ],
+      "iconContract": "iphone",
+      "ownerScope": "traveler",
+      "note": "Task 8 traveler device signal, set in a companion's traveler details. rules.contextChips (base.json traveler_device_chips) adds essentials.phone + electronics.phone_charger for that traveler, and TravelerEligibilityResolver's phoneOwnership family accepts it as the explicit phone signal. The primary traveler never needs it (implicit phone). Not in the Intelligence API chip vocabulary."
+    },
+    {
+      "kind": "contextChip",
+      "id": "bringingTablet",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "testIDs": [
+        "TripSetupDraftTests.swift::companionDeviceChoicesBecomeTravelerScopedEngineSignals"
+      ],
+      "iconContract": "ipad",
+      "ownerScope": "traveler",
+      "note": "Task 8 traveler device signal, set in a companion's traveler details. rules.contextChips (base.json traveler_device_chips) adds electronics.tablet for that traveler; electronics.tablet eligibility is deviceSignalRequired(bringingTablet). Counts toward the travel adapter's deviceCount when on the list. Not in the Intelligence API chip vocabulary."
     }
   ]
 }

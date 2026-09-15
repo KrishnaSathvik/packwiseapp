@@ -238,6 +238,36 @@ struct TripParty: Hashable, Codable, Sendable {
         }
     }
 
+    /// Presentation label for a traveler (Product Experience V2, Task 8): the
+    /// optional name when set, otherwise a stable positional label — You,
+    /// Adult 1, Adult 2, Child 1, Child 2 — derived from party order. Never
+    /// written back over the name, and never an engine input.
+    func label(for traveler: Traveler) -> String {
+        let trimmed = traveler.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if traveler.role == .self { return trimmed.isEmpty || trimmed == "You" ? "You" : trimmed }
+        if !trimmed.isEmpty { return trimmed }
+        if traveler.role == .child {
+            let children = travelers.filter { $0.role == .child }
+            return "Child \((children.firstIndex { $0.id == traveler.id } ?? 0) + 1)"
+        }
+        let adults = travelers.filter { $0.role == .partner || $0.role == .otherAdult }
+        return "Adult \((adults.firstIndex { $0.id == traveler.id } ?? 0) + 1)"
+    }
+
+    /// The label for the shared group, beside `label(for:)`.
+    static let sharedLabel = "Shared"
+
+    /// One unambiguous count: the current user is always "You", so the rest
+    /// are *other* adults — "You + 3 adults", "You + 1 adult, 2 children".
+    var travelerCountSummary: String {
+        let adults = travelers.filter { $0.role == .partner || $0.role == .otherAdult }.count
+        let children = travelers.filter { $0.role == .child }.count
+        var parts: [String] = []
+        if adults > 0 { parts.append("\(adults) adult\(adults == 1 ? "" : "s")") }
+        if children > 0 { parts.append("\(children) \(children == 1 ? "child" : "children")") }
+        return parts.isEmpty ? "Just you" : "You + " + parts.joined(separator: ", ")
+    }
+
     func listFilters() -> [PartyListFilter] {
         var filters: [PartyListFilter] = [.all]
         for traveler in travelers where traveler.role != .child {
@@ -350,16 +380,84 @@ struct ChildDraft: Identifiable, Hashable, Sendable {
     var name: String
     var ageGroup: AgeGroup
     var needs: Set<ChildNeed>
+    /// Device choices. Only a teen is offered them; the builder drops them
+    /// for any younger age group.
+    var chips: Set<ContextChip>
 
-    init(id: UUID = UUID(), name: String = "", ageGroup: AgeGroup = .child, needs: Set<ChildNeed> = []) {
+    init(id: UUID = UUID(), name: String = "", ageGroup: AgeGroup = .child, needs: Set<ChildNeed> = [], chips: Set<ContextChip> = []) {
         self.id = id
         self.name = name
         self.ageGroup = ageGroup
         self.needs = needs
+        self.chips = chips
+    }
+
+    /// Whether traveler details offer device choices for this age.
+    static func offersDevices(_ ageGroup: AgeGroup) -> Bool { ageGroup == .teen }
+}
+
+/// Setup's editable details for one adult other than You (Task 8): the
+/// partner on a couple trip, or an other adult on a family or group trip.
+struct AdultDraft: Identifiable, Hashable, Sendable {
+    var id: UUID
+    var name: String
+    /// Differences (medication, contacts, …) and device choices, attributed
+    /// to this adult only.
+    var chips: Set<ContextChip>
+    var notes: String
+
+    init(id: UUID = UUID(), name: String = "", chips: Set<ContextChip> = [], notes: String = "") {
+        self.id = id
+        self.name = name
+        self.chips = chips
+        self.notes = notes
     }
 }
 
 enum TripPartyBuilder {
+    /// Builds a party from setup's per-traveler drafts (Task 8). Draft IDs are
+    /// traveler IDs, so editing a trip keeps every surviving traveler's
+    /// identity (and the rows that belong to them). You is implicit; `otherAdults`
+    /// are everyone else who is an adult. A couple uses the first as partner;
+    /// a group always has at least one.
+    static func make(
+        mode: TravelMode,
+        selfChips: Set<ContextChip>,
+        otherAdults: [AdultDraft],
+        children: [ChildDraft],
+        existing: TripParty? = nil
+    ) -> TripParty {
+        let primary = reusedSelf(from: existing, chips: selfChips.subtracting(ContextChip.travelerDeviceSignals))
+        let partnerIDs = Set(existing?.travelers.filter { $0.role == .partner }.map(\.id) ?? [])
+        func adult(_ draft: AdultDraft, role: TravelerRole) -> Traveler {
+            Traveler(id: draft.id, name: draft.name, role: role, ageGroup: .adult, chips: draft.chips, notes: draft.notes)
+        }
+        switch mode {
+        case .solo:
+            return TripParty(travelMode: .solo, travelers: [primary])
+        case .couple:
+            return TripParty(travelMode: .couple, travelers: [primary, adult(otherAdults.first ?? AdultDraft(), role: .partner)])
+        case .family:
+            var travelers = [primary] + otherAdults.map { adult($0, role: partnerIDs.contains($0.id) ? .partner : .otherAdult) }
+            for child in children {
+                travelers.append(Traveler(
+                    id: child.id,
+                    name: child.name,
+                    role: .child,
+                    ageGroup: child.ageGroup,
+                    packingResponsibility: .guardian,
+                    guardianTravelerID: primary.id,
+                    chips: ChildDraft.offersDevices(child.ageGroup) ? child.chips.intersection(ContextChip.travelerDevices) : [],
+                    needs: child.needs
+                ))
+            }
+            return TripParty(travelMode: .family, travelers: travelers)
+        case .group:
+            let adults = otherAdults.isEmpty ? [AdultDraft()] : otherAdults
+            return TripParty(travelMode: .group, travelers: [primary] + adults.map { adult($0, role: .otherAdult) })
+        }
+    }
+
     static func make(
         mode: TravelMode,
         selfChips: Set<ContextChip> = [],

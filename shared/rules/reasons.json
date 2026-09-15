@@ -67,6 +67,8 @@
     "party.shared": "{quantityPhrase} for the group — not one per person.",
     "party.shared_umbrella": "Rain is expected on {rainDaysPhrase}. {umbrellaPhrase} should cover your group — no need to pack one each.",
     "preference.bringingLaptop": "You're bringing a laptop.",
+    "preference.bringingPhone": "Bringing a phone.",
+    "preference.bringingTablet": "Bringing a tablet.",
     "preference.dailyMedication": "You take daily medication.",
     "preference.generic": "Based on how you travel.",
     "preference.getColdEasily": "You get cold easily.",

@@ -67,6 +67,8 @@
     "party.shared",
     "party.shared_umbrella",
     "preference.bringingLaptop",
+    "preference.bringingPhone",
+    "preference.bringingTablet",
     "preference.dailyMedication",
     "preference.generic",
     "preference.getColdEasily",
@@ -234,6 +236,8 @@
       "umbrellaPhrase"
     ],
     "preference.bringingLaptop": [],
+    "preference.bringingPhone": [],
+    "preference.bringingTablet": [],
     "preference.dailyMedication": [],
     "preference.generic": [],
     "preference.getColdEasily": [],

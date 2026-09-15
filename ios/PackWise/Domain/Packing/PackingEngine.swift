@@ -1190,6 +1190,8 @@ struct PackingEngine: Sendable {
         case .travelingInternationally: "You're traveling internationally."
         case .getColdEasily: "You get cold easily."
         case .laundryAvailable: "You expect to do laundry."
+        case .bringingPhone: "Bringing a phone."
+        case .bringingTablet: "Bringing a tablet."
         }
     }
 }

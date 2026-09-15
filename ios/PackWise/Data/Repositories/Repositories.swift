@@ -61,11 +61,11 @@ final class TripRepository {
         }
     }
 
-    func attach(party: TripParty, bagType: BagType, on trip: TripRecord) {
-        replaceParty(party, bagType: bagType, on: trip)
+    func attach(party: TripParty, bagTypes: Set<BagType>, on trip: TripRecord) {
+        replaceParty(party, bagTypes: bagTypes, on: trip)
     }
 
-    func replaceParty(_ party: TripParty, bagType: BagType, on trip: TripRecord) {
+    func replaceParty(_ party: TripParty, bagTypes: Set<BagType>, on trip: TripRecord) {
         trip.travelModeRaw = party.travelMode.rawValue
         trip.travelerCount = max(1, party.travelers.count)
         let existingByID = Dictionary(uniqueKeysWithValues: trip.travelers.map { ($0.id, $0) })
@@ -82,87 +82,66 @@ final class TripRepository {
             context.delete(record)
         }
         trip.travelers = next
-        // Reconcile the trip's bag record against `bagType` on every call,
-        // not only when `trip.bags` starts empty. `TripRecord.bagTypes`
-        // (the source of truth other readers consume) derives from `bags`,
-        // not `bagTypeRaw` — so an edit that only changed `bagTypeRaw`
-        // (as `TripRepository.apply` used to do, relying solely on this
-        // method for the bag side) would leave `bagTypes` silently
-        // pointing at the trip's original bag forever, since a non-empty
-        // `trip.bags` used to always short-circuit here. If a matching
-        // record already exists, its identity/owner are preserved
-        // untouched — this only replaces the bag when the selection
-        // actually changed. Filters per-record (mirroring `applyBagTypes`)
-        // rather than an all-or-nothing "does any bag match" check: the
-        // design invariant is at most one setup-created `BagRecord`, but a
-        // per-record filter converges to exactly one matching record
-        // regardless of starting state — 0, 1, or, were that invariant
-        // ever violated, N existing records — instead of leaving stray
-        // non-matching ones behind whenever a match happens to already be
-        // present among several.
-        for stale in trip.bags where stale.bagTypeRaw != bagType.rawValue {
-            context.delete(stale)
-        }
-        trip.bags.removeAll { $0.bagTypeRaw != bagType.rawValue }
-        if trip.bags.isEmpty {
-            let ownership: PackingOwnership = party.usesSimpleList ? .personal : .shared
-            let bag = TripBag(
-                name: bagType.title,
-                bagType: bagType,
-                ownerTravelerID: party.usesSimpleList ? party.primary.id : nil,
-                ownershipType: ownership
-            )
-            trip.bags = [BagRecord(from: bag, trip: trip)]
-        }
+        reconcileBags(bagTypes, party: party, on: trip)
     }
 
-    /// Set-valued trip-type write boundary for Task 3/4 callers (design
-    /// Sections 6.1/6.2). Trip types are a flat stable array, so a
-    /// multi-value write is fully safe today; nothing yet reads more than
-    /// the compatibility singleton (`TripRecord.tripType`), and that
-    /// accessor already fails safe rather than picking a primary value.
+    /// Set-valued trip-type write boundary (design Sections 6.1/6.2). An
+    /// empty selection is rejected: a trip always has at least one type.
     func applyTripTypes(_ tripTypes: Set<TripType>, on trip: TripRecord) throws {
         try TripTypeSelection.validateNonEmptyDraftSelection(tripTypes)
+        writeTripTypes(tripTypes, on: trip)
+        trip.updatedAt = .now
+    }
+
+    /// Set-valued bag write boundary. Every physical bag is independently
+    /// selectable (Task 5's `LuggageContext` owns multi-bag semantics); an
+    /// empty set is "not sure yet". Preserves the identity/owner of an
+    /// existing matching `BagRecord`, exactly like migration does.
+    func applyBagTypes(_ bagTypes: Set<BagType>, on trip: TripRecord) throws {
+        reconcileBags(bagTypes, party: trip.party, on: trip)
+        trip.updatedAt = .now
+    }
+
+    private func writeTripTypes(_ tripTypes: Set<TripType>, on trip: TripRecord) {
         trip.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON(tripTypes)
+        // Compat scalar only, never read back as authority.
         if let first = TripType.stableOrder.first(where: tripTypes.contains) {
             trip.tripTypeRaw = first.rawValue
         }
-        trip.updatedAt = .now
     }
 
-    enum BagAssignmentError: Error, Equatable {
-        /// Until Task 5 lands multi-bag luggage semantics, a caller must
-        /// not persist more than one bag through this boundary — doing so
-        /// would require picking an arbitrary "primary" bag for every
-        /// reader still built around a single `BagType`, which the design
-        /// explicitly forbids (Section 6.1's fail-safe requirement).
-        case multipleBagsNotYetSupported
-    }
-
-    /// Set-valued bag write boundary for Task 5/8 callers. Rejects a
-    /// genuine multi-bag selection rather than silently collapsing it;
-    /// `LuggageContext` (Task 5) removes this guard once bag-set-aware
-    /// engine consumers exist. Preserves the identity/owner of an existing
-    /// matching `BagRecord`, exactly like migration does.
-    func applyBagTypes(_ bagTypes: Set<BagType>, on trip: TripRecord) throws {
-        guard bagTypes.count <= 1 else { throw BagAssignmentError.multipleBagsNotYetSupported }
-        for existing in trip.bags where !bagTypes.contains(where: { $0.rawValue == existing.bagTypeRaw }) {
-            context.delete(existing)
+    /// Converges `trip.bags` to exactly one record per selected physical bag
+    /// (`TripRecord.bagTypes` derives from these records). A bag already
+    /// present keeps its record; deselected bags are deleted; new bags are
+    /// shared on a party trip and the primary's own on a solo trip.
+    private func reconcileBags(_ bagTypes: Set<BagType>, party: TripParty, on trip: TripRecord) {
+        let selected = bagTypes.filter(BagType.stableOrder.contains)
+        var seen: Set<String> = []
+        for existing in trip.bags {
+            if !selected.contains(where: { $0.rawValue == existing.bagTypeRaw }) || !seen.insert(existing.bagTypeRaw).inserted {
+                context.delete(existing)
+            }
         }
-        trip.bags.removeAll { existing in !bagTypes.contains(where: { $0.rawValue == existing.bagTypeRaw }) }
-        if let only = bagTypes.first, !trip.bags.contains(where: { $0.bagTypeRaw == only.rawValue }) {
-            let bag = TripBag(name: only.title, bagType: only, ownershipType: .personal)
-            let record = BagRecord(from: bag, trip: trip)
+        var kept = trip.bags.filter { existing in selected.contains { $0.rawValue == existing.bagTypeRaw } }
+        var keptTypes: Set<String> = []
+        kept = kept.filter { keptTypes.insert($0.bagTypeRaw).inserted }
+        for bag in BagType.stableOrder where selected.contains(bag) && !keptTypes.contains(bag.rawValue) {
+            let record = BagRecord(
+                from: TripBag(
+                    name: bag.title,
+                    bagType: bag,
+                    ownerTravelerID: party.usesSimpleList ? party.primary.id : nil,
+                    ownershipType: party.usesSimpleList ? .personal : .shared
+                ),
+                trip: trip
+            )
             context.insert(record)
-            trip.bags.append(record)
+            kept.append(record)
         }
-        // Compat scalar, symmetric with `applyTripTypes`'s `tripTypeRaw`
-        // handling: `.notSure` already means "no bag constraint" in the
-        // legacy vocabulary, so an empty selection has just as meaningful
-        // a single-value representation as a populated one. Never read
-        // back as authority.
-        trip.bagTypeRaw = (bagTypes.first ?? .notSure).rawValue
-        trip.updatedAt = .now
+        trip.bags = kept
+        // Compat scalar: one bag keeps its value, none or several read as
+        // "not sure" — never a chosen primary bag.
+        trip.bagTypeRaw = (selected.count == 1 ? selected.first! : .notSure).rawValue
     }
 
     func addItem(_ draft: PackingItemDraft, to trip: TripRecord, syncWeatherChange: Bool = true) {
@@ -264,9 +243,9 @@ final class TripRepository {
         endDate: Date,
         durationDays: Int,
         durationNights: Int,
-        tripType: TripType,
+        tripTypes: Set<TripType>,
         activities: [String],
-        bagType: BagType,
+        bagTypes: Set<BagType>,
         packingStyle: PackingStyle,
         laundryAccess: LaundryAccess,
         userNotes: String,
@@ -288,16 +267,14 @@ final class TripRepository {
         trip.endDate = endDate
         trip.durationDays = durationDays
         trip.durationNights = durationNights
-        trip.tripTypeRaw = tripType.rawValue
-        trip.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON([tripType])
+        if !tripTypes.isEmpty { writeTripTypes(tripTypes, on: trip) }
         trip.activitiesRaw = activities.joined(separator: ",")
-        trip.bagTypeRaw = bagType.rawValue
         trip.packingStyleRaw = packingStyle.rawValue
         trip.laundryAccessRaw = laundryAccess.rawValue
         trip.userNotes = userNotes
         trip.contextChipsRaw = contextChips.map(\.rawValue).joined(separator: ",")
         trip.updatedAt = .now
-        replaceParty(party, bagType: bagType, on: trip)
+        replaceParty(party, bagTypes: bagTypes, on: trip)
         syncPendingWeatherChange(on: trip)
     }
 

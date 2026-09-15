@@ -32,7 +32,8 @@ enum EligibilityFamily: Hashable, Sendable {
     /// an implicit phone-ownership signal: PackWise is running on their phone.
     /// That proves a phone — and the charger that follows it — and nothing
     /// else. Every other traveler, at any age, needs an explicit
-    /// traveler-scoped phone signal (collected in traveler details, Task 8).
+    /// traveler-scoped phone signal: `bringingPhone`, set in traveler details
+    /// (Task 8).
     case phoneOwnership
     /// Every other personal device (Task 7.1): ownership needs evidence,
     /// never age, and is never proven by owning a phone.
@@ -151,7 +152,8 @@ enum TravelerEligibilityResolver {
             if isSoleTraveler { return .eligible(.soleTravelerContext) }
             return .requiresExplicitSignal(.device(signal))
         case .phoneOwnership:
-            return traveler.role == .self ? .eligible(.implicitPrimaryPhone) : .requiresExplicitSignal(.phone)
+            if traveler.role == .self { return .eligible(.implicitPrimaryPhone) }
+            return signals.contains(.bringingPhone) ? .eligible(.travelerSignal) : .requiresExplicitSignal(.phone)
         case .deviceSignalRequired(nil):
             return traveler.role == .self ? .eligible(.primaryTravelerInterim) : .requiresExplicitSignal(.device(nil))
         case .travelerSignalRequired(let signal):

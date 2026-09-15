@@ -32,12 +32,14 @@ enum DebugPreviewScreen: String {
     case setupDestination
     case setupDestinationFallback
     case setupDates
-    case setupParty
-    case setupPartyFamily
-    case setupType
+    case setupTravelers
+    case setupTravelersFamily
+    case setupTravelersFamilyDetails
+    case setupTripTypes
     case setupActivities
-    case setupBagStyle
-    case setupExtras
+    case setupBags
+    case setupStyleLaundry
+    case setupPreferences
     case setupReview
     case reviewChanges
     case weatherChanged
@@ -94,20 +96,25 @@ struct DebugPreviewScene: View {
                 TripSetupView(existingTrip: seed.completedTrip, initialStep: .destination)
             case .setupDates:
                 setup(.dates)
-            case .setupParty:
-                setup(.party)
-            case .setupPartyFamily:
-                TripSetupView(existingTrip: seed.familyTrip, initialStep: .party)
-            case .setupType:
-                setup(.type)
+            case .setupTravelers:
+                setup(.travelers)
+            case .setupTravelersFamily:
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .travelers)
+            case .setupTravelersFamilyDetails:
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .travelers)
+                    .environment(\.setupCaptureScrollAnchor, UnitPoint(x: 0.5, y: 0.28))
+            case .setupTripTypes:
+                setup(.tripTypes)
             case .setupActivities:
                 setup(.activities)
-            case .setupBagStyle:
-                setup(.bagAndStyle)
-            case .setupExtras:
-                setup(.extras)
+            case .setupBags:
+                setup(.bags)
+            case .setupStyleLaundry:
+                setup(.styleAndLaundry)
+            case .setupPreferences:
+                setup(.preferences)
             case .setupReview:
-                setup(.review)
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .review)
             case .reviewChanges:
                 NavigationStack {
                     RecommendationDiffScreen(
@@ -342,14 +349,19 @@ final class DebugTripSeed {
         repository.attach(
             party: TripPartyBuilder.make(
                 mode: .family,
-                adultCount: 2,
-                childProfiles: [
-                    ChildDraft(name: "Ada", ageGroup: .toddler, needs: Set(ChildNeed.suggested(for: .toddler).prefix(2)))
+                selfChips: [],
+                otherAdults: [AdultDraft(name: "Maya", chips: [.bringingPhone, .bringingLaptop])],
+                children: [
+                    ChildDraft(name: "Ada", ageGroup: .toddler, needs: Set(ChildNeed.suggested(for: .toddler).prefix(2))),
+                    ChildDraft(ageGroup: .teen, chips: [.bringingPhone])
                 ]
             ),
-            bagType: .checked,
+            bagTypes: [.carryOn, .checked],
             on: familyTrip
         )
+        // A V2 reference state: two trip types, two bags.
+        try? repository.applyTripTypes([.vacation, .beach], on: familyTrip)
+        familyTrip.activitiesRaw = "beachDays,sightseeing"
 
         completedTrip = TripRecord(
             destination: Destination(

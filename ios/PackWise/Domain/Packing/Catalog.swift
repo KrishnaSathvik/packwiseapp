@@ -89,6 +89,9 @@ struct BaseRulesFile: Codable, Sendable {
     var baseEssentials: [String]
     var internationalAdds: [String]
     var contextChips: [String: [String]]
+    /// Traveler-scoped device signals (Task 8). Kept apart from
+    /// `context_chips`, which is also the Intelligence API chip vocabulary.
+    var travelerDeviceChips: [String: [String]]? = nil
     var freeTextKeywords: [String: String]
     var shortTripSkips: ShortTripSkips?
 
@@ -96,6 +99,7 @@ struct BaseRulesFile: Codable, Sendable {
         case baseEssentials = "base_essentials"
         case internationalAdds = "international_adds"
         case contextChips = "context_chips"
+        case travelerDeviceChips = "traveler_device_chips"
         case freeTextKeywords = "free_text_keywords"
         case shortTripSkips = "short_trip_skips"
     }
@@ -334,7 +338,9 @@ struct PackingRulesFile: Sendable {
     var baseEssentials: [String] { base.baseEssentials }
 
     var internationalAdds: [String] { base.internationalAdds }
-    var contextChips: [String: [String]] { base.contextChips }
+    /// Every chip's item adds: trip/primary context chips plus traveler
+    /// device signals. The engine reads one map.
+    var contextChips: [String: [String]] { base.contextChips.merging(base.travelerDeviceChips ?? [:]) { current, _ in current } }
     var freeTextKeywords: [String: String] { base.freeTextKeywords }
 }
 

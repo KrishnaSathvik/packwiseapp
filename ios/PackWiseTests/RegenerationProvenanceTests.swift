@@ -71,7 +71,7 @@ struct RegenerationProvenanceTests {
         trip.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON(ctx.tripTypes)
         modelContext.insert(trip)
         let repo = TripRepository(context: modelContext)
-        repo.attach(party: ctx.effectiveParty, bagType: .carryOn, on: trip)
+        repo.attach(party: ctx.effectiveParty, bagTypes: [.carryOn], on: trip)
         return (repo, trip)
     }
 

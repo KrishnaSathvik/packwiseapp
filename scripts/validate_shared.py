@@ -137,7 +137,7 @@ def eligibility_eligible(entry: dict, age: str, needs: set, chips: set) -> bool:
     if family == "explicitChildNeed":
         return entry["need"] in needs
     if family == "phoneOwnership":
-        return False
+        return "bringingPhone" in chips
     if family == "deviceSignalRequired":
         return entry.get("signal") is not None and entry["signal"] in chips
     if family == "travelerSignalRequired":
@@ -286,7 +286,13 @@ def main() -> int:
     for item_id in party.get("sharingPolicies", {}):
         if item_id not in catalog:
             errors.append(f"party policy unknown {item_id}")
-    errors.extend(eligibility_errors(party, set(catalog), set(base["context_chips"])))
+    device_chips = base.get("traveler_device_chips", {})
+    for chip, refs in device_chips.items():
+        if chip in base["context_chips"]:
+            errors.append(f"traveler device chip {chip} is also a trip context chip")
+        if missing := check(f"device chip {chip}", refs):
+            errors.append(f"device chip {chip}: {missing}")
+    errors.extend(eligibility_errors(party, set(catalog), set(base["context_chips"]) | set(device_chips)))
 
     for item in items:
         if item["quantity_kind"] not in quantity_kinds:
@@ -302,11 +308,14 @@ def main() -> int:
     inference_vocabulary = chip_names | activity_names
 
     swift_chips = swift_enum_cases(IOS / "Domain" / "TripTypes.swift", "ContextChip")
-    if swift_chips and swift_chips != chip_names:
+    # Traveler device signals are Swift chips too, but never inference
+    # vocabulary (the API cannot infer who owns a device).
+    all_chip_names = chip_names | set(base.get("traveler_device_chips", {}))
+    if swift_chips and swift_chips != all_chip_names:
         errors.append(
             "ContextChip drift: "
-            f"swift-only {sorted(swift_chips - chip_names)}, "
-            f"rules-only {sorted(chip_names - swift_chips)}"
+            f"swift-only {sorted(swift_chips - all_chip_names)}, "
+            f"rules-only {sorted(all_chip_names - swift_chips)}"
         )
 
     # Swift's stableOrder is the one canonical-order authority; the API's

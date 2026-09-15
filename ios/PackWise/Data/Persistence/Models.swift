@@ -670,26 +670,15 @@ final class PackingPreferenceRecord {
         )
     }
 
-    /// TEMPORARY single-select writer for Me's one-bag picker (Task 15.1);
-    /// Task 8 replaces it with the four-bag multi-select. Writes the legacy
-    /// scalar and the V4 set together so the V4 value is never stale: a
-    /// physical bag becomes its singleton set, and `notSure`/`roadTripLuggage`
-    /// become the empty set (no bag preference) — the same mapping the V3→V4
-    /// migration applies.
-    func setSingleSelectPreferredBag(_ bag: BagType) {
-        preferredBagRaw = bag.rawValue
-        preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(BagType.stableOrder.contains(bag) ? [bag] : [])
+    /// Me's default-bags multi-select writer (Task 8). The V4 set is the
+    /// authority; the legacy scalar keeps a compat value only — the one bag
+    /// when exactly one is chosen, otherwise `notSure`, never a guessed
+    /// primary bag.
+    func setPreferredBagTypes(_ bags: Set<BagType>) {
+        let physical = bags.filter(BagType.stableOrder.contains)
+        preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(physical)
+        preferredBagRaw = (physical.count == 1 ? physical.first! : .notSure).rawValue
         preferredBagTypesMigrated = true
-    }
-
-    /// Binding surface for Me's single-select picker: reads the legacy raw
-    /// value the picker shows and writes through
-    /// `setSingleSelectPreferredBag`. A computed property rather than a
-    /// `Binding(get:set:)` so the binding never captures this non-Sendable
-    /// record in a `@Sendable` closure. Not persisted.
-    var singleSelectPreferredBagRaw: String {
-        get { preferredBagRaw }
-        set { setSingleSelectPreferredBag(BagType(rawValue: newValue) ?? .notSure) }
     }
 
     func apply(_ preferences: TravelerPreferences) {

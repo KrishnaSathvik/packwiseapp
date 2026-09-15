@@ -34,6 +34,15 @@
     "essentials.cash",
     "documents.travel_insurance"
   ],
+  "traveler_device_chips": {
+    "bringingPhone": [
+      "essentials.phone",
+      "electronics.phone_charger"
+    ],
+    "bringingTablet": [
+      "electronics.tablet"
+    ]
+  },
   "context_chips": {
     "dailyMedication": [
       "health.daily_medication",

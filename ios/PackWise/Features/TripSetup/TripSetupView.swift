@@ -1,90 +1,6 @@
 import SwiftData
 import SwiftUI
 
-struct TripDraft {
-    var destination: Destination?
-    var startDate = Calendar.current.startOfDay(for: Date.now)
-    var endDate = Calendar.current.date(byAdding: .day, value: 4, to: Calendar.current.startOfDay(for: Date.now)) ?? Date.now
-    var tripType: TripType = .vacation
-    var activities: [String] = []
-    var customActivity: String = ""
-    var bagType: BagType = .notSure
-    var packingStyle: PackingStyle = .balanced
-    var laundry: LaundryAccess = .none
-    var chips: Set<ContextChip> = []
-    var notes: String = ""
-    var travelMode: TravelMode = .solo
-    var partnerName: String = ""
-    var partnerChips: Set<ContextChip> = []
-    var partnerNotes: String = ""
-    var adultCount: Int = 2
-    var childProfiles: [ChildDraft] = [ChildDraft(ageGroup: .toddler)]
-    var existingParty: TripParty?
-
-    var duration: (days: Int, nights: Int) {
-        TripDateMath.daysAndNights(from: startDate, to: endDate)
-    }
-
-    var personalChips: Set<ContextChip> {
-        chips.subtracting(ContextChip.tripLevel)
-    }
-
-    var party: TripParty {
-        TripPartyBuilder.make(
-            mode: travelMode,
-            selfChips: personalChips,
-            partnerName: partnerName,
-            partnerChips: partnerChips,
-            partnerNotes: partnerNotes,
-            adultCount: travelMode == .couple ? 2 : adultCount,
-            childProfiles: travelMode == .family ? childProfiles : [],
-            existing: existingParty
-        )
-    }
-
-    static func fresh(preferences: TravelerPreferences) -> TripDraft {
-        var draft = TripDraft()
-        draft.packingStyle = preferences.packingStyle
-        draft.bagType = preferences.preferredBag
-        return draft
-    }
-
-    static func from(trip: TripRecord) -> TripDraft {
-        let party = trip.party
-        let partner = party.travelers.first { $0.role == .partner }
-        var draft = TripDraft()
-        draft.destination = trip.destination
-        draft.startDate = trip.startDate
-        draft.endDate = trip.endDate
-        draft.tripType = trip.tripType
-        draft.activities = trip.activities
-        draft.bagType = trip.bagType
-        draft.packingStyle = trip.packingStyle
-        draft.laundry = trip.laundryAccess
-        draft.chips = Set(trip.contextChips)
-        draft.notes = trip.userNotes
-        draft.travelMode = party.travelMode
-        draft.partnerName = partner?.name ?? ""
-        draft.partnerChips = partner?.chips ?? []
-        draft.partnerNotes = partner?.notes ?? ""
-        draft.adultCount = max(1, party.travelers.filter { $0.role != .child }.count)
-        draft.childProfiles = party.travelers.filter { $0.role == .child }.map {
-            ChildDraft(id: $0.id, name: $0.name, ageGroup: $0.ageGroup, needs: $0.needs)
-        }
-        if draft.childProfiles.isEmpty {
-            draft.childProfiles = [ChildDraft(ageGroup: .toddler)]
-        }
-        draft.existingParty = party
-        return draft
-    }
-}
-
-enum SetupStep: Int, CaseIterable {
-    /// Bag and style are one screen, as the board draws them. The underlying
-    /// draft still records them separately.
-    case destination, dates, party, type, activities, bagAndStyle, extras, review
-}
-
 struct TripSetupView: View {
     var existingTrip: TripRecord? = nil
     var onFinished: ((UUID) -> Void)? = nil
@@ -99,7 +15,7 @@ struct TripSetupView: View {
 
     @State private var draft = TripDraft()
     /// Steps after the first, in visit order. The destination step is the
-    /// stack's root; Next pushes, Back pops.
+    /// stack's root; the bottom action pushes, Back pops.
     @State private var stepPath: [SetupStep] = []
     @State private var search = ""
     @State private var destinationMatches: [Destination] = []
@@ -115,7 +31,7 @@ struct TripSetupView: View {
 
     var body: some View {
         // The flow owns its NavigationStack: it is presented full screen, and
-        // each of the eight steps is a real push, not swapped-in content.
+        // each of the nine steps is a real push, not swapped-in content.
         NavigationStack(path: $stepPath) {
             stepScreen(.destination)
                 .navigationDestination(for: SetupStep.self) { stepScreen($0) }
@@ -138,159 +54,46 @@ struct TripSetupView: View {
     }
 
     private func stepScreen(_ step: SetupStep) -> some View {
-        VStack(spacing: 0) {
-            progressBar(for: step)
-            ScrollView {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
-                    stepContent(for: step)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, PackWiseSpacing.comfortable)
-                .padding(.top, PackWiseSpacing.snug)
-                .padding(.bottom, PackWiseSpacing.section)
-            }
-            footer(for: step)
-        }
-        .background(PackWiseColor.screen)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        // The reference sheet's toolbar area is white; without an explicit
-        // background the bar renders the grouped-gray system default above
-        // the progress underline.
-        .toolbarBackground(PackWiseColor.screen, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbar { setupToolbar(for: step) }
-    }
-
-    /// A thin bar under the navigation bar tracking position through the
-    /// eight steps — at eight, page dots would be noise.
-    private func progressBar(for step: SetupStep) -> some View {
-        GeometryReader { proxy in
-            Rectangle()
-                .fill(PackWiseColor.accent)
-                .frame(
-                    width: proxy.size.width
-                        * Double(step.rawValue + 1) / Double(SetupStep.allCases.count)
-                )
-        }
-        .frame(height: 2)
-        .background(PackWiseColor.border)
-        .accessibilityLabel("Step \(step.rawValue + 1) of \(SetupStep.allCases.count)")
-    }
-
-    // design-system.md: trip setup uses a top Back / Next header, not custom
-    // wizard chrome. Review keeps its own primary action.
-    //
-    // On iOS 26 a toolbar item is wrapped in Liquid Glass by default, and
-    // `.buttonStyle(.plain)` does not opt out of it — the button keeps the
-    // capsule and, for the back item, gets squeezed until "Back" truncates to
-    // an ellipsis. `sharedBackgroundVisibility(.hidden)` is the actual opt-out,
-    // and it lives on the toolbar item rather than on the button. It is iOS 26
-    // only, so the pre-26 path keeps the plain items it already drew correctly.
-    @ToolbarContentBuilder
-    private func setupToolbar(for step: SetupStep) -> some ToolbarContent {
-        if #available(iOS 26.0, *) {
-            ToolbarItem(placement: .cancellationAction) { leadingButton(for: step) }
-                .sharedBackgroundVisibility(.hidden)
-            if step != .review {
-                ToolbarItem(placement: .confirmationAction) { nextButton(for: step) }
-                    .sharedBackgroundVisibility(.hidden)
-            }
-        } else {
-            ToolbarItem(placement: .cancellationAction) { leadingButton(for: step) }
-            if step != .review {
-                ToolbarItem(placement: .confirmationAction) { nextButton(for: step) }
-            }
+        TripSetupShell(
+            step: step,
+            leading: step == .destination ? .cancel : .back,
+            primaryTitle: primaryTitle(for: step),
+            primaryEnabled: canAdvance(for: step) && !isBuilding,
+            onLeading: { step == .destination ? dismiss() : goBack() },
+            onPrimary: { Task { await advance(from: step) } },
+            primaryHint: hint(for: step)
+        ) {
+            stepContent(for: step)
         }
     }
 
-    @ViewBuilder
-    private func leadingButton(for step: SetupStep) -> some View {
-        if step == .destination {
-            // "Cancel", never truncated — the leading item must keep its
-            // intrinsic width or the bar squeezes it to "Cl…".
-            Button("Cancel") { dismiss() }
-                .buttonStyle(.plain)
-                .foregroundStyle(PackWiseColor.accent)
-                .lineLimit(1)
-                .fixedSize()
-        } else {
-            Button {
-                goBack()
-            } label: {
-                // Without `fixedSize` the toolbar sizes this item to the
-                // glyph and clips the word to "B".
-                Label("Back", systemImage: "chevron.left")
-                    .labelStyle(.titleAndIcon)
-                    .fixedSize()
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(PackWiseColor.accent)
+    private func primaryTitle(for step: SetupStep) -> String {
+        guard step == .review else { return "Next" }
+        if isBuilding {
+            return isEditing ? "Updating your packing list" : "Building your packing list"
         }
+        return isEditing ? "Update Packing List" : "Build My Packing List"
     }
 
-    private func nextButton(for step: SetupStep) -> some View {
-        Button("Next") { Task { await advance(from: step) } }
-            .buttonStyle(.plain)
-            .font(.body.weight(.semibold))
-            .foregroundStyle(PackWiseColor.accent)
-            .lineLimit(1)
-            .fixedSize()
-            .disabled(!canAdvance(for: step))
-    }
-
-    private func title(for step: SetupStep) -> String {
+    private func hint(for step: SetupStep) -> String? {
         switch step {
-        case .destination: "Where are you going?"
-        case .dates: "When are you going?"
-        case .party: "Who's traveling?"
-        case .type: "What kind of trip is it?"
-        case .activities: "What will you be doing?"
-        case .bagAndStyle: "How are you traveling?"
-        case .extras: "Anything PackWise should know?"
-        case .review: "Review your trip"
-        }
-    }
-
-    private func subtitle(for step: SetupStep) -> String? {
-        switch step {
-        case .destination: "Search for a city, region, or country."
-        case .party: "Help us personalize your packing list."
-        case .activities: "Choose activities that apply to your trip."
-        case .extras: "Optional, but it makes the list fit better."
-        case .type: "This helps tailor your packing list."
-        case .bagAndStyle: "This affects what you can bring."
-        case .review: "One look before PackWise builds your list."
-        case .dates: nil
-        }
-    }
-
-    /// The board puts the step's question in the content, with only Back and
-    /// Next in the navigation bar.
-    private func heading(for step: SetupStep) -> some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            Text(title(for: step))
-                .font(PackWiseFont.screenTitle)
-                .foregroundStyle(PackWiseColor.textPrimary)
-            if let subtitle = subtitle(for: step) {
-                Text(subtitle)
-                    .font(PackWiseFont.screenSubtitle)
-                    .foregroundStyle(PackWiseColor.textSecondary)
-            }
+        case .destination: "Choose a destination to continue."
+        case .tripTypes: "Choose at least one trip type."
+        default: nil
         }
     }
 
     @ViewBuilder
     private func stepContent(for step: SetupStep) -> some View {
-        heading(for: step)
         switch step {
         case .destination: destinationStep
         case .dates: datesStep
-        case .party: partyStep
-        case .type: typeStep
+        case .travelers: travelersStep
+        case .tripTypes: tripTypesStep
         case .activities: activitiesStep
-        case .bagAndStyle: bagAndStyleStep
-        case .extras: extrasStep
+        case .bags: bagsStep
+        case .styleAndLaundry: styleAndLaundryStep
+        case .preferences: preferencesStep
         case .review: reviewStep
         }
     }
@@ -304,7 +107,7 @@ struct TripSetupView: View {
         }
     }
 
-    // MARK: - Destination
+    // MARK: - 1. Destination
 
     private var destinationStep: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
@@ -364,12 +167,13 @@ struct TripSetupView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityAddTraits(draft.destination == destination ? .isSelected : [])
                     }
                 }
             }
 
             // Destination photography, with the name and a location pin
-            // below — never a map embed.
+            // below. The destination redesign itself is Task 9.
             if let destination = draft.destination {
                 VStack(alignment: .leading, spacing: 0) {
                     DestinationVisualView(destination: destination, purpose: .destinationPreview)
@@ -395,12 +199,11 @@ struct TripSetupView: View {
                     RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous)
                         .strokeBorder(PackWiseColor.border, lineWidth: 1)
                 }
-                .shadow(color: .black.opacity(0.04), radius: 8, y: 2)
             }
         }
     }
 
-    // MARK: - Dates
+    // MARK: - 2. Dates
 
     private var datesStep: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
@@ -412,40 +215,35 @@ struct TripSetupView: View {
                 )
             }
 
-            // The span and its length are one fact, so they read as one row
-            // rather than as two stacked lines below a very tall calendar.
+            // The span and its length are one fact, so they read as one row.
             PackWiseCard {
                 HStack(spacing: PackWiseSpacing.regular) {
                     PackWiseIconBadge(symbol: "calendar", tint: PackWiseColor.accent)
                     VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                        HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.snug) {
-                            Text(draft.startDate.formatted(.dateTime.month(.abbreviated).day()))
-                            Image(systemName: "arrow.right")
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(PackWiseColor.textSecondary)
-                            Text(draft.endDate.formatted(.dateTime.month(.abbreviated).day()))
-                        }
-                        .font(.headline)
+                        Text(shortDateSpan)
+                            .font(PackWiseFont.cardTitle)
+                            .foregroundStyle(PackWiseColor.textPrimary)
                         Text("\(draft.duration.days) days · \(draft.duration.nights) nights")
-                            .font(.subheadline)
+                            .font(PackWiseFont.rowSubtitle)
                             .foregroundStyle(PackWiseColor.textSecondary)
                     }
                     Spacer(minLength: 0)
                 }
+                .accessibilityElement(children: .combine)
             }
 
             if let dateError {
                 Label(dateError, systemImage: "exclamationmark.triangle")
-                    .font(.subheadline)
-                    .foregroundStyle(.red)
+                    .font(PackWiseFont.rowSubtitle)
+                    .foregroundStyle(PackWiseColor.danger)
             }
         }
     }
 
-    // MARK: - Party
+    // MARK: - 3. Travelers
 
-    private var partyStep: some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
+    private var travelersStep: some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
             group {
                 ForEach(Array(TravelMode.allCases.enumerated()), id: \.element.id) { index, mode in
                     if index > 0 { PackWiseRowDivider() }
@@ -456,109 +254,178 @@ struct TripSetupView: View {
                         subtitle: mode.subtitle,
                         isSelected: draft.travelMode == mode
                     ) {
-                        draft.travelMode = mode
-                        if mode == .family, draft.childProfiles.isEmpty {
-                            draft.childProfiles = [ChildDraft(ageGroup: .toddler)]
-                        }
-                        if mode == .group {
-                            draft.adultCount = max(draft.adultCount, 3)
+                        draft.setTravelMode(mode)
+                    }
+                }
+            }
+
+            if draft.travelMode == .family || draft.travelMode == .group {
+                PackWiseCard {
+                    VStack(spacing: PackWiseSpacing.regular) {
+                        countRow(
+                            title: "Other adults",
+                            detail: "Besides you",
+                            value: Binding(get: { draft.otherAdultCount }, set: { draft.setOtherAdultCount($0) }),
+                            range: TripDraft.otherAdultRange(for: draft.travelMode)
+                        )
+                        if draft.travelMode == .family {
+                            PackWiseRowDivider(inset: 0)
+                            countRow(
+                                title: "Children",
+                                detail: "Infants to teens",
+                                value: Binding(get: { draft.childProfiles.count }, set: { draft.setChildCount($0) }),
+                                range: TripDraft.childRange
+                            )
                         }
                     }
                 }
             }
 
-            if draft.travelMode == .couple { partnerDetails }
-            if draft.travelMode == .family { familyDetails }
-            if draft.travelMode == .group { groupDetails }
+            if draft.travelMode != .solo {
+                let party = draft.party
+                ForEach(Array(draft.otherAdults.prefix(draft.otherAdultCount))) { adult in
+                    if let traveler = party.travelers.first(where: { $0.id == adult.id }) {
+                        adultDetails(label: party.label(for: traveler), adult: adultBinding(adult.id))
+                    }
+                }
+                if draft.travelMode == .family {
+                    ForEach(draft.childProfiles) { child in
+                        if let traveler = party.travelers.first(where: { $0.id == child.id }) {
+                            childDetails(label: party.label(for: traveler), child: childBinding(child.id))
+                        }
+                    }
+                }
+            }
         }
     }
 
-    private var partnerDetails: some View {
+    /// Bindings by traveler ID, never by array index: a count stepper can
+    /// shrink the array while a row is still rendering.
+    private func adultBinding(_ id: UUID) -> Binding<AdultDraft> {
+        Binding(
+            get: { draft.otherAdults.first { $0.id == id } ?? AdultDraft(id: id) },
+            set: { value in
+                if let index = draft.otherAdults.firstIndex(where: { $0.id == id }) { draft.otherAdults[index] = value }
+            }
+        )
+    }
+
+    private func childBinding(_ id: UUID) -> Binding<ChildDraft> {
+        Binding(
+            get: { draft.childProfiles.first { $0.id == id } ?? ChildDraft(id: id) },
+            set: { value in
+                if let index = draft.childProfiles.firstIndex(where: { $0.id == id }) { draft.childProfiles[index] = value }
+            }
+        )
+    }
+
+    private func countRow(
+        title: String,
+        detail: String,
+        value: Binding<Int>,
+        range: ClosedRange<Int>
+    ) -> some View {
+        Stepper(value: value, in: range) {
+            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                HStack(spacing: PackWiseSpacing.snug) {
+                    Text(title)
+                        .font(PackWiseFont.rowTitle)
+                        .foregroundStyle(PackWiseColor.textPrimary)
+                    Text("\(value.wrappedValue)")
+                        .font(PackWiseFont.numeral)
+                        .foregroundStyle(PackWiseColor.accent)
+                        .monospacedDigit()
+                }
+                Text(detail)
+                    .font(PackWiseFont.rowSubtitle)
+                    .foregroundStyle(PackWiseColor.textSecondary)
+            }
+        }
+        .accessibilityValue("\(value.wrappedValue)")
+    }
+
+    private func adultDetails(label: String, adult: Binding<AdultDraft>) -> some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            PackWiseSectionHeader(title: "Partner")
+            PackWiseSectionHeader(title: label)
             PackWiseCard {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                    TextField("Name (optional)", text: $draft.partnerName)
+                    TextField("Name (optional)", text: adult.name)
+                        .textInputAutocapitalization(.words)
                     PackWiseRowDivider(inset: 0)
-                    Text("Does your partner need anything different?")
-                        .font(.subheadline)
-                        .foregroundStyle(PackWiseColor.textSecondary)
-                    PackWiseFlowLayout {
-                        ForEach(ContextChip.partnerDifferences) { chip in
-                            SelectableChip(
-                                title: chip.differenceTitle,
-                                selected: draft.partnerChips.contains(chip)
-                            ) {
-                                if draft.partnerChips.contains(chip) {
-                                    draft.partnerChips.remove(chip)
-                                } else {
-                                    draft.partnerChips.insert(chip)
-                                }
-                            }
-                        }
-                    }
+                    chipGroup(
+                        title: "Devices",
+                        helper: "Only what they're bringing. PackWise won't assume.",
+                        options: ContextChip.travelerDevices,
+                        selection: adult.chips,
+                        titleFor: \.chipTitle
+                    )
                     PackWiseRowDivider(inset: 0)
-                    TextField("Add note", text: $draft.partnerNotes, axis: .vertical)
-                        .lineLimit(2...4)
+                    chipGroup(
+                        title: "Anything different?",
+                        helper: nil,
+                        options: ContextChip.partnerDifferences,
+                        selection: adult.chips,
+                        titleFor: \.differenceTitle
+                    )
+                    PackWiseRowDivider(inset: 0)
+                    TextField("Add note", text: adult.notes, axis: .vertical)
+                        .lineLimit(1...4)
                 }
             }
         }
     }
 
-    private var familyDetails: some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
+    private func childDetails(label: String, child: Binding<ChildDraft>) -> some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+            PackWiseSectionHeader(title: label)
             PackWiseCard {
-                VStack(spacing: PackWiseSpacing.regular) {
-                    Stepper("Adults  \(draft.adultCount)", value: $draft.adultCount, in: 1...6)
+                VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                    TextField("Name (optional)", text: child.name)
+                        .textInputAutocapitalization(.words)
                     PackWiseRowDivider(inset: 0)
-                    Stepper("Children  \(draft.childProfiles.count)", value: Binding(
-                        get: { draft.childProfiles.count },
-                        set: { count in
-                            if count > draft.childProfiles.count {
-                                draft.childProfiles.append(ChildDraft(ageGroup: .child))
-                            } else if count < draft.childProfiles.count {
-                                draft.childProfiles = Array(draft.childProfiles.prefix(count))
+                    HStack {
+                        Text("Age group")
+                            .font(PackWiseFont.rowTitle)
+                            .foregroundStyle(PackWiseColor.textPrimary)
+                        Spacer()
+                        Picker("Age group", selection: child.ageGroup) {
+                            ForEach(AgeGroup.allCases.filter { $0 != .adult }) { group in
+                                Text(group.title).tag(group)
                             }
                         }
-                    ), in: 0...6)
-                }
-            }
-
-            ForEach($draft.childProfiles) { $child in
-                let number = draft.childProfiles.firstIndex(where: { $0.id == child.id }).map { $0 + 1 } ?? 1
-                VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                    PackWiseSectionHeader(title: "Child \(number)")
-                    PackWiseCard {
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                            TextField("Name (optional)", text: $child.name)
-                            PackWiseRowDivider(inset: 0)
-                            HStack {
-                                Text("Age group")
-                                Spacer()
-                                Picker("Age group", selection: $child.ageGroup) {
-                                    ForEach(AgeGroup.allCases.filter { $0 != .adult }) { group in
-                                        Text(group.title).tag(group)
-                                    }
-                                }
-                                .labelsHidden()
-                                .pickerStyle(.menu)
-                            }
-                            if !ChildNeed.suggested(for: child.ageGroup).isEmpty {
-                                PackWiseRowDivider(inset: 0)
-                                Text("What should PackWise plan for?")
-                                    .font(.subheadline)
-                                    .foregroundStyle(PackWiseColor.textSecondary)
-                                PackWiseFlowLayout {
-                                    ForEach(ChildNeed.suggested(for: child.ageGroup)) { need in
-                                        SelectableChip(
-                                            title: need.title,
-                                            selected: child.needs.contains(need)
-                                        ) {
-                                            if child.needs.contains(need) {
-                                                child.needs.remove(need)
-                                            } else {
-                                                child.needs.insert(need)
-                                            }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .fixedSize()
+                    }
+                    // Young children get no device choices by default; a teen
+                    // can bring their own.
+                    if ChildDraft.offersDevices(child.wrappedValue.ageGroup) {
+                        PackWiseRowDivider(inset: 0)
+                        chipGroup(
+                            title: "Devices",
+                            helper: "Only what they're bringing. PackWise won't assume.",
+                            options: ContextChip.travelerDevices,
+                            selection: child.chips,
+                            titleFor: \.chipTitle
+                        )
+                    }
+                    let needs = ChildNeed.suggested(for: child.wrappedValue.ageGroup)
+                    if !needs.isEmpty {
+                        PackWiseRowDivider(inset: 0)
+                        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                            Text("What should PackWise plan for?")
+                                .font(PackWiseFont.rowSubtitle.weight(.semibold))
+                                .foregroundStyle(PackWiseColor.textSecondary)
+                            PackWiseFlowLayout {
+                                ForEach(needs) { need in
+                                    PackWiseChip(
+                                        title: need.title,
+                                        isSelected: child.wrappedValue.needs.contains(need)
+                                    ) {
+                                        if child.wrappedValue.needs.contains(need) {
+                                            child.wrappedValue.needs.remove(need)
+                                        } else {
+                                            child.wrappedValue.needs.insert(need)
                                         }
                                     }
                                 }
@@ -570,78 +437,72 @@ struct TripSetupView: View {
         }
     }
 
-    private var groupDetails: some View {
-        PackWiseCard {
-            VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                Stepper("Adults  \(draft.adultCount)", value: $draft.adultCount, in: 2...8)
-                Text("PackWise will build personal lists plus a shared list. Collaboration across phones comes later.")
-                    .font(.footnote)
+    private func chipGroup(
+        title: String,
+        helper: String?,
+        options: [ContextChip],
+        selection: Binding<Set<ContextChip>>,
+        titleFor: KeyPath<ContextChip, String>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                Text(title)
+                    .font(PackWiseFont.rowSubtitle.weight(.semibold))
                     .foregroundStyle(PackWiseColor.textSecondary)
+                if let helper {
+                    Text(helper)
+                        .font(PackWiseFont.rowSubtitle)
+                        .foregroundStyle(PackWiseColor.textTertiary)
+                }
             }
-        }
-    }
-
-    // MARK: - Trip type
-
-    private var typeStep: some View {
-        group {
-            ForEach(Array(TripType.allCases.enumerated()), id: \.element.id) { index, type in
-                if index > 0 { PackWiseRowDivider() }
-                PackWiseSelectionRow(
-                    symbol: type.symbol,
-                    tint: type.tint,
-                    title: type.title,
-                    subtitle: nil,
-                    isSelected: draft.tripType == type
-                ) {
-                    draft.tripType = type
-                    if draft.activities.isEmpty {
-                        draft.activities = Array(type.suggestedActivityIDs.prefix(2))
+            PackWiseFlowLayout {
+                ForEach(options) { chip in
+                    PackWiseChip(
+                        title: chip[keyPath: titleFor],
+                        symbol: chip.symbol,
+                        tint: chip.tint,
+                        isSelected: selection.wrappedValue.contains(chip)
+                    ) {
+                        if selection.wrappedValue.contains(chip) {
+                            selection.wrappedValue.remove(chip)
+                        } else {
+                            selection.wrappedValue.insert(chip)
+                        }
                     }
                 }
             }
         }
     }
 
-    // MARK: - Activities
+    // MARK: - 4. Trip types
+
+    private var tripTypesStep: some View {
+        TripSetupSelectionGrid(items: TripType.stableOrder) { type, layout in
+            MultiSelectionCard(
+                symbol: type.symbol,
+                tint: type.tint,
+                title: type.title,
+                isSelected: draft.tripTypes.contains(type),
+                layout: layout
+            ) {
+                draft.toggleTripType(type)
+            }
+        }
+    }
+
+    // MARK: - 5. Activities
 
     private var activitiesStep: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
-            // Plain text tokens made this field read as a filter bar. The
-            // glyph is what tells "Nice dinner" from "Nightlife" at a glance.
-            PackWiseFlowLayout {
-                ForEach(suggestedActivities, id: \.self) { id in
-                    PackWiseChip(
-                        title: activityTitle(id),
-                        symbol: PackWiseActivityStyle.symbol(for: id),
-                        tint: PackWiseActivityStyle.tint(for: id),
-                        isSelected: draft.activities.contains(id)
-                    ) {
-                        toggleActivity(id)
-                    }
-                }
-                if !addingCustom {
-                    // "+ Add something" lives inline in the flow as a white
-                    // pill with blue text, not as a full-width field.
-                    Button {
-                        addingCustom = true
-                        customFieldFocused = true
-                    } label: {
-                        HStack(spacing: PackWiseSpacing.tight + 2) {
-                            Image(systemName: "plus")
-                                .font(.footnote.weight(.semibold))
-                            Text("Add something")
-                                .font(.subheadline.weight(.medium))
-                        }
-                        .foregroundStyle(PackWiseColor.accent)
-                        .padding(.horizontal, PackWiseSpacing.comfortable)
-                        .frame(minHeight: 40)
-                        .background { Capsule().fill(PackWiseColor.surface) }
-                        .overlay { Capsule().strokeBorder(PackWiseColor.border, lineWidth: 1) }
-                        .padding(.vertical, 2)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
+            TripSetupSelectionGrid(items: draft.visibleActivities(contracts: dependencies.rules.tripTypeContracts)) { id, layout in
+                MultiSelectionCard(
+                    symbol: PackWiseActivityStyle.symbol(for: id),
+                    tint: PackWiseActivityStyle.tint(for: id),
+                    title: activityTitle(id),
+                    isSelected: draft.activities.contains(id),
+                    layout: layout
+                ) {
+                    draft.toggleActivity(id)
                 }
             }
 
@@ -654,7 +515,7 @@ struct TripSetupView: View {
                         .onSubmit { addCustom() }
                     if !customText.trimmingCharacters(in: .whitespaces).isEmpty {
                         Button("Add") { addCustom() }
-                            .font(.subheadline.weight(.semibold))
+                            .font(PackWiseFont.rowTitle)
                             .foregroundStyle(PackWiseColor.accent)
                     }
                 }
@@ -664,41 +525,52 @@ struct TripSetupView: View {
                     RoundedRectangle(cornerRadius: PackWiseRadius.control, style: .continuous)
                         .strokeBorder(PackWiseColor.border, lineWidth: 1)
                 }
+            } else {
+                Button {
+                    addingCustom = true
+                    customFieldFocused = true
+                } label: {
+                    Label("Add something", systemImage: "plus")
+                        .font(PackWiseFont.rowTitle)
+                        .foregroundStyle(PackWiseColor.accent)
+                        .frame(minHeight: PackWiseSize.tapTarget)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
-
         }
     }
 
-    /// Suggestions for the trip type, plus anything already chosen that is not
-    /// among them, so a selection never disappears from the field it lives in.
-    private var suggestedActivities: [String] {
-        var ids = draft.tripType.suggestedActivityIDs
-        ids.append(contentsOf: draft.activities.filter { !ids.contains($0) })
-        return ids
-    }
+    // MARK: - 6. Bags
 
-    // MARK: - Bag and style
-
-    private var bagAndStyleStep: some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
-            group {
-                ForEach(Array(BagType.allCases.enumerated()), id: \.element.id) { index, bag in
-                    if index > 0 { PackWiseRowDivider() }
-                    PackWiseSelectionRow(
-                        symbol: bag.symbol,
-                        tint: bag.tint,
-                        title: bag.title,
-                        subtitle: bag.setupSubtitle,
-                        isSelected: draft.bagType == bag
-                    ) {
-                        draft.bagType = bag
-                    }
+    private var bagsStep: some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+            TripSetupSelectionGrid(items: BagType.stableOrder, columns: 1) { bag, layout in
+                MultiSelectionCard(
+                    symbol: bag.symbol,
+                    tint: bag.tint,
+                    title: bag.title,
+                    subtitle: bag.setupSubtitle,
+                    isSelected: draft.bagTypes.contains(bag),
+                    layout: layout
+                ) {
+                    draft.toggleBag(bag)
                 }
             }
+            if draft.bagTypes.isEmpty {
+                Label("Not sure yet? Skip this — PackWise won't apply a bag limit.", systemImage: "info.circle")
+                    .font(PackWiseFont.rowSubtitle)
+                    .foregroundStyle(PackWiseColor.textSecondary)
+            }
+        }
+    }
 
-            VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                Text("How do you prefer to pack?")
-                    .font(.title3.bold())
+    // MARK: - 7. Style and laundry
+
+    private var styleAndLaundryStep: some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
+            VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                PackWiseSectionHeader(title: "Packing style")
                 group {
                     ForEach(Array(PackingStyle.allCases.enumerated()), id: \.element.id) { index, style in
                         if index > 0 { PackWiseRowDivider() }
@@ -715,9 +587,8 @@ struct TripSetupView: View {
                 }
             }
 
-            VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                Text("Laundry on this trip?")
-                    .font(.title3.bold())
+            VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                PackWiseSectionHeader(title: "Laundry")
                 group {
                     ForEach(Array(LaundryAccess.allCases.enumerated()), id: \.element.rawValue) { index, laundry in
                         if index > 0 { PackWiseRowDivider() }
@@ -736,42 +607,29 @@ struct TripSetupView: View {
         }
     }
 
-    // MARK: - Extras
+    // MARK: - 8. Preferences
 
-    /// Nine identical grey pills on a grey page communicate no importance and
-    /// no structure. The same nine facts split into "you" and "this trip",
-    /// each carrying a glyph, give the screen something to be read by.
-    private var extrasStep: some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
-            chipField(
-                "About you",
-                ContextChip.allCases.filter { !ContextChip.tripLevel.contains($0) }
-            )
-            chipField(
-                "About this trip",
-                // Laundry moved to the bag-and-style step as a three-way
-                // control; the boolean chip stays in the enum for old trips.
-                ContextChip.allCases.filter { ContextChip.tripLevel.contains($0) && $0 != .laundryAvailable }
-            )
-
-        }
-    }
-
-    private func chipField(_ title: String, _ chips: [ContextChip]) -> some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            PackWiseSectionHeader(title: title)
-            PackWiseFlowLayout {
-                ForEach(chips) { chip in
-                    PackWiseChip(
-                        title: chip.chipTitle,
-                        symbol: chip.symbol,
-                        tint: chip.tint,
-                        isSelected: draft.chips.contains(chip)
-                    ) {
-                        if draft.chips.contains(chip) {
-                            draft.chips.remove(chip)
-                        } else {
-                            draft.chips.insert(chip)
+    /// Grouped by what each fact is about (design Section 11). Laundry is on
+    /// the style step; the boolean chip stays in the enum for old trips.
+    private var preferencesStep: some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
+            ForEach(PreferenceGroup.allCases, id: \.self) { group in
+                VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                    PackWiseSectionHeader(title: group.title)
+                    PackWiseFlowLayout {
+                        ForEach(group.chips) { chip in
+                            PackWiseChip(
+                                title: chip.chipTitle,
+                                symbol: chip.symbol,
+                                tint: chip.tint,
+                                isSelected: draft.chips.contains(chip)
+                            ) {
+                                if draft.chips.contains(chip) {
+                                    draft.chips.remove(chip)
+                                } else {
+                                    draft.chips.insert(chip)
+                                }
+                            }
                         }
                     }
                 }
@@ -779,15 +637,13 @@ struct TripSetupView: View {
         }
     }
 
-    // MARK: - Review
+    // MARK: - 9. Review
 
-    /// The last screen before the list is built.
-    ///
-    /// The destination leads visually; below it, one row per fact — dates,
-    /// length, type, traveler, activities, bag, style, notes — so there is
-    /// actually something to review.
+    /// One wrapping summary per decision, so nothing is hidden behind a
+    /// combined line.
     private var reviewStep: some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
+        let party = draft.party
+        return VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
             if let destination = draft.destination {
                 ZStack(alignment: .bottomLeading) {
                     DestinationVisualView(
@@ -799,81 +655,37 @@ struct TripSetupView: View {
 
                     VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
                         Text(destination.displayName)
-                            .font(.title2.bold())
+                            .font(PackWiseFont.screenTitle)
                         Text(dateSpan)
-                            .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.92))
+                            .font(PackWiseFont.screenSubtitle)
+                            .opacity(0.92)
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(PackWiseColor.onAccent)
                     .padding(PackWiseSpacing.comfortable)
                 }
                 .frame(maxWidth: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous))
+            }
 
-                // Grouped by what the user decided, not one row per form
-                // field: the dates live on the hero, and the eight steps
-                // collapse into a handful of named facts.
-                PackWiseCard {
-                    VStack(spacing: 0) {
-                        reviewSummaryBlock(
-                            title: "Your trip",
-                            symbol: draft.tripType.symbol,
-                            tint: draft.tripType.tint,
-                            value: "\(draft.tripType.title) · \(draft.party.summary)"
-                        )
-                        PackWiseRowDivider()
-                        reviewSummaryBlock(
-                            title: "Activities",
-                            symbol: "figure.walk",
-                            tint: .green,
-                            value: draft.activities.isEmpty
-                                ? "None chosen"
-                                : draft.activities.map(activityTitle).joined(separator: " · ")
-                        )
-                        PackWiseRowDivider()
-                        reviewSummaryBlock(
-                            title: "Packing",
-                            symbol: draft.bagType.symbol,
-                            tint: draft.bagType.tint,
-                            value: "\(draft.bagType.title) · \(draft.packingStyle.title)"
-                        )
-                        PackWiseRowDivider()
-                        reviewSummaryBlock(
-                            title: "Laundry",
-                            symbol: draft.laundry.setupSymbol,
-                            tint: draft.laundry.setupTint,
-                            value: draft.laundry.setupTitle
-                        )
-                        PackWiseRowDivider()
-                        reviewSummaryBlock(
-                            title: "Preferences",
-                            symbol: "slider.horizontal.3",
-                            tint: PackWiseColor.accent,
-                            value: draft.chips.isEmpty
-                                ? "None"
-                                : ContextChip.allCases.filter { draft.chips.contains($0) }.map(\.chipTitle).joined(separator: " · ")
-                        )
+            PackWiseCard {
+                VStack(spacing: 0) {
+                    ForEach(Array(TripReviewSummary.sections(draft: draft, party: party, activityTitle: activityTitle).enumerated()), id: \.element.title) { index, section in
+                        if index > 0 { PackWiseRowDivider() }
+                        reviewSummaryBlock(section)
                     }
                 }
             }
         }
     }
 
-    private func reviewSummaryBlock(
-        title: String,
-        symbol: String,
-        tint: Color,
-        value: String
-    ) -> some View {
-        HStack(spacing: PackWiseSpacing.regular) {
-            PackWiseIconBadge(symbol: symbol, tint: tint)
+    private func reviewSummaryBlock(_ section: TripReviewSummary.Section) -> some View {
+        HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
+            PackWiseIconBadge(symbol: section.symbol, tint: section.tint)
             VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                Text(title)
-                    .font(PackWiseFont.microLabel)
+                Text(section.title)
+                    .font(PackWiseFont.rowSubtitle.weight(.semibold))
                     .foregroundStyle(PackWiseColor.textSecondary)
-                    .textCase(.uppercase)
-                    .kerning(0.5)
-                Text(value)
+                Text(section.value)
                     .font(PackWiseFont.rowTitle)
                     .foregroundStyle(PackWiseColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -882,13 +694,10 @@ struct TripSetupView: View {
         }
         .padding(.vertical, PackWiseSpacing.snug)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title), \(value)")
     }
 
     private var dateSpan: String {
-        let start = draft.startDate.formatted(.dateTime.month(.abbreviated).day())
-        let end = draft.endDate.formatted(.dateTime.month(.abbreviated).day())
-        return "\(start) – \(end) · \(draft.duration.days) days · \(draft.duration.nights) nights"
+        "\(shortDateSpan) · \(draft.duration.days) days · \(draft.duration.nights) nights"
     }
 
     private var shortDateSpan: String {
@@ -921,7 +730,7 @@ struct TripSetupView: View {
                             Text(destination.displayName)
                                 .font(PackWiseFont.rowTitle)
                                 .foregroundStyle(PackWiseColor.textPrimary)
-                            Text("\(shortDateSpan) · \(draft.tripType.title)")
+                            Text(shortDateSpan)
                                 .font(PackWiseFont.rowSubtitle)
                                 .foregroundStyle(PackWiseColor.textSecondary)
                         }
@@ -939,30 +748,14 @@ struct TripSetupView: View {
         .transition(.opacity)
     }
 
-    @ViewBuilder
-    private func footer(for step: SetupStep) -> some View {
-        if step == .review {
-            Button(reviewCTA) {
-                Task { await advance(from: step) }
-            }
-            .buttonStyle(PrimaryButtonStyle())
-            .disabled(!canAdvance(for: step) || isBuilding)
-            .padding(PackWiseSpacing.comfortable)
-            .background(PackWiseColor.screen)
-        }
-    }
-
-    private var reviewCTA: String {
-        if isBuilding {
-            return isEditing ? "Updating your packing list" : "Building your packing list"
-        }
-        return isEditing ? "Update Packing List" : "Build My Packing List"
-    }
+    // MARK: - Flow
 
     private func canAdvance(for step: SetupStep) -> Bool {
         switch step {
         case .destination: draft.destination != nil
         case .dates: TripDateMath.isStartAllowed(draft.startDate) && draft.endDate >= draft.startDate
+        case .tripTypes: draft.hasTripType
+        case .review: draft.destination != nil && draft.hasTripType
         default: true
         }
     }
@@ -979,10 +772,8 @@ struct TripSetupView: View {
             return
         }
         dateError = nil
-        if step != .review {
-            if let next = SetupStep(rawValue: step.rawValue + 1) {
-                stepPath.append(next)
-            }
+        if let next = step.next {
+            stepPath.append(next)
             return
         }
         await saveTrip()
@@ -1005,12 +796,14 @@ struct TripSetupView: View {
     }
 
     private func saveTrip() async {
-        guard let destination = draft.destination else { return }
+        guard let destination = draft.destination, draft.hasTripType else { return }
         isBuilding = true
         let prefs = preferenceRecords.first?.preferences ?? .deviceDefaults()
         let duration = draft.duration
         let notes = draft.notes
-        var activities = dependencies.engine.interpretFreeTextActivities(notes + " " + draft.customActivity, selected: draft.activities)
+        // Only what the user tapped. Notes and trip types never add or remove
+        // an activity at save time.
+        var activities = draft.activities
         let party = draft.party
         let repository = TripRepository(context: modelContext)
 
@@ -1030,13 +823,13 @@ struct TripSetupView: View {
                 endDate: draft.endDate,
                 durationDays: duration.days,
                 durationNights: duration.nights,
-                tripType: draft.tripType,
+                tripTypes: draft.tripTypes,
                 activities: activities,
-                bagType: draft.bagType,
+                bagTypes: draft.bagTypes,
                 packingStyle: draft.packingStyle,
                 laundryAccess: draft.laundry,
                 userNotes: notes,
-                contextChips: Array(draft.chips),
+                contextChips: ContextChip.allCases.filter(draft.tripChips.contains),
                 party: party,
                 on: existing
             )
@@ -1054,12 +847,10 @@ struct TripSetupView: View {
             if let snapshot = resolved.snapshot {
                 repository.storeWeather(snapshot, on: existing)
             }
-            let existingItems = existing.items.map(\.draft)
-            let overrides = existing.overrides.map(\.draft)
             let diff = dependencies.engine.recommendationDiff(
                 context: context,
-                existing: existingItems,
-                overrides: overrides
+                existing: existing.items.map(\.draft),
+                overrides: existing.overrides.map(\.draft)
             )
             try? modelContext.save()
             isBuilding = false
@@ -1077,17 +868,20 @@ struct TripSetupView: View {
             endDate: draft.endDate,
             durationDays: duration.days,
             durationNights: duration.nights,
-            tripType: draft.tripType,
+            tripType: TripType.stableOrder.first(where: draft.tripTypes.contains) ?? .other,
             activities: activities,
-            bagType: draft.bagType,
+            bagType: .notSure,
             packingStyle: draft.packingStyle,
             status: .packing,
             userNotes: notes,
-            contextChips: Array(draft.chips),
+            contextChips: ContextChip.allCases.filter(draft.tripChips.contains),
             travelerCount: party.travelers.count,
             travelMode: party.travelMode,
             laundryAccess: draft.laundry
         )
+        modelContext.insert(trip)
+        try? repository.applyTripTypes(draft.tripTypes, on: trip)
+        repository.attach(party: party, bagTypes: draft.bagTypes, on: trip)
 
         var context = trip.context(preferences: prefs, weather: weather)
         context.party = party
@@ -1102,8 +896,6 @@ struct TripSetupView: View {
         }
 
         let items = dependencies.engine.generate(context: context)
-        modelContext.insert(trip)
-        repository.attach(party: party, bagType: draft.bagType, on: trip)
         repository.replaceItems(on: trip, with: items)
         if let snapshot = resolved.snapshot {
             repository.storeWeather(snapshot, on: trip)
@@ -1118,21 +910,20 @@ struct TripSetupView: View {
         dismiss()
     }
 
-    private func toggleActivity(_ id: String) {
-        if draft.activities.contains(id) {
-            draft.activities.removeAll { $0 == id }
-        } else {
-            draft.activities.append(id)
-        }
-    }
-
+    /// A typed activity the user explicitly adds. Known keywords normalize to
+    /// their activity; anything else stays a custom, inert entry.
     private func addCustom() {
         let text = customText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
-        draft.customActivity += " " + text
-        draft.activities = dependencies.engine.interpretFreeTextActivities(text, selected: draft.activities)
-        if !draft.activities.contains(where: { $0.caseInsensitiveCompare(text) == .orderedSame }) {
-            draft.activities.append(text)
+        let interpreted = dependencies.engine.interpretFreeTextActivities(text, selected: [])
+        if interpreted.isEmpty {
+            if !draft.activities.contains(where: { $0.caseInsensitiveCompare(text) == .orderedSame }) {
+                draft.activities.append(text)
+            }
+        } else {
+            for id in interpreted where !draft.activities.contains(id) {
+                draft.activities.append(id)
+            }
         }
         customText = ""
         addingCustom = false
@@ -1150,6 +941,94 @@ struct TripSetupView: View {
     }
 
     private func activityTitle(_ id: String) -> String {
+        TripReviewSummary.activityTitle(id)
+    }
+}
+
+/// The About you / trip preference groups (design Section 11). Only known,
+/// relevant controls appear; traveler device signals never do — You own your
+/// phone implicitly, and companions choose devices in traveler details.
+enum PreferenceGroup: CaseIterable {
+    case health, devicesAndWork, clothingAndComfort, trip
+
+    var title: String {
+        switch self {
+        case .health: "Health"
+        case .devicesAndWork: "Devices & work"
+        case .clothingAndComfort: "Clothing & comfort"
+        case .trip: "This trip"
+        }
+    }
+
+    var chips: [ContextChip] {
+        switch self {
+        case .health: [.dailyMedication, .wearContacts]
+        case .devicesAndWork: [.bringingLaptop]
+        case .clothingAndComfort: [.usuallyWorkOut, .runWhileTraveling, .needFormalOutfit, .getColdEasily]
+        case .trip: [.travelingInternationally]
+        }
+    }
+}
+
+/// Review's summaries, one per decision, as plain values so they are
+/// testable. Empty bags read "Not sure yet".
+enum TripReviewSummary {
+    struct Section: Hashable {
+        var title: String
+        var symbol: String
+        var tint: Color
+        var value: String
+    }
+
+    static func sections(draft: TripDraft, party: TripParty, activityTitle: (String) -> String = activityTitle) -> [Section] {
+        let travelers = party.travelers.map(party.label(for:)).joined(separator: ", ")
+        return [
+            Section(
+                title: "Trip types",
+                symbol: TripType.stableOrder.first(where: draft.tripTypes.contains)?.symbol ?? "suitcase",
+                tint: PackWiseColor.accent,
+                value: draft.tripTypes.isEmpty ? "None chosen" : TripType.stableOrder.filter(draft.tripTypes.contains).map(\.title).joined(separator: ", ")
+            ),
+            Section(
+                title: "Travelers",
+                symbol: party.travelMode.symbol,
+                tint: party.travelMode.tint,
+                value: party.usesSimpleList ? "Just you" : "\(party.travelerCountSummary) · \(travelers)"
+            ),
+            Section(
+                title: "Activities",
+                symbol: "figure.walk",
+                tint: PackWiseColor.success,
+                value: draft.activities.isEmpty ? "None chosen" : draft.activities.map(activityTitle).joined(separator: ", ")
+            ),
+            Section(
+                title: "Bags",
+                symbol: "suitcase",
+                tint: PackWiseColor.info,
+                value: draft.bagTypes.isEmpty ? "Not sure yet" : BagType.stableOrder.filter(draft.bagTypes.contains).map(\.title).joined(separator: ", ")
+            ),
+            Section(
+                title: "Packing style",
+                symbol: draft.packingStyle.symbol,
+                tint: draft.packingStyle.tint,
+                value: draft.packingStyle.title
+            ),
+            Section(
+                title: "Laundry",
+                symbol: draft.laundry.setupSymbol,
+                tint: draft.laundry.setupTint,
+                value: draft.laundry.setupTitle
+            ),
+            Section(
+                title: "Preferences",
+                symbol: "slider.horizontal.3",
+                tint: PackWiseColor.accent,
+                value: draft.tripChips.isEmpty ? "None" : ContextChip.allCases.filter(draft.tripChips.contains).map(\.chipTitle).joined(separator: ", ")
+            ),
+        ]
+    }
+
+    static func activityTitle(_ id: String) -> String {
         switch id {
         case "swimming": "Swimming"
         case "beachDays": "Beach days"
@@ -1167,23 +1046,17 @@ struct TripSetupView: View {
         case "yoga": "Yoga"
         case "photography": "Photography"
         case "wildlife": "Wildlife"
-        default: id.capitalized
+        case "camping": "Camping"
+        case "skiing": "Skiing"
+        default: id.prefix(1).uppercased() + id.dropFirst()
         }
     }
 }
 
-/// Terse subtitles for the bag step.
-///
-/// `BagType.implication` is domain copy — it explains to the engine's user
-/// what choosing a bag does to the list, and it is kept intact for that. At
-/// six options on one screen those full sentences make the rows twice the
-/// height the board draws, so the setup step gets its own short labels. This
-/// lives here rather than in `Domain/` because it is presentation only.
-/// Presentation-only, like `BagType.setupSubtitle` below. The middle option
-/// deliberately reads as availability ("there if I need it") and the last as
-/// intent ("planning on it") — the engine treats them differently, so the
-/// wording must establish which one the user meant.
-private extension LaundryAccess {
+/// Presentation-only copy for the laundry control. The middle option reads as
+/// availability ("there if I need it") and the last as intent ("planning on
+/// it") — the engine treats them differently.
+extension LaundryAccess {
     var setupTitle: String {
         switch self {
         case .none: "No laundry"
@@ -1217,13 +1090,15 @@ private extension LaundryAccess {
     }
 }
 
-private extension BagType {
+/// Terse subtitles for the bag step; `BagType.implication` stays the fuller
+/// domain copy.
+extension BagType {
     var setupSubtitle: String {
         switch self {
-        case .personalItem: "Smallest and most compact"
-        case .carryOn: "Favor versatile items and fewer backups"
-        case .checked: "More flexibility"
-        case .backpack: "Great for flexible travel"
+        case .personalItem: "Fits under the seat"
+        case .carryOn: "Overhead bin"
+        case .checked: "More room for extras"
+        case .backpack: "Carried on your back"
         case .roadTripLuggage: "Traveling by car"
         case .notSure: "Choose later"
         }

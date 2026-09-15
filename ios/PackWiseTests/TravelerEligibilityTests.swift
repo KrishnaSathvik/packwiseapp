@@ -306,9 +306,14 @@ struct TravelerEligibilityTests {
         let you = Traveler.primarySelf()
         #expect(decide("essentials.phone", you) == .eligible(.implicitPrimaryPhone))
         #expect(decide("electronics.phone_charger", you) == .eligible(.implicitPrimaryPhone), "the charger follows the owned phone")
-        for id in ["electronics.headphones", "electronics.power_bank", "electronics.tablet", "electronics.camera"] {
+        for id in ["electronics.headphones", "electronics.power_bank", "electronics.camera"] {
             #expect(decide(id, you) == .eligible(.primaryTravelerInterim), "\(id) is not proven by the phone")
         }
+        #expect(decide("electronics.tablet", you) == .requiresExplicitSignal(.device(.bringingTablet)),
+                "Task 8: a tablet is a chosen device, never implied by the phone")
+        #expect(decide("electronics.tablet", Traveler(role: .otherAdult, ageGroup: .adult), signals: [.bringingTablet]) == .eligible(.travelerSignal))
+        #expect(decide("essentials.phone", Traveler(role: .otherAdult, ageGroup: .adult), signals: [.bringingPhone]) == .eligible(.travelerSignal),
+                "Task 8: a companion's explicit phone choice")
         #expect(decide("electronics.laptop", you) == .requiresExplicitSignal(.device(.bringingLaptop)), "a phone never proves a laptop on a party list")
 
         for traveler in [Traveler(role: .partner, ageGroup: .adult), Traveler(role: .otherAdult, ageGroup: .adult),

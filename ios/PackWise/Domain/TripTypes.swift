@@ -56,34 +56,6 @@ enum TripType: String, Codable, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Legacy setup-UI suggestion list. The approved suggestions now live in
-    /// `TripTypeContract.suggestedActivityIDs` (`trip-types.json`); Task 8
-    /// switches setup to them. Display data only — never a selection.
-    var suggestedActivityIDs: [String] {
-        switch self {
-        case .beach:
-            ["swimming", "beachDays", "snorkeling", "niceDinner", "running", "sightseeing", "boatTrip"]
-        case .cityBreak, .vacation:
-            ["sightseeing", "walking", "niceDinner", "nightlife", "running", "shopping", "museums", "work"]
-        case .business:
-            ["work", "niceDinner", "walking"]
-        case .outdoor:
-            ["hiking", "sightseeing", "running", "wildlife"]
-        case .roadTrip:
-            ["sightseeing", "walking", "hiking"]
-        case .weddingEvent:
-            ["niceDinner", "sightseeing"]
-        case .skiSnow:
-            ["sightseeing"]
-        case .festival:
-            ["nightlife", "sightseeing"]
-        case .visitingFamily:
-            ["sightseeing", "walking", "niceDinner"]
-        case .other:
-            ["sightseeing", "walking"]
-        }
-    }
-
     /// The one true persistence/API/signature order for `Set<TripType>`,
     /// per the product-approved matrix in design Section 8.1
     /// (`docs/plans/2026-09-04-product-experience-v2-design.md`). Every
@@ -196,6 +168,11 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
     case travelingInternationally
     case getColdEasily
     case laundryAvailable
+    /// Traveler-scoped device signals (Task 8), set in a companion's traveler
+    /// details. Never trip context and never in the Intelligence API chip
+    /// vocabulary: they live in `base.json` `traveler_device_chips`.
+    case bringingPhone
+    case bringingTablet
 
     var id: String { rawValue }
 
@@ -210,6 +187,8 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
         case .travelingInternationally: "I'm traveling internationally"
         case .getColdEasily: "I get cold easily"
         case .laundryAvailable: "I'll have laundry"
+        case .bringingPhone: "Bringing a phone"
+        case .bringingTablet: "Bringing a tablet"
         }
     }
 
@@ -230,6 +209,25 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
 
     static var partnerDifferences: [ContextChip] {
         [.dailyMedication, .wearContacts, .usuallyWorkOut, .needFormalOutfit, .getColdEasily]
+    }
+
+    /// Device choices in a companion's traveler details, in display order.
+    /// Laptop reuses the existing `bringingLaptop` signal. The primary
+    /// traveler is not asked: their phone is implicit (PackWise runs on it)
+    /// and their laptop lives in About you.
+    static var travelerDevices: [ContextChip] {
+        [.bringingPhone, .bringingLaptop, .bringingTablet]
+    }
+
+    /// Signals that only ever belong to one traveler's details — never the
+    /// trip's own chips, and never sent as trip context.
+    static var travelerDeviceSignals: Set<ContextChip> {
+        [.bringingPhone, .bringingTablet]
+    }
+
+    /// The About you choices for the primary traveler, in display order.
+    static var aboutYou: [ContextChip] {
+        [.dailyMedication, .wearContacts, .bringingLaptop, .usuallyWorkOut, .runWhileTraveling, .needFormalOutfit, .getColdEasily]
     }
 }
 
