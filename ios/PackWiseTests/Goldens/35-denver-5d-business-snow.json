@@ -24,6 +24,17 @@
       "displayName" : "Beanie / warm hat",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -48,6 +59,18 @@
       "displayName" : "Blazer",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "tripType" : "business"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "business"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -72,6 +95,18 @@
       "displayName" : "Dress shirts",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "tripType" : "business"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "business"
+        }
+      ],
       "quantity" : 2,
       "quantityReason" : "2 based on a 5-day trip.",
       "quantityReasonArguments" : {
@@ -96,6 +131,26 @@
       "displayName" : "Gloves",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -120,6 +175,17 @@
       "displayName" : "Hoodie",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityReason" : "2 based on a 5-day trip.",
       "quantityReasonArguments" : {
@@ -144,6 +210,35 @@
       "displayName" : "Light sweater",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "swing" : "22"
+          },
+          "reasonCode" : "weather.temperature_swing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityReason" : "2 to rotate through 5 cold days.",
       "quantityReasonArguments" : {
@@ -169,6 +264,17 @@
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 3,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -206,6 +312,17 @@
       "displayName" : "Sleepwear",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -242,6 +359,17 @@
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 7,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -279,6 +407,17 @@
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 5,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 2,
@@ -316,6 +455,17 @@
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 7,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -353,6 +503,17 @@
       "displayName" : "Winter coat",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -377,6 +538,17 @@
       "displayName" : "Photo ID",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.documents",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -401,6 +573,17 @@
       "displayName" : "Headphones",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Denver"
+          },
+          "reasonCode" : "activity.work",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -425,6 +608,27 @@
       "displayName" : "Laptop",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Denver"
+          },
+          "reasonCode" : "activity.work",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "business"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "business"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -450,6 +654,27 @@
       "displayName" : "Laptop charger",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Denver"
+          },
+          "reasonCode" : "activity.work",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "business"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "business"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -475,6 +700,17 @@
       "displayName" : "Phone charger",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.electronics",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -499,6 +735,17 @@
       "displayName" : "Keys",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -523,6 +770,17 @@
       "displayName" : "Phone",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -547,6 +805,17 @@
       "displayName" : "Wallet",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -571,6 +840,17 @@
       "displayName" : "Boots",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -595,6 +875,18 @@
       "displayName" : "Dress shoes",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "tripType" : "business"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "business"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -619,6 +911,17 @@
       "displayName" : "Walking shoes",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.footwear",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -643,6 +946,17 @@
       "displayName" : "Pain reliever",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.health",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -667,6 +981,17 @@
       "displayName" : "Body wash",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -691,6 +1016,17 @@
       "displayName" : "Deodorant",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -715,6 +1051,17 @@
       "displayName" : "Shampoo",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -739,6 +1086,17 @@
       "displayName" : "Toothbrush",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -763,6 +1121,17 @@
       "displayName" : "Toothpaste",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -787,6 +1156,17 @@
       "displayName" : "Packing cubes",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -811,6 +1191,17 @@
       "displayName" : "Laundry bag",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -835,6 +1226,17 @@
       "displayName" : "Toiletry bag",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {

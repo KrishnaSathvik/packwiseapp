@@ -66,6 +66,7 @@ _TRACE_FIELDS = (
     "reason",
     "quantity_reason",
     "quantity_evidence",
+    "provenance",
     "user_modified",
 )
 
@@ -80,6 +81,7 @@ _TRACE_FIELD_JSON_NAMES = {
     "reason": "reason",
     "quantity_reason": "quantityReason",
     "quantity_evidence": "quantityEvidence",
+    "provenance": "provenance",
     "user_modified": "userModified",
 }
 
@@ -99,6 +101,9 @@ class GoldenItem:
     reason: str
     quantity_reason: str
     quantity_evidence: Optional[str]
+    # Canonical JSON of the structured provenance facts (Product Experience
+    # V2, Task 4). Absent in goldens recorded before provenance existed.
+    provenance: Optional[str]
     user_modified: object
 
     @property
@@ -123,6 +128,11 @@ class GoldenItem:
             quantity_evidence=(
                 json.dumps(raw["quantityEvidence"], sort_keys=True, separators=(",", ":"))
                 if raw.get("quantityEvidence") is not None
+                else None
+            ),
+            provenance=(
+                json.dumps(raw["provenance"], sort_keys=True, separators=(",", ":"))
+                if "provenance" in raw
                 else None
             ),
             user_modified=raw.get("userModified"),
@@ -295,9 +305,13 @@ class Report:
 # ---------------------------------------------------------------------------
 
 
-def _changed_trace_fields(baseline: GoldenItem, candidate: GoldenItem) -> Tuple[str, ...]:
+def _changed_trace_fields(
+    baseline: GoldenItem, candidate: GoldenItem, ignored: Tuple[str, ...] = ()
+) -> Tuple[str, ...]:
     changed = []
     for attr in _TRACE_FIELDS:
+        if _TRACE_FIELD_JSON_NAMES[attr] in ignored:
+            continue
         if getattr(baseline, attr) != getattr(candidate, attr):
             changed.append(_TRACE_FIELD_JSON_NAMES[attr])
     return tuple(changed)
@@ -335,7 +349,7 @@ def _compare_constraints(baseline: Tuple[ConstraintEntry, ...], candidate: Tuple
     return sorted(changes, key=lambda c: (c.owner, c.constraint, c.kind))
 
 
-def compare_fixture(baseline_raw: dict, candidate_raw: dict) -> FixtureReport:
+def compare_fixture(baseline_raw: dict, candidate_raw: dict, ignored_trace_fields: Tuple[str, ...] = ()) -> FixtureReport:
     """Compare one fixture's baseline and candidate golden JSON (already
     `json.load`-ed dicts, in the exact shape `GoldenEngineTests.swift`
     writes)."""
@@ -356,7 +370,7 @@ def compare_fixture(baseline_raw: dict, candidate_raw: dict) -> FixtureReport:
             added.append(AddedItem(key[0], key[1], c_item.quantity))
             continue
         quantity_changed = b_item.quantity != c_item.quantity
-        changed_fields = _changed_trace_fields(b_item, c_item)
+        changed_fields = _changed_trace_fields(b_item, c_item, ignored_trace_fields)
         if quantity_changed:
             quantity_changes.append(QuantityChange(key[0], key[1], b_item.quantity, c_item.quantity))
         if changed_fields:
@@ -383,11 +397,13 @@ def compare_fixture(baseline_raw: dict, candidate_raw: dict) -> FixtureReport:
     )
 
 
-def compare_directories(baseline: Dict[str, dict], candidate: Dict[str, dict]) -> Report:
+def compare_directories(
+    baseline: Dict[str, dict], candidate: Dict[str, dict], ignored_trace_fields: Tuple[str, ...] = ()
+) -> Report:
     """Compare two `{fixture_id: golden_json_dict}` maps, e.g. as loaded by
     `load_golden_dir` / `load_golden_git_ref`."""
     common = sorted(set(baseline) & set(candidate))
-    fixtures = [compare_fixture(baseline[fid], candidate[fid]) for fid in common]
+    fixtures = [compare_fixture(baseline[fid], candidate[fid], ignored_trace_fields) for fid in common]
     return Report(
         fixtures=fixtures,
         new_fixtures=sorted(set(candidate) - set(baseline)),
@@ -616,6 +632,14 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Directory of candidate golden JSON files on disk (typically ios/PackWiseTests/Goldens).",
     )
     parser.add_argument(
+        "--ignore-trace-field",
+        action="append",
+        default=[],
+        choices=sorted(_TRACE_FIELD_JSON_NAMES.values()),
+        help="Leave one trace field out of the comparison (repeatable). For comparing against "
+        "a baseline recorded before that field existed; say so in any report that uses it.",
+    )
+    parser.add_argument(
         "--format",
         choices=("text", "markdown"),
         default="text",
@@ -664,7 +688,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"error: {e}", file=sys.stderr)
         return 2
 
-    report = compare_directories(baseline, candidate)
+    report = compare_directories(baseline, candidate, tuple(args.ignore_trace_field))
     render = render_markdown if args.format == "markdown" else render_text
     print(render(report))
     return 0 if report.is_clean else 1

@@ -355,13 +355,41 @@ struct PackingRulesFile: Sendable {
     var freeTextKeywords: [String: String] { base.freeTextKeywords }
 }
 
-struct RecommendationProvenance: Hashable, Sendable {
+/// One structured causal fact behind a recommendation: which rule source
+/// contributed the item. Part of the single Phase 8 `RecommendationTrace`
+/// (read via `RecommendationTrace.provenance(for:)`); an item may carry
+/// several, and reason copy never erases them.
+struct RecommendationProvenance: Hashable, Codable, Sendable {
     var reasonCode: String
     var reasonArguments: [String: String]
     var sourceSignals: [RecommendationSignal]
     /// The trip type behind this fact, when a trip type is the source
     /// (design Section 10: structured facts per contributing trip type).
     var tripType: TripType? = nil
+
+    /// The one stable order for an item's facts, so identical inputs always
+    /// persist and render identically regardless of collection order:
+    /// signal vocabulary order, then reason code, then trip-type stable order,
+    /// then arguments.
+    static func canonicalOrder(_ facts: [RecommendationProvenance]) -> [RecommendationProvenance] {
+        var unique: [RecommendationProvenance] = []
+        for fact in facts where !unique.contains(fact) { unique.append(fact) }
+        func signalRank(_ fact: RecommendationProvenance) -> Int {
+            fact.sourceSignals.first.flatMap { RecommendationSignal.allCases.firstIndex(of: $0) } ?? Int.max
+        }
+        func tripTypeRank(_ fact: RecommendationProvenance) -> Int {
+            fact.tripType.flatMap { TripType.stableOrder.firstIndex(of: $0) } ?? -1
+        }
+        func argumentsKey(_ fact: RecommendationProvenance) -> String {
+            fact.reasonArguments.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        }
+        return unique.sorted { a, b in
+            if signalRank(a) != signalRank(b) { return signalRank(a) < signalRank(b) }
+            if a.reasonCode != b.reasonCode { return a.reasonCode < b.reasonCode }
+            if tripTypeRank(a) != tripTypeRank(b) { return tripTypeRank(a) < tripTypeRank(b) }
+            return argumentsKey(a) < argumentsKey(b)
+        }
+    }
 }
 
 struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
@@ -406,6 +434,16 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
     /// Who is responsible for bringing it. Distinct from the owner.
     var assignedTravelerID: UUID?
     var bagID: UUID?
+    /// Backing store for `provenance`. Optional so a draft encoded before
+    /// Task 4 (inside a pending weather proposal's payload) still decodes.
+    private var provenanceFacts: [RecommendationProvenance]? = nil
+
+    /// Every structured causal fact behind this item, in canonical order.
+    /// Read through `RecommendationTrace.provenance(for:)`.
+    var provenance: [RecommendationProvenance] {
+        get { provenanceFacts ?? [] }
+        set { provenanceFacts = newValue.isEmpty ? nil : newValue }
+    }
 
     var isPacked: Bool { packedQuantity >= max(1, quantity) }
 
@@ -439,7 +477,8 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
         ownershipType: PackingOwnership = .personal,
         travelerID: UUID? = nil,
         assignedTravelerID: UUID? = nil,
-        bagID: UUID? = nil
+        bagID: UUID? = nil,
+        provenance: [RecommendationProvenance] = []
     ) {
         self.id = id
         self.canonicalItemID = canonicalItemID
@@ -463,6 +502,7 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
         self.travelerID = travelerID
         self.assignedTravelerID = assignedTravelerID
         self.bagID = bagID
+        self.provenance = provenance
     }
 }
 
@@ -483,6 +523,10 @@ extension PackingItemDraft {
             || quantityReasonArguments != fresh.quantityReasonArguments
             || satisfiedCapabilities != fresh.satisfiedCapabilities
             || bagStyleConstraintFact != fresh.bagStyleConstraintFact
+            // A record from before Task 4 has no stored provenance; that
+            // absence alone is not a change to show the traveler. It is
+            // written the next time a real causal change refreshes the item.
+            || (!provenance.isEmpty && provenance != fresh.provenance)
     }
 }
 
@@ -533,4 +577,7 @@ struct RuleSuggestion: Hashable, Sendable {
     var reasonCode: String
     var reasonArguments: [String: String]
     var reason: String
+    /// Every source that suggested this item. Merges append; the row's single
+    /// reason is chosen by tier, but no contributing fact is ever dropped.
+    var provenance: [RecommendationProvenance] = []
 }

@@ -177,6 +177,23 @@ class TraceChangeTests(unittest.TestCase):
         self.assertIn("reasonArguments", report.trace_changes[0].changed_fields)
         self.assertEqual(report.quantity_changes, [])
 
+    def test_provenance_change_alone_is_a_trace_change(self):
+        report = compare_fixture(
+            golden(items=[item("clothing.swimsuit", 1, provenance=[{"reasonCode": "trip_type.generic", "tripType": "beach"}])]),
+            golden(items=[item("clothing.swimsuit", 1, provenance=[
+                {"reasonCode": "trip_type.generic", "tripType": "beach"},
+                {"reasonCode": "trip_type.generic", "tripType": "vacation"},
+            ])]),
+        )
+        self.assertEqual(len(report.trace_changes), 1)
+        self.assertEqual(report.trace_changes[0].changed_fields, ("provenance",))
+
+    def test_an_ignored_trace_field_is_left_out_of_the_comparison(self):
+        baseline = golden(items=[item("clothing.swimsuit", 1)])
+        candidate = golden(items=[item("clothing.swimsuit", 1, provenance=[{"reasonCode": "trip_type.generic"}])])
+        self.assertEqual(len(compare_fixture(baseline, candidate).trace_changes), 1)
+        self.assertEqual(compare_fixture(baseline, candidate, ("provenance",)).trace_changes, [])
+
     def test_quantity_and_trace_can_change_together_and_both_are_reported(self):
         report = compare_fixture(
             golden(items=[item("clothing.tshirt", 7, reason="old")]),

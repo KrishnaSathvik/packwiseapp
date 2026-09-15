@@ -24,6 +24,27 @@
       "displayName" : "Daypack",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Reykjavik"
+          },
+          "reasonCode" : "activity.sightseeing",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "cityBreak"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "cityBreak"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -49,6 +70,17 @@
       "displayName" : "Gloves",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -73,6 +105,17 @@
       "displayName" : "Hoodie",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -97,6 +140,36 @@
       "displayName" : "Light sweater",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "rainDays" : "1",
+            "tripDays" : "5"
+          },
+          "reasonCode" : "weather.rain_days",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityReason" : "2 to rotate through 5 cold days.",
       "quantityReasonArguments" : {
@@ -123,6 +196,17 @@
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -161,6 +245,27 @@
       "displayName" : "Rain jacket",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "rainDays" : "1",
+            "tripDays" : "5"
+          },
+          "reasonCode" : "weather.rain_days",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "weekday" : "Tuesday"
+          },
+          "reasonCode" : "weather.rain_weekday",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -186,6 +291,17 @@
       "displayName" : "Sleepwear",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -222,6 +338,17 @@
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 6,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -260,6 +387,17 @@
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 5,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -298,6 +436,17 @@
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 6,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -336,6 +485,17 @@
       "displayName" : "Photo ID",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.documents",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -360,6 +520,17 @@
       "displayName" : "Passport",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "destination.international",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -384,6 +555,17 @@
       "displayName" : "Travel insurance info",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "destination.international",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -408,6 +590,17 @@
       "displayName" : "Visa / entry docs",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "documents.visa_check",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -432,6 +625,17 @@
       "displayName" : "Phone charger",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.electronics",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -456,6 +660,17 @@
       "displayName" : "Portable charger",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Reykjavik"
+          },
+          "reasonCode" : "activity.sightseeing",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -480,6 +695,17 @@
       "displayName" : "Travel adapter",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "destination.international",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -504,6 +730,17 @@
       "displayName" : "Local cash",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "destination.international",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -528,6 +765,17 @@
       "displayName" : "Keys",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -552,6 +800,17 @@
       "displayName" : "Phone",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -576,6 +835,18 @@
       "displayName" : "Sunglasses",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "tripType" : "cityBreak"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "cityBreak"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -600,6 +871,27 @@
       "displayName" : "Compact umbrella",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "rainDays" : "1",
+            "tripDays" : "5"
+          },
+          "reasonCode" : "weather.rain_days",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "weekday" : "Tuesday"
+          },
+          "reasonCode" : "weather.rain_weekday",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -624,6 +916,17 @@
       "displayName" : "Wallet",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -648,6 +951,26 @@
       "displayName" : "Walking shoes",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Reykjavik"
+          },
+          "reasonCode" : "activity.walking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.footwear",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -673,6 +996,26 @@
       "displayName" : "Blister pads",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Reykjavik"
+          },
+          "reasonCode" : "activity.sightseeing",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "destination" : "Reykjavik"
+          },
+          "reasonCode" : "activity.walking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -697,6 +1040,17 @@
       "displayName" : "Pain reliever",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.health",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -721,6 +1075,17 @@
       "displayName" : "Body wash",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -745,6 +1110,17 @@
       "displayName" : "Deodorant",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -769,6 +1145,17 @@
       "displayName" : "Shampoo",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -793,6 +1180,17 @@
       "displayName" : "Toothbrush",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -817,6 +1215,17 @@
       "displayName" : "Toothpaste",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -841,6 +1250,17 @@
       "displayName" : "Packing cubes",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -865,6 +1285,17 @@
       "displayName" : "Empty security bottle",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "flight.empty_bottle",
+          "sourceSignals" : [
+            "tripType"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -889,6 +1320,17 @@
       "displayName" : "Laundry bag",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -913,6 +1355,17 @@
       "displayName" : "Toiletry bag",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {

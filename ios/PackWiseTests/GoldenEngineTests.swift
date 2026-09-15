@@ -640,6 +640,10 @@ struct GoldenEngineTests {
         /// contingent on essentialOptionalTags protection (Phase 8). Nil
         /// when the bag/style ruling never left its no-op guard.
         var bagStyleConstraintFact: BagStyleConstraintFact?
+        /// Every structured causal fact behind the item, in canonical order
+        /// (Product Experience V2, Task 4) — the provenance facet of the one
+        /// `RecommendationTrace`.
+        var provenance: [RecommendationProvenance]
         var userModified: Bool?
     }
 
@@ -720,6 +724,7 @@ struct GoldenEngineTests {
                         quantityReasonArguments: item.quantityReasonArguments,
                         satisfiedCapabilities: item.satisfiedCapabilities,
                         bagStyleConstraintFact: item.bagStyleConstraintFact,
+                        provenance: item.provenance,
                         userModified: item.isUserModified ? true : nil
                     )
                 }

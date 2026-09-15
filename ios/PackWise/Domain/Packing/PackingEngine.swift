@@ -300,9 +300,11 @@ struct PackingEngine: Sendable {
         code: String,
         arguments: [String: String],
         fallback: String,
+        provenance fact: RecommendationProvenance? = nil,
         context: TripContext,
         into collected: inout [String: RuleSuggestion]
     ) {
+        let fact = fact ?? RecommendationProvenance(reasonCode: code, reasonArguments: arguments, sourceSignals: [signal])
         for id in ids {
             guard let item = catalog.item(id: id) else { continue }
             if item.travelRestrictionReviewRequired && context.bagType.isSpaceConstrained { continue }
@@ -310,6 +312,9 @@ struct PackingEngine: Sendable {
             if var existing = collected[id] {
                 if !existing.signals.contains(signal) {
                     existing.signals.append(signal)
+                }
+                if !existing.provenance.contains(fact) {
+                    existing.provenance.append(fact)
                 }
                 // The more trip-specific reason wins the row: walking shoes
                 // suggested as a base essential and for sightseeing should
@@ -326,7 +331,8 @@ struct PackingEngine: Sendable {
                     signals: [signal],
                     reasonCode: code,
                     reasonArguments: arguments,
-                    reason: reason
+                    reason: reason,
+                    provenance: [fact]
                 )
             }
         }
@@ -336,6 +342,9 @@ struct PackingEngine: Sendable {
         if var existing = collected[suggestion.canonicalItemID] {
             for signal in suggestion.signals where !existing.signals.contains(signal) {
                 existing.signals.append(signal)
+            }
+            for fact in suggestion.provenance where !existing.provenance.contains(fact) {
+                existing.provenance.append(fact)
             }
             if ReasonRenderer.tier(suggestion.reasonCode) > ReasonRenderer.tier(existing.reasonCode) {
                 existing.reason = suggestion.reason
@@ -387,8 +396,15 @@ struct PackingEngine: Sendable {
     ) -> [RuleSuggestion] {
         var collected: [String: RuleSuggestion] = [:]
 
-        func add(_ ids: [String], signal: RecommendationSignal, code: String, arguments: [String: String] = [:], fallback: String) {
-            addIDs(ids, signal: signal, code: code, arguments: arguments, fallback: fallback, context: context, into: &collected)
+        func add(
+            _ ids: [String],
+            signal: RecommendationSignal,
+            code: String,
+            arguments: [String: String] = [:],
+            fallback: String,
+            provenance: RecommendationProvenance? = nil
+        ) {
+            addIDs(ids, signal: signal, code: code, arguments: arguments, fallback: fallback, provenance: provenance, context: context, into: &collected)
         }
 
         // One warm line per category beats twenty rows of "a core item for
@@ -412,7 +428,8 @@ struct PackingEngine: Sendable {
                 signal: .tripType,
                 code: "trip_type.generic",
                 arguments: ["tripType": context.tripType.title.lowercased()],
-                fallback: "Suggested for a \(context.tripType.title.lowercased()) trip."
+                fallback: "Suggested for a \(context.tripType.title.lowercased()) trip.",
+                provenance: .tripType(context.tripType)
             )
         }
 
@@ -541,12 +558,16 @@ struct PackingEngine: Sendable {
         )
 
         func add(_ ids: [String], code: String, arguments: [String: String], fallback: String) {
+            let fact = RecommendationProvenance(reasonCode: code, reasonArguments: arguments, sourceSignals: [.weather])
             for id in ids {
                 guard let item = catalog.item(id: id) else { continue }
                 let reason = render(code, arguments, category: item.category.rawValue, fallback: fallback)
                 if var existing = collected[id] {
                     if !existing.signals.contains(.weather) {
                         existing.signals.append(.weather)
+                    }
+                    if !existing.provenance.contains(fact) {
+                        existing.provenance.append(fact)
                     }
                     if ReasonRenderer.tier(code) > ReasonRenderer.tier(existing.reasonCode) {
                         existing.reason = reason
@@ -560,7 +581,8 @@ struct PackingEngine: Sendable {
                         signals: [.weather],
                         reasonCode: code,
                         reasonArguments: arguments,
-                        reason: reason
+                        reason: reason,
+                        provenance: [fact]
                     )
                 }
             }
@@ -642,7 +664,8 @@ struct PackingEngine: Sendable {
                     signals: [.weather],
                     reasonCode: "weather.seasonal_layer",
                     reasonArguments: [:],
-                    reason: render("weather.seasonal_layer", [:], fallback: "Seasonal conditions suggest a warmer layer.")
+                    reason: render("weather.seasonal_layer", [:], fallback: "Seasonal conditions suggest a warmer layer."),
+                    provenance: [RecommendationProvenance(reasonCode: "weather.seasonal_layer", reasonArguments: [:], sourceSignals: [.weather])]
                 )
             }
         }
@@ -654,7 +677,8 @@ struct PackingEngine: Sendable {
                     signals: [.weather],
                     reasonCode: "weather.seasonal_sun",
                     reasonArguments: [:],
-                    reason: render("weather.seasonal_sun", [:], fallback: "Seasonal sun is likely.")
+                    reason: render("weather.seasonal_sun", [:], fallback: "Seasonal sun is likely."),
+                    provenance: [RecommendationProvenance(reasonCode: "weather.seasonal_sun", reasonArguments: [:], sourceSignals: [.weather])]
                 )
             }
         }
@@ -703,6 +727,7 @@ struct PackingEngine: Sendable {
                 updated.reasonCode = suggestion.reasonCode
                 updated.reasonArguments = suggestion.reasonArguments
                 updated.sourceSignals = suggestion.signals
+                updated.provenance = RecommendationProvenance.canonicalOrder(suggestion.provenance)
                 updated.ownershipType = ownership
                 updated.travelerID = travelerID
                 if updated.assignedTravelerID == nil {
@@ -750,7 +775,8 @@ struct PackingEngine: Sendable {
                         : nil,
                     ownershipType: ownership,
                     travelerID: travelerID,
-                    assignedTravelerID: assignedTravelerID
+                    assignedTravelerID: assignedTravelerID,
+                    provenance: RecommendationProvenance.canonicalOrder(suggestion.provenance)
                 )
             )
         }
@@ -818,7 +844,12 @@ struct PackingEngine: Sendable {
                         reasonArguments: arguments,
                         ownershipType: ownership,
                         travelerID: travelerID,
-                        assignedTravelerID: sharedCompanion ? nil : item.assignedTravelerID
+                        assignedTravelerID: sharedCompanion ? nil : item.assignedTravelerID,
+                        provenance: [RecommendationProvenance(
+                            reasonCode: "dependency.companion",
+                            reasonArguments: arguments,
+                            sourceSignals: item.sourceSignals
+                        )]
                     )
                 )
                 if sharedCompanion {

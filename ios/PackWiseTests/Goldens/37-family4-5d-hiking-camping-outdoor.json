@@ -63,6 +63,27 @@
       "displayName" : "Daypack",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -88,6 +109,17 @@
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -125,6 +157,17 @@
       "displayName" : "Sleepwear",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -161,6 +204,17 @@
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 6,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -198,6 +252,17 @@
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 6,
       "quantityEvidence" : {
         "ageMultiplier" : 1.15,
@@ -236,6 +301,17 @@
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 7,
       "quantityEvidence" : {
         "ageMultiplier" : 1.1,
@@ -274,6 +350,18 @@
       "displayName" : "Earbuds",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "child",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -299,6 +387,17 @@
       "displayName" : "Phone charger",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.electronics",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -323,6 +422,17 @@
       "displayName" : "Keys",
       "importance" : "critical",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -347,6 +457,17 @@
       "displayName" : "Phone",
       "importance" : "critical",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -371,6 +492,17 @@
       "displayName" : "Sunglasses",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.seasonal_sun",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -395,6 +527,17 @@
       "displayName" : "Wallet",
       "importance" : "critical",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -419,6 +562,17 @@
       "displayName" : "Hiking shoes",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -444,6 +598,27 @@
       "displayName" : "Water bottle",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -469,6 +644,18 @@
       "displayName" : "Small activities",
       "importance" : "optional",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "child",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -494,6 +681,18 @@
       "displayName" : "Kid snacks",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "child",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -519,6 +718,17 @@
       "displayName" : "Small flashlight",
       "importance" : "optional",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.camping",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -543,6 +753,17 @@
       "displayName" : "Body wash",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -567,6 +788,17 @@
       "displayName" : "Shampoo",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -591,6 +823,17 @@
       "displayName" : "Toothbrush",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -615,6 +858,17 @@
       "displayName" : "Toothpaste",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -639,6 +893,17 @@
       "displayName" : "Packing cubes",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -663,6 +928,17 @@
       "displayName" : "Laundry bag",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -687,6 +963,17 @@
       "displayName" : "Toiletry bag",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -711,6 +998,27 @@
       "displayName" : "Daypack",
       "importance" : "important",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -736,6 +1044,17 @@
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 3,
       "quantityEvidence" : {
         "ageMultiplier" : 1.4,
@@ -774,6 +1093,27 @@
       "displayName" : "Sleepwear",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -812,6 +1152,17 @@
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 9,
       "quantityEvidence" : {
         "ageMultiplier" : 1.4,
@@ -850,6 +1201,17 @@
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 9,
       "quantityEvidence" : {
         "ageMultiplier" : 1.75,
@@ -888,6 +1250,17 @@
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 9,
       "quantityEvidence" : {
         "ageMultiplier" : 1.4,
@@ -926,6 +1299,17 @@
       "displayName" : "Phone charger",
       "importance" : "important",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.electronics",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -950,6 +1334,17 @@
       "displayName" : "Sunglasses",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.seasonal_sun",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -974,6 +1369,17 @@
       "displayName" : "Hiking shoes",
       "importance" : "important",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -999,6 +1405,27 @@
       "displayName" : "Water bottle",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1024,6 +1451,18 @@
       "displayName" : "Small activities",
       "importance" : "optional",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1049,6 +1488,18 @@
       "displayName" : "Extra outfits",
       "importance" : "important",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityReason" : "2 spare outfits for Child — spills and surprises happen.",
       "quantityReasonArguments" : {
@@ -1075,6 +1526,18 @@
       "displayName" : "Sippy cup",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1100,6 +1563,18 @@
       "displayName" : "Kid snacks",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1125,6 +1600,17 @@
       "displayName" : "Small flashlight",
       "importance" : "optional",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.camping",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1149,6 +1635,17 @@
       "displayName" : "Body wash",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1173,6 +1670,17 @@
       "displayName" : "Shampoo",
       "importance" : "normal",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1197,6 +1705,17 @@
       "displayName" : "Toothbrush",
       "importance" : "important",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1221,6 +1740,17 @@
       "displayName" : "Toothpaste",
       "importance" : "important",
       "owner" : "child-2",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1245,6 +1775,27 @@
       "displayName" : "Daypack",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1270,6 +1821,17 @@
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -1307,6 +1869,17 @@
       "displayName" : "Sleepwear",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -1343,6 +1916,17 @@
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 6,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -1380,6 +1964,17 @@
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 5,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -1417,6 +2012,17 @@
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 6,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -1454,6 +2060,17 @@
       "displayName" : "Photo ID",
       "importance" : "critical",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.documents",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1478,6 +2095,17 @@
       "displayName" : "Phone charger",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.electronics",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1502,6 +2130,17 @@
       "displayName" : "Keys",
       "importance" : "critical",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1526,6 +2165,17 @@
       "displayName" : "Phone",
       "importance" : "critical",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1550,6 +2200,17 @@
       "displayName" : "Sunglasses",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.seasonal_sun",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1574,6 +2235,17 @@
       "displayName" : "Wallet",
       "importance" : "critical",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1598,6 +2270,17 @@
       "displayName" : "Hiking shoes",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1623,6 +2306,27 @@
       "displayName" : "Blister pads",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1648,6 +2352,17 @@
       "displayName" : "Pain reliever",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.health",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1672,6 +2387,27 @@
       "displayName" : "Water bottle",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1697,6 +2433,17 @@
       "displayName" : "Small flashlight",
       "importance" : "optional",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.camping",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1721,6 +2468,17 @@
       "displayName" : "Body wash",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1745,6 +2503,17 @@
       "displayName" : "Deodorant",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1769,6 +2538,17 @@
       "displayName" : "Shampoo",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1793,6 +2573,17 @@
       "displayName" : "Toothbrush",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1817,6 +2608,17 @@
       "displayName" : "Toothpaste",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1841,6 +2643,17 @@
       "displayName" : "Packing cubes",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1865,6 +2678,17 @@
       "displayName" : "Laundry bag",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1889,6 +2713,17 @@
       "displayName" : "Toiletry bag",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1913,6 +2748,27 @@
       "displayName" : "Daypack",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -1938,6 +2794,17 @@
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -1975,6 +2842,17 @@
       "displayName" : "Sleepwear",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -2011,6 +2889,17 @@
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 6,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -2048,6 +2937,17 @@
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 5,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -2085,6 +2985,17 @@
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 6,
       "quantityEvidence" : {
         "appearanceOffsetUses" : 0,
@@ -2122,6 +3033,17 @@
       "displayName" : "Photo ID",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.documents",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2146,6 +3068,17 @@
       "displayName" : "Phone charger",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.electronics",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2170,6 +3103,17 @@
       "displayName" : "Keys",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2194,6 +3138,17 @@
       "displayName" : "Phone",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2218,6 +3173,17 @@
       "displayName" : "Sunglasses",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.seasonal_sun",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2242,6 +3208,17 @@
       "displayName" : "Wallet",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2266,6 +3243,17 @@
       "displayName" : "Hiking shoes",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2291,6 +3279,27 @@
       "displayName" : "Blister pads",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2316,6 +3325,17 @@
       "displayName" : "Pain reliever",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.health",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2340,6 +3360,27 @@
       "displayName" : "Water bottle",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.hiking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2365,6 +3406,17 @@
       "displayName" : "Small flashlight",
       "importance" : "optional",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.camping",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2389,6 +3441,17 @@
       "displayName" : "Body wash",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2413,6 +3476,17 @@
       "displayName" : "Deodorant",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2437,6 +3511,17 @@
       "displayName" : "Shampoo",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2461,6 +3546,17 @@
       "displayName" : "Toothbrush",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2485,6 +3581,17 @@
       "displayName" : "Toothpaste",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2509,6 +3616,17 @@
       "displayName" : "Packing cubes",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2533,6 +3651,17 @@
       "displayName" : "Laundry bag",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2557,6 +3686,17 @@
       "displayName" : "Toiletry bag",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
       "quantityReasonArguments" : {
@@ -2581,6 +3721,18 @@
       "displayName" : "Mini first-aid kit",
       "importance" : "optional",
       "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
@@ -2606,6 +3758,27 @@
       "displayName" : "Insect repellent",
       "importance" : "normal",
       "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.camping",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "tripType" : "outdoor"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "outdoor"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
@@ -2632,6 +3805,17 @@
       "displayName" : "Sunscreen",
       "importance" : "important",
       "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Yellowstone"
+          },
+          "reasonCode" : "activity.camping",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityReason" : "2 for the group — not one per person.",
       "quantityReasonArguments" : {

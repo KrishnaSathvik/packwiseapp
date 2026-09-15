@@ -310,6 +310,7 @@ final class PackingItemRecord {
         self.travelerID = draft.travelerID
         self.assignedTravelerID = draft.assignedTravelerID
         self.bagID = draft.bagID
+        self.recommendationTraceRaw = RecommendationTrace.ProvenanceEncoding.encode(draft.provenance)
         self.createdAt = .now
         self.updatedAt = .now
         self.trip = trip
@@ -376,7 +377,8 @@ final class PackingItemRecord {
             ownershipType: ownershipType,
             travelerID: travelerID,
             assignedTravelerID: assignedTravelerID,
-            bagID: bagID
+            bagID: bagID,
+            provenance: RecommendationTrace.ProvenanceEncoding.decode(recommendationTraceRaw)
         )
     }
 
@@ -420,6 +422,7 @@ final class PackingItemRecord {
         travelerID = draft.travelerID
         assignedTravelerID = draft.assignedTravelerID
         bagID = draft.bagID
+        recommendationTraceRaw = RecommendationTrace.ProvenanceEncoding.encode(draft.provenance)
         updatedAt = .now
     }
 }

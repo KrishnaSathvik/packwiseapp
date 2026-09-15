@@ -101,3 +101,35 @@ extension RecommendationTrace {
         )
     }
 }
+
+extension RecommendationTrace {
+    /// Every structured causal fact behind the item — a field read, like the
+    /// other facets. `PackingItemRecord.recommendationTraceRaw` is this
+    /// facet's persisted encoding (`ProvenanceEncoding`), not a second
+    /// explanation source.
+    static func provenance(for item: PackingItemDraft) -> [RecommendationProvenance] {
+        item.provenance
+    }
+
+    /// The persistence encoding of the provenance facet. Versioned so a later
+    /// trace field can join the same column without a store migration.
+    enum ProvenanceEncoding {
+        private struct Envelope: Codable {
+            var version: Int
+            var provenance: [RecommendationProvenance]
+        }
+
+        static func encode(_ facts: [RecommendationProvenance]) -> String? {
+            guard !facts.isEmpty else { return nil }
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .sortedKeys
+            guard let data = try? encoder.encode(Envelope(version: 1, provenance: facts)) else { return nil }
+            return String(decoding: data, as: UTF8.self)
+        }
+
+        static func decode(_ raw: String?) -> [RecommendationProvenance] {
+            guard let raw, let envelope = try? JSONDecoder().decode(Envelope.self, from: Data(raw.utf8)) else { return [] }
+            return envelope.provenance
+        }
+    }
+}

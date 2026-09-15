@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E40F90877ECD6E6F6D869AC2 /* RecommendationProvenanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E92963C40DD6C7ED5E85344 /* RecommendationProvenanceTests.swift */; };
 		388A50B374A78BA2D3234C35 /* TripTypeContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174A9ADD35A69392BDE10E2C /* TripTypeContracts.swift */; };
 		FCB34CE8A21DC56894291157 /* TripTypeCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A668756ACD1F8990F14B93CB /* TripTypeCompositionTests.swift */; };
 		31F2BEAED61DA79783B9196E /* WeatherNeedHardeningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C01AF49040DF67F8E845C18 /* WeatherNeedHardeningTests.swift */; };
@@ -164,6 +165,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4E92963C40DD6C7ED5E85344 /* RecommendationProvenanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationProvenanceTests.swift; sourceTree = "<group>"; };
 		174A9ADD35A69392BDE10E2C /* TripTypeContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripTypeContracts.swift; sourceTree = "<group>"; };
 		A668756ACD1F8990F14B93CB /* TripTypeCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripTypeCompositionTests.swift; sourceTree = "<group>"; };
 		5C01AF49040DF67F8E845C18 /* WeatherNeedHardeningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherNeedHardeningTests.swift; sourceTree = "<group>"; };
@@ -540,6 +542,7 @@
 		8A47DFD989F74EC5A9A4B4E3 /* PackWiseTests */ = {
 			isa = PBXGroup;
 			children = (
+				4E92963C40DD6C7ED5E85344 /* RecommendationProvenanceTests.swift */,
 				A668756ACD1F8990F14B93CB /* TripTypeCompositionTests.swift */,
 				5C01AF49040DF67F8E845C18 /* WeatherNeedHardeningTests.swift */,
 				95E3886B07D48DB06DA4738B /* TripContextSnapshotTests.swift */,
@@ -987,6 +990,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E40F90877ECD6E6F6D869AC2 /* RecommendationProvenanceTests.swift in Sources */,
 				FCB34CE8A21DC56894291157 /* TripTypeCompositionTests.swift in Sources */,
 				31F2BEAED61DA79783B9196E /* WeatherNeedHardeningTests.swift in Sources */,
 				B13FF3D5CAAFEE365402E00B /* TripContextSnapshotTests.swift in Sources */,
