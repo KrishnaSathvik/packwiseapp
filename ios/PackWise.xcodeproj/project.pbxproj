@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		929457BA236EB8816F7BCAA1 /* DestinationVisualTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E83C6FD5ADCFCCD0ABD63E9 /* DestinationVisualTests.swift */; };
+		1CAFDB1A65F75DFF7EC0C890 /* DestinationStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D4AE1387314C3DACB305375 /* DestinationStep.swift */; };
 		C6B040E62C827AF90B928A07 /* TripSetupDraftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61DCA4C63516A14ED872E49 /* TripSetupDraftTests.swift */; };
 		968083A4E8DDB2858F466246 /* TripSetupSelectionGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5F98D8A70DD88C04135713 /* TripSetupSelectionGrid.swift */; };
 		A7401F7774EDACD479912C69 /* TripSetupShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA8F9FC5B8881E16E34720C2 /* TripSetupShell.swift */; };
@@ -176,6 +178,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3E83C6FD5ADCFCCD0ABD63E9 /* DestinationVisualTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationVisualTests.swift; sourceTree = "<group>"; };
+		8D4AE1387314C3DACB305375 /* DestinationStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationStep.swift; sourceTree = "<group>"; };
 		F61DCA4C63516A14ED872E49 /* TripSetupDraftTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripSetupDraftTests.swift; sourceTree = "<group>"; };
 		AF5F98D8A70DD88C04135713 /* TripSetupSelectionGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripSetupSelectionGrid.swift; sourceTree = "<group>"; };
 		BA8F9FC5B8881E16E34720C2 /* TripSetupShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripSetupShell.swift; sourceTree = "<group>"; };
@@ -566,6 +570,7 @@
 		8A47DFD989F74EC5A9A4B4E3 /* PackWiseTests */ = {
 			isa = PBXGroup;
 			children = (
+				3E83C6FD5ADCFCCD0ABD63E9 /* DestinationVisualTests.swift */,
 				F61DCA4C63516A14ED872E49 /* TripSetupDraftTests.swift */,
 				4D5D2778945C94EA577DF74F /* FamilySharingTests.swift */,
 				E96D87A72B1A980F042F796C /* TravelerEligibilityTests.swift */,
@@ -734,6 +739,7 @@
 		E675D3DBE004CCA82185B444 /* TripSetup */ = {
 			isa = PBXGroup;
 			children = (
+				8D4AE1387314C3DACB305375 /* DestinationStep.swift */,
 				AF5F98D8A70DD88C04135713 /* TripSetupSelectionGrid.swift */,
 				BA8F9FC5B8881E16E34720C2 /* TripSetupShell.swift */,
 				ECF62750C2382769E6364E10 /* TripSetupDraft.swift */,
@@ -953,6 +959,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1CAFDB1A65F75DFF7EC0C890 /* DestinationStep.swift in Sources */,
 				968083A4E8DDB2858F466246 /* TripSetupSelectionGrid.swift in Sources */,
 				A7401F7774EDACD479912C69 /* TripSetupShell.swift in Sources */,
 				BF3E492DC98959081B259FA4 /* TripSetupDraft.swift in Sources */,
@@ -1028,6 +1035,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				929457BA236EB8816F7BCAA1 /* DestinationVisualTests.swift in Sources */,
 				C6B040E62C827AF90B928A07 /* TripSetupDraftTests.swift in Sources */,
 				59FA1947B49EF6282C3D9C95 /* FamilySharingTests.swift in Sources */,
 				8736BE0F8BFAD02CD7E2A28D /* TravelerEligibilityTests.swift in Sources */,

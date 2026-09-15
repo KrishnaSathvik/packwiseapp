@@ -76,6 +76,12 @@ enum PackWiseFont {
     static let numeral = Font.system(.subheadline, design: .default, weight: .semibold)
     /// Selection state glyphs (check circles and squares) — title2, 22pt.
     static let selectionGlyph = Font.system(.title2, design: .default, weight: .regular)
+    /// Destination name on the full-bleed Trip Detail hero — largeTitle, 34pt bold.
+    static let heroTitle = Font.system(.largeTitle, design: .default, weight: .bold)
+    /// Destination name on a card-sized hero (Trips Home, Review) — title2, 22pt bold.
+    static let heroCardTitle = Font.system(.title2, design: .default, weight: .bold)
+    /// Dates and party under a destination name on imagery — subheadline, 15pt medium.
+    static let heroMetadata = Font.system(.subheadline, design: .default, weight: .medium)
 }
 
 enum PackWiseImageSlot {

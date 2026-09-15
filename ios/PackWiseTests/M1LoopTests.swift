@@ -211,6 +211,22 @@ struct M1LoopTests {
     }
     #endif
 
+    #if DEBUG
+    /// Task 9: every destination and onboarding state the contact sheet
+    /// reviews is capturable.
+    @Test func task9ReferenceStatesAreAllCapturable() {
+        let required = [
+            "onboarding", "onboardingTrip", "onboardingPersonal",
+            "setupDestinationEmpty", "setupDestinationRecents", "setupDestinationSearching", "setupDestinationResults",
+            "setupDestinationChicago", "setupDestinationKhammam", "setupDestinationLong", "setupDestinationOffline",
+            "setupReview", "setupReviewMap", "setupReviewOffline", "tripsHome", "tripDetail", "tripDetailOffline",
+        ]
+        for id in required {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing Task 9 state \(id)")
+        }
+    }
+    #endif
+
     @Test func mergedActivityIDsNormalizeOnRead() throws {
         // A trip saved before fineDining was merged still holds the old value.
         // Left alone it would lose its packing rule and be rejected by the

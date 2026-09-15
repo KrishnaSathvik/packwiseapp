@@ -1,15 +1,48 @@
 import SwiftUI
 
-/// Three screens: what PackWise promises, how it gets there, and that it
-/// improves with use.
-///
-/// Panel one is a single full-bleed travel photograph with a restrained scrim.
-/// The two explanatory panels keep their teaching cards close to their copy.
-///
-/// The habits shown on the third screen are an illustration of the idea, the
-/// same way the Chicago example on the second is. They are not the user's
-/// data: PackWise has not observed anything yet, and Me shows only what the
-/// user has actually set.
+/// The three onboarding messages (Task 9). Copy lives here, not in views, so
+/// it is testable: every claim describes what PackWise does today. Nothing
+/// promises learning or memory until Packing Memory ships.
+enum OnboardingPage: Int, CaseIterable, Identifiable {
+    case trip
+    case composition
+    case authority
+
+    var id: Int { rawValue }
+
+    var title: String {
+        switch self {
+        case .trip: "Pack for the trip you're actually taking."
+        case .composition: "One trip can be many things."
+        case .authority: "Your choices stay yours."
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .trip: "Destination, dates, weather and plans shape your list."
+        case .composition: "Beach, city, business, activities and luggage work together."
+        case .authority: "Change quantities, skip items and add your own without losing your decisions."
+        }
+    }
+
+    var primaryTitle: String {
+        self == .authority ? "Create My First Trip" : "Continue"
+    }
+
+    /// What the illustration shows, read once in place of its parts.
+    var heroAccessibilityLabel: String {
+        switch self {
+        case .trip: "Illustration: a trip's destination, dates, weather and plans."
+        case .composition: "Illustration: one trip that is a beach, city and business trip, with its activities and bags."
+        case .authority: "Illustration: a list with a quantity you changed, an item you skipped, and an item you added."
+        }
+    }
+}
+
+/// One branded shell for every page: the PackWise mark in the same place, a
+/// framed hero, the title and supporting copy, then page dots and the
+/// primary action pinned to the bottom safe area. Only the hero differs.
 struct OnboardingView: View {
     var onFinished: () -> Void
     /// Where the flow opens. Always the first page in the app; the Debug
@@ -17,348 +50,267 @@ struct OnboardingView: View {
     var initialPage = 0
 
     @State private var page = 0
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private static let lastPage = 2
+    private var current: OnboardingPage { OnboardingPage(rawValue: page) ?? .trip }
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .bottom) {
-                TabView(selection: $page) {
-                    welcome(topInset: 0).tag(0)
-                    howItWorks(topInset: 0).tag(1)
-                    personal(topInset: 0).tag(2)
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .preferredColorScheme(page == 0 ? .dark : .light)
+        VStack(spacing: 0) {
+            PackWiseBrandMark()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, PackWiseSpacing.comfortable)
+                .padding(.top, PackWiseSpacing.snug)
+                .padding(.bottom, PackWiseSpacing.regular)
 
-                VStack(spacing: PackWiseSpacing.regular) {
-                    Button(action: advance) {
-                        HStack(spacing: PackWiseSpacing.snug) {
-                            Text(buttonTitle)
-                            if page == 0 {
-                                Image(systemName: "arrow.right")
-                                    .font(.body.weight(.semibold))
-                            }
-                        }
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
-
-                    PackWisePageDots(
-                        count: Self.lastPage + 1,
-                        current: page,
-                        inactive: page == 0 ? .white.opacity(0.4) : PackWiseColor.border
-                    )
+            TabView(selection: $page) {
+                ForEach(OnboardingPage.allCases) { page in
+                    OnboardingPageLayout(page: page)
+                        .tag(page.rawValue)
                 }
-                .padding(.horizontal, PackWiseSpacing.loose)
-                .padding(.bottom, PackWiseSpacing.snug)
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: page)
         }
-        .background {
-            if page == 0 {
-                OnboardingImage(slot: PackWiseImageSlot.welcome)
-                    .ignoresSafeArea()
-            } else {
-                PackWiseColor.screen.ignoresSafeArea()
-            }
-        }
-        .preferredColorScheme(page == 0 ? .dark : .light)
+        .safeAreaInset(edge: .bottom, spacing: 0) { controls }
+        .background(PackWiseColor.screen)
+        .preferredColorScheme(.light)
         .onAppear { page = initialPage }
     }
 
-    private var buttonTitle: String {
-        switch page {
-        case 0: "Get Started"
-        case 1: "Next"
-        default: "Create My First Trip"
+    private var controls: some View {
+        VStack(spacing: PackWiseSpacing.regular) {
+            PackWisePageDots(count: OnboardingPage.allCases.count, current: page, inactive: PackWiseColor.border)
+            Button(current.primaryTitle, action: advance)
+                .buttonStyle(PrimaryButtonStyle())
         }
+        .padding(.horizontal, PackWiseSpacing.comfortable)
+        .padding(.top, PackWiseSpacing.regular)
+        .padding(.bottom, PackWiseSpacing.snug)
+        .background(PackWiseColor.screen)
     }
 
     private func advance() {
-        if page < Self.lastPage {
-            withAnimation { page += 1 }
-        } else {
+        guard page < OnboardingPage.allCases.count - 1 else {
             onFinished()
+            return
+        }
+        if reduceMotion {
+            page += 1
+        } else {
+            withAnimation(.easeInOut(duration: 0.3)) { page += 1 }
         }
     }
+}
 
-    /// Clears the floating button and dots on the two scrolling pages.
-    private var floatingControlsClearance: CGFloat {
-        PackWiseSize.buttonHeight + 60
-    }
+/// The wordmark every onboarding page shares.
+struct PackWiseBrandMark: View {
+    @ScaledMetric(relativeTo: .headline) private var tile: CGFloat = 28
 
-    // MARK: - Welcome
-
-    private func welcome(topInset: CGFloat) -> some View {
-        GeometryReader { proxy in
-            ZStack {
-                Color.clear
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                            HStack(spacing: PackWiseSpacing.snug) {
-                                Image(systemName: "suitcase.fill")
-                                    .font(.title2)
-                                    .foregroundStyle(.white)
-                                    .accessibilityHidden(true)
-                                Text("PackWise")
-                                    .font(.title.bold())
-                                    .foregroundStyle(.white)
-                            }
-                            Text("Pack what this trip actually needs.")
-                                .font(PackWiseFont.screenTitle)
-                                .foregroundStyle(.white)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text("Weather, activities, trip length and the way you travel — all considered.")
-                                .font(PackWiseFont.screenSubtitle)
-                                .foregroundStyle(.white.opacity(0.88))
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-
-                        Spacer(minLength: PackWiseSpacing.section)
-
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                            benefit("checkmark", "Smarter packing lists")
-                            benefit("cloud.sun.fill", "Weather-aware suggestions")
-                            benefit("person.fill", "Personalized over time")
-                        }
-                        .foregroundStyle(.white)
-
-                        Spacer()
-                            .frame(height: floatingControlsClearance)
-                    }
-                    .padding(.horizontal, PackWiseSpacing.loose)
-                    .padding(
-                        .top,
-                        topInset + PackWiseSpacing.loose
-                            + (dynamicTypeSize.isAccessibilitySize ? 52 : 0)
-                    )
-                    .padding(.bottom, PackWiseSpacing.snug)
-                    .frame(minHeight: proxy.size.height, alignment: .top)
-                }
-                .scrollIndicators(.hidden)
-            }
-            .ignoresSafeArea()
-        }
-    }
-
-    private func benefit(_ symbol: String, _ title: String) -> some View {
+    var body: some View {
         HStack(spacing: PackWiseSpacing.snug) {
-            Circle()
-                .fill(.black.opacity(0.35))
-                .frame(width: 24, height: 24)
-                .overlay {
-                    Image(systemName: symbol)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
-                .accessibilityHidden(true)
-            Text(title)
-                .font(.system(size: 15, weight: .medium))
+            Image(systemName: "suitcase.fill")
+                .font(.system(size: tile * 0.5, weight: .semibold))
+                .foregroundStyle(PackWiseColor.onAccent)
+                .frame(width: tile, height: tile)
+                .background(PackWiseColor.accent, in: RoundedRectangle(cornerRadius: PackWiseRadius.badge, style: .continuous))
+            Text("PackWise")
+                .font(PackWiseFont.cardTitle)
+                .foregroundStyle(PackWiseColor.textPrimary)
         }
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("PackWise")
+        .accessibilityAddTraits(.isHeader)
     }
+}
 
-    // MARK: - How it works
+/// Hero, title, supporting copy — scrolling as one, so an accessibility text
+/// size never clips the title or collides with the illustration.
+private struct OnboardingPageLayout: View {
+    var page: OnboardingPage
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    /// The content group stretches to the height the floating controls leave
-    /// free, so the screen does not end at 60% with a void below — the
-    /// spacers distribute the slack around the teaching device.
-    private func howItWorks(topInset: CGFloat) -> some View {
+    var body: some View {
         GeometryReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
+                    OnboardingHeroFrame(height: OnboardingHeroMetrics.height(forPage: proxy.size.height, accessibilitySize: dynamicTypeSize.isAccessibilitySize)) {
+                        switch page {
+                        case .trip: TripShapesListHero()
+                        case .composition: ComposedTripHero()
+                        case .authority: UserAuthorityHero()
+                        }
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(page.heroAccessibilityLabel)
+
                     VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                        Text("Built around your trip.")
+                        Text(page.title)
                             .font(PackWiseFont.screenTitle)
                             .foregroundStyle(PackWiseColor.textPrimary)
-                        Text("Tell us about your trip and PackWise creates a personalized packing list.")
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityAddTraits(.isHeader)
+                        Text(page.subtitle)
                             .font(PackWiseFont.screenSubtitle)
                             .foregroundStyle(PackWiseColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-
-                    PackWiseCard {
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                                Text("Chicago")
-                                    .font(PackWiseFont.cardTitle)
-                                    .foregroundStyle(PackWiseColor.textPrimary)
-                                Text("5 days · City trip")
-                                    .font(PackWiseFont.rowSubtitle)
-                                    .foregroundStyle(PackWiseColor.textSecondary)
-                            }
-                            Spacer()
-                            // Weather sits inline in the card, not in its own
-                            // divided row.
-                            HStack(spacing: PackWiseSpacing.snug) {
-                                Image(systemName: "cloud.rain.fill")
-                                    .font(.title3)
-                                    .weatherGlyphStyle("cloud.rain.fill")
-                                VStack(alignment: .leading, spacing: 0) {
-                                    Text("61° – 78°")
-                                        .font(PackWiseFont.numeral)
-                                        .foregroundStyle(PackWiseColor.textPrimary)
-                                    Text("Rain Saturday")
-                                        .font(PackWiseFont.rowSubtitle)
-                                        .foregroundStyle(PackWiseColor.textSecondary)
-                                }
-                            }
-                        }
-                    }
-
-                    Image(systemName: "arrow.down")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(PackWiseColor.accent)
-                        .frame(maxWidth: .infinity)
-                        .accessibilityHidden(true)
-
-                    PackWiseCard {
-                        VStack(spacing: 0) {
-                            outcome("cloud.rain", .green, "Rain jacket", "Added for expected rain")
-                            outcomeDivider
-                            outcome("wind", .teal, "Light layer", "Cool evenings")
-                            outcomeDivider
-                            outcome("shoe", .brown, "Walking shoes", "For sightseeing")
-                            outcomeDivider
-                            outcome("number", .purple, "5-day quantities", "Based on your trip length")
-                        }
-                    }
-
                 }
-                .padding(PackWiseSpacing.loose)
-                .padding(.top, topInset)
-                .padding(.bottom, floatingControlsClearance)
-                // Stretch the group to the visible height so the slack
-                // distributes through the spacers instead of pooling at the
-                // bottom. Two cards and an arrow are the teaching device — a
-                // third card is not the fix for a void.
-                .frame(minHeight: proxy.size.height)
+                .padding(.horizontal, PackWiseSpacing.comfortable)
+                .padding(.bottom, PackWiseSpacing.loose)
             }
-            .background(PackWiseColor.screen)
+            .scrollIndicators(.hidden)
         }
     }
+}
 
-    private var outcomeDivider: some View {
-        PackWiseRowDivider()
+enum OnboardingHeroMetrics {
+    /// About half the page, within bounds, at every text size — the copy
+    /// below scrolls instead of the illustration shrinking.
+    /// At accessibility sizes the illustration yields height so the title
+    /// and supporting copy are on screen without scrolling.
+    static func height(forPage pageHeight: CGFloat, accessibilitySize: Bool = false) -> CGFloat {
+        accessibilitySize ? min(max(pageHeight * 0.34, 200), 300) : min(max(pageHeight * 0.62, 250), 440)
+    }
+}
+
+/// The frame every hero sits in: one height rule, one radius, one border.
+private struct OnboardingHeroFrame<Content: View>: View {
+    var height: CGFloat
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        content
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
+            .background(PackWiseColor.accentWash)
+            .clipShape(RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous)
+                    .strokeBorder(PackWiseColor.border, lineWidth: 1)
+            }
+            // Illustrations are examples, not content: they keep their
+            // composition at every size while the real copy scales freely.
+            .dynamicTypeSize(...DynamicTypeSize.large)
+    }
+}
+
+// MARK: - Heroes
+
+/// Page 1: a travel photograph with the four inputs that shape a list.
+private struct TripShapesListHero: View {
+    private let inputs: [(String, String)] = [
+        ("mappin.and.ellipse", "Destination"),
+        ("calendar", "Dates"),
+        ("cloud.sun.fill", "Weather"),
+        ("figure.walk", "Plans"),
+    ]
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            Group {
+                if let photo = UIImage(named: PackWiseImageSlot.welcome) {
+                    Image(uiImage: photo)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    DestinationGraphicalFallback()
+                }
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+            .clipped()
+            DestinationScrim()
+
+            PackWiseFlowLayout {
+                ForEach(inputs, id: \.1) { symbol, title in
+                    PackWiseStatusBadge(title: title, symbol: symbol, tint: PackWiseColor.accent, style: .onPhoto)
+                }
+            }
+            .padding(PackWiseSpacing.comfortable)
+        }
+    }
+}
+
+/// Page 2: one trip that is three kinds of trip, with its plans and bags.
+private struct ComposedTripHero: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+            Text("THIS TRIP")
+                .font(PackWiseFont.microLabel)
+                .foregroundStyle(PackWiseColor.textSecondary)
+            PackWiseFlowLayout {
+                ForEach([TripType.beach, .cityBreak, .business], id: \.self) { type in
+                    PackWiseChip(title: type.title, symbol: type.symbol, tint: type.tint, isSelected: true) {}
+                }
+            }
+            PackWiseRowDivider(inset: 0)
+            demoRow(symbol: "figure.open.water.swim", tint: .cyan, title: "Activities", value: "Snorkeling · Museums")
+            demoRow(symbol: "suitcase", tint: .blue, title: "Bags", value: "Carry-on · Personal item")
+        }
+        .padding(PackWiseSpacing.comfortable)
+        .background(PackWiseColor.surface, in: RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous)
+                .strokeBorder(PackWiseColor.border, lineWidth: 1)
+        }
+        .padding(PackWiseSpacing.comfortable)
+        .allowsHitTesting(false)
+    }
+}
+
+/// Page 3: a changed quantity, a skipped item, and an added one.
+private struct UserAuthorityHero: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            row(symbol: PackingCategory.clothing.style.symbol, tint: PackingCategory.clothing.style.tint,
+                title: "T-shirts", detail: "Quantity 5", tag: "Your quantity", strike: false)
+            PackWiseRowDivider()
+            row(symbol: PackingCategory.travelComfort.style.symbol, tint: PackingCategory.travelComfort.style.tint,
+                title: "Travel pillow", detail: "Not needed", tag: "Skipped", strike: true)
+            PackWiseRowDivider()
+            row(symbol: PackingCategory.electronics.style.symbol, tint: PackingCategory.electronics.style.tint,
+                title: "Film camera", detail: "Quantity 1", tag: "Added by you", strike: false)
+        }
+        .padding(.horizontal, PackWiseSpacing.comfortable)
+        .padding(.vertical, PackWiseSpacing.snug)
+        .background(PackWiseColor.surface, in: RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous)
+                .strokeBorder(PackWiseColor.border, lineWidth: 1)
+        }
+        .padding(PackWiseSpacing.comfortable)
     }
 
-    private func outcome(_ symbol: String, _ tint: Color, _ title: String, _ subtitle: String) -> some View {
+    private func row(symbol: String, tint: Color, title: String, detail: String, tag: String, strike: Bool) -> some View {
         HStack(spacing: PackWiseSpacing.regular) {
             PackWiseIconBadge(symbol: symbol, tint: tint)
             VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(PackWiseColor.textPrimary)
-                Text(subtitle)
+                    .font(PackWiseFont.rowTitle)
+                    .strikethrough(strike)
+                    .foregroundStyle(strike ? PackWiseColor.textTertiary : PackWiseColor.textPrimary)
+                Text(detail)
                     .font(PackWiseFont.rowSubtitle)
                     .foregroundStyle(PackWiseColor.textSecondary)
             }
-            Spacer(minLength: 0)
-        }
-        .padding(.vertical, PackWiseSpacing.regular)
-    }
-
-    // MARK: - Personalization
-
-    private func personal(topInset: CGFloat) -> some View {
-        GeometryReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
-                    VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                        Text("It gets more personal.")
-                            .font(PackWiseFont.screenTitle)
-                            .foregroundStyle(PackWiseColor.textPrimary)
-                        Text("PackWise remembers what you bring, skip and actually use, so future trips fit you better.")
-                            .font(PackWiseFont.screenSubtitle)
-                            .foregroundStyle(PackWiseColor.textSecondary)
-                    }
-
-                    PackWiseCard {
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                            // Title case, inside the card — never a floating
-                            // uppercase label.
-                            Text("Your Packing Habits")
-                                .font(PackWiseFont.sectionTitle)
-                                .foregroundStyle(PackWiseColor.textPrimary)
-                            VStack(spacing: 0) {
-                                habit("arrow.down.circle", .green, "Usually bring", "Portable charger · Running shoes")
-                                habit("xmark.circle", .red, "Tend to skip", "Travel pillow · Extra jeans")
-                                habit("circle.lefthalf.filled", .orange, "Typical style", "Balanced")
-                                habit("suitcase", .blue, "Often travel", "Carry-on")
-                            }
-                        }
-                    }
-
-                    // Sample values, not the user's — nothing has been
-                    // observed yet.
-                    Text("An example. PackWise starts learning after your first trip.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(PackWiseColor.textTertiary)
-                        .frame(maxWidth: .infinity)
-                        .multilineTextAlignment(.center)
-
-                }
-                .padding(PackWiseSpacing.loose)
-                .padding(.top, topInset)
-                .padding(.bottom, floatingControlsClearance)
-                .frame(minHeight: proxy.size.height)
-            }
-            .background(PackWiseColor.screen)
-        }
-    }
-
-    private func habit(_ symbol: String, _ tint: Color, _ title: String, _ value: String) -> some View {
-        HStack(spacing: PackWiseSpacing.regular) {
-            PackWiseIconBadge(symbol: symbol, tint: tint)
-            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(PackWiseColor.textPrimary)
-                Text(value)
-                    .font(PackWiseFont.rowSubtitle)
-                    .foregroundStyle(PackWiseColor.textSecondary)
-            }
-            Spacer(minLength: 0)
+            Spacer(minLength: PackWiseSpacing.snug)
+            PackWiseStatusBadge(title: tag, symbol: nil, tint: strike ? PackWiseColor.textSecondary : PackWiseColor.accent)
         }
         .padding(.vertical, PackWiseSpacing.regular)
     }
 }
 
-/// The bundled welcome photograph, or a branded stand-in if the asset is ever
-/// missing — never a broken image.
-private struct OnboardingImage: View {
-    var slot: String
-
-    private var bundled: UIImage? { UIImage(named: slot) }
-
-    var body: some View {
-        ZStack {
-            if let bundled {
-                GeometryReader { proxy in
-                    Image(uiImage: bundled)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: proxy.size.width, height: proxy.size.height)
-                        .clipped()
-                }
-            } else {
-                BrandedDestinationPanel()
-            }
-            // Both text zones need contrast, while the center stays open so
-            // the photograph still reads as travel rather than a dark panel.
-            LinearGradient(
-                stops: [
-                    .init(color: .black.opacity(0.58), location: 0),
-                    .init(color: .black.opacity(0.18), location: 0.36),
-                    .init(color: .black.opacity(0.22), location: 0.55),
-                    .init(color: .black.opacity(0.78), location: 1.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+private func demoRow(symbol: String, tint: Color, title: String, value: String) -> some View {
+    HStack(spacing: PackWiseSpacing.regular) {
+        PackWiseIconBadge(symbol: symbol, tint: tint)
+        VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+            Text(title)
+                .font(PackWiseFont.rowSubtitle)
+                .foregroundStyle(PackWiseColor.textSecondary)
+            Text(value)
+                .font(PackWiseFont.rowTitle)
+                .foregroundStyle(PackWiseColor.textPrimary)
         }
-        .clipped()
-        .accessibilityHidden(true)
+        Spacer(minLength: 0)
     }
 }

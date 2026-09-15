@@ -32,16 +32,16 @@ enum PackWiseSize {
     static let tapTarget: CGFloat = 44
     /// Compact destination thumbnail on a trip card.
     static let tripThumbnail: CGFloat = 56
-    /// Photo band at the top of the hero trip card on Trips Home.
-    static let tripCardPhotoHeight: CGFloat = 140
-    /// Full-bleed destination hero on Trip Detail.
-    static let heroHeight: CGFloat = 240
-    /// Extra hero height keeps two-line destination context clear at large text sizes.
-    static let heroAccessibilityHeight: CGFloat = 320
+    /// The confirmed destination's map thumbnail in trip setup.
+    static let destinationThumbnail: CGFloat = 64
+    /// Minimum height of the destination band on the Trips Home hero card and
+    /// the setup Review hero. Text grows it at larger sizes.
+    static let tripCardPhotoHeight: CGFloat = 150
+    /// Minimum height of the full-bleed destination hero on Trip Detail,
+    /// status region included. Text grows it at larger sizes.
+    static let heroHeight: CGFloat = 270
     /// Clears the status region while keeping hero controls inside the image.
     static let heroControlTopInset: CGFloat = 58
-    /// Destination confirmation image in trip setup.
-    static let previewHeight: CGFloat = 150
     static let progressBarHeight: CGFloat = 6
 }
 

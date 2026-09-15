@@ -183,7 +183,7 @@ struct TripsHomeView: View {
         for trip in trips.prefix(8) {
             await destinationVisuals.prewarm(
                 trip.destination,
-                purposes: [.tripThumbnail, .tripHero]
+                purposes: [.tripThumbnail, .tripCard, .tripHero]
             )
         }
     }
@@ -272,20 +272,13 @@ struct HeroTripCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DestinationVisualView(destination: trip.destination, purpose: .tripHero, overlaysText: true)
-                .frame(height: PackWiseSize.tripCardPhotoHeight)
-                .clipped()
-                .overlay(alignment: .bottomLeading) {
-                    VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                        Text(trip.destinationDisplayName)
-                            .font(.title3.weight(.semibold))
-                        Text(dateLine)
-                            .font(PackWiseFont.rowSubtitle)
-                            .opacity(0.92)
-                    }
-                    .foregroundStyle(.white)
-                    .padding(PackWiseSpacing.comfortable)
-                }
+            DestinationHero(
+                destination: trip.destination,
+                style: .card,
+                title: trip.destinationDisplayName,
+                metadata: [dateLine],
+                minHeight: PackWiseSize.tripCardPhotoHeight
+            )
 
             VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
                 weatherRow
@@ -390,7 +383,7 @@ struct CompactTripCard: View {
             HStack(spacing: PackWiseSpacing.regular) {
                 DestinationVisualView(destination: trip.destination, purpose: .tripThumbnail)
                     .frame(width: PackWiseSize.tripThumbnail, height: PackWiseSize.tripThumbnail)
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: PackWiseRadius.control, style: .continuous))
 
                 VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
                     Text(trip.destinationDisplayName)

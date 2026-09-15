@@ -33,6 +33,21 @@ enum DebugPreviewScreen: String {
     case tripsHomeEmpty
     case setupDestination
     case setupDestinationFallback
+    /// Task 9 destination states: empty with no trips, recents, searching,
+    /// compact results, confirmed places, a long name, and offline visuals.
+    case setupDestinationEmpty
+    case setupDestinationRecents
+    case setupDestinationSearching
+    case setupDestinationResults
+    case setupDestinationChicago
+    case setupDestinationKhammam
+    case setupDestinationLong
+    case setupDestinationOffline
+    /// Review's destination hero on a map (Khammam) and offline (graphical).
+    case setupReviewMap
+    case setupReviewOffline
+    /// Trip Detail's hero with the map provider failing.
+    case tripDetailOffline
     case setupDates
     case setupTravelers
     case setupTravelersFamily
@@ -99,6 +114,34 @@ struct DebugPreviewScene: View {
                 setup(.destination)
             case .setupDestinationFallback:
                 TripSetupView(existingTrip: seed.completedTrip, initialStep: .destination)
+            case .setupDestinationEmpty:
+                TripSetupView()
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationRecents:
+                TripSetupView()
+            case .setupDestinationSearching:
+                TripSetupView(captureSearch: DebugDestinationSearch(suspends: true), captureQuery: "Kham")
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationResults:
+                TripSetupView(captureSearch: DebugDestinationSearch(), captureQuery: "Chi")
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationChicago:
+                TripSetupView(captureDestination: DebugDestinationSearch.chicago)
+            case .setupDestinationKhammam:
+                TripSetupView(captureDestination: DebugDestinationSearch.khammam)
+            case .setupDestinationLong:
+                TripSetupView(captureDestination: DebugDestinationSearch.longName)
+            case .setupDestinationOffline:
+                TripSetupView(captureDestination: DebugDestinationSearch.khammam)
+                    .environment(\.destinationVisuals, DebugTripSeed.offlineVisuals)
+            case .setupReviewMap:
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .review, captureDestination: DebugDestinationSearch.khammam)
+            case .setupReviewOffline:
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .review, captureDestination: DebugDestinationSearch.longName)
+                    .environment(\.destinationVisuals, DebugTripSeed.offlineVisuals)
+            case .tripDetailOffline:
+                NavigationStack { TripDetailView(trip: seed.trip) }
+                    .environment(\.destinationVisuals, DebugTripSeed.offlineVisuals)
             case .setupDates:
                 setup(.dates)
             case .setupTravelers:
@@ -212,6 +255,50 @@ struct DebugPreviewScene: View {
     }
 }
 
+/// Capture-only destination search: real places with their real
+/// coordinates, returned without the network, or never (to hold the
+/// searching state on screen).
+struct DebugDestinationSearch: DestinationSearching {
+    var suspends = false
+
+    static let chicago = Destination(
+        displayName: "Chicago", city: "Chicago", region: "IL", country: "United States", countryCode: "US",
+        latitude: 41.8781, longitude: -87.6298, timeZone: "America/Chicago", mapKitIdentifier: nil, fixtureID: nil
+    )
+    static let khammam = Destination(
+        displayName: "Khammam", city: "Khammam", region: "Telangana", country: "India", countryCode: "IN",
+        latitude: 17.2473, longitude: 80.1514, timeZone: "Asia/Kolkata", mapKitIdentifier: nil, fixtureID: nil
+    )
+    static let longName = Destination(
+        displayName: "Saint-Rémy-de-Provence", city: "Saint-Rémy-de-Provence", region: "Provence-Alpes-Côte d'Azur",
+        country: "France", countryCode: "FR", latitude: 43.7888, longitude: 4.8317, timeZone: "Europe/Paris",
+        mapKitIdentifier: nil, fixtureID: nil
+    )
+
+    func search(query: String) async -> [Destination] {
+        if suspends {
+            try? await Task.sleep(for: .seconds(3600))
+            return []
+        }
+        return [
+            Self.chicago,
+            Destination(displayName: "Chicago Heights", city: "Chicago Heights", region: "IL", country: "United States", countryCode: "US",
+                        latitude: 41.5061, longitude: -87.6356, timeZone: "America/Chicago", mapKitIdentifier: nil, fixtureID: nil),
+            Destination(displayName: "Chico", city: "Chico", region: "CA", country: "United States", countryCode: "US",
+                        latitude: 39.7285, longitude: -121.8375, timeZone: "America/Los_Angeles", mapKitIdentifier: nil, fixtureID: nil),
+            Destination(displayName: "Chiang Mai", city: "Chiang Mai", region: "Chiang Mai", country: "Thailand", countryCode: "TH",
+                        latitude: 18.7883, longitude: 98.9853, timeZone: "Asia/Bangkok", mapKitIdentifier: nil, fixtureID: nil),
+        ]
+    }
+}
+
+/// A map provider that always fails, as offline.
+struct DebugOfflineMapSnapshots: DestinationMapSnapshotting {
+    func snapshot(for request: DestinationMapRequest) async throws -> UIImage {
+        throw URLError(.notConnectedToInternet)
+    }
+}
+
 /// Chicago, five days, part way packed — the trip the reference board draws.
 @MainActor
 @Observable
@@ -228,6 +315,13 @@ final class DebugTripSeed {
     /// You plus three other adults, one named with device choices, for the
     /// expanded group branch of the travelers step.
     let groupTrip: TripRecord
+
+    /// Visuals with no trusted imagery and a failing map: the offline state.
+    static let offlineVisuals = MapKitDestinationVisualService(
+        directory: nil,
+        trusted: { _ in nil },
+        mapSnapshots: DebugOfflineMapSnapshots()
+    )
 
     /// For the empty Trips Home. Trips Home reads its own @Query, so an empty
     /// state needs a store with nothing in it.

@@ -7,18 +7,23 @@ struct TripSetupView: View {
     /// Where the flow opens. Always the first step in the app; the Debug
     /// capture harness uses it to photograph a step without walking to it.
     var initialStep: SetupStep = .destination
+    /// Capture-only overrides for the Debug harness (Task 9 destination
+    /// states). Nil in the app.
+    var captureSearch: (any DestinationSearching)? = nil
+    var captureQuery: String? = nil
+    var captureDestination: Destination? = nil
 
     @Environment(AppDependencies.self) private var dependencies
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var preferenceRecords: [PackingPreferenceRecord]
+    @Query(sort: \TripRecord.createdAt, order: .reverse) private var trips: [TripRecord]
 
     @State private var draft = TripDraft()
     /// Steps after the first, in visit order. The destination step is the
     /// stack's root; the bottom action pushes, Back pops.
     @State private var stepPath: [SetupStep] = []
     @State private var search = ""
-    @State private var destinationMatches: [Destination] = []
     @State private var customText = ""
     @State private var addingCustom = false
     @FocusState private var customFieldFocused: Bool
@@ -109,99 +114,16 @@ struct TripSetupView: View {
 
     // MARK: - 1. Destination
 
+    /// Task 9: search, recents or guidance, compact results, and one
+    /// confirmed state — see `DestinationStepContent`.
     private var destinationStep: some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
-            HStack(spacing: PackWiseSpacing.snug) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(PackWiseColor.textSecondary)
-                TextField("Search city or destination", text: $search)
-                    .font(PackWiseFont.rowTitle)
-                    .autocorrectionDisabled()
-                if !search.isEmpty {
-                    Button {
-                        search = ""
-                        destinationMatches = []
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(PackWiseColor.textTertiary)
-                    }
-                    .accessibilityLabel("Clear search")
-                }
-            }
-            .padding(PackWiseSpacing.regular)
-            .background(PackWiseColor.surfaceAlt, in: RoundedRectangle(cornerRadius: PackWiseRadius.control, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: PackWiseRadius.control, style: .continuous)
-                    .strokeBorder(PackWiseColor.border, lineWidth: 1)
-            }
-            .task(id: search) {
-                try? await Task.sleep(for: .milliseconds(280))
-                let results = await dependencies.destinationSearch.search(query: search)
-                destinationMatches = results.map { attachFixture($0) }
-            }
-
-            if !destinationMatches.isEmpty {
-                group {
-                    ForEach(Array(destinationMatches.enumerated()), id: \.element.id) { index, destination in
-                        if index > 0 { PackWiseRowDivider() }
-                        Button {
-                            draft.destination = destination
-                        } label: {
-                            HStack(spacing: PackWiseSpacing.regular) {
-                                PackWiseIconBadge(symbol: "mappin.circle", tint: PackWiseColor.accent)
-                                VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                                    Text(destination.displayName)
-                                        .font(PackWiseFont.rowTitle)
-                                        .foregroundStyle(PackWiseColor.textPrimary)
-                                    Text(destination.subtitle)
-                                        .font(PackWiseFont.rowSubtitle)
-                                        .foregroundStyle(PackWiseColor.textSecondary)
-                                }
-                                Spacer(minLength: PackWiseSpacing.snug)
-                                if draft.destination == destination {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(PackWiseFont.selectionGlyph)
-                                        .foregroundStyle(PackWiseColor.onAccent, PackWiseColor.accent)
-                                }
-                            }
-                            .padding(.vertical, PackWiseSpacing.regular)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityAddTraits(draft.destination == destination ? .isSelected : [])
-                    }
-                }
-            }
-
-            // Destination photography, with the name and a location pin
-            // below. The destination redesign itself is Task 9.
-            if let destination = draft.destination {
-                VStack(alignment: .leading, spacing: 0) {
-                    DestinationVisualView(destination: destination, purpose: .destinationPreview)
-                        .frame(height: PackWiseSize.previewHeight)
-                    HStack(spacing: PackWiseSpacing.regular) {
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                            Text(destination.city.isEmpty ? destination.displayName : destination.city)
-                                .font(PackWiseFont.cardTitle)
-                                .foregroundStyle(PackWiseColor.textPrimary)
-                            Text(destination.subtitle)
-                                .font(PackWiseFont.rowSubtitle)
-                                .foregroundStyle(PackWiseColor.textSecondary)
-                        }
-                        Spacer()
-                        Image(systemName: "mappin.and.ellipse")
-                            .foregroundStyle(PackWiseColor.accent)
-                    }
-                    .padding(PackWiseSpacing.comfortable)
-                }
-                .background(PackWiseColor.surface)
-                .clipShape(RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous)
-                        .strokeBorder(PackWiseColor.border, lineWidth: 1)
-                }
-            }
-        }
+        DestinationStepContent(
+            selected: $draft.destination,
+            query: $search,
+            recents: DestinationRecents.recents(from: trips.filter { $0.id != existingTrip?.id }.map { ($0.destination, $0.createdAt) }),
+            search: captureSearch ?? dependencies.destinationSearch,
+            prepare: attachFixture
+        )
     }
 
     // MARK: - 2. Dates
@@ -709,26 +631,15 @@ struct TripSetupView: View {
         let party = draft.party
         return VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
             if let destination = draft.destination {
-                ZStack(alignment: .bottomLeading) {
-                    DestinationVisualView(
-                        destination: destination,
-                        purpose: .tripHero,
-                        overlaysText: true
-                    )
-                    .frame(height: 168)
-
-                    VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                        Text(destination.displayName)
-                            .font(PackWiseFont.screenTitle)
-                        Text(dateSpan)
-                            .font(PackWiseFont.screenSubtitle)
-                            .opacity(0.92)
-                    }
-                    .foregroundStyle(PackWiseColor.onAccent)
-                    .padding(PackWiseSpacing.comfortable)
-                }
-                .frame(maxWidth: .infinity)
+                DestinationHero(
+                    destination: destination,
+                    style: .card,
+                    title: destination.presentationTitle,
+                    metadata: [dateSpan],
+                    minHeight: PackWiseSize.tripCardPhotoHeight
+                )
                 .clipShape(RoundedRectangle(cornerRadius: PackWiseRadius.card, style: .continuous))
+                .accessibilityElement(children: .combine)
             }
 
             PackWiseCard {
@@ -857,6 +768,8 @@ struct TripSetupView: View {
         } else if let prefs = preferenceRecords.first?.preferences {
             draft = TripDraft.fresh(preferences: prefs)
         }
+        if let captureDestination { draft.destination = captureDestination }
+        if let captureQuery { search = captureQuery }
     }
 
     private func saveTrip() async {

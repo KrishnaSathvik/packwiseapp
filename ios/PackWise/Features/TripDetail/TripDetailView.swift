@@ -47,9 +47,10 @@ struct TripDetailView: View {
                         categories
                     }
                     .padding(.horizontal, PackWiseSpacing.comfortable)
-                    // The progress card overlaps the hero's bottom edge, which is
-                    // what stitches the photo and the content into one screen.
-                    .padding(.top, -PackWiseSpacing.loose)
+                    // Task 9: the progress card no longer overlaps the hero —
+                    // it would cover the imagery's attribution in the
+                    // bottom-left corner.
+                    .padding(.top, PackWiseSpacing.loose)
                 }
                 // Nested horizontal content (weather days and chips) must not
                 // widen the vertical page at accessibility sizes.
@@ -122,60 +123,29 @@ struct TripDetailView: View {
         .accessibilityLabel("Trip options")
     }
 
+    /// The shared destination hero (Task 9). Its visual is a background, so
+    /// the destination text sets the height at large sizes; the top band
+    /// under the controls is reserved for decoration and never holds text.
     private var hero: some View {
-        DestinationVisualView(
+        DestinationHero(
             destination: trip.destination,
-            purpose: .tripHero,
-            overlaysText: true
-        )
-        .frame(
-            height: dynamicTypeSize.isAccessibilitySize
-                ? PackWiseSize.heroAccessibilityHeight
-                : PackWiseSize.heroHeight
-        )
-        .overlay(alignment: .bottomLeading) {
-            VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
-                if isFinished {
-                    PackWiseStatusBadge(
-                        title: "Completed",
-                        symbol: "checkmark.circle.fill",
-                        tint: PackWiseColor.success,
-                        style: .onPhoto
-                    )
-                }
-                Text(trip.destinationDisplayName)
-                    .font(.largeTitle.bold())
-                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.75)
-                Text(dateLine)
-                    .font(.subheadline)
-                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-                    .foregroundStyle(.white.opacity(0.9))
-                if !trip.party.usesSimpleList {
-                    Text(trip.party.summary)
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.9))
-                }
+            style: .hero,
+            title: trip.destinationDisplayName,
+            metadata: [dateLine] + (trip.party.usesSimpleList ? [] : [trip.party.summary]),
+            minHeight: PackWiseSize.heroHeight,
+            reservedTop: PackWiseSize.heroControlTopInset + PackWiseSize.tapTarget,
+            topShade: true
+        ) {
+            if isFinished {
+                PackWiseStatusBadge(
+                    title: "Completed",
+                    symbol: "checkmark.circle.fill",
+                    tint: PackWiseColor.success,
+                    style: .onPhoto
+                )
             }
-            .foregroundStyle(.white)
-            .padding(PackWiseSpacing.comfortable)
-            // Look Around snapshots carry Apple's Maps attribution in the
-            // bottom-left corner. It is a licensing requirement and must not
-            // be covered, so the trip text clears it — and clears the
-            // progress card overlapping the hero's bottom edge.
-            .padding(.bottom, PackWiseSpacing.section + PackWiseSpacing.snug)
         }
-        .overlay(alignment: .top) {
-            // Keeps the back button legible over a bright image.
-            LinearGradient(
-                colors: [.black.opacity(0.35), .clear],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 110)
-            .allowsHitTesting(false)
-        }
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
     }
 
     /// A finished trip is a record, not a task: no weather proposal, and the

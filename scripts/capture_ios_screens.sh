@@ -27,7 +27,9 @@ if [ "${#SCREENS[@]}" -eq 1 ] && [ "${SCREENS[0]}" = "all" ]; then
     SCREENS=(
         onboarding onboardingTrip onboardingPersonal
         tripsHome tripsHomeEmpty
-        setupDestination setupDestinationFallback setupDates setupTravelers setupTravelersFamily setupTravelersFamilyDetails setupTravelersGroup
+        setupDestination setupDestinationFallback setupDestinationEmpty setupDestinationRecents setupDestinationSearching
+        setupDestinationResults setupDestinationChicago setupDestinationKhammam setupDestinationLong setupDestinationOffline
+        setupReviewMap setupReviewOffline tripDetailOffline setupDates setupTravelers setupTravelersFamily setupTravelersFamilyDetails setupTravelersGroup
         setupTripTypes setupActivities setupBags setupStyleLaundry setupPreferences setupReview
         tripDetail tripDetailSeasonal packingList packingListScrolled packingListFamily
         itemDetailSheet itemDetailLarge addItem addItemCategory
