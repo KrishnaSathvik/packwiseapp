@@ -40,44 +40,47 @@
       "suppressed" : "clothing.windbreaker"
     }
   ],
+  "eligibility" : [
+    {
+      "items" : [
+        "documents.id",
+        "essentials.keys",
+        "essentials.wallet",
+        "health.blister_pads",
+        "health.pain_reliever",
+        "toiletries.deodorant"
+      ],
+      "owner" : "child",
+      "reason" : "adult_or_teen_only",
+      "result" : "ineligible"
+    },
+    {
+      "items" : [
+        "activities.daypack",
+        "travel_comfort.book",
+        "travel_comfort.compression_packing",
+        "travel_comfort.laundry_bag",
+        "travel_comfort.toiletry_bag"
+      ],
+      "owner" : "child",
+      "reason" : "not_for_age_group",
+      "result" : "ineligible"
+    },
+    {
+      "items" : [
+        "electronics.headphones",
+        "electronics.phone_charger",
+        "electronics.power_bank",
+        "essentials.phone"
+      ],
+      "owner" : "child",
+      "reason" : "device_signal_required",
+      "result" : "requiresExplicitSignal"
+    }
+  ],
   "engineVersion" : "v2",
   "fixture" : "16-minneapolis-7d-winter-family",
   "items" : [
-    {
-      "canonicalItemID" : "activities.daypack",
-      "carrier" : "primary",
-      "category" : "activities",
-      "displayName" : "Daypack",
-      "importance" : "important",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Minneapolis"
-          },
-          "reasonCode" : "activity.sightseeing",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You'll have sightseeing days in Minneapolis.",
-      "reasonArguments" : {
-        "destination" : "Minneapolis"
-      },
-      "reasonCode" : "activity.sightseeing",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
-      ]
-    },
     {
       "canonicalItemID" : "clothing.beanie",
       "carrier" : "primary",
@@ -633,76 +636,6 @@
       ],
       "signals" : [
         "weather"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.phone_charger",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Phone charger",
-      "importance" : "important",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.electronics",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Dead batteries cut days short.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.electronics",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.power_bank",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Portable charger",
-      "importance" : "important",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Minneapolis"
-          },
-          "reasonCode" : "activity.sightseeing",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You'll have sightseeing days in Minneapolis.",
-      "reasonArguments" : {
-        "destination" : "Minneapolis"
-      },
-      "reasonCode" : "activity.sightseeing",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
       ]
     },
     {

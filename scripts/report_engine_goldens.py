@@ -17,6 +17,9 @@ serializes it, matches items across baseline and candidate by
                          quantity reason, userModified) — evidence for *why*
                          an item is recommended, not *whether* or *how many*
     COVERAGE CHANGES    the fixture's `coverage` suppression ledger differs
+    ELIGIBILITY CHANGES the fixture's `eligibility` ledger (candidates a
+                         traveler did not receive, with result and reason)
+                         differs
     CONSTRAINT CHANGES  the fixture's `constraints` ledger differs, or its
                          one normalized `luggage` decision (capacity,
                          selected bags) differs
@@ -213,6 +216,42 @@ class ConstraintEntry:
 
 
 @dataclass(frozen=True)
+class EligibilityEntry:
+    owner: str
+    result: str
+    reason: str
+    items: Tuple[str, ...]
+
+    @property
+    def key(self) -> Tuple[str, str, str]:
+        return (self.owner, self.result, self.reason)
+
+    @staticmethod
+    def from_json(raw: dict) -> "EligibilityEntry":
+        return EligibilityEntry(
+            owner=raw["owner"], result=raw["result"], reason=raw["reason"], items=tuple(raw.get("items", []))
+        )
+
+
+EligibilityChange = namedtuple("EligibilityChange", "kind owner reason added removed")
+
+
+def _compare_eligibility(
+    baseline: Tuple[EligibilityEntry, ...], candidate: Tuple[EligibilityEntry, ...]
+) -> List["EligibilityChange"]:
+    baseline_map = {e.key: e for e in baseline}
+    candidate_map = {e.key: e for e in candidate}
+    changes = []
+    for key in sorted(set(baseline_map) | set(candidate_map)):
+        before = set(baseline_map[key].items) if key in baseline_map else set()
+        after = set(candidate_map[key].items) if key in candidate_map else set()
+        if before != after:
+            kind = "added" if not before else "removed" if not after else "changed"
+            changes.append(EligibilityChange(kind, key[0], f"{key[1]}:{key[2]}", sorted(after - before), sorted(before - after)))
+    return changes
+
+
+@dataclass(frozen=True)
 class LuggageDecision:
     capacity: str
     selected_bags: Tuple[str, ...]
@@ -239,6 +278,7 @@ class Golden:
     coverage: Tuple[CoverageEntry, ...]
     constraints: Tuple[ConstraintEntry, ...]
     luggage: Optional[LuggageDecision] = None
+    eligibility: Tuple[EligibilityEntry, ...] = ()
 
     @staticmethod
     def from_json(raw: dict) -> "Golden":
@@ -248,6 +288,7 @@ class Golden:
             coverage=tuple(CoverageEntry.from_json(c) for c in (raw.get("coverage") or [])),
             constraints=tuple(ConstraintEntry.from_json(c) for c in (raw.get("constraints") or [])),
             luggage=LuggageDecision.from_json(raw.get("luggage")),
+            eligibility=tuple(EligibilityEntry.from_json(e) for e in (raw.get("eligibility") or [])),
         )
 
 
@@ -273,6 +314,7 @@ class FixtureReport:
     trace_changes: List[TraceChange] = field(default_factory=list)
     coverage_changes: List[LedgerChange] = field(default_factory=list)
     constraint_changes: List[ConstraintChange] = field(default_factory=list)
+    eligibility_changes: List["EligibilityChange"] = field(default_factory=list)
 
     @property
     def is_unchanged(self) -> bool:
@@ -283,6 +325,7 @@ class FixtureReport:
             or self.trace_changes
             or self.coverage_changes
             or self.constraint_changes
+            or self.eligibility_changes
         )
 
     def counts(self) -> Dict[str, int]:
@@ -294,6 +337,7 @@ class FixtureReport:
             "TRACE CHANGES": len(self.trace_changes),
             "COVERAGE CHANGES": len(self.coverage_changes),
             "CONSTRAINT CHANGES": len(self.constraint_changes),
+            "ELIGIBILITY CHANGES": len(self.eligibility_changes),
         }
 
 
@@ -324,6 +368,7 @@ class Report:
             "TRACE CHANGES": 0,
             "COVERAGE CHANGES": 0,
             "CONSTRAINT CHANGES": 0,
+            "ELIGIBILITY CHANGES": 0,
         }
         for f in self.fixtures:
             for label, count in f.counts().items():
@@ -448,6 +493,7 @@ def compare_fixture(
         constraint_changes=_compare_constraints(
             baseline.constraints, candidate.constraints, baseline.luggage, candidate.luggage, ignore_luggage_evidence
         ),
+        eligibility_changes=_compare_eligibility(baseline.eligibility, candidate.eligibility),
     )
 
 
@@ -546,6 +592,7 @@ _SUMMARY_LABELS = (
     "TRACE CHANGES",
     "COVERAGE CHANGES",
     "CONSTRAINT CHANGES",
+    "ELIGIBILITY CHANGES",
 )
 
 
@@ -569,6 +616,8 @@ def render_text(report: Report) -> str:
             lines.append(f"    coverage {c.kind}: {c.owner}/{c.suppressed} ({c.detail})")
         for c in f.constraint_changes:
             lines.append(f"    constraint {c.kind}: {c.owner}/{c.constraint} ({c.detail})")
+        for e in f.eligibility_changes:
+            lines.append(f"    eligibility {e.kind}: {e.owner}/{e.reason} +{e.added} -{e.removed}")
 
     if report.new_fixtures:
         lines.append("")
@@ -652,6 +701,11 @@ def render_markdown(report: Report) -> str:
             lines.append("**CONSTRAINT CHANGES**")
             for c in f.constraint_changes:
                 lines.append(f"- {c.kind}: `{c.owner}/{c.constraint}` ({c.detail})")
+        if f.eligibility_changes:
+            lines.append("")
+            lines.append("**ELIGIBILITY CHANGES**")
+            for e in f.eligibility_changes:
+                lines.append(f"- {e.kind}: `{e.owner}/{e.reason}` added {e.added} removed {e.removed}")
 
     if report.new_fixtures:
         lines.append("")

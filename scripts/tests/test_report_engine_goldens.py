@@ -310,6 +310,22 @@ class LuggageEvidenceTests(unittest.TestCase):
         self.assertTrue(report.is_unchanged)
 
 
+class EligibilityChangeTests(unittest.TestCase):
+    def entry(self, items, reason="device_signal_required", result="requiresExplicitSignal", owner="child"):
+        return {"owner": owner, "result": result, "reason": reason, "items": items}
+
+    def test_new_eligibility_ruling_is_an_eligibility_change(self):
+        report = compare_fixture(golden(), dict(golden(), eligibility=[self.entry(["electronics.phone_charger"])]))
+        self.assertEqual([(e.kind, e.added) for e in report.eligibility_changes], [("added", ["electronics.phone_charger"])])
+        self.assertFalse(report.is_unchanged)
+        self.assertEqual(report.counts()["ELIGIBILITY CHANGES"], 1)
+
+    def test_identical_eligibility_ledger_is_not_a_change(self):
+        ledger = [self.entry(["a", "b"])]
+        report = compare_fixture(dict(golden(), eligibility=ledger), dict(golden(), eligibility=ledger))
+        self.assertEqual(report.eligibility_changes, [])
+
+
 class NewFixtureTests(unittest.TestCase):
     def test_fixture_present_only_in_candidate_is_reported_as_new_not_diffed(self):
         from scripts.report_engine_goldens import compare_directories

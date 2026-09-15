@@ -270,48 +270,42 @@ struct ReasonTemplatesFile: Codable, Sendable {
     var templates: [String: String]
 }
 
-struct PartyRulesFile: Codable, Sendable {
+struct PartyRulesFile: Decodable, Sendable {
     var sharedByDefault: [String]
-    /// Skipped for infants, toddlers, and school-age children.
-    var skipForYoungChildren: [String]
-    /// Skipped only below school age: items a school-age child plausibly
-    /// carries (headphones, a book, their own organizers) that a toddler
-    /// does not.
-    var skipForInfantsAndToddlers: [String]
     var ageGroups: [String: AgeGroupRule]
     var activityAdds: [String: [String]]
     var sharingPolicies: [String: SharingPolicyRule]
+    /// Product Experience V2, Task 6: one eligibility family per catalog
+    /// item, read only by `TravelerEligibilityResolver`.
+    var eligibility: EligibilityRules
 
     enum CodingKeys: String, CodingKey {
-        case sharedByDefault, skipForYoungChildren, skipForInfantsAndToddlers, ageGroups, activityAdds, sharingPolicies
+        case sharedByDefault, ageGroups, activityAdds, sharingPolicies, eligibility
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         sharedByDefault = try container.decode([String].self, forKey: .sharedByDefault)
-        skipForYoungChildren = try container.decode([String].self, forKey: .skipForYoungChildren)
-        skipForInfantsAndToddlers = try container.decodeIfPresent([String].self, forKey: .skipForInfantsAndToddlers) ?? []
         ageGroups = try container.decode([String: AgeGroupRule].self, forKey: .ageGroups)
         activityAdds = try container.decode([String: [String]].self, forKey: .activityAdds)
         sharingPolicies = try container.decode([String: SharingPolicyRule].self, forKey: .sharingPolicies)
+        eligibility = try container.decode(EligibilityRules.self, forKey: .eligibility)
     }
 }
 
 struct AgeGroupRule: Codable, Sendable {
     var add: [String]
     var candidates: [String: [String]]
-    var skipAdultClothing: Bool
     var quantityMultipliers: [String: Double]
 
     enum CodingKeys: String, CodingKey {
-        case add, candidates, skipAdultClothing, quantityMultipliers
+        case add, candidates, quantityMultipliers
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         add = try container.decodeIfPresent([String].self, forKey: .add) ?? []
         candidates = try container.decodeIfPresent([String: [String]].self, forKey: .candidates) ?? [:]
-        skipAdultClothing = try container.decodeIfPresent(Bool.self, forKey: .skipAdultClothing) ?? false
         quantityMultipliers = try container.decodeIfPresent([String: Double].self, forKey: .quantityMultipliers) ?? [:]
     }
 }

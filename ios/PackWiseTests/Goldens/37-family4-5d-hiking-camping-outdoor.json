@@ -53,6 +53,65 @@
       "suppressed" : "footwear.walking_shoes"
     }
   ],
+  "eligibility" : [
+    {
+      "items" : [
+        "documents.id",
+        "essentials.keys",
+        "essentials.wallet",
+        "health.blister_pads",
+        "health.pain_reliever",
+        "toiletries.deodorant"
+      ],
+      "owner" : "child",
+      "reason" : "adult_or_teen_only",
+      "result" : "ineligible"
+    },
+    {
+      "items" : [
+        "electronics.phone_charger",
+        "essentials.phone"
+      ],
+      "owner" : "child",
+      "reason" : "device_signal_required",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "documents.id",
+        "essentials.keys",
+        "essentials.wallet",
+        "health.blister_pads",
+        "health.pain_reliever",
+        "toiletries.deodorant"
+      ],
+      "owner" : "child-2",
+      "reason" : "adult_or_teen_only",
+      "result" : "ineligible"
+    },
+    {
+      "items" : [
+        "activities.daypack",
+        "hydration.water_bottle",
+        "miscellaneous.flashlight",
+        "travel_comfort.compression_packing",
+        "travel_comfort.laundry_bag",
+        "travel_comfort.toiletry_bag"
+      ],
+      "owner" : "child-2",
+      "reason" : "not_for_age_group",
+      "result" : "ineligible"
+    },
+    {
+      "items" : [
+        "electronics.phone_charger",
+        "essentials.phone"
+      ],
+      "owner" : "child-2",
+      "reason" : "device_signal_required",
+      "result" : "requiresExplicitSignal"
+    }
+  ],
   "engineVersion" : "v2",
   "fixture" : "37-family4-5d-hiking-camping-outdoor",
   "items" : [
@@ -344,148 +403,6 @@
       ]
     },
     {
-      "canonicalItemID" : "electronics.earbuds_case",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Earbuds",
-      "importance" : "normal",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "ageGroup" : "child",
-            "name" : "Child"
-          },
-          "reasonCode" : "party.age_group",
-          "sourceSignals" : [
-            "party"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Suggested for Child (child).",
-      "reasonArguments" : {
-        "ageGroup" : "child",
-        "name" : "Child"
-      },
-      "reasonCode" : "party.age_group",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "party"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.phone_charger",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Phone charger",
-      "importance" : "important",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.electronics",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Dead batteries cut days short.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.electronics",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "essentials.keys",
-      "carrier" : "primary",
-      "category" : "essentials",
-      "displayName" : "Keys",
-      "importance" : "critical",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.essentials",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "The pocket check before you head out.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.essentials",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "essentials.phone",
-      "carrier" : "primary",
-      "category" : "essentials",
-      "displayName" : "Phone",
-      "importance" : "critical",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.essentials",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "The pocket check before you head out.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.essentials",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "essentials.sunglasses",
       "carrier" : "primary",
       "category" : "essentials",
@@ -518,41 +435,6 @@
       ],
       "signals" : [
         "weather"
-      ]
-    },
-    {
-      "canonicalItemID" : "essentials.wallet",
-      "carrier" : "primary",
-      "category" : "essentials",
-      "displayName" : "Wallet",
-      "importance" : "critical",
-      "owner" : "child",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.essentials",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "The pocket check before you head out.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.essentials",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
       ]
     },
     {
@@ -992,52 +874,6 @@
       ]
     },
     {
-      "canonicalItemID" : "activities.daypack",
-      "carrier" : "primary",
-      "category" : "activities",
-      "displayName" : "Daypack",
-      "importance" : "important",
-      "owner" : "child-2",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Yellowstone"
-          },
-          "reasonCode" : "activity.hiking",
-          "sourceSignals" : [
-            "activity"
-          ]
-        },
-        {
-          "reasonArguments" : {
-            "tripType" : "outdoor"
-          },
-          "reasonCode" : "trip_type.generic",
-          "sourceSignals" : [
-            "tripType"
-          ],
-          "tripType" : "outdoor"
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Hiking is on your plans.",
-      "reasonArguments" : {
-        "destination" : "Yellowstone"
-      },
-      "reasonCode" : "activity.hiking",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity",
-        "tripType"
-      ]
-    },
-    {
       "canonicalItemID" : "clothing.pants",
       "carrier" : "primary",
       "category" : "clothing",
@@ -1293,41 +1129,6 @@
       ]
     },
     {
-      "canonicalItemID" : "electronics.phone_charger",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Phone charger",
-      "importance" : "important",
-      "owner" : "child-2",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.electronics",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Dead batteries cut days short.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.electronics",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "essentials.sunglasses",
       "carrier" : "primary",
       "category" : "essentials",
@@ -1396,52 +1197,6 @@
       ],
       "signals" : [
         "activity"
-      ]
-    },
-    {
-      "canonicalItemID" : "hydration.water_bottle",
-      "carrier" : "primary",
-      "category" : "essentials",
-      "displayName" : "Water bottle",
-      "importance" : "normal",
-      "owner" : "child-2",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Yellowstone"
-          },
-          "reasonCode" : "activity.hiking",
-          "sourceSignals" : [
-            "activity"
-          ]
-        },
-        {
-          "reasonArguments" : {
-            "tripType" : "outdoor"
-          },
-          "reasonCode" : "trip_type.generic",
-          "sourceSignals" : [
-            "tripType"
-          ],
-          "tripType" : "outdoor"
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Hiking is on your plans.",
-      "reasonArguments" : {
-        "destination" : "Yellowstone"
-      },
-      "reasonCode" : "activity.hiking",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity",
-        "tripType"
       ]
     },
     {
@@ -1591,41 +1346,6 @@
       ],
       "signals" : [
         "party"
-      ]
-    },
-    {
-      "canonicalItemID" : "miscellaneous.flashlight",
-      "carrier" : "primary",
-      "category" : "miscellaneous",
-      "displayName" : "Small flashlight",
-      "importance" : "optional",
-      "owner" : "child-2",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Yellowstone"
-          },
-          "reasonCode" : "activity.camping",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You're camping on this trip.",
-      "reasonArguments" : {
-        "destination" : "Yellowstone"
-      },
-      "reasonCode" : "activity.camping",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
       ]
     },
     {

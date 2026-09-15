@@ -444,16 +444,18 @@ struct PackingEngineTests {
     }
 
     @Test func schoolAgeChildKeepsCarryablesButNotAdultCareItems() throws {
-        // A school-age child plausibly has headphones, a book, and their own
-        // packing organizers; deodorant, adult pain relief, and a photo ID
-        // stay off the list.
+        // A school-age child plausibly has a book and their own packing
+        // organizers; deodorant, adult pain relief, and a photo ID stay off
+        // the list. Product Experience V2, Task 6: headphones are a personal
+        // device, and age alone is not evidence a child owns one — this test
+        // previously required them.
         let adult = Traveler.primarySelf()
         let child = Traveler(name: "Sam", role: .child, ageGroup: .child)
         var ctx = context(destination: try destination("Chicago"), days: 7, type: .vacation, bag: .checked, style: .balanced, chips: [], laundry: .none)
         ctx.party = TripParty(travelMode: .family, travelers: [adult, child])
         let items = try makeEngine().generate(context: ctx)
         let childIDs = Set(items.filter { $0.travelerID == child.id }.map(\.canonicalItemID))
-        #expect(childIDs.contains("electronics.headphones"))
+        #expect(!childIDs.contains("electronics.headphones"))
         #expect(childIDs.contains("travel_comfort.book"))
         #expect(!childIDs.contains("toiletries.deodorant"))
         #expect(!childIDs.contains("health.pain_reliever"))

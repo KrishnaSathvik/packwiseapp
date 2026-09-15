@@ -700,6 +700,15 @@ struct GoldenEngineTests {
         var selectedBags: [String]
     }
 
+    /// Candidates a traveler did not receive because traveler eligibility
+    /// ruled them out (Product Experience V2, Task 6). Absent when none.
+    struct GoldenEligibilityEntry: Codable {
+        var owner: String
+        var result: String
+        var reason: String
+        var items: [String]
+    }
+
     /// The generation's one normalized luggage decision, recorded even when
     /// nothing was trimmed.
     struct GoldenLuggage: Codable {
@@ -714,6 +723,7 @@ struct GoldenEngineTests {
         var items: [GoldenItem]
         var coverage: [GoldenCoverageEntry]?
         var constraints: [GoldenConstraintEntry]?
+        var eligibility: [GoldenEligibilityEntry]?
         var luggage: GoldenLuggage
     }
 
@@ -808,6 +818,20 @@ struct GoldenEngineTests {
                 .sorted {
                     if $0.owner != $1.owner { return $0.owner < $1.owner }
                     return $0.constraint < $1.constraint
+                },
+            eligibility: generation.eligibilityDecisions.isEmpty ? nil : generation.eligibilityDecisions
+                .map { entry in
+                    GoldenEligibilityEntry(
+                        owner: entry.travelerID.flatMap { slugs[$0] } ?? "primary",
+                        result: entry.result.rawValue,
+                        reason: entry.reason,
+                        items: entry.items
+                    )
+                }
+                .sorted {
+                    if $0.owner != $1.owner { return $0.owner < $1.owner }
+                    if $0.result != $1.result { return $0.result < $1.result }
+                    return $0.reason < $1.reason
                 },
             luggage: GoldenLuggage(
                 capacity: generation.luggage.capacity.rawValue,

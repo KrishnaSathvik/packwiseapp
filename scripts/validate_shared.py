@@ -109,6 +109,99 @@ def load(path: Path):
     return json.loads(path.read_text())
 
 
+ELIGIBILITY_FAMILIES = {
+    "universal", "adultOrTeen", "ageSpecific", "explicitChildNeed",
+    "deviceSignalRequired", "travelerSignalRequired", "travelerDocument",
+}
+RETIRED_PARTY_KEYS = ("skipForYoungChildren", "skipForInfantsAndToddlers")
+
+
+def eligibility_eligible(entry: dict, age: str, needs: set, chips: set) -> bool:
+    """Mirror of TravelerEligibilityResolver for rule-consistency checks only."""
+    adult_or_teen = age in ("adult", "teen")
+    family = entry["family"]
+    if family == "universal":
+        return True
+    if family == "adultOrTeen":
+        return adult_or_teen
+    if family == "ageSpecific":
+        return age in entry["ageGroups"]
+    if family == "explicitChildNeed":
+        return entry["need"] in needs
+    if family == "deviceSignalRequired":
+        return adult_or_teen or (entry.get("signal") is not None and entry["signal"] in chips)
+    if family == "travelerSignalRequired":
+        return entry["signal"] in chips
+    if family == "travelerDocument":
+        return entry["travelers"] == "all" or adult_or_teen
+    return False
+
+
+def eligibility_errors(party: dict, catalog: set, chip_names: set) -> list:
+    """Task 6: every catalog item carries closed eligibility metadata, and the
+    age-group rules never contradict it. Missing metadata fails here rather
+    than defaulting permissively."""
+    errors = []
+    for key in RETIRED_PARTY_KEYS:
+        if key in party:
+            errors.append(f"party.json retired key {key}: eligibility replaces it")
+    for age, body in party["ageGroups"].items():
+        if "skipAdultClothing" in body:
+            errors.append(f"party age {age}: retired skipAdultClothing")
+    table = party.get("eligibility")
+    if not isinstance(table, dict):
+        return errors + ["party.json missing eligibility"]
+    for item_id in sorted(catalog - set(table)):
+        errors.append(f"eligibility missing for {item_id}")
+    for item_id, entry in sorted(table.items()):
+        if item_id not in catalog:
+            errors.append(f"eligibility for unknown item {item_id}")
+        family = entry.get("family")
+        if family not in ELIGIBILITY_FAMILIES:
+            errors.append(f"eligibility {item_id}: unknown family {family}")
+            continue
+        allowed = {"family"} | {
+            "ageSpecific": {"ageGroups"}, "explicitChildNeed": {"need"},
+            "deviceSignalRequired": {"signal"}, "travelerSignalRequired": {"signal"},
+            "travelerDocument": {"travelers"},
+        }.get(family, set())
+        if extra := set(entry) - allowed:
+            errors.append(f"eligibility {item_id}: unexpected keys {sorted(extra)}")
+        if family == "ageSpecific" and (not entry.get("ageGroups") or set(entry["ageGroups"]) - set(AGE_GROUPS)):
+            errors.append(f"eligibility {item_id}: bad ageGroups {entry.get('ageGroups')}")
+        if family == "explicitChildNeed" and entry.get("need") not in CHILD_NEEDS:
+            errors.append(f"eligibility {item_id}: unknown need {entry.get('need')}")
+        if family == "travelerSignalRequired" and entry.get("signal") not in chip_names:
+            errors.append(f"eligibility {item_id}: unknown signal {entry.get('signal')}")
+        if family == "deviceSignalRequired" and "signal" in entry and entry["signal"] not in chip_names:
+            errors.append(f"eligibility {item_id}: unknown signal {entry.get('signal')}")
+        if family == "travelerDocument" and entry.get("travelers") not in ("all", "adultOrTeen"):
+            errors.append(f"eligibility {item_id}: unknown travelers {entry.get('travelers')}")
+        if family == "travelerDocument" and not item_id.startswith("documents."):
+            errors.append(f"eligibility {item_id}: travelerDocument outside documents")
+    # Sensitive families must never be classified permissively.
+    for item_id in sorted(table):
+        if item_id.startswith("kids.") and table[item_id].get("family") in ("universal", "adultOrTeen"):
+            errors.append(f"eligibility {item_id}: child item classified {table[item_id]['family']}")
+    for item_id in ("health.daily_medication", "toiletries.contacts_solution", "electronics.phone_charger", "electronics.laptop"):
+        if table.get(item_id, {}).get("family") in ("universal", "ageSpecific"):
+            errors.append(f"eligibility {item_id}: sensitive item classified permissively")
+    for item_id in sorted(i for i in catalog if i.startswith("documents.")):
+        if table.get(item_id, {}).get("family") == "ageSpecific":
+            errors.append(f"eligibility {item_id}: documents are never filtered by category-wide age rules")
+    # Age-group rules must agree with the authority.
+    for age, body in party["ageGroups"].items():
+        for item_id in body.get("add", []):
+            if item_id in table and not eligibility_eligible(table[item_id], age, set(), set()):
+                errors.append(f"party age {age} adds {item_id} its eligibility forbids")
+        for need, refs in body.get("candidates", {}).items():
+            for item_id in refs:
+                entry = table.get(item_id, {})
+                if entry and (eligibility_eligible(entry, age, set(), set()) or not eligibility_eligible(entry, age, {need}, set())):
+                    errors.append(f"party candidate {age}.{need} {item_id} does not require exactly that need")
+    return errors
+
+
 def main() -> int:
     items = []
     for path in sorted((SHARED / "catalog").glob("*.json")):
@@ -154,7 +247,6 @@ def main() -> int:
     party = load(SHARED / "rules" / "party.json")
     for label, refs in [
         ("party shared", party["sharedByDefault"]),
-        ("party skip", party["skipForYoungChildren"]),
     ]:
         if missing := check(label, refs):
             errors.append(f"{label}: {missing}")
@@ -170,6 +262,7 @@ def main() -> int:
     for item_id in party.get("sharingPolicies", {}):
         if item_id not in catalog:
             errors.append(f"party policy unknown {item_id}")
+    errors.extend(eligibility_errors(party, set(catalog), set(base["context_chips"])))
 
     for item in items:
         if item["quantity_kind"] not in quantity_kinds:

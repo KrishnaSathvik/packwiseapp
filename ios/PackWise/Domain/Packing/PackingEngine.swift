@@ -8,6 +8,10 @@ struct EngineGeneration: Sendable {
     var items: [PackingItemDraft]
     var coverageSuppressions: [CoverageSuppression]
     var constraintDecisions: [ConstraintDecision]
+    /// Candidates a traveler did not receive because
+    /// `TravelerEligibilityResolver` ruled them out (Product Experience V2,
+    /// Task 6). Audit evidence only — never customer prose.
+    var eligibilityDecisions: [EligibilityLedgerEntry]
     /// The one normalized luggage decision this generation ran under —
     /// recorded even when it trimmed nothing, so "checked capacity, no trim
     /// applied" is evidence rather than an absence. Items it didn't affect
@@ -23,6 +27,10 @@ struct EngineGeneration: Sendable {
 /// Raw constraint drops collected during resolution, aggregated into
 /// `ConstraintDecision` records at the end of a generation.
 typealias ConstraintDrops = [(travelerID: UUID?, canonicalItemID: String, key: String)]
+
+/// Raw eligibility rulings that removed a candidate, aggregated into
+/// `EligibilityLedgerEntry` records at the end of a generation.
+typealias EligibilityDrops = [(travelerID: UUID?, canonicalItemID: String, decision: EligibilityDecision)]
 
 struct PackingEngine: Sendable {
     var catalog: PackingCatalog
@@ -64,6 +72,7 @@ struct PackingEngine: Sendable {
             },
             coverageSuppressions: generated.suppressions,
             constraintDecisions: ConstraintResolver.decisions(from: generated.drops, luggage: snapshot.luggage),
+            eligibilityDecisions: EligibilityLedgerEntry.entries(from: generated.ineligible),
             luggage: snapshot.luggage,
             contextDiagnostics: snapshot.diagnostics
         )
@@ -133,9 +142,18 @@ struct PackingEngine: Sendable {
         snapshot: TripContextSnapshot,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
-    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
+    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops, ineligible: EligibilityDrops) {
         var drops: ConstraintDrops = []
-        let suggestions = ruleSuggestions(for: context, snapshot: snapshot)
+        var ineligible: EligibilityDrops = []
+        let primary = context.effectiveParty.primary
+        let suggestions = eligibleSuggestions(
+            ruleSuggestions(for: context, snapshot: snapshot),
+            for: primary,
+            signals: travelerChips(primary, context: context),
+            existingKey: { "canonical:\($0)" },
+            existing: existing,
+            ineligible: &ineligible
+        )
         let resolved = resolve(
             suggestions: suggestions,
             context: context,
@@ -148,7 +166,7 @@ struct PackingEngine: Sendable {
         )
         let (covered, suppressions) = applyCoverage(resolved, snapshot: snapshot)
         let completed = addCompanions(covered, context: context, overrides: overrides)
-        return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops)
+        return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops, ineligible)
     }
 
     private func generateForParty(
@@ -156,8 +174,9 @@ struct PackingEngine: Sendable {
         snapshot: TripContextSnapshot,
         existing: [PackingItemDraft],
         overrides: [RecommendationOverrideDraft]
-    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops) {
+    ) -> (items: [PackingItemDraft], suppressions: [CoverageSuppression], drops: ConstraintDrops, ineligible: EligibilityDrops) {
         var drops: ConstraintDrops = []
+        var ineligible: EligibilityDrops = []
         let party = context.effectiveParty
         // Weather and trip-wide activity signals are computed once, then split
         // into personal vs shared effects so rain does not become 4 umbrellas.
@@ -177,9 +196,18 @@ struct PackingEngine: Sendable {
             addAgeGroupSuggestions(traveler, context: context, into: &collected)
             addPartyActivitySuggestions(traveler, context: context, into: &collected)
 
+            // Eligibility runs once per traveler, before sharing and quantity:
+            // a shared item exists only because some traveler was eligible.
+            let eligible = eligibleSuggestions(
+                Array(collected.values),
+                for: traveler,
+                signals: travelerChips(traveler, context: context),
+                existingKey: { recommendationKey(canonical: $0, ownership: .personal, travelerID: traveler.id) },
+                existing: existing,
+                ineligible: &ineligible
+            )
             var personal: [RuleSuggestion] = []
-            for suggestion in collected.values {
-                if shouldSkip(suggestion.canonicalItemID, for: traveler) { continue }
+            for suggestion in eligible {
                 if ConstraintResolver.sharingResolution(for: suggestion.canonicalItemID, rules: rules.party, context: context, party: party).isShared {
                     mergeSuggestion(suggestion, into: &sharedCollected)
                 } else {
@@ -214,7 +242,7 @@ struct PackingEngine: Sendable {
         result = result.filter { seen.insert($0.id).inserted }
         let (covered, suppressions) = applyCoverage(result, snapshot: snapshot)
         let completed = addCompanions(covered, context: context, overrides: overrides)
-        return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops)
+        return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops, ineligible)
     }
 
     private func tripWideContext(_ context: TripContext) -> TripContext {
@@ -283,13 +311,11 @@ struct PackingEngine: Sendable {
 
     private func addPartyActivitySuggestions(_ traveler: Traveler, context: TripContext, into collected: inout [String: RuleSuggestion]) {
         for activity in context.activities {
+            // Offered to every traveler; `TravelerEligibilityResolver` alone
+            // decides who may receive them.
             guard let ids = rules.party.activityAdds[activity] else { continue }
-            let matching = ids.filter { id in
-                guard let item = catalog.item(id: id) else { return false }
-                return item.tags.contains(traveler.ageGroup.rawValue) || item.tags.contains("shared_ok")
-            }
             addIDs(
-                matching,
+                ids,
                 signal: .party,
                 code: "party.age_group",
                 arguments: ["name": traveler.displayName, "ageGroup": traveler.ageGroup.title.lowercased()],
@@ -363,22 +389,38 @@ struct PackingEngine: Sendable {
         }
     }
 
-    private func shouldSkip(_ id: String, for traveler: Traveler) -> Bool {
-        let ageRule = rules.party.ageGroups[traveler.ageGroup.rawValue]
-        if rules.party.skipForYoungChildren.contains(id), traveler.ageGroup.isYoungChild {
-            return true
-        }
-        if rules.party.skipForInfantsAndToddlers.contains(id), traveler.ageGroup.skipsAdultPersonalEssentials {
-            return true
-        }
-        if ageRule?.skipAdultClothing == true, id.hasPrefix("clothing.") {
-            return true
-        }
-        if traveler.ageGroup.skipsAdultPersonalEssentials,
-           ["essentials.wallet", "essentials.phone", "essentials.keys", "essentials.home_keys", "essentials.watch"].contains(id) {
-            return true
-        }
-        return false
+    /// The one eligibility gate. A candidate the resolver rules out is
+    /// recorded and dropped — unless the traveler already has an explicit
+    /// user row for it (added or edited), which only `resolve` may keep:
+    /// eligibility governs generated recommendations, never user intent.
+    private func eligibleSuggestions(
+        _ suggestions: [RuleSuggestion],
+        for traveler: Traveler,
+        signals: Set<ContextChip>,
+        existingKey: (String) -> String,
+        existing: [PackingItemDraft],
+        ineligible: inout EligibilityDrops
+    ) -> [RuleSuggestion] {
+        let authorityKeys = Set(existing.filter(ConstraintResolver.hasUserAuthority).flatMap { draft -> [String] in
+            var keys = [draft.recommendationKey]
+            if let id = draft.canonicalItemID { keys.append("canonical:\(id)") }
+            return keys
+        })
+        return suggestions
+            .sorted { $0.canonicalItemID < $1.canonicalItemID }
+            .filter { suggestion in
+                let decision = TravelerEligibilityResolver.evaluate(
+                    canonicalItemID: suggestion.canonicalItemID,
+                    traveler: traveler,
+                    explicitNeeds: traveler.needs,
+                    signals: signals,
+                    catalog: catalog,
+                    rules: rules.party.eligibility
+                )
+                if decision.isEligible || authorityKeys.contains(existingKey(suggestion.canonicalItemID)) { return true }
+                ineligible.append((traveler.id, suggestion.canonicalItemID, decision))
+                return false
+            }
     }
 
     func interpretFreeTextActivities(_ note: String, selected: [String]) -> [String] {
