@@ -243,15 +243,15 @@ git commit -m "feat: model trip types as typed packing needs"
 - Consumes: `TripContext.tripTypes` and Task 3 contributions.
 - Produces: one candidate collection, combined structured provenance, stable context signatures, and coverage based on the full need set.
 
-- [ ] **Step 1: Add failing final-output tests for Vacation+Beach, Vacation+City Break+Beach, Business+City Break, Road Trip+Outdoor, Wedding/Event+Vacation, Festival+City Break, Visiting Family+Vacation, and Outdoor+Ski/Snow.** Assert no duplicate recommendation keys, baseline clothing is not multiplied, and expected capabilities remain covered.
+- [x] **Step 1: Add failing final-output tests for Vacation+Beach, Vacation+City Break+Beach, Business+City Break, Road Trip+Outdoor, Wedding/Event+Vacation, Festival+City Break, Visiting Family+Vacation, and Outdoor+Ski/Snow.** Assert no duplicate recommendation keys, baseline clothing is not multiplied, and expected capabilities remain covered.
 
-- [ ] **Step 2: Add trace assertions.** Walking shoes must retain City Break/Sightseeing/Walking facts when present; no trace may expose an invented primary trip type.
+- [x] **Step 2: Add trace assertions.** (2026-09-14: trace authority decided first, `dfd6e4f`; City Break's trace example uses the daypack, see the Task 4 record.) Walking shoes must retain City Break/Sightseeing/Walking facts when present; no trace may expose an invented primary trip type.
 
-- [ ] **Step 3: Replace the singular trip-type branch with contribution collection before candidate generation.** Merge provenance on an existing recommendation key instead of adding another row. Extend `CoverageResolver.needs` to consume normalized needs while retaining one greedy coverage pass.
+- [x] **Step 3: Replace the singular trip-type branch with contribution collection before candidate generation.** (`TripContext.tripType` deleted.) Merge provenance on an existing recommendation key instead of adding another row. Extend `CoverageResolver.needs` to consume normalized needs while retaining one greedy coverage pass.
 
-- [ ] **Step 4: Update weather/context signatures to sort trip types, run focused tests, and generate a semantic golden diff.** Record for every changed golden: added IDs, removed IDs, quantity changes, coverage suppressions, constraint decisions, and reason/provenance changes.
+- [x] **Step 4: Update weather/context signatures to sort trip types, run focused tests, and generate a semantic golden diff.** (Existing 38 unchanged; 10 combination fixtures reviewed against each member alone.) Record for every changed golden: added IDs, removed IDs, quantity changes, coverage suppressions, constraint decisions, and reason/provenance changes.
 
-- [ ] **Step 5: Commit only after the semantic diff matches the contract intent.**
+- [x] **Step 5: Commit only after the semantic diff matches the contract intent.** (`c11926a`; record `docs/plans/2026-09-14-product-v2-task-4-trip-type-composition.md`.)
 
 ```bash
 git add ios/PackWise/Domain/Packing/PackingEngine.swift ios/PackWise/Domain/Packing/CoverageResolver.swift \
