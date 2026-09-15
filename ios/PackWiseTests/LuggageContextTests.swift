@@ -154,4 +154,31 @@ struct LuggageContextTests {
             }
         }
     }
+
+    // MARK: - Single luggage authority
+
+    /// Structural guard: engine decision files never ask which bags were
+    /// selected, never promote a primary bag, and never name a bag case.
+    /// Only `LuggageContext.swift` interprets the set.
+    @Test func engineDecisionFilesNeverInterpretBagsDirectly() throws {
+        let packing = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("PackWise/Domain")
+        let files = [
+            "Packing/PackingEngine.swift", "Packing/ConstraintResolver.swift", "Packing/ClothingQuantity.swift",
+            "Packing/QuantityEngine.swift", "Packing/CareQuantity.swift", "Packing/CoverageResolver.swift",
+            "TripContextSnapshot.swift"
+        ]
+        let forbidden = [
+            #"bagTypes\.(contains|first|isDisjoint|count|intersection|sorted|filter|map)"#,
+            #"\.bagType\b"#, #"primaryBag"#, #"preferredBag"#,
+            #"\.(personalItem|carryOn|checked|backpack|notSure|roadTripLuggage)\b"#
+        ]
+        for file in files {
+            let source = try String(contentsOf: packing.appendingPathComponent(file), encoding: .utf8)
+            for pattern in forbidden {
+                #expect(source.range(of: pattern, options: .regularExpression) == nil, "\(file) matches \(pattern)")
+            }
+        }
+    }
 }

@@ -275,15 +275,15 @@ git commit -m "feat: compose multiple trip types in one packing plan"
 - Produces: `LuggageContext.resolve(_:)`, `LuggageContext.Capacity`, luggage-aware quantity/optional-item constraint inputs.
 - Rule: `.checkedAvailable` always defeats carry-on-only/personal-item-only trimming; style remains independent.
 
-- [ ] **Step 1: Write the complete luggage truth-table tests.** Cover empty, each single bag, Personal+Carry-on, Carry-on+Checked, Personal+Carry-on+Checked, Backpack+Checked, Backpack+Carry-on, and set-order determinism.
+- [x] **Step 1: Write the complete luggage truth-table tests.** (2026-09-14: all 16 subsets, `LuggageContextTests`.) Cover empty, each single bag, Personal+Carry-on, Carry-on+Checked, Personal+Carry-on+Checked, Backpack+Checked, Backpack+Carry-on, and set-order determinism.
 
-- [ ] **Step 2: Add behavioral tests.** The same prepared trip with Carry-on only may trim optional items; Carry-on+Checked must not emit a carry-on trim decision; Light+Checked may still reduce style-sensitive quantities.
+- [x] **Step 2: Add behavioral tests.** (`MultiBagEngineTests`, `ConstraintTests`, `ClothingQuantityTests`.) The same prepared trip with Carry-on only may trim optional items; Carry-on+Checked must not emit a carry-on trim decision; Light+Checked may still reduce style-sensitive quantities.
 
-- [ ] **Step 3: Run focused tests and verify failures on singular `BagType` APIs.**
+- [x] **Step 3: Run focused tests and verify failures on singular `BagType` APIs.**
 
-- [ ] **Step 4: Implement luggage derivation and change quantity/constraint APIs from `BagType` to `LuggageContext`.** Remove all branches where the mere presence of carry-on wins over checked. Keep transportation separate.
+- [x] **Step 4: Implement luggage derivation and change quantity/constraint APIs from `BagType` to `LuggageContext`.** Remove all branches where the mere presence of carry-on wins over checked. Keep transportation separate.
 
-- [ ] **Step 5: Update goldens/fixtures to `bagTypes`, record semantic diffs, run focused tests, and commit.**
+- [x] **Step 5: Update goldens/fixtures to `bagTypes`, record semantic diffs, run focused tests, and commit.** (`fe0895e`, trace evidence `42ea686`; record: `docs/plans/2026-09-14-product-v2-task-5-multi-bag-luggage.md`.)
 
 ```bash
 git add ios/PackWise/Domain/Packing/LuggageContext.swift ios/PackWise/Domain/Packing/PackingEngine.swift \
