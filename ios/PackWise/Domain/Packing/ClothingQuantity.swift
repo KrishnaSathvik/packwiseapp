@@ -6,7 +6,7 @@ import Foundation
 struct ClothingQuantityContext: Hashable, Sendable {
     var days: Int
     var style: PackingStyle
-    var bag: BagType
+    var luggage: LuggageContext
     var laundry: LaundryAccess
     var selectedActivityIDs: Set<String>
     var datedActivityUses: [String: Int]
@@ -15,7 +15,7 @@ struct ClothingQuantityContext: Hashable, Sendable {
     init(
         days: Int,
         style: PackingStyle,
-        bag: BagType,
+        luggage: LuggageContext,
         laundry: LaundryAccess,
         selectedActivityIDs: Set<String>,
         datedActivityUses: [String: Int],
@@ -23,7 +23,7 @@ struct ClothingQuantityContext: Hashable, Sendable {
     ) {
         self.days = max(1, days)
         self.style = style
-        self.bag = bag
+        self.luggage = luggage
         self.laundry = laundry
         self.selectedActivityIDs = selectedActivityIDs
         self.datedActivityUses = datedActivityUses
@@ -33,7 +33,7 @@ struct ClothingQuantityContext: Hashable, Sendable {
     init(snapshot: TripContextSnapshot) {
         days = snapshot.durationDays
         style = snapshot.packingStyle
-        bag = snapshot.bagType
+        luggage = snapshot.luggage
         laundry = snapshot.laundryPlan
         selectedActivityIDs = Set(snapshot.knownActivityIDs)
         datedActivityUses = snapshot.knownDatedActivityUses
@@ -106,9 +106,9 @@ struct ClothingNeedPolicy: Sendable {
     var minimum: Int
     /// No-laundry growth stops here even with unlimited space.
     var styleMaximum: [PackingStyle: Int]
-    /// Binding cap for carry-on and backpack.
+    /// Binding cap for compact, carry-on constrained, and moderate capacity.
     var constrainedBagMaximum: Int
-    /// Binding cap for a personal item only.
+    /// Binding cap for very constrained capacity (a personal item alone).
     var personalItemMaximum: Int
     /// Formal tops satisfy some of this need's uses: a five-day business
     /// trip with two dress shirts needs daily tops for the remaining days,
@@ -342,7 +342,7 @@ struct ClothingQuantityEngine: Sendable {
             policy,
             days: context.durationDays,
             style: context.packingStyle,
-            bag: context.bagType,
+            luggage: context.luggage,
             laundry: context.laundryPlan,
             formalTopUnits: formalTopUnits
         )
@@ -352,7 +352,7 @@ struct ClothingQuantityEngine: Sendable {
         _ policy: ClothingNeedPolicy,
         days: Int,
         style: PackingStyle,
-        bag: BagType,
+        luggage: LuggageContext,
         laundry: LaundryAccess,
         formalTopUnits: Int = 0
     ) -> Int {
@@ -364,7 +364,7 @@ struct ClothingQuantityEngine: Sendable {
         let context = ClothingQuantityContext(
             days: days,
             style: style,
-            bag: bag,
+            luggage: luggage,
             laundry: laundry,
             selectedActivityIDs: selectedActivityIDs,
             datedActivityUses: [:],
@@ -448,13 +448,19 @@ struct ClothingQuantityEngine: Sendable {
     ) -> (value: Int, laundryReduced: Bool, styleBuffer: Int, bagCap: Int?, bagCapApplied: Bool) {
         let style = context.style
         var cap = policy.styleMaximum[style] ?? Int.max
+        // Capacity, never the number or identity of selected bags, sets the
+        // cap: more bags never mean more clothes.
         var bagCap: Int?
-        if policy.influences.contains(.bag), context.bag == .personalItem {
-            bagCap = policy.personalItemMaximum
-            cap = min(cap, policy.personalItemMaximum)
-        } else if policy.influences.contains(.bag), context.bag.isSpaceConstrained {
-            bagCap = policy.constrainedBagMaximum
-            cap = min(cap, policy.constrainedBagMaximum)
+        if policy.influences.contains(.bag) {
+            switch context.luggage.capacity {
+            case .veryConstrained:
+                bagCap = policy.personalItemMaximum
+            case .compact, .carryOnConstrained, .moderate:
+                bagCap = policy.constrainedBagMaximum
+            case .unspecified, .checkedAvailable:
+                bagCap = nil
+            }
+            if let bagCap { cap = min(cap, bagCap) }
         }
         let base: Int
         if !policy.influences.contains(.laundry) {

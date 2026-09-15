@@ -1,5 +1,5 @@
 {
-  "comment": "Product Experience V2 multi-value trip contexts (Task 15). Intelligence API TripContextDTO shape with tripTypes/bagTypes in stable canonical order. The six trip-type combinations now have engine behavior (Task 4) reviewed through golden fixtures 39-48; the four bag combinations stay contract-only until Task 5 gives multi-bag luggage semantics and its reviewed expectations.",
+  "comment": "Product Experience V2 multi-value trip contexts (Task 15). Intelligence API TripContextDTO shape with tripTypes/bagTypes in stable canonical order. The six trip-type combinations now have engine behavior (Task 4) reviewed through golden fixtures 39-48; the four bag combinations have multi-bag luggage behavior (Task 5) reviewed through golden fixtures 49-52.",
   "contexts": [
     {
       "id": "vacation-beach",

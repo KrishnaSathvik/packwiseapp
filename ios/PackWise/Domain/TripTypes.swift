@@ -128,15 +128,6 @@ enum BagType: String, Codable, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    var appliesBagConstraint: Bool { self != .notSure }
-
-    var isSpaceConstrained: Bool {
-        switch self {
-        case .personalItem, .carryOn, .backpack: true
-        case .checked, .roadTripLuggage, .notSure: false
-        }
-    }
-
     /// The four V2 physical bags, in the one true persistence/API/signature
     /// order. `.notSure` and `.roadTripLuggage` remain declared cases for
     /// existing non-V2 call sites (default preferences, legacy pickers) but
@@ -425,14 +416,6 @@ struct TripContext: Hashable, Sendable {
     var weather: TripWeatherContext?
     var preferences: TravelerPreferences
     var party: TripParty = .solo()
-
-    /// TEMPORARY engine compatibility accessor — Task 5's `LuggageContext`
-    /// replaces every reader. A singleton resolves to its bag; empty or
-    /// multi-bag fails safe to `.notSure` (no bag constraint).
-    var bagType: BagType {
-        guard bagTypes.count == 1, let only = bagTypes.first else { return .notSure }
-        return only
-    }
 
     var effectiveParty: TripParty {
         party.travelers.isEmpty ? .solo() : party

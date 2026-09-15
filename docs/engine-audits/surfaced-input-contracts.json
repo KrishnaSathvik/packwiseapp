@@ -173,10 +173,17 @@
       "id": "backpack",
       "exposed": true,
       "engineContract": "deterministic",
-      "fixtureIDs": [],
+      "fixtureIDs": [
+        "52-v2-bags-checked-backpack-reykjavik"
+      ],
       "iconContract": "backpack",
       "ownerScope": "trip",
-      "note": "BagType.isSpaceConstrained groups backpack with carryOn (same trim/cap path in ConstraintResolver.optionalRuling and ClothingQuantityEngine), but no golden fixture sets bag=backpack; deterministic and currently untested."
+      "testIDs": [
+        "LuggageContextTests.swift::everyBagSubsetResolvesToItsApprovedCapacity",
+        "MultiBagEngineTests.swift::backpackPlusCarryOnIsModerateCapacity",
+        "MultiBagEngineTests.swift::backpackPlusCheckedIsCheckedCapacity"
+      ],
+      "note": "Product Experience V2 Task 5: resolves through LuggageContext — alone or with a personal item it is compact capacity (the same Light trim and constrained clothing cap as carry-on), with a carry-on it is moderate, and beside a checked bag it never lowers checked capacity (fixture 52). No golden sets a backpack alone; the truth-table and engine tests cover it."
     },
     {
       "kind": "bagType",
@@ -190,7 +197,7 @@
         "TripContextCollectionsTests.swift::legacyRoadTripLuggageBagValueNormalizesToEmptySetAndNeverInfersRoadTrip",
         "StoreHistoryTests.swift::aV2StoreUpgradesAndRoadTripLuggageNeverBecomesRoadTrip"
       ],
-      "note": "Legacy-only since Product Experience V2 Task 15: not a V2 bag value. Every boundary normalizes it to the empty bag set (no luggage constraint) and never infers Road Trip; golden fixtures 18/28/29 that used it now carry bagTypes []. Before V2 it already changed no engine output (appliesBagConstraint without isSpaceConstrained applies no trim), so it is contextOnly, not deterministic. Still offered by the single-select setup and Me pickers until Task 8 replaces them."
+      "note": "Legacy-only since Product Experience V2 Task 15: not a V2 bag value. Every boundary normalizes it to the empty bag set (no luggage constraint) and never infers Road Trip; golden fixtures 18/28/29 that used it now carry bagTypes []. Before V2 it already changed no engine output (it applied no space constraint), and LuggageContext.resolve drops it from the bag set, so it is contextOnly, not deterministic. Still offered by the single-select setup and Me pickers until Task 8 replaces them."
     },
     {
       "kind": "bagType",

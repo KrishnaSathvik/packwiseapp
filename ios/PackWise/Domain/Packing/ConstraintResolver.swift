@@ -28,7 +28,7 @@ struct ConstraintDecision: Hashable, Sendable {
 /// says bring extras, a personal item says there's no room — the resolver
 /// decides explicitly and the decision is recorded.
 enum ConstraintResolver {
-    /// Optional items carrying these tags survive a space-constrained bag:
+    /// Optional items carrying these tags survive constrained luggage:
     /// they're small or they matter more than space.
     static let essentialOptionalTags: Set<String> = ["base", "rain", "cold", "medication"]
 
@@ -49,13 +49,17 @@ enum ConstraintResolver {
         var wouldTrimUnderKey: String? = nil
     }
 
-    /// Whether an optional item survives the bag/style combination.
+    /// Whether an optional item survives the luggage capacity and style.
     ///
-    /// A personal item can't fit optional extras regardless of style — and
-    /// when the style is Prepared, that's a genuine conflict (Prepared says
-    /// bring backups; the bag says there's no room), resolved in the bag's
-    /// favor and recorded under its own key. Carry-on and backpack only trim
-    /// when packing light; checked and road-trip luggage never trim.
+    /// Reads the resolved `LuggageContext` capacity only, never the selected
+    /// bags (Product Experience V2, Task 5). Very constrained capacity (a
+    /// personal item alone) can't fit optional extras regardless of style —
+    /// and when the style is Prepared, that's a genuine conflict (Prepared
+    /// says bring backups; capacity says there's no room), resolved in
+    /// capacity's favor and recorded under its own key. Compact, carry-on
+    /// constrained, and moderate capacity only trim when packing light.
+    /// Unspecified and checked-available capacity never trim, so a checked
+    /// bag defeats every trim whatever else is selected.
     ///
     /// The would-be conflict key is computed *before* the essential-tag
     /// check (not just on the non-protected path) so a trace can answer
@@ -65,20 +69,20 @@ enum ConstraintResolver {
     static func optionalRuling(
         importance: ItemImportance,
         tags: [String],
-        bag: BagType,
+        luggage: LuggageContext,
         style: PackingStyle
     ) -> OptionalRuling {
-        guard importance == .optional,
-              bag.appliesBagConstraint, bag.isSpaceConstrained else {
+        guard importance == .optional, luggage.appliesCapacityConstraint else {
             return OptionalRuling(keep: true, conflictKey: nil, wasConstraintLive: false, essentialTagProtected: false, wouldTrimUnderKey: nil)
         }
-        let wouldBeKey: String? = {
-            if bag == .personalItem {
-                return style == .prepared ? "style.prepared_vs_personal_item" : "bag.personal_item"
-            }
-            if style == .light { return "bag.space_constrained" }
-            return nil
-        }()
+        let wouldBeKey: String? = switch luggage.capacity {
+        case .veryConstrained:
+            style == .prepared ? "style.prepared_vs_personal_item" : "bag.personal_item"
+        case .compact, .carryOnConstrained, .moderate:
+            style == .light ? "bag.space_constrained" : nil
+        case .unspecified, .checkedAvailable:
+            nil  // unreachable: the guard above already returned
+        }
         let isEssentialOptional = tags.contains { essentialOptionalTags.contains($0) }
         if isEssentialOptional {
             return OptionalRuling(keep: true, conflictKey: nil, wasConstraintLive: true, essentialTagProtected: true, wouldTrimUnderKey: wouldBeKey)

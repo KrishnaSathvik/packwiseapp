@@ -307,7 +307,7 @@ struct PackingEngine: Sendable {
         let fact = fact ?? RecommendationProvenance(reasonCode: code, reasonArguments: arguments, sourceSignals: [signal])
         for id in ids {
             guard let item = catalog.item(id: id) else { continue }
-            if item.travelRestrictionReviewRequired && context.bagType.isSpaceConstrained { continue }
+            if item.travelRestrictionReviewRequired && context.luggage.appliesCapacityConstraint { continue }
             let reason = render(code, arguments, category: item.category.rawValue, fallback: fallback)
             if var existing = collected[id] {
                 if !existing.signals.contains(signal) {
@@ -482,7 +482,7 @@ struct PackingEngine: Sendable {
 
         addWeather(context: context, snapshot: snapshot, into: &collected)
 
-        if context.bagType == .carryOn || context.bagType == .personalItem || context.transportation == .flight {
+        if snapshot.luggage.includesCabinBag || context.transportation == .flight {
             add(
                 ["travel_comfort.empty_security_bottle"],
                 signal: .tripType,
@@ -767,11 +767,12 @@ struct PackingEngine: Sendable {
             }
 
             guard let catalogItem = catalog.item(id: suggestion.canonicalItemID) else { continue }
-            if catalogItem.travelRestrictionReviewRequired && context.bagType.isSpaceConstrained { continue }
+            let luggage = context.luggage
+            if catalogItem.travelRestrictionReviewRequired && luggage.appliesCapacityConstraint { continue }
             let ruling = ConstraintResolver.optionalRuling(
                 importance: catalogItem.importance,
                 tags: catalogItem.tags,
-                bag: context.bagType,
+                luggage: luggage,
                 style: context.packingStyle
             )
             if !ruling.keep {

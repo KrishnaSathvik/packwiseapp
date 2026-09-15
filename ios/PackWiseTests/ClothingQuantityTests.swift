@@ -89,7 +89,7 @@ struct ClothingQuantityTests {
         ClothingQuantityContext(
             days: days,
             style: style,
-            bag: bag,
+            luggage: .resolve(Set([bag])),
             laundry: laundry,
             selectedActivityIDs: selectedActivityIDs,
             datedActivityUses: datedActivityUses,
@@ -307,12 +307,12 @@ struct ClothingQuantityTests {
         let tops = try #require(ClothingNeedPolicy.byKind["daily_top"])
         let socks = try #require(ClothingNeedPolicy.byKind["daily_socks"])
         #expect(
-            ClothingQuantityEngine.compute(tops, days: 5, style: .prepared, bag: .checked, laundry: .none, formalTopUnits: 10) == 2,
+            ClothingQuantityEngine.compute(tops, days: 5, style: .prepared, luggage: .resolve([.checked]), laundry: .none, formalTopUnits: 10) == 2,
             "any number of formal tops still leaves the floor of two daily tops"
         )
         #expect(
-            ClothingQuantityEngine.compute(socks, days: 5, style: .prepared, bag: .checked, laundry: .none, formalTopUnits: 10)
-                == ClothingQuantityEngine.compute(socks, days: 5, style: .prepared, bag: .checked, laundry: .none),
+            ClothingQuantityEngine.compute(socks, days: 5, style: .prepared, luggage: .resolve([.checked]), laundry: .none, formalTopUnits: 10)
+                == ClothingQuantityEngine.compute(socks, days: 5, style: .prepared, luggage: .resolve([.checked]), laundry: .none),
             "the offset applies only to the daily-top need"
         )
     }
@@ -403,7 +403,7 @@ struct ClothingQuantityTests {
         var cap = policy.styleMaximum[style] ?? Int.max
         if bag == .personalItem {
             cap = min(cap, policy.personalItemMaximum)
-        } else if bag.isSpaceConstrained {
+        } else if [BagType.carryOn, .backpack].contains(bag) {
             cap = min(cap, policy.constrainedBagMaximum)
         }
         return cap
@@ -707,5 +707,44 @@ struct ClothingQuantityTests {
 
         #expect(toddlerTop.quantityEvidence?.ageMultiplier == 1.75)
         #expect(toddlerTop.quantityEvidence?.quantity == toddlerTop.quantity)
+    }
+
+    // MARK: - Product Experience V2, Task 5: luggage capacity
+
+    /// Representative clothing on one 14-day no-laundry Miami trip (running,
+    /// swimming, beach days), Balanced. Carry-on + Checked sizes exactly like
+    /// Checked; quantities move only through the existing capacity caps, and
+    /// a second bag never adds clothes.
+    @Test func representativeClothingFollowsCapacityNotBagCount() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let destination = try #require(try SharedLibrary.testDestinations().first { $0.city == "Miami" })
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 7, day: 6))!
+        let end = Calendar.current.date(byAdding: .day, value: 13, to: start)!
+        func quantities(_ bags: Set<BagType>) -> [String: Int] {
+            let math = TripDateMath.daysAndNights(from: start, to: end)
+            let context = TripContext(
+                destination: destination, startDate: start, endDate: end,
+                durationDays: math.days, durationNights: math.nights,
+                tripTypes: [.beach], activities: ["running", "swimming", "beachDays"], datedActivities: [], bagTypes: bags,
+                packingStyle: .balanced, transportation: .unknown, laundryAccess: .none, travelerCount: 1,
+                userNotes: "", contextChips: [], weather: nil, preferences: .deviceDefaults()
+            )
+            return Dictionary(uniqueKeysWithValues: engine.generate(context: context)
+                .compactMap { item in item.canonicalItemID.map { ($0, item.quantity) } })
+        }
+        let ids = ["clothing.tshirt", "clothing.underwear", "clothing.socks", "clothing.pants",
+                   "clothing.sleepwear", "clothing.workout_top", "clothing.workout_bottom", "clothing.swimsuit"]
+        let expected: [Set<BagType>: [Int]] = [
+            [.carryOn]: [8, 10, 10, 5, 2, 4, 4, 2],
+            [.carryOn, .checked]: [12, 12, 12, 6, 2, 5, 5, 2],
+            [.personalItem]: [5, 7, 7, 3, 2, 2, 2, 2],
+            [.checked]: [12, 12, 12, 6, 2, 5, 5, 2]
+        ]
+        for (bags, values) in expected {
+            let actual = quantities(bags)
+            #expect(ids.map { actual[$0] ?? -1 } == values, "\(bags)")
+        }
+        #expect(quantities([.carryOn, .checked]) .filter { $0.key.hasPrefix("clothing.") }
+                == quantities([.checked]).filter { $0.key.hasPrefix("clothing.") })
     }
 }

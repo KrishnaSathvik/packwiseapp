@@ -373,7 +373,7 @@ struct ConstraintTests {
         let ruling = ConstraintResolver.optionalRuling(
             importance: .optional,
             tags: ["medication"],
-            bag: .personalItem,
+            luggage: .resolve([.personalItem]),
             style: .light
         )
         #expect(ruling.keep)
@@ -393,7 +393,10 @@ struct ConstraintTests {
         bag: BagType,
         style: PackingStyle
     ) -> (keep: Bool, conflictKey: String?) {
-        guard importance == .optional, bag.appliesBagConstraint, bag.isSpaceConstrained else {
+        // The pre-V2 singular bag semantics, spelled out here now that
+        // `BagType` no longer carries them.
+        let spaceConstrained = [BagType.personalItem, .carryOn, .backpack].contains(bag)
+        guard importance == .optional, spaceConstrained else {
             return (true, nil)
         }
         let isEssentialOptional = tags.contains { ConstraintResolver.essentialOptionalTags.contains($0) }
@@ -406,6 +409,9 @@ struct ConstraintTests {
         return (true, nil)
     }
 
+    /// Product Experience V2, Task 5: every single bag, legacy values
+    /// included, resolves through `LuggageContext` to exactly the pre-V2
+    /// singular ruling.
     @Test func optionalRulingReorderIsByteIdenticalOnKeepAndConflictKeyForEveryInput() {
         let tagSets: [[String]] = [[], ["medication"], ["rain"], ["cold"], ["base"], ["unrelated"], ["unrelated", "cold"]]
         for importance in ItemImportance.allCases {
@@ -413,7 +419,7 @@ struct ConstraintTests {
                 for style in PackingStyle.allCases {
                     for tags in tagSets {
                         let expected = referenceKeepAndConflictKey(importance: importance, tags: tags, bag: bag, style: style)
-                        let actual = ConstraintResolver.optionalRuling(importance: importance, tags: tags, bag: bag, style: style)
+                        let actual = ConstraintResolver.optionalRuling(importance: importance, tags: tags, luggage: .resolve([bag]), style: style)
                         #expect(actual.keep == expected.keep, "importance:\(importance) tags:\(tags) bag:\(bag) style:\(style)")
                         #expect(actual.conflictKey == expected.conflictKey, "importance:\(importance) tags:\(tags) bag:\(bag) style:\(style)")
                     }
@@ -845,5 +851,51 @@ struct ConstraintTests {
         #expect(normalized(first.items) == normalized(second.items))
         #expect(first.constraintDecisions == second.constraintDecisions)
         #expect(first.coverageSuppressions == second.coverageSuppressions)
+    }
+
+    // MARK: - Product Experience V2, Task 5: one luggage capacity
+
+    /// The same prepared trip: Carry-on alone may trim optionals under
+    /// Light; adding a checked bag must not emit a carry-on trim decision.
+    @Test func checkedBagBesideACarryOnEmitsNoCarryOnTrim() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Miami")
+        func generation(_ bags: Set<BagType>) -> EngineGeneration {
+            var ctx = context(destination: dest, days: 7, type: .beach, activities: ["swimming", "beachDays"], style: .light)
+            ctx.bagTypes = bags
+            return engine.generateDetailed(context: ctx)
+        }
+        let carryOn = generation([.carryOn])
+        #expect(carryOn.constraintDecisions.map(\.constraint) == ["bag.space_constrained"])
+
+        for bags: Set<BagType> in [[.carryOn, .checked], [.checked, .carryOn, .personalItem], [.backpack, .checked]] {
+            let roomy = generation(bags)
+            #expect(roomy.constraintDecisions.isEmpty, "\(bags): no trimmed-because-carry-on decision")
+            #expect(roomy.items.allSatisfy { $0.bagStyleConstraintFact == nil }, "\(bags): no fake constraint evidence")
+            // Trimming runs before coverage, so an item the carry-on trimmed
+            // returns either on the list or as a recorded coverage decision
+            // (flip-flops: sandals already cover the beach need).
+            let trimmed = Set(carryOn.constraintDecisions.flatMap(\.items))
+            let accounted = Set(roomy.items.compactMap(\.canonicalItemID)).union(roomy.coverageSuppressions.map(\.canonicalItemID))
+            #expect(trimmed.isSubset(of: accounted), "\(bags): the carry-on trims come back")
+        }
+    }
+
+    /// Constraints run once per generation, from one capacity: the decision
+    /// ledger for a multi-bag set equals the ledger of its resolved capacity's
+    /// representative single bag, never a union of per-bag ledgers.
+    @Test func multiBagConstraintsRunOnceFromTheResolvedCapacity() throws {
+        let engine = try makeEngine()
+        let dest = try destination("Miami")
+        func trims(_ bags: Set<BagType>, _ style: PackingStyle) -> [String] {
+            var ctx = context(destination: dest, days: 7, type: .beach, activities: ["swimming", "beachDays"], style: style)
+            ctx.bagTypes = bags
+            return engine.generateDetailed(context: ctx).constraintDecisions.map { "\($0.constraint):\($0.items)" }
+        }
+        for style in PackingStyle.allCases {
+            #expect(trims([.personalItem, .carryOn], style) == trims([.carryOn], style), "\(style)")
+            #expect(trims([.personalItem, .backpack], style) == trims([.backpack], style), "\(style)")
+            #expect(trims([.personalItem, .carryOn, .checked, .backpack], style).isEmpty, "\(style)")
+        }
     }
 }

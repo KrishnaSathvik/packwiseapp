@@ -751,6 +751,62 @@
       "style": "balanced",
       "laundry": "none",
       "homeCountryCode": "US"
+    },
+    {
+      "id": "49-v2-bags-personalitem-carryon-chicago",
+      "proves": "Personal item + Carry-on: carry-on constrained capacity — a personal item beside a carry-on never tightens to personal-item trimming",
+      "destination": "Chicago",
+      "weatherFixture": null,
+      "startDate": "2026-10-02",
+      "days": 3,
+      "tripTypes": ["cityBreak"],
+      "activities": ["sightseeing", "walking"],
+      "bagTypes": ["personalItem", "carryOn"],
+      "style": "light",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "50-v2-bags-carryon-checked-tokyo",
+      "proves": "Carry-on + Checked: checked capacity available — no carry-on trim, no carry-on clothing caps",
+      "destination": "Tokyo",
+      "weatherFixture": null,
+      "startDate": "2027-04-05",
+      "days": 10,
+      "tripTypes": ["vacation"],
+      "activities": ["walking", "shopping"],
+      "bagTypes": ["carryOn", "checked"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "51-v2-bags-personalitem-carryon-checked-paris",
+      "proves": "Personal item + Carry-on + Checked: checked capacity available whatever else is selected",
+      "destination": "Paris",
+      "weatherFixture": null,
+      "startDate": "2026-11-16",
+      "days": 9,
+      "tripTypes": ["vacation"],
+      "activities": ["museums", "niceDinner", "walking"],
+      "bagTypes": ["personalItem", "carryOn", "checked"],
+      "style": "balanced",
+      "laundry": "none",
+      "homeCountryCode": "US"
+    },
+    {
+      "id": "52-v2-bags-checked-backpack-reykjavik",
+      "proves": "Backpack + Checked: checked capacity available; the backpack never lowers capacity",
+      "destination": "Reykjavik",
+      "weatherFixture": null,
+      "startDate": "2026-10-12",
+      "days": 7,
+      "tripTypes": ["outdoor"],
+      "activities": ["hiking", "photography"],
+      "bagTypes": ["checked", "backpack"],
+      "style": "prepared",
+      "laundry": "none",
+      "homeCountryCode": "US"
     }
   ]
 }

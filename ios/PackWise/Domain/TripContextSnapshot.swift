@@ -24,7 +24,7 @@ enum ContextOutcome: Hashable, Sendable {
 
 /// One diagnostic entry per normalized field. `field` names the
 /// `TripContextSnapshot` property the diagnostic is about (e.g. "dates",
-/// "activities", "bagType", "laundry", "party", "weather"), so later
+/// "activities", "laundry", "party", "weather"), so later
 /// phases and the audit tooling can filter/report on exactly what changed.
 struct ContextDiagnostic: Hashable, Sendable {
     var field: String
@@ -67,11 +67,13 @@ struct TripContextSnapshot: Hashable, Sendable {
     /// surface, even though the engine itself can't act on it.
     var unknownActivityIDs: [String]
 
-    var bagType: BagType
-    /// `context.bagType.appliesBagConstraint` verbatim — `.notSure` applies
-    /// no bag constraint, and that is a valid, supported state, not a
-    /// fallback, so it never produces a diagnostic.
-    var appliesBagConstraint: Bool
+    /// Every selected physical bag, as the context carries it.
+    var bagTypes: Set<BagType>
+    /// The one normalized luggage interpretation (`LuggageContext.resolve`).
+    /// An empty set is "Not sure yet" — unspecified capacity, no constraint —
+    /// a valid, supported state, not a fallback, so it never produces a
+    /// diagnostic.
+    var luggage: LuggageContext
     /// Passed straight through — every `PackingStyle` case is a real, closed,
     /// supported enum case, so there is no "unknown packing style" the way
     /// there's an unknown free-text activity ID.
@@ -160,8 +162,8 @@ enum TripContextCompiler {
             knownActivityIDs: known,
             knownDatedActivityUses: datedUses,
             unknownActivityIDs: unknown,
-            bagType: context.bagType,
-            appliesBagConstraint: context.bagType.appliesBagConstraint,
+            bagTypes: context.bagTypes,
+            luggage: context.luggage,
             packingStyle: context.packingStyle,
             contextChips: context.contextChips,
             laundryPlan: laundry,

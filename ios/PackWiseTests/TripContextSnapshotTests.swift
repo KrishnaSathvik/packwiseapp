@@ -182,9 +182,10 @@ struct TripContextSnapshotTests {
         var context = baseContext()
         context.bagTypes = [] // "Not sure yet" is the empty bag set
         let snapshot = TripContextCompiler.compile(context, rules: try rules())
-        #expect(snapshot.bagType == .notSure)
-        #expect(snapshot.appliesBagConstraint == false)
-        #expect(!snapshot.diagnostics.contains { $0.field == "bagType" }) // notSure is valid, not a fallback
+        #expect(snapshot.bagTypes.isEmpty)
+        #expect(snapshot.luggage.capacity == .unspecified)
+        #expect(snapshot.luggage.appliesCapacityConstraint == false)
+        #expect(!snapshot.diagnostics.contains { $0.field.hasPrefix("bag") }) // not sure is valid, not a fallback
     }
 
     @Test func packingStylePassesThroughUnchanged() throws {

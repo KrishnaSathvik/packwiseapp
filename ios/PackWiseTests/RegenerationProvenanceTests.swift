@@ -64,14 +64,14 @@ struct RegenerationProvenanceTests {
             durationNights: ctx.durationNights,
             tripType: .other,
             activities: ctx.activities,
-            bagType: ctx.bagType,
+            bagType: .carryOn,  // the fixture context selects exactly [.carryOn]
             packingStyle: ctx.packingStyle
         )
         // The record's authoritative selection is the full set, not a scalar.
         trip.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON(ctx.tripTypes)
         modelContext.insert(trip)
         let repo = TripRepository(context: modelContext)
-        repo.attach(party: ctx.effectiveParty, bagType: ctx.bagType, on: trip)
+        repo.attach(party: ctx.effectiveParty, bagType: .carryOn, on: trip)
         return (repo, trip)
     }
 

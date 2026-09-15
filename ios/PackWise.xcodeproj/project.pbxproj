@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		446F0122E35543BA3CE97A67 /* MultiBagEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64496BF35AD21B89151BD9F8 /* MultiBagEngineTests.swift */; };
+		BB42FA337C3C48525909703F /* LuggageContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = F68424E3377CFB0517015578 /* LuggageContext.swift */; };
+		E359AE61FB181E2F81424786 /* LuggageContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 614696B5E80F76723E2E5CFA /* LuggageContextTests.swift */; };
 		4ED11CAAC0A7A8602F730298 /* TripTypeEngineCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78425FBB84935955536BAC30 /* TripTypeEngineCompositionTests.swift */; };
 		E40F90877ECD6E6F6D869AC2 /* RecommendationProvenanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E92963C40DD6C7ED5E85344 /* RecommendationProvenanceTests.swift */; };
 		388A50B374A78BA2D3234C35 /* TripTypeContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174A9ADD35A69392BDE10E2C /* TripTypeContracts.swift */; };
@@ -166,6 +169,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		64496BF35AD21B89151BD9F8 /* MultiBagEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiBagEngineTests.swift; sourceTree = "<group>"; };
+		F68424E3377CFB0517015578 /* LuggageContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LuggageContext.swift; sourceTree = "<group>"; };
+		614696B5E80F76723E2E5CFA /* LuggageContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LuggageContextTests.swift; sourceTree = "<group>"; };
 		78425FBB84935955536BAC30 /* TripTypeEngineCompositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripTypeEngineCompositionTests.swift; sourceTree = "<group>"; };
 		4E92963C40DD6C7ED5E85344 /* RecommendationProvenanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationProvenanceTests.swift; sourceTree = "<group>"; };
 		174A9ADD35A69392BDE10E2C /* TripTypeContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripTypeContracts.swift; sourceTree = "<group>"; };
@@ -500,6 +506,7 @@
 		6FEF913E762E0098A9F12471 /* Packing */ = {
 			isa = PBXGroup;
 			children = (
+				F68424E3377CFB0517015578 /* LuggageContext.swift */,
 				174A9ADD35A69392BDE10E2C /* TripTypeContracts.swift */,
 				A243E601A204510B1E8D7217 /* RecommendationTrace.swift */,
 				D27D7BB95B41E56D32D40385 /* ActivityContracts.swift */,
@@ -544,6 +551,8 @@
 		8A47DFD989F74EC5A9A4B4E3 /* PackWiseTests */ = {
 			isa = PBXGroup;
 			children = (
+				64496BF35AD21B89151BD9F8 /* MultiBagEngineTests.swift */,
+				614696B5E80F76723E2E5CFA /* LuggageContextTests.swift */,
 				78425FBB84935955536BAC30 /* TripTypeEngineCompositionTests.swift */,
 				4E92963C40DD6C7ED5E85344 /* RecommendationProvenanceTests.swift */,
 				A668756ACD1F8990F14B93CB /* TripTypeCompositionTests.swift */,
@@ -923,6 +932,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB42FA337C3C48525909703F /* LuggageContext.swift in Sources */,
 				388A50B374A78BA2D3234C35 /* TripTypeContracts.swift in Sources */,
 				93030584B0F2EE4145F48254 /* TripContextSnapshot.swift in Sources */,
 				2A71AA6413F62B3A759E6351 /* RecommendationTrace.swift in Sources */,
@@ -993,6 +1003,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				446F0122E35543BA3CE97A67 /* MultiBagEngineTests.swift in Sources */,
+				E359AE61FB181E2F81424786 /* LuggageContextTests.swift in Sources */,
 				4ED11CAAC0A7A8602F730298 /* TripTypeEngineCompositionTests.swift in Sources */,
 				E40F90877ECD6E6F6D869AC2 /* RecommendationProvenanceTests.swift in Sources */,
 				FCB34CE8A21DC56894291157 /* TripTypeCompositionTests.swift in Sources */,
