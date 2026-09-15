@@ -422,7 +422,7 @@ struct PackingEngine: Sendable {
             )
         }
 
-        addTripTypeNeeds(context: context) { ids, signal, code, arguments, fallback, provenance in
+        addTripTypeNeeds(snapshot: snapshot) { ids, signal, code, arguments, fallback, provenance in
             add(ids, signal: signal, code: code, arguments: arguments, fallback: fallback, provenance: provenance)
         }
 
@@ -496,21 +496,20 @@ struct PackingEngine: Sendable {
 
     /// Product Experience V2, Task 4: every selected trip type contributes.
     ///
-    /// The full `tripTypes` set resolves to normalized needs once (identical
-    /// needs merge, every provenance fact kept); each need's central candidates
-    /// then join the one `collected` map, so an item several trip types share
-    /// is a single suggestion carrying one fact per contributing type. Its
-    /// reason names all of them in stable order. No type is primary, and
-    /// nothing here reads the temporary singular accessor.
+    /// The full `tripTypes` set resolved to normalized needs once, in the
+    /// snapshot (identical needs merge, every provenance fact kept); each
+    /// need's central candidates then join the one `collected` map, so an
+    /// item several trip types share is a single suggestion carrying one fact
+    /// per contributing type. Its reason names all of them in stable order.
+    /// No type is primary. Coverage reads the same snapshot needs.
     private func addTripTypeNeeds(
-        context: TripContext,
+        snapshot: TripContextSnapshot,
         add: (_ ids: [String], _ signal: RecommendationSignal, _ code: String,
               _ arguments: [String: String], _ fallback: String, _ provenance: RecommendationProvenance?) -> Void
     ) {
-        let resolver = TripTypeContractResolver(contracts: rules.tripTypeContracts)
         var order: [String] = []
         var contributors: [String: Set<TripType>] = [:]
-        for normalized in resolver.normalizedNeeds(for: context.tripTypes) {
+        for normalized in snapshot.packingNeeds {
             let sources = Set(normalized.provenance.compactMap(\.tripType))
             for id in rules.tripTypeContracts.needDefinitions[normalized.need]?.candidateItemIDs ?? [] {
                 if contributors[id] == nil { order.append(id) }

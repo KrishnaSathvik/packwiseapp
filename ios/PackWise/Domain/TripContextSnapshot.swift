@@ -46,6 +46,11 @@ struct TripContextSnapshot: Hashable, Sendable {
     /// Every selected trip type (Product Experience V2): engine decisions read
     /// the full set, never the temporary singular accessor.
     var tripTypes: Set<TripType>
+    /// The selection resolved once through `TripTypeContractResolver`
+    /// (Product Experience V2, Task 4.1). The single trip-type semantic
+    /// authority downstream: candidate generation and capability coverage
+    /// both read these needs, and neither maps `tripTypes` itself.
+    var packingNeeds: [NormalizedPackingNeed]
 
     /// Activity IDs (post `ActivityVocabulary.normalize`) that have a
     /// matching entry in `rules.activities` — the engine's real activity
@@ -150,6 +155,8 @@ enum TripContextCompiler {
             durationDays: days,
             durationNights: nights,
             tripTypes: context.tripTypes,
+            packingNeeds: TripTypeContractResolver(contracts: rules.tripTypeContracts)
+                .normalizedNeeds(for: context.tripTypes),
             knownActivityIDs: known,
             knownDatedActivityUses: datedUses,
             unknownActivityIDs: unknown,

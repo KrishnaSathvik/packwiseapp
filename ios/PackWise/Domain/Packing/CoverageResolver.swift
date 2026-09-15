@@ -34,7 +34,8 @@ enum PackingCapability: String, CaseIterable, Sendable {
 /// cosmetic churn across every Phase 4 file, and is routed forward if a third
 /// family ever joins.
 struct CoverageContext: Hashable, Sendable {
-    var tripTypes: Set<TripType>
+    /// Normalized trip-type needs from the snapshot — never raw trip types.
+    var packingNeeds: Set<PackingNeed>
     var activityIDs: Set<String>
     var contextChips: Set<ContextChip>
     var weatherSignals: Set<WeatherSignal>
@@ -44,7 +45,7 @@ struct CoverageContext: Hashable, Sendable {
     var party: TripParty
 
     init(snapshot: TripContextSnapshot, thresholds: WeatherThresholds) {
-        tripTypes = snapshot.tripTypes
+        packingNeeds = Set(snapshot.packingNeeds.map(\.need))
         activityIDs = Set(snapshot.knownActivityIDs)
         contextChips = snapshot.contextChips
         party = snapshot.party
@@ -150,6 +151,22 @@ enum CoverageResolver {
         "clothing.gloves": [.coldHands]
     ]
 
+    /// The only bridge from trip-type needs into the closed coverage
+    /// vocabulary, the counterpart of `ActivityContracts.needCapabilities`.
+    /// It states what a need *is* for coverage and names no trip type, so a
+    /// contract that gains or loses a need moves coverage with it. Needs
+    /// absent here contribute candidates only.
+    static let needCapabilities: [PackingNeed: Set<PackingCapability>] = [
+        .beachSwim: [.beach],
+        .formalPresentation: [.formal],
+        .formalEvent: [.formal],
+        .snowSport: [.snowSportHands, .coldHands]
+    ]
+
+    static func capabilities(for needs: Set<PackingNeed>) -> Set<PackingCapability> {
+        needs.reduce(into: Set<PackingCapability>()) { $0.formUnion(needCapabilities[$1] ?? []) }
+    }
+
     /// Needs derive from trip signals, never from which items happened to be
     /// emitted — deriving them from item capabilities would let a versatile
     /// item manufacture the need that justifies itself.
@@ -166,18 +183,16 @@ enum CoverageResolver {
         // need. Today Hiking is the only one that does, so this is
         // behaviour-identical to the string test it replaces.
         needs.formUnion(ActivityContracts.capabilities(for: ActivityContracts.needs(for: activities)))
-        if context.tripTypes.contains(.beach)
-            || !activities.isDisjoint(with: ["swimming", "beachDays", "snorkeling", "boatTrip"]) {
+        // Trip types arrive already interpreted as `PackingNeed`s; coverage
+        // only bridges those needs into capabilities and never maps a
+        // trip type itself (Product Experience V2, Task 4.1).
+        needs.formUnion(capabilities(for: context.packingNeeds))
+        if !activities.isDisjoint(with: ["swimming", "beachDays", "snorkeling", "boatTrip"]) {
             needs.insert(.beach)
         }
-        if !context.tripTypes.isDisjoint(with: [.business, .weddingEvent])
-            || !activities.isDisjoint(with: ["work", "niceDinner"])
+        if !activities.isDisjoint(with: ["work", "niceDinner"])
             || context.contextChips.contains(.needFormalOutfit) {
             needs.insert(.formal)
-        }
-        if context.tripTypes.contains(.skiSnow) {
-            needs.insert(.coldHands)
-            needs.insert(.snowSportHands)
         }
 
         if context.hasForecastWeather {

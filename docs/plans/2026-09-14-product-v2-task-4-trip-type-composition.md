@@ -101,6 +101,19 @@ Reviewed differences, all existing policy rather than composition artifacts:
 - The design lists a "Business + Vacation" combination the Task 4 instruction did not; it is included (fixture `43`, tests).
 - `CoverageResolver.needs` still derives capability needs from trip types plus activities rather than from `PackingNeed` values directly. It now reads the full set, which is the behavior the plan requires, without a second resolver.
 
+## Task 4.1 closure — normalized needs are the one trip-type authority
+
+The deviation above was a second interpretation of the same selection: coverage mapped trip types to capabilities itself (beach, business/wedding → formal, ski/snow → hands), in parallel with the contract table. It is removed.
+
+- `TripContextCompiler` resolves `tripTypes` through `TripTypeContractResolver` once, into `TripContextSnapshot.packingNeeds`.
+- Candidate generation (`addTripTypeNeeds`) and `CoverageContext.packingNeeds` both read that value. `CoverageContext` no longer carries trip types.
+- `CoverageResolver.needCapabilities` is the only bridge from trip-type needs into coverage (`beachSwim → beach`, `formalPresentation`/`formalEvent → formal`, `snowSport → snowSportHands + coldHands`), the counterpart of `ActivityContracts.needCapabilities`. It names no trip type.
+- Activity- and chip-derived coverage (swimming/beach days, work/nice dinner, formal-outfit chip, running) is unchanged and still separate; activity contracts were not migrated.
+
+Tests (`TripTypeEngineCompositionTests`, +4): per-type capabilities equal the retired mapping; editing a contract moves coverage with it; the snapshot carries exactly the resolver's needs; `CoverageResolver.swift` names no trip type.
+
+Proof: all 48 goldens re-recorded byte-identical; semantic diff vs `54cf818` CLEAN (1737 unchanged; zero added, removed, quantity, trace, coverage, or constraint changes) across fixtures 1–38 and 39–48. iOS 434/28 suites pass; clean Debug build 0 Swift warnings; `scripts/run_engine_audit.sh` all 6 steps pass.
+
 ## Findings
 
 - **List copy (Task 13):** `PackingReasonPresentation.inclusionReason` receives `TripRecord.tripType`, so a multi-type trip's `trip_type.generic` rows would render the fail-safe "other" in the list. The engine's own reason names every type correctly.

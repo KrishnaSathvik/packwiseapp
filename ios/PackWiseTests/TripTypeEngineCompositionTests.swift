@@ -285,6 +285,64 @@ struct TripTypeEngineCompositionTests {
         #expect(items.contains { $0.provenance.contains(.tripType(.outdoor)) }, "outdoor contributes")
     }
 
+    // MARK: - Task 4.1: normalized needs are the one trip-type authority
+
+    private static func coverageNeeds(_ types: Set<TripType>, rules: PackingRulesFile) throws -> Set<PackingCapability> {
+        CoverageResolver.needs(context: CoverageContext(
+            snapshot: TripContextCompiler.compile(try context(tripTypes: types), rules: rules),
+            thresholds: rules.weather.thresholds
+        ))
+    }
+
+    /// Pins the capabilities each single type reached through the retired
+    /// direct `tripTypes` checks (beach → beach, business/wedding → formal,
+    /// ski/snow → both hand capabilities, nothing else) now that they arrive
+    /// through the contract's needs.
+    @Test func contractNeedsReproduceTheRetiredTripTypeCoverageMapping() throws {
+        let rules = try SharedLibrary.rules()
+        let baseline = try Self.coverageNeeds([.other], rules: rules)
+        let expected: [TripType: Set<PackingCapability>] = [
+            .beach: [.beach], .business: [.formal], .weddingEvent: [.formal],
+            .skiSnow: [.coldHands, .snowSportHands]
+        ]
+        for type in TripType.stableOrder {
+            #expect(try Self.coverageNeeds([type], rules: rules).subtracting(baseline) == (expected[type] ?? []), "\(type)")
+        }
+    }
+
+    /// Coverage reads the resolver's needs, so editing a contract moves
+    /// coverage with it — there is no second trip-type mapping to drift.
+    @Test func coverageFollowsTheContractNotTheTripType() throws {
+        var rules = try SharedLibrary.rules()
+        #expect(!(try Self.coverageNeeds([.vacation], rules: rules)).contains(.formal))
+        #expect(try Self.coverageNeeds([.business], rules: rules).contains(.formal))
+
+        rules.tripTypeContracts.replaceContract(for: .vacation) { $0.needs = [.leisureGeneralTravel, .formalPresentation] }
+        rules.tripTypeContracts.replaceContract(for: .business) { $0.needs = [.workContext] }
+        rules.tripTypeContracts.replaceContract(for: .skiSnow) { $0.needs = [.coldActivityExposure] }
+        #expect(try Self.coverageNeeds([.vacation], rules: rules).contains(.formal))
+        #expect(!(try Self.coverageNeeds([.business], rules: rules)).contains(.formal))
+        #expect(try Self.coverageNeeds([.skiSnow], rules: rules).isDisjoint(with: [.snowSportHands]))
+    }
+
+    @Test func snapshotCarriesTheResolverNeedsOnce() throws {
+        let rules = try SharedLibrary.rules()
+        let types: Set<TripType> = [.festival, .beach, .cityBreak]
+        let snapshot = TripContextCompiler.compile(try Self.context(tripTypes: types), rules: rules)
+        #expect(snapshot.packingNeeds == TripTypeContractResolver(contracts: rules.tripTypeContracts).normalizedNeeds(for: types))
+    }
+
+    /// Structural guard: coverage names no trip type. A `TripType` mapping
+    /// reappearing in the coverage resolver is exactly the parallel
+    /// semantics Task 4.1 removed.
+    @Test func coverageResolverSourceNamesNoTripType() throws {
+        let source = try String(contentsOf: URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("PackWise/Domain/Packing/CoverageResolver.swift"), encoding: .utf8)
+        #expect(!source.contains("TripType"))
+        #expect(!source.contains("tripTypes"))
+    }
+
     // MARK: - Legacy road-trip luggage
 
     @Test @MainActor func legacyRoadTripLuggageNeverCreatesRoadTripBehavior() throws {
