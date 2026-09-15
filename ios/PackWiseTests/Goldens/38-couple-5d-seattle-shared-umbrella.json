@@ -2210,5 +2210,12 @@
         "weather"
       ]
     }
-  ]
+  ],
+  "luggage" : {
+    "appliesCapacityConstraint" : true,
+    "capacity" : "carryOnConstrained",
+    "selectedBags" : [
+      "carryOn"
+    ]
+  }
 }

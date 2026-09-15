@@ -21,14 +21,21 @@ from pathlib import Path
 from scripts.report_engine_goldens import GoldenLoadError, compare_fixture, load_golden_dir, load_golden_git_ref
 
 
-def golden(fixture="fixture", items=None, coverage=None, constraints=None):
-    return {
+def golden(fixture="fixture", items=None, coverage=None, constraints=None, luggage=None):
+    raw = {
         "fixture": fixture,
         "engineVersion": "v2",
         "items": items or [],
         "coverage": coverage or [],
         "constraints": constraints or [],
     }
+    if luggage is not None:
+        raw["luggage"] = luggage
+    return raw
+
+
+def luggage(capacity="carryOnConstrained", bags=("carryOn",), applies=True):
+    return {"capacity": capacity, "selectedBags": list(bags), "appliesCapacityConstraint": applies}
 
 
 def item(canonical_item_id, quantity=1, owner="primary", **overrides):
@@ -269,6 +276,38 @@ class ConstraintChangeTests(unittest.TestCase):
             golden(constraints=[constraint_entry("bag.personal_item", items=["a", "b"])]),
         )
         self.assertEqual(report.constraint_changes, [])
+
+
+class LuggageEvidenceTests(unittest.TestCase):
+    def test_identical_luggage_decision_is_not_a_change(self):
+        report = compare_fixture(golden(luggage=luggage()), golden(luggage=luggage()))
+        self.assertEqual(report.constraint_changes, [])
+
+    def test_changed_capacity_is_a_constraint_change_even_with_no_trims(self):
+        report = compare_fixture(
+            golden(luggage=luggage("carryOnConstrained", ("carryOn",))),
+            golden(luggage=luggage("checkedAvailable", ("carryOn", "checked"), applies=False)),
+        )
+        self.assertEqual([c.kind for c in report.constraint_changes], ["luggage"])
+        self.assertIn("checkedAvailable [carryOn, checked]", report.constraint_changes[0].detail)
+
+    def test_constraint_capacity_is_compared(self):
+        before = constraint_entry("bag.space_constrained", items=["a"])
+        before.update(capacity="compact", selectedBags=["backpack"])
+        after = dict(before, capacity="moderate", selectedBags=["carryOn", "backpack"])
+        report = compare_fixture(golden(constraints=[before]), golden(constraints=[after]))
+        self.assertEqual([c.kind for c in report.constraint_changes], ["changed"])
+
+    def test_ignoring_luggage_evidence_compares_a_pre_task_5_baseline_on_trims_only(self):
+        old = constraint_entry("bag.personal_item", items=["a"])
+        new = dict(old, capacity="veryConstrained", selectedBags=["personalItem"])
+        report = compare_fixture(
+            golden(constraints=[old]),
+            golden(constraints=[new], luggage=luggage("veryConstrained", ("personalItem",))),
+            ignore_luggage_evidence=True,
+        )
+        self.assertEqual(report.constraint_changes, [])
+        self.assertTrue(report.is_unchanged)
 
 
 class NewFixtureTests(unittest.TestCase):

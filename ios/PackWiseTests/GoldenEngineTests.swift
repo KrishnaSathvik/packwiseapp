@@ -301,6 +301,35 @@ struct GoldenEngineTests {
         #expect(!ids(existingShell).contains("clothing.windbreaker"))
     }
 
+    // MARK: - Product Experience V2, Task 5: luggage evidence
+
+    /// Every golden records one normalized luggage decision. Constraint
+    /// evidence exists only where capacity is constrained, always names that
+    /// same decision, and lists bags in stable order.
+    @Test func everyGoldenRecordsOneConsistentLuggageDecision() throws {
+        let stable = BagType.stableOrder.map(\.rawValue)
+        for output in try allGoldenFixtures() {
+            let luggage = output.luggage
+            #expect(luggage.selectedBags == stable.filter(luggage.selectedBags.contains), "\(output.fixture): stable bag order")
+            if !luggage.appliesCapacityConstraint {
+                #expect(output.constraints == nil, "\(output.fixture): no trim without constrained capacity")
+                #expect(output.items.allSatisfy { $0.bagStyleConstraintFact == nil }, "\(output.fixture): no fake constraint evidence")
+            }
+            for entry in output.constraints ?? [] {
+                #expect(entry.capacity == luggage.capacity && entry.selectedBags == luggage.selectedBags, "\(output.fixture): \(entry.constraint)")
+            }
+        }
+
+        let personal = try renderFixture(id: "06-miami-5d-beach-personal-item")
+        #expect(personal.luggage.capacity == "veryConstrained" && personal.luggage.selectedBags == ["personalItem"])
+        #expect(personal.constraints?.first?.capacity == "veryConstrained")
+
+        let roomy = try renderFixture(id: "50-v2-bags-carryon-checked-tokyo")
+        #expect(roomy.luggage.capacity == "checkedAvailable")
+        #expect(roomy.luggage.selectedBags == ["carryOn", "checked"])
+        #expect(!roomy.luggage.appliesCapacityConstraint && roomy.constraints == nil, "no carry-on trim applied")
+    }
+
     private func ids(_ output: GoldenOutput) -> Set<String> {
         Set(output.items.map(\.canonicalItemID))
     }
@@ -665,6 +694,18 @@ struct GoldenEngineTests {
         var constraint: String
         var summary: String
         var items: [String]
+        /// The resolved luggage capacity and stable-ordered bags behind the
+        /// trim (Product Experience V2, Task 5).
+        var capacity: String
+        var selectedBags: [String]
+    }
+
+    /// The generation's one normalized luggage decision, recorded even when
+    /// nothing was trimmed.
+    struct GoldenLuggage: Codable {
+        var capacity: String
+        var selectedBags: [String]
+        var appliesCapacityConstraint: Bool
     }
 
     struct GoldenOutput: Codable {
@@ -673,6 +714,7 @@ struct GoldenEngineTests {
         var items: [GoldenItem]
         var coverage: [GoldenCoverageEntry]?
         var constraints: [GoldenConstraintEntry]?
+        var luggage: GoldenLuggage
     }
 
     private static func serialize(
@@ -758,13 +800,20 @@ struct GoldenEngineTests {
                         owner: decision.travelerID.flatMap { slugs[$0] } ?? "primary",
                         constraint: decision.constraint,
                         summary: decision.summary,
-                        items: decision.items
+                        items: decision.items,
+                        capacity: decision.capacity.rawValue,
+                        selectedBags: decision.selectedBags.map(\.rawValue)
                     )
                 }
                 .sorted {
                     if $0.owner != $1.owner { return $0.owner < $1.owner }
                     return $0.constraint < $1.constraint
-                }
+                },
+            luggage: GoldenLuggage(
+                capacity: generation.luggage.capacity.rawValue,
+                selectedBags: generation.luggage.orderedBagTypes.map(\.rawValue),
+                appliesCapacityConstraint: generation.luggage.appliesCapacityConstraint
+            )
         )
 
         let encoder = JSONEncoder()

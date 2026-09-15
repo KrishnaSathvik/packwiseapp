@@ -1,6 +1,7 @@
 {
   "constraints" : [
     {
+      "capacity" : "veryConstrained",
       "constraint" : "bag.personal_item",
       "items" : [
         "activities.goggles",
@@ -8,6 +9,9 @@
         "footwear.flip_flops"
       ],
       "owner" : "primary",
+      "selectedBags" : [
+        "personalItem"
+      ],
       "summary" : "Trimmed to fit a personal item."
     }
   ],
@@ -1243,5 +1247,12 @@
         "baseEssential"
       ]
     }
-  ]
+  ],
+  "luggage" : {
+    "appliesCapacityConstraint" : true,
+    "capacity" : "veryConstrained",
+    "selectedBags" : [
+      "personalItem"
+    ]
+  }
 }

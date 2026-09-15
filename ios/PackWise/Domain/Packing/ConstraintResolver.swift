@@ -10,6 +10,11 @@ struct ConstraintDecision: Hashable, Sendable {
     var travelerID: UUID?
     /// Canonical IDs the decision removed, sorted.
     var items: [String]
+    /// The normalized luggage decision behind the trim (Product Experience
+    /// V2, Task 5): the resolved capacity and the selected bags in
+    /// `BagType.stableOrder`, never selection order.
+    var capacity: LuggageContext.Capacity
+    var selectedBags: [BagType]
 }
 
 /// Where conflicts between trip constraints resolve — Engine V2, Step 5.
@@ -110,7 +115,8 @@ enum ConstraintResolver {
     /// Aggregates raw drops into one recorded decision per conflict and
     /// traveler, items sorted, so the ledger stays compact and reviewable.
     static func decisions(
-        from drops: [(travelerID: UUID?, canonicalItemID: String, key: String)]
+        from drops: [(travelerID: UUID?, canonicalItemID: String, key: String)],
+        luggage: LuggageContext
     ) -> [ConstraintDecision] {
         var grouped: [String: (travelerID: UUID?, key: String, items: Set<String>)] = [:]
         for drop in drops {
@@ -125,7 +131,9 @@ enum ConstraintResolver {
                     constraint: entry.key,
                     summary: summary(for: entry.key),
                     travelerID: entry.travelerID,
-                    items: entry.items.sorted()
+                    items: entry.items.sorted(),
+                    capacity: luggage.capacity,
+                    selectedBags: luggage.orderedBagTypes
                 )
             }
             .sorted {

@@ -1071,5 +1071,12 @@
         "baseEssential"
       ]
     }
-  ]
+  ],
+  "luggage" : {
+    "appliesCapacityConstraint" : false,
+    "capacity" : "unspecified",
+    "selectedBags" : [
+
+    ]
+  }
 }

@@ -1,11 +1,15 @@
 {
   "constraints" : [
     {
+      "capacity" : "carryOnConstrained",
       "constraint" : "bag.space_constrained",
       "items" : [
         "travel_comfort.book"
       ],
       "owner" : "primary",
+      "selectedBags" : [
+        "carryOn"
+      ],
       "summary" : "Left out to keep the bag light."
     }
   ],
@@ -1365,5 +1369,12 @@
         "baseEssential"
       ]
     }
-  ]
+  ],
+  "luggage" : {
+    "appliesCapacityConstraint" : true,
+    "capacity" : "carryOnConstrained",
+    "selectedBags" : [
+      "carryOn"
+    ]
+  }
 }

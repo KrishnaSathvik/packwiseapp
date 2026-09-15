@@ -3821,5 +3821,12 @@
         "userPreference"
       ]
     }
-  ]
+  ],
+  "luggage" : {
+    "appliesCapacityConstraint" : false,
+    "capacity" : "checkedAvailable",
+    "selectedBags" : [
+      "checked"
+    ]
+  }
 }

@@ -976,5 +976,13 @@
         "baseEssential"
       ]
     }
-  ]
+  ],
+  "luggage" : {
+    "appliesCapacityConstraint" : true,
+    "capacity" : "carryOnConstrained",
+    "selectedBags" : [
+      "personalItem",
+      "carryOn"
+    ]
+  }
 }

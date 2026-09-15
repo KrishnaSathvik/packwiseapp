@@ -299,4 +299,47 @@ struct RecommendationTraceTests {
         })
         #expect(carriedByAnAdult.travelerID != carriedByAnAdult.assignedTravelerID)
     }
+
+    // MARK: - Product Experience V2, Task 5: luggage in the constraint trace
+
+    /// Constraint evidence describes the normalized luggage decision in
+    /// stable bag order, whatever order the bags were selected in.
+    @Test func constraintEvidenceNamesTheNormalizedLuggageDecisionInStableOrder() throws {
+        let engine = PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
+        let destination = try #require(try SharedLibrary.testDestinations().first { $0.city == "Miami" })
+        let start = Calendar.current.date(from: DateComponents(year: 2026, month: 7, day: 6))!
+        let end = Calendar.current.date(byAdding: .day, value: 6, to: start)!
+        func generation(_ order: [BagType]) -> EngineGeneration {
+            var bags = Set<BagType>(minimumCapacity: 16)
+            for bag in order { bags.insert(bag) }
+            let math = TripDateMath.daysAndNights(from: start, to: end)
+            return engine.generateDetailed(context: TripContext(
+                destination: destination, startDate: start, endDate: end,
+                durationDays: math.days, durationNights: math.nights,
+                tripTypes: [.beach], activities: ["swimming", "beachDays"], datedActivities: [], bagTypes: bags,
+                packingStyle: .light, transportation: .unknown, laundryAccess: .none, travelerCount: 1,
+                userNotes: "", contextChips: [], weather: nil, preferences: .deviceDefaults()
+            ))
+        }
+
+        let compact = [generation([.backpack, .personalItem]), generation([.personalItem, .backpack])]
+        for result in compact {
+            let decision = try #require(result.constraintDecisions.first)
+            #expect(decision.capacity == .compact)
+            #expect(decision.selectedBags == [.personalItem, .backpack])
+            #expect(result.luggage.orderedBagTypes == [.personalItem, .backpack])
+        }
+        // Compared without the per-context solo traveler UUID.
+        func ledger(_ result: EngineGeneration) -> [String] {
+            result.constraintDecisions.map { "\($0.constraint)|\($0.items)|\($0.capacity)|\($0.selectedBags)" }
+        }
+        #expect(ledger(compact[0]) == ledger(compact[1]))
+
+        let personal = try #require(generation([.personalItem]).constraintDecisions.first)
+        #expect(personal.capacity == .veryConstrained && personal.selectedBags == [.personalItem])
+
+        let roomy = generation([.checked, .carryOn])
+        #expect(roomy.luggage.capacity == .checkedAvailable && roomy.luggage.orderedBagTypes == [.carryOn, .checked])
+        #expect(roomy.constraintDecisions.isEmpty, "no carry-on trim applied, and no decision pretending one was")
+    }
 }

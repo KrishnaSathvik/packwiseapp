@@ -17,7 +17,9 @@ serializes it, matches items across baseline and candidate by
                          quantity reason, userModified) — evidence for *why*
                          an item is recommended, not *whether* or *how many*
     COVERAGE CHANGES    the fixture's `coverage` suppression ledger differs
-    CONSTRAINT CHANGES  the fixture's `constraints` ledger differs
+    CONSTRAINT CHANGES  the fixture's `constraints` ledger differs, or its
+                         one normalized `luggage` decision (capacity,
+                         selected bags) differs
 
 Quantity and trace are independent axes: an item can appear in both lists
 at once if both changed. Fixtures present in only one side are reported as
@@ -182,6 +184,10 @@ class ConstraintEntry:
     constraint: str
     summary: str
     items: Tuple[str, ...]
+    # The luggage decision behind the trim (Product Experience V2, Task 5).
+    # None/() in goldens recorded before that evidence existed.
+    capacity: Optional[str] = None
+    selected_bags: Tuple[str, ...] = ()
 
     @property
     def key(self) -> ItemKey:
@@ -194,10 +200,36 @@ class ConstraintEntry:
             constraint=raw["constraint"],
             summary=raw["summary"],
             items=tuple(raw.get("items", [])),
+            capacity=raw.get("capacity"),
+            selected_bags=tuple(raw.get("selectedBags", [])),
+        )
+
+    def without_luggage_evidence(self) -> "ConstraintEntry":
+        return ConstraintEntry(self.owner, self.constraint, self.summary, self.items)
+
+    def describe(self) -> str:
+        luggage = f" under {self.capacity} [{', '.join(self.selected_bags)}]" if self.capacity else ""
+        return f'"{self.summary}" removed [{", ".join(self.items)}]{luggage}'
+
+
+@dataclass(frozen=True)
+class LuggageDecision:
+    capacity: str
+    selected_bags: Tuple[str, ...]
+    applies_capacity_constraint: bool
+
+    @staticmethod
+    def from_json(raw: Optional[dict]) -> Optional["LuggageDecision"]:
+        if raw is None:
+            return None
+        return LuggageDecision(
+            capacity=raw["capacity"],
+            selected_bags=tuple(raw.get("selectedBags", [])),
+            applies_capacity_constraint=bool(raw.get("appliesCapacityConstraint", False)),
         )
 
     def describe(self) -> str:
-        return f'"{self.summary}" removed [{", ".join(self.items)}]'
+        return f"{self.capacity} [{', '.join(self.selected_bags)}]"
 
 
 @dataclass(frozen=True)
@@ -206,6 +238,7 @@ class Golden:
     items: Tuple[GoldenItem, ...]
     coverage: Tuple[CoverageEntry, ...]
     constraints: Tuple[ConstraintEntry, ...]
+    luggage: Optional[LuggageDecision] = None
 
     @staticmethod
     def from_json(raw: dict) -> "Golden":
@@ -214,6 +247,7 @@ class Golden:
             items=tuple(GoldenItem.from_json(i) for i in raw.get("items", [])),
             coverage=tuple(CoverageEntry.from_json(c) for c in (raw.get("coverage") or [])),
             constraints=tuple(ConstraintEntry.from_json(c) for c in (raw.get("constraints") or [])),
+            luggage=LuggageDecision.from_json(raw.get("luggage")),
         )
 
 
@@ -333,10 +367,23 @@ def _compare_coverage(baseline: Tuple[CoverageEntry, ...], candidate: Tuple[Cove
     return sorted(changes, key=lambda c: (c.owner, c.suppressed, c.kind))
 
 
-def _compare_constraints(baseline: Tuple[ConstraintEntry, ...], candidate: Tuple[ConstraintEntry, ...]) -> List[ConstraintChange]:
+def _compare_constraints(
+    baseline: Tuple[ConstraintEntry, ...],
+    candidate: Tuple[ConstraintEntry, ...],
+    baseline_luggage: Optional[LuggageDecision] = None,
+    candidate_luggage: Optional[LuggageDecision] = None,
+    ignore_luggage_evidence: bool = False,
+) -> List[ConstraintChange]:
+    if ignore_luggage_evidence:
+        baseline = tuple(c.without_luggage_evidence() for c in baseline)
+        candidate = tuple(c.without_luggage_evidence() for c in candidate)
     baseline_map = {c.key: c for c in baseline}
     candidate_map = {c.key: c for c in candidate}
     changes: List[ConstraintChange] = []
+    if not ignore_luggage_evidence and baseline_luggage != candidate_luggage:
+        before = baseline_luggage.describe() if baseline_luggage else "not recorded"
+        after = candidate_luggage.describe() if candidate_luggage else "not recorded"
+        changes.append(ConstraintChange("luggage", "trip", "luggage", f"{before} -> {after}"))
     for key, c_entry in candidate_map.items():
         b_entry = baseline_map.get(key)
         if b_entry is None:
@@ -349,7 +396,12 @@ def _compare_constraints(baseline: Tuple[ConstraintEntry, ...], candidate: Tuple
     return sorted(changes, key=lambda c: (c.owner, c.constraint, c.kind))
 
 
-def compare_fixture(baseline_raw: dict, candidate_raw: dict, ignored_trace_fields: Tuple[str, ...] = ()) -> FixtureReport:
+def compare_fixture(
+    baseline_raw: dict,
+    candidate_raw: dict,
+    ignored_trace_fields: Tuple[str, ...] = (),
+    ignore_luggage_evidence: bool = False,
+) -> FixtureReport:
     """Compare one fixture's baseline and candidate golden JSON (already
     `json.load`-ed dicts, in the exact shape `GoldenEngineTests.swift`
     writes)."""
@@ -393,17 +445,24 @@ def compare_fixture(baseline_raw: dict, candidate_raw: dict, ignored_trace_field
         quantity_changes=sorted(quantity_changes),
         trace_changes=sorted(trace_changes),
         coverage_changes=_compare_coverage(baseline.coverage, candidate.coverage),
-        constraint_changes=_compare_constraints(baseline.constraints, candidate.constraints),
+        constraint_changes=_compare_constraints(
+            baseline.constraints, candidate.constraints, baseline.luggage, candidate.luggage, ignore_luggage_evidence
+        ),
     )
 
 
 def compare_directories(
-    baseline: Dict[str, dict], candidate: Dict[str, dict], ignored_trace_fields: Tuple[str, ...] = ()
+    baseline: Dict[str, dict],
+    candidate: Dict[str, dict],
+    ignored_trace_fields: Tuple[str, ...] = (),
+    ignore_luggage_evidence: bool = False,
 ) -> Report:
     """Compare two `{fixture_id: golden_json_dict}` maps, e.g. as loaded by
     `load_golden_dir` / `load_golden_git_ref`."""
     common = sorted(set(baseline) & set(candidate))
-    fixtures = [compare_fixture(baseline[fid], candidate[fid], ignored_trace_fields) for fid in common]
+    fixtures = [
+        compare_fixture(baseline[fid], candidate[fid], ignored_trace_fields, ignore_luggage_evidence) for fid in common
+    ]
     return Report(
         fixtures=fixtures,
         new_fixtures=sorted(set(candidate) - set(baseline)),
@@ -640,6 +699,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "a baseline recorded before that field existed; say so in any report that uses it.",
     )
     parser.add_argument(
+        "--ignore-luggage-evidence",
+        action="store_true",
+        help="Leave the luggage decision (the golden `luggage` block and each constraint's capacity/"
+        "selectedBags) out of the comparison. For comparing against a baseline recorded before "
+        "Product Experience V2 Task 5's luggage evidence; say so in any report that uses it.",
+    )
+    parser.add_argument(
         "--format",
         choices=("text", "markdown"),
         default="text",
@@ -688,7 +754,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"error: {e}", file=sys.stderr)
         return 2
 
-    report = compare_directories(baseline, candidate, tuple(args.ignore_trace_field))
+    report = compare_directories(baseline, candidate, tuple(args.ignore_trace_field), args.ignore_luggage_evidence)
     render = render_markdown if args.format == "markdown" else render_text
     print(render(report))
     return 0 if report.is_clean else 1

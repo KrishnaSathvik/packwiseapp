@@ -8,6 +8,11 @@ struct EngineGeneration: Sendable {
     var items: [PackingItemDraft]
     var coverageSuppressions: [CoverageSuppression]
     var constraintDecisions: [ConstraintDecision]
+    /// The one normalized luggage decision this generation ran under —
+    /// recorded even when it trimmed nothing, so "checked capacity, no trim
+    /// applied" is evidence rather than an absence. Items it didn't affect
+    /// carry no constraint fact.
+    var luggage: LuggageContext
     /// Diagnostics from compiling a `TripContextSnapshot` for this
     /// generation — validation/observability only. No decision logic in this
     /// file reads from the snapshot; it is compiled purely to attach these
@@ -58,7 +63,8 @@ struct PackingEngine: Sendable {
                 return PartyInvariants.normalize(item, in: party)
             },
             coverageSuppressions: generated.suppressions,
-            constraintDecisions: ConstraintResolver.decisions(from: generated.drops),
+            constraintDecisions: ConstraintResolver.decisions(from: generated.drops, luggage: snapshot.luggage),
+            luggage: snapshot.luggage,
             contextDiagnostics: snapshot.diagnostics
         )
     }

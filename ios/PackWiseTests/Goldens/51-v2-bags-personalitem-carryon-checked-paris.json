@@ -1163,5 +1163,14 @@
         "baseEssential"
       ]
     }
-  ]
+  ],
+  "luggage" : {
+    "appliesCapacityConstraint" : false,
+    "capacity" : "checkedAvailable",
+    "selectedBags" : [
+      "personalItem",
+      "carryOn",
+      "checked"
+    ]
+  }
 }
