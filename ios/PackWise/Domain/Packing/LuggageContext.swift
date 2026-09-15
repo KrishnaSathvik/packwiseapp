@@ -53,11 +53,20 @@ struct LuggageContext: Hashable, Sendable {
         return LuggageContext(bagTypes: bags, capacity: capacity, appliesCapacityConstraint: capacity.isConstrained)
     }
 
-    /// Whether an airline cabin bag (a personal item or carry-on) is among the
-    /// selection. Not a capacity: it carries forward the pre-V2 "carry-on or
-    /// personal item" trigger for the empty security bottle, generalized to a
-    /// set without a primary bag. A checked bag beside one doesn't change it.
-    var includesCabinBag: Bool {
+    /// Whether a cabin-accessible bag (a personal item or carry-on) is among
+    /// the selection. **Not a capacity constraint** — an independent fact
+    /// beside `capacity` (approved Task 5 semantics, 2026-09-14):
+    ///
+    ///     Carry-on only            → carryOnConstrained, cabin bag
+    ///     Carry-on + Checked       → checkedAvailable,   cabin bag
+    ///     Personal item + Checked  → checkedAvailable,   cabin bag
+    ///     Checked only             → checkedAvailable,   no cabin bag
+    ///
+    /// Adding a checked bag never removes the cabin bag a traveler still
+    /// carries. The empty security bottle responds to this fact, never to
+    /// capacity. It does not model transportation; Task 13 owns that item's
+    /// naming and reason.
+    var hasCabinAccessibleBag: Bool {
         !bagTypes.isDisjoint(with: [.personalItem, .carryOn])
     }
 

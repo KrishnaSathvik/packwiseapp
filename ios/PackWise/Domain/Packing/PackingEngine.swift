@@ -488,7 +488,7 @@ struct PackingEngine: Sendable {
 
         addWeather(context: context, snapshot: snapshot, into: &collected)
 
-        if snapshot.luggage.includesCabinBag || context.transportation == .flight {
+        if snapshot.luggage.hasCabinAccessibleBag || context.transportation == .flight {
             add(
                 ["travel_comfort.empty_security_bottle"],
                 signal: .tripType,

@@ -353,6 +353,46 @@ it, and the destination phase.
 
 ---
 
+## Product Experience V2 notes (recorded 2026-09-14, not scheduled)
+
+Architecture and tooling notes from Task 5 review. None is customer-visible;
+each was reviewed and deliberately left as is.
+
+### V2-N1 — optional-item trimming runs before capability coverage
+
+- **Observed:** under Carry-on + Light, `footwear.flip_flops` is trimmed as an
+  optional item (`bag.space_constrained`). With a checked bag it is generated,
+  then suppressed by coverage because sandals already satisfy the beach need.
+- **Result:** correct either way; the second path does wasted work and shows
+  up in a naive diff as an item that "didn't come back".
+- **Decision:** leave the ordering. Reordering constraints and coverage has a
+  wide blast radius for no customer-visible gain. Optimization note only.
+
+### V2-N2 — the restriction-review skip has no reachable item
+
+- **Observed:** `travelRestrictionReviewRequired` is true only for
+  `miscellaneous.multi_tool`, and no rule emits that item. The luggage-driven
+  skip in `PackingEngine` (`appliesCapacityConstraint`) is therefore dead in
+  every generated trip.
+- **Decision:** dead-rule cleanup, not family-eligibility work. Leave until a
+  rule emits a restricted item or the flag is retired.
+
+### V2-N3 — golden recording needs the suite-level test filter
+
+- **Observed:** `-only-testing:PackWiseTests/GoldenEngineTests/engineOutputMatchesGoldens`
+  matches no Swift Testing test, so record mode silently writes nothing.
+- **Correct command:**
+  ```bash
+  TEST_RUNNER_PACKWISE_RECORD_GOLDENS=1 xcodebuild test \
+      -project ios/PackWise.xcodeproj -scheme PackWise \
+      -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+      -only-testing:PackWiseTests/GoldenEngineTests
+  ```
+- **Decision:** tooling note only. Verify a re-record with `git status` on
+  `ios/PackWiseTests/Goldens` before trusting a clean diff.
+
+---
+
 ## Self-review — judgment calls made in this ranking
 
 - **P1 vs P2 boundary for `camping` vs `tripType.other` (P1-2 vs P2-3):**

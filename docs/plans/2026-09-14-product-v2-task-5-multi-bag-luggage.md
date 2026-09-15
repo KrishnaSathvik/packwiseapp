@@ -66,11 +66,11 @@ Recommendation/context signatures already used the stable bag set (Task 15). `Lu
 | `PackingMemoryEventRecord.bagRaw` compat scalar (first stable bag) | older diagnostics read it; never read back as authority | none (compat) |
 | `DebugPreviewScene` singular bag arguments | Debug preview data | Task 8 |
 
-## Decisions to review
+## Approved decisions (2026-09-14)
 
-1. **`moderate` keeps the constrained-bag levers.** The design names `moderate` but approves no looser policy for it. Carry-on + backpack therefore trims optionals under Light and applies `constrainedBagMaximum`, exactly like carry-on alone; the distinction lives in capacity and trace. A looser moderate policy would be a new product decision. Pinned by `MultiBagEngineTests.backpackPlusCarryOnIsModerateCapacity`.
-2. **The empty security bottle follows the selection, not capacity.** The old condition was "the one bag is a carry-on or personal item". It is now `LuggageContext.includesCabinBag` (a personal item or carry-on is selected), so Carry-on + Checked now gets the bottle. The old fail-safe accessor collapsed that set to not-sure, which had dropped it. Every single-bag case is unchanged. The rule is transport-flavored, not capacity, and is recorded as a derived fact inside `LuggageContext` so no engine file asks about bags.
-3. **Trimming runs before coverage.** Under Carry-on + Light, flip-flops are trimmed as an optional. With a checked bag they are generated and then suppressed by coverage (sandals already cover the beach need), so they "return" as a coverage decision, not a list row. Pre-existing ordering; noted because it looks like a missing return in a naive diff.
+1. **`moderate` intentionally shares the constrained-bag policy.** Carry-on + Backpack is classified `moderate`, distinct for trace and for future per-bag/airline policy. For Product V2 it shares the optional-trim and clothing-cap policy of `carryOnConstrained` and `compact`, because no principled rule says what an extra backpack adds. Pinned as deliberate by `LuggageContextTests.moderateIntentionallySharesTheConstrainedBagPolicy` and `MultiBagEngineTests.backpackPlusCarryOnIsModerateCapacity`.
+2. **The empty security bottle follows the cabin-accessible-bag signal, not capacity.** `LuggageContext.hasCabinAccessibleBag` is true when a personal item or carry-on is selected, whatever else is selected. Carry-on only, Carry-on + Checked, and Personal item + Checked get the bottle; Checked only does not. A checked bag never erases the cabin-bag signal. No transport model was introduced; Task 13 owns the item's naming and reason. Pinned by `LuggageContextTests.cabinAccessibleBagIsNotACapacityFact` and `MultiBagEngineTests.securityBottleFollowsTheCabinBagSignalNotCapacity`.
+3. **Trimming before coverage, the dead `multi_tool` restriction rule, and the golden-record filter** are recorded as V2-N1, V2-N2, and V2-N3 in `docs/engine-audits/2026-09-03-engine-findings.md`. None is scheduled.
 
 ## Multi-bag fixtures — manual review
 

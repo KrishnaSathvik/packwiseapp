@@ -155,6 +155,68 @@ struct LuggageContextTests {
         }
     }
 
+    // MARK: - Approved Task 5 semantics (2026-09-14)
+
+    /// `moderate` is a distinct capacity classification, but for Product V2 it
+    /// intentionally shares the constrained-bag optional-trim and clothing
+    /// policy with `carryOnConstrained` and `compact`. There is no principled
+    /// rule for what an extra backpack adds, so none is invented. Distinct
+    /// enum cases must not be assumed to produce distinct quantities; a future
+    /// per-bag/airline policy that separates them must update this test on
+    /// purpose.
+    @Test func moderateIntentionallySharesTheConstrainedBagPolicy() {
+        let moderate = LuggageContext.resolve([.carryOn, .backpack])
+        let carryOn = LuggageContext.resolve([.carryOn])
+        let compact = LuggageContext.resolve([.backpack])
+        #expect(moderate.capacity == .moderate)
+        #expect(Set([moderate.capacity, carryOn.capacity, compact.capacity]).count == 3, "classification stays distinct")
+
+        let tagSets: [[String]] = [[], ["rain"], ["unrelated"]]
+        for style in PackingStyle.allCases {
+            for importance in ItemImportance.allCases {
+                for tags in tagSets {
+                    let rulings = [moderate, carryOn, compact].map {
+                        ConstraintResolver.optionalRuling(importance: importance, tags: tags, luggage: $0, style: style)
+                    }
+                    #expect(rulings.allSatisfy { $0.keep == rulings[0].keep && $0.conflictKey == rulings[0].conflictKey },
+                            "\(style) \(importance) \(tags)")
+                }
+            }
+            for policy in ClothingNeedPolicy.all {
+                for days in [3, 9, 21] {
+                    let values = [moderate, carryOn, compact].map { luggage in
+                        ClothingQuantityEngine.evaluate(policy, context: ClothingQuantityContext(
+                            days: days, style: style, luggage: luggage, laundry: .none,
+                            selectedActivityIDs: [], datedActivityUses: [:], party: .solo()
+                        )).evidence
+                    }
+                    #expect(values.allSatisfy { $0.quantity == values[0].quantity && $0.bagCap == values[0].bagCap },
+                            "\(policy.needID) \(days)d \(style)")
+                }
+            }
+        }
+    }
+
+    /// The cabin-accessible-bag signal is independent of capacity: a checked
+    /// bag never erases it.
+    @Test func cabinAccessibleBagIsNotACapacityFact() {
+        let table: [(bags: Set<BagType>, capacity: LuggageContext.Capacity, cabin: Bool)] = [
+            ([.carryOn], .carryOnConstrained, true),
+            ([.personalItem], .veryConstrained, true),
+            ([.carryOn, .checked], .checkedAvailable, true),
+            ([.personalItem, .checked], .checkedAvailable, true),
+            ([.checked], .checkedAvailable, false),
+            ([.backpack], .compact, false),
+            ([.backpack, .checked], .checkedAvailable, false),
+            ([], .unspecified, false)
+        ]
+        for row in table {
+            let luggage = LuggageContext.resolve(row.bags)
+            #expect(luggage.capacity == row.capacity, "\(row.bags)")
+            #expect(luggage.hasCabinAccessibleBag == row.cabin, "\(row.bags)")
+        }
+    }
+
     // MARK: - Single luggage authority
 
     /// Structural guard: engine decision files never ask which bags were

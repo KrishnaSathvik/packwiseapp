@@ -86,6 +86,15 @@ struct MultiBagEngineTests {
         #expect(try Self.generate([.carryOn]).items.contains { $0.canonicalItemID == Self.bottle })
     }
 
+    /// Approved Task 5 semantics: the bottle follows the cabin-accessible-bag
+    /// signal, not capacity, so a checked bag never removes it.
+    @Test func securityBottleFollowsTheCabinBagSignalNotCapacity() throws {
+        for (bags, expected) in [([BagType.carryOn], true), ([.carryOn, .checked], true), ([.personalItem, .checked], true), ([.checked], false)] {
+            let items = try Self.generate(Set(bags)).items
+            #expect(items.contains { $0.canonicalItemID == Self.bottle } == expected, "\(bags)")
+        }
+    }
+
     @Test func carryOnPlusCheckedNeverBehavesLikeCarryOnOnly() throws {
         for style in PackingStyle.allCases {
             let both = try Self.generate([.carryOn, .checked], style: style)
