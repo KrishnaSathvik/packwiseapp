@@ -34,7 +34,7 @@ enum PackingCapability: String, CaseIterable, Sendable {
 /// cosmetic churn across every Phase 4 file, and is routed forward if a third
 /// family ever joins.
 struct CoverageContext: Hashable, Sendable {
-    var tripType: TripType
+    var tripTypes: Set<TripType>
     var activityIDs: Set<String>
     var contextChips: Set<ContextChip>
     var weatherSignals: Set<WeatherSignal>
@@ -44,7 +44,7 @@ struct CoverageContext: Hashable, Sendable {
     var party: TripParty
 
     init(snapshot: TripContextSnapshot, thresholds: WeatherThresholds) {
-        tripType = snapshot.tripType
+        tripTypes = snapshot.tripTypes
         activityIDs = Set(snapshot.knownActivityIDs)
         contextChips = snapshot.contextChips
         party = snapshot.party
@@ -166,16 +166,16 @@ enum CoverageResolver {
         // need. Today Hiking is the only one that does, so this is
         // behaviour-identical to the string test it replaces.
         needs.formUnion(ActivityContracts.capabilities(for: ActivityContracts.needs(for: activities)))
-        if context.tripType == .beach
+        if context.tripTypes.contains(.beach)
             || !activities.isDisjoint(with: ["swimming", "beachDays", "snorkeling", "boatTrip"]) {
             needs.insert(.beach)
         }
-        if context.tripType == .business || context.tripType == .weddingEvent
+        if !context.tripTypes.isDisjoint(with: [.business, .weddingEvent])
             || !activities.isDisjoint(with: ["work", "niceDinner"])
             || context.contextChips.contains(.needFormalOutfit) {
             needs.insert(.formal)
         }
-        if context.tripType == .skiSnow {
+        if context.tripTypes.contains(.skiSnow) {
             needs.insert(.coldHands)
             needs.insert(.snowSportHands)
         }

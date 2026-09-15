@@ -60,7 +60,7 @@
       ],
       "iconContract": "mountain.2",
       "ownerScope": "trip",
-      "note": "rules.tripTypes['outdoor'] adds a daypack, water bottle, insect repellent, blister pads and a first-aid kit, and CoverageContext treats its activities as outdoor for weather-signal extraction. No golden fixture selected it until Phase 5: the five Camping fixtures (28-32) all use tripType=outdoor, so the row is now exercised. Note this is why fixture 28's Camping delta is small -- the trip type already supplies water and repellent, and the de-duplication is the contract working."
+      "note": "its contract need outdoorDayUse (shared/rules/trip-types.json) resolves to a daypack, water bottle, insect repellent, blister pads and a first-aid kit, and CoverageContext treats its activities as outdoor for weather-signal extraction. No golden fixture selected it until Phase 5: the five Camping fixtures (28-32) all use tripType=outdoor, so the row is now exercised. Note this is why fixture 28's Camping delta is small -- the trip type already supplies water and repellent, and the de-duplication is the contract working."
     },
     {
       "kind": "tripType",
@@ -78,10 +78,12 @@
       "id": "weddingEvent",
       "exposed": true,
       "engineContract": "deterministic",
-      "fixtureIDs": [],
+      "fixtureIDs": [
+        "46-v2-vacation-wedding-lisbon"
+      ],
       "iconContract": "heart",
       "ownerScope": "trip",
-      "note": "its trip-type contract need formalEvent (shared/rules/trip-types.json) resolves to formal_outfit/dress_shoes/wedding_card but no golden fixture sets tripType=weddingEvent; deterministic and currently untested."
+      "note": "its trip-type contract need formalEvent (shared/rules/trip-types.json) resolves to formal_outfit/dress_shoes/wedding_card; composed through golden fixture 46-v2-vacation-wedding-lisbon since Product Experience V2 Task 4."
     },
     {
       "kind": "tripType",
@@ -99,20 +101,24 @@
       "id": "festival",
       "exposed": true,
       "engineContract": "deterministic",
-      "fixtureIDs": [],
+      "fixtureIDs": [
+        "47-v2-festival-citybreak-austin"
+      ],
       "iconContract": "music.note",
       "ownerScope": "trip",
-      "note": "its trip-type contract need festivalAttendance (shared/rules/trip-types.json) resolves to festival_earplugs/power_bank/sunscreen/hand_sanitizer but no golden fixture sets tripType=festival; deterministic and currently untested."
+      "note": "its trip-type contract need festivalAttendance (shared/rules/trip-types.json) resolves to festival_earplugs/power_bank/sunscreen/hand_sanitizer; composed through golden fixture 47-v2-festival-citybreak-austin since Product Experience V2 Task 4."
     },
     {
       "kind": "tripType",
       "id": "visitingFamily",
       "exposed": true,
       "engineContract": "deterministic",
-      "fixtureIDs": [],
+      "fixtureIDs": [
+        "48-v2-visitingfamily-vacation-boston"
+      ],
       "iconContract": "house",
       "ownerScope": "trip",
-      "note": "its trip-type contract need hostVisit (shared/rules/trip-types.json) resolves to a gift item but no golden fixture sets tripType=visitingFamily; deterministic and currently untested."
+      "note": "its trip-type contract need hostVisit (shared/rules/trip-types.json) resolves to a gift item; composed through golden fixture 48-v2-visitingfamily-vacation-boston since Product Experience V2 Task 4."
     },
     {
       "kind": "tripType",

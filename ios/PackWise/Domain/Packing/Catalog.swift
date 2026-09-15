@@ -101,14 +101,6 @@ struct BaseRulesFile: Codable, Sendable {
     }
 }
 
-/// TEMPORARY Task 3 → Task 4 bridge: the item list the unchanged engine reads
-/// for a single trip type, derived from that type's contract needs through the
-/// central need→candidate map. Trip types no longer own item lists; Task 4
-/// composes `TripTypeContractResolver` needs directly and deletes this.
-struct TripTypeRule: Sendable {
-    var add: [String]
-}
-
 struct ActivityRulesFile: Codable, Sendable {
     var activities: [String: [String]]
 }
@@ -343,13 +335,6 @@ struct PackingRulesFile: Sendable {
 
     var baseEssentials: [String] { base.baseEssentials }
 
-    /// TEMPORARY bridge for `PackingEngine` until Task 4; see `TripTypeRule`.
-    var tripTypes: [String: TripTypeRule] {
-        Dictionary(uniqueKeysWithValues: TripType.allCases.map { tripType in
-            let needs = tripTypeContracts.contract(for: tripType).needs
-            return (tripType.rawValue, TripTypeRule(add: tripTypeContracts.candidateItemIDs(for: needs)))
-        })
-    }
     var internationalAdds: [String] { base.internationalAdds }
     var contextChips: [String: [String]] { base.contextChips }
     var freeTextKeywords: [String: String] { base.freeTextKeywords }

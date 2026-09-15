@@ -62,11 +62,13 @@ struct RegenerationProvenanceTests {
             endDate: ctx.endDate,
             durationDays: ctx.durationDays,
             durationNights: ctx.durationNights,
-            tripType: ctx.tripType,
+            tripType: .other,
             activities: ctx.activities,
             bagType: ctx.bagType,
             packingStyle: ctx.packingStyle
         )
+        // The record's authoritative selection is the full set, not a scalar.
+        trip.tripTypesRaw = PackWiseStableEncoding.tripTypesJSON(ctx.tripTypes)
         modelContext.insert(trip)
         let repo = TripRepository(context: modelContext)
         repo.attach(party: ctx.effectiveParty, bagType: ctx.bagType, on: trip)

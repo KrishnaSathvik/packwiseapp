@@ -426,16 +426,6 @@ struct TripContext: Hashable, Sendable {
     var preferences: TravelerPreferences
     var party: TripParty = .solo()
 
-    /// TEMPORARY engine compatibility accessor — Tasks 3/4 replace every
-    /// reader with typed needs composed from `tripTypes`. Mirrors
-    /// `TripRecord.tripType`: a singleton resolves to its value; a genuine
-    /// multi-selection fails safe to `.other` (no typed needs) instead of
-    /// promoting one selected type to primary.
-    var tripType: TripType {
-        guard tripTypes.count == 1, let only = tripTypes.first else { return .other }
-        return only
-    }
-
     /// TEMPORARY engine compatibility accessor — Task 5's `LuggageContext`
     /// replaces every reader. A singleton resolves to its bag; empty or
     /// multi-bag fails safe to `.notSure` (no bag constraint).

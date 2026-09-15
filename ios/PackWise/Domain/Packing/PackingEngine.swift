@@ -422,15 +422,8 @@ struct PackingEngine: Sendable {
             )
         }
 
-        if let typeRule = rules.tripTypes[context.tripType.rawValue] {
-            add(
-                typeRule.add,
-                signal: .tripType,
-                code: "trip_type.generic",
-                arguments: ["tripType": context.tripType.title.lowercased()],
-                fallback: "Suggested for a \(context.tripType.title.lowercased()) trip.",
-                provenance: .tripType(context.tripType)
-            )
+        addTripTypeNeeds(context: context) { ids, signal, code, arguments, fallback, provenance in
+            add(ids, signal: signal, code: code, arguments: arguments, fallback: fallback, provenance: provenance)
         }
 
         for activity in context.activities {
@@ -499,6 +492,39 @@ struct PackingEngine: Sendable {
         }
 
         return Array(collected.values)
+    }
+
+    /// Product Experience V2, Task 4: every selected trip type contributes.
+    ///
+    /// The full `tripTypes` set resolves to normalized needs once (identical
+    /// needs merge, every provenance fact kept); each need's central candidates
+    /// then join the one `collected` map, so an item several trip types share
+    /// is a single suggestion carrying one fact per contributing type. Its
+    /// reason names all of them in stable order. No type is primary, and
+    /// nothing here reads the temporary singular accessor.
+    private func addTripTypeNeeds(
+        context: TripContext,
+        add: (_ ids: [String], _ signal: RecommendationSignal, _ code: String,
+              _ arguments: [String: String], _ fallback: String, _ provenance: RecommendationProvenance?) -> Void
+    ) {
+        let resolver = TripTypeContractResolver(contracts: rules.tripTypeContracts)
+        var order: [String] = []
+        var contributors: [String: Set<TripType>] = [:]
+        for normalized in resolver.normalizedNeeds(for: context.tripTypes) {
+            let sources = Set(normalized.provenance.compactMap(\.tripType))
+            for id in rules.tripTypeContracts.needDefinitions[normalized.need]?.candidateItemIDs ?? [] {
+                if contributors[id] == nil { order.append(id) }
+                contributors[id, default: []].formUnion(sources)
+            }
+        }
+        for id in order {
+            let sources = contributors[id] ?? []
+            let phrase = TripType.reasonPhrase(sources)
+            for tripType in TripType.stableOrder where sources.contains(tripType) {
+                add([id], .tripType, "trip_type.generic", ["tripType": phrase],
+                    "Suggested for a \(phrase) trip.", .tripType(tripType))
+            }
+        }
     }
 
     /// Resolves the trip's composed `Set<ActivityNeed>` into candidate items.

@@ -43,7 +43,9 @@ struct TripContextSnapshot: Hashable, Sendable {
     var endDate: Date
     var durationDays: Int
     var durationNights: Int
-    var tripType: TripType
+    /// Every selected trip type (Product Experience V2): engine decisions read
+    /// the full set, never the temporary singular accessor.
+    var tripTypes: Set<TripType>
 
     /// Activity IDs (post `ActivityVocabulary.normalize`) that have a
     /// matching entry in `rules.activities` — the engine's real activity
@@ -147,7 +149,7 @@ enum TripContextCompiler {
             endDate: context.endDate,
             durationDays: days,
             durationNights: nights,
-            tripType: context.tripType,
+            tripTypes: context.tripTypes,
             knownActivityIDs: known,
             knownDatedActivityUses: datedUses,
             unknownActivityIDs: unknown,

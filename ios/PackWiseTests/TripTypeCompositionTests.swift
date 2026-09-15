@@ -203,7 +203,6 @@ struct TripTypeCompositionTests {
     @Test func theContextResolverReadsEveryTripTypeNotTheTemporarySingularAccessor() throws {
         let resolver = try resolver()
         let context = try Self.context(tripTypes: [.business, .cityBreak], activities: [])
-        #expect(context.tripType == .other, "precondition: the temporary accessor fails safe for a multi-selection")
         #expect(resolver.contributions(for: context) == resolver.contributions(for: [.business, .cityBreak]))
         #expect(Set(resolver.contributions(for: context).compactMap(\.provenance.tripType)) == [.business, .cityBreak])
     }
@@ -231,11 +230,11 @@ struct TripTypeCompositionTests {
         #expect(selected.contains { $0.reasonCode == "activity.walking" }, "an explicit selection does")
     }
 
-    // MARK: - Task 3 → Task 4 bridge: output cannot move
+    // MARK: - Single types keep their pre-V2 candidates
 
-    /// Until Task 4 composes needs through the engine, the engine reads each
-    /// singleton type's candidates derived from its contract. That derived
-    /// list must be exactly today's per-type item list.
+    /// Each single type's needs resolve, through the central need→candidate
+    /// map, to exactly its pre-V2 per-type item list — why every single-type
+    /// golden is unchanged by composition.
     @Test func derivedCandidatesForEachSingleTypeEqualTodaysItemLists() throws {
         let legacy: [TripType: Set<String>] = [
             .vacation: ["electronics.headphones", "travel_comfort.book"],
@@ -255,9 +254,9 @@ struct TripTypeCompositionTests {
             .visitingFamily: ["miscellaneous.gift"],
             .other: [],
         ]
-        let rules = try SharedLibrary.rules()
+        let contracts = try table()
         for tripType in TripType.allCases {
-            let derived = try #require(rules.tripTypes[tripType.rawValue], "\(tripType)").add
+            let derived = contracts.candidateItemIDs(for: contracts.contract(for: tripType).needs)
             #expect(Set(derived) == legacy[tripType], "\(tripType)")
             #expect(derived.count == Set(derived).count, "\(tripType) derived list has no duplicates")
         }

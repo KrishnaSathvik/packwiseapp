@@ -253,9 +253,7 @@ struct IntelligenceServiceTests {
             let payload = IntelligenceDTO.payload(for: trip)
             #expect(payload.tripTypes == row.context.tripTypes, "\(row.id) trip types")
             #expect(payload.bagTypes == row.context.bagTypes, "\(row.id) bags")
-            if tripTypes.count > 1 {
-                #expect(trip.tripType == .other, "\(row.id) must not resolve a primary trip type")
-            }
+            #expect(payload.tripTypes.count == tripTypes.count, "\(row.id) must not collapse to a primary trip type")
         }
     }
 

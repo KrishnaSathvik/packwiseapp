@@ -185,9 +185,9 @@ struct TripContextCollectionsTests {
         )
     }
 
-    @Test func singletonContextSetsExposeTheSameCompatScalarsTheEngineReadsToday() throws {
+    @Test func singletonContextSetsKeepTheirValuesAndTheTemporaryBagScalar() throws {
         let ctx = try context(tripTypes: [.beach], bagTypes: [.carryOn])
-        #expect(ctx.tripType == .beach)
+        #expect(ctx.tripTypes == [.beach])
         #expect(ctx.bagType == .carryOn)
         #expect(try self.context(tripTypes: [.business], bagTypes: []).bagType == .notSure,
                 "an empty bag set is the not-sure/no-constraint state")
@@ -197,7 +197,6 @@ struct TripContextCollectionsTests {
         let ctx = try context(tripTypes: [.vacation, .cityBreak, .beach], bagTypes: [.personalItem, .checked])
         #expect(ctx.tripTypes == [.vacation, .cityBreak, .beach], "the context keeps every selected trip type")
         #expect(ctx.bagTypes == [.personalItem, .checked], "the context keeps every selected bag")
-        #expect(ctx.tripType == .other, "a multi-type selection must fail safe, never pick the first stable value")
         #expect(ctx.bagType == .notSure, "a multi-bag selection must fail safe to no bag constraint")
     }
 

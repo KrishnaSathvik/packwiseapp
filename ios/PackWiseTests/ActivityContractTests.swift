@@ -595,7 +595,7 @@ struct ActivityContractTests {
 
         let empty = TripType.allCases.filter { contracts.contract(for: $0).needs.isEmpty }
         #expect(empty == [.other], "a trip type silently lost its needs: \(empty)")
-        #expect(Set(try rules().tripTypes.keys) == Set(TripType.allCases.map(\.rawValue)))
+        #expect(Set(contracts.contracts.keys) == Set(TripType.allCases))
     }
 
     /// An `Other` trip still produces a complete, coherent list, and every row

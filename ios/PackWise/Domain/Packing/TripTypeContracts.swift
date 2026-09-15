@@ -290,3 +290,18 @@ extension RecommendationProvenance {
         )
     }
 }
+
+extension TripType {
+    /// The trip-type phrase for a reason template argument: every contributing
+    /// type in stable order, never one promoted to primary. "beach",
+    /// "vacation and beach", "vacation, city break, and beach".
+    static func reasonPhrase(_ tripTypes: Set<TripType>) -> String {
+        let titles = TripType.stableOrder.filter(tripTypes.contains).map { $0.title.lowercased() }
+        switch titles.count {
+        case 0: return ""
+        case 1: return titles[0]
+        case 2: return "\(titles[0]) and \(titles[1])"
+        default: return titles.dropLast().joined(separator: ", ") + ", and " + titles.last!
+        }
+    }
+}
