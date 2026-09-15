@@ -407,7 +407,7 @@
       ],
       "iconContract": "binoculars",
       "ownerScope": "trip",
-      "note": "Suggested for outdoor trips; rules.activities adds activities.binoculars/electronics.camera, but no golden fixture selects wildlife; Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
+      "note": "Suggested for outdoor trips; rules.activities adds activities.binoculars (and lists electronics.camera, which since Task 8.1 requires the traveler's explicit bringingCamera choice). No golden fixture selects wildlife; verified by named tests."
     },
     {
       "kind": "activity",
@@ -477,15 +477,11 @@
       "kind": "activity",
       "id": "photography",
       "exposed": true,
-      "engineContract": "deterministic",
+      "engineContract": "contextOnly",
       "fixtureIDs": [],
-      "testIDs": [
-        "ActivityContractTests.swift::photographyAddsACameraAndMemoryCard",
-        "ActivityContractTests.swift::everyDeterministicActivityHasAnObservableEffect"
-      ],
       "iconContract": "camera.aperture",
       "ownerScope": "trip",
-      "note": "Not offered as a suggested-activity chip for any TripType; reachable only via the free-text keyword \"photo\" in shared/rules/base.json. rules.activities adds camera/charger/memory card, but no golden fixture selects photography; Phase 5 closes the evidence gap with a named, verified test rather than fixture spam."
+      "note": "Context-only since Task 8.1 (2026-09-15). rules.activities still lists camera, camera charger, and memory card, but every one requires the traveler's explicit bringingCamera device choice, which adds them by itself — so selecting photography changes nothing on its own (pinned by ActivityContractTests.photographyAddsACameraAndMemoryCard). Not offered as a suggested-activity chip; reachable via the free-text keyword \"photo\"."
     },
     {
       "kind": "activity",
@@ -624,6 +620,45 @@
       "iconContract": "ipad",
       "ownerScope": "traveler",
       "note": "Task 8 traveler device signal, set in a companion's traveler details. rules.contextChips (base.json traveler_device_chips) adds electronics.tablet for that traveler; electronics.tablet eligibility is deviceSignalRequired(bringingTablet). Counts toward the travel adapter's deviceCount when on the list. Not in the Intelligence API chip vocabulary."
+    },
+    {
+      "kind": "contextChip",
+      "id": "bringingHeadphones",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "testIDs": [
+        "TripSetupDraftTests.swift::primaryDeviceChoicesStayOnYouAndNeverBecomeTripContext"
+      ],
+      "iconContract": "headphones",
+      "ownerScope": "traveler",
+      "note": "Task 8.1 traveler device signal: You choose it in About you, a companion in their traveler card. rules.contextChips (base.json traveler_device_chips) adds electronics.headphones for that traveler only, and the item's eligibility requires this signal. Stored on the traveler record, never as a trip chip; not in the Intelligence API chip vocabulary."
+    },
+    {
+      "kind": "contextChip",
+      "id": "bringingPowerBank",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "testIDs": [
+        "TripSetupDraftTests.swift::primaryDeviceChoicesStayOnYouAndNeverBecomeTripContext"
+      ],
+      "iconContract": "battery.100percent.bolt",
+      "ownerScope": "traveler",
+      "note": "Task 8.1 traveler device signal: You choose it in About you, a companion in their traveler card. rules.contextChips (base.json traveler_device_chips) adds electronics.power_bank for that traveler only, and the item's eligibility requires this signal. Stored on the traveler record, never as a trip chip; not in the Intelligence API chip vocabulary."
+    },
+    {
+      "kind": "contextChip",
+      "id": "bringingCamera",
+      "exposed": true,
+      "engineContract": "deterministic",
+      "fixtureIDs": [],
+      "testIDs": [
+        "TripSetupDraftTests.swift::primaryDeviceChoicesStayOnYouAndNeverBecomeTripContext"
+      ],
+      "iconContract": "camera",
+      "ownerScope": "traveler",
+      "note": "Task 8.1 traveler device signal: You choose it in About you, a companion in their traveler card. rules.contextChips (base.json traveler_device_chips) adds electronics.camera + electronics.camera_charger + electronics.memory_card for that traveler only, and the item's eligibility requires this signal. Stored on the traveler record, never as a trip chip; not in the Intelligence API chip vocabulary."
     }
   ]
 }

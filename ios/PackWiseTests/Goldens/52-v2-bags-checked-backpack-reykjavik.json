@@ -14,6 +14,18 @@
       "suppressed" : "footwear.walking_shoes"
     }
   ],
+  "eligibility" : [
+    {
+      "items" : [
+        "electronics.camera",
+        "electronics.camera_charger",
+        "electronics.memory_card"
+      ],
+      "owner" : "primary",
+      "reason" : "device_signal.bringingCamera",
+      "result" : "requiresExplicitSignal"
+    }
+  ],
   "engineVersion" : "v2",
   "fixture" : "52-v2-bags-checked-backpack-reykjavik",
   "items" : [
@@ -440,111 +452,6 @@
       ],
       "signals" : [
         "destination"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.camera",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Camera",
-      "importance" : "optional",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Reykjavik"
-          },
-          "reasonCode" : "activity.photography",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You're planning to shoot photos in Reykjavik.",
-      "reasonArguments" : {
-        "destination" : "Reykjavik"
-      },
-      "reasonCode" : "activity.photography",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.camera_charger",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Camera charger",
-      "importance" : "optional",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Reykjavik"
-          },
-          "reasonCode" : "activity.photography",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You're planning to shoot photos in Reykjavik.",
-      "reasonArguments" : {
-        "destination" : "Reykjavik"
-      },
-      "reasonCode" : "activity.photography",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.memory_card",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Memory card",
-      "importance" : "optional",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Reykjavik"
-          },
-          "reasonCode" : "activity.photography",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You're planning to shoot photos in Reykjavik.",
-      "reasonArguments" : {
-        "destination" : "Reykjavik"
-      },
-      "reasonCode" : "activity.photography",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
       ]
     },
     {

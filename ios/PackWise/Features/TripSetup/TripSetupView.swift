@@ -115,6 +115,7 @@ struct TripSetupView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(PackWiseColor.textSecondary)
                 TextField("Search city or destination", text: $search)
+                    .font(PackWiseFont.rowTitle)
                     .autocorrectionDisabled()
                 if !search.isEmpty {
                     Button {
@@ -159,7 +160,7 @@ struct TripSetupView: View {
                                 Spacer(minLength: PackWiseSpacing.snug)
                                 if draft.destination == destination {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 22))
+                                        .font(PackWiseFont.selectionGlyph)
                                         .foregroundStyle(PackWiseColor.onAccent, PackWiseColor.accent)
                                 }
                             }
@@ -285,13 +286,13 @@ struct TripSetupView: View {
                 let party = draft.party
                 ForEach(Array(draft.otherAdults.prefix(draft.otherAdultCount))) { adult in
                     if let traveler = party.travelers.first(where: { $0.id == adult.id }) {
-                        adultDetails(label: party.label(for: traveler), adult: adultBinding(adult.id))
+                        adultDetails(label: party.positionLabel(for: traveler), adult: adultBinding(adult.id))
                     }
                 }
                 if draft.travelMode == .family {
                     ForEach(draft.childProfiles) { child in
                         if let traveler = party.travelers.first(where: { $0.id == child.id }) {
-                            childDetails(label: party.label(for: traveler), child: childBinding(child.id))
+                            childDetails(label: party.positionLabel(for: traveler), child: childBinding(child.id))
                         }
                     }
                 }
@@ -349,8 +350,7 @@ struct TripSetupView: View {
             PackWiseSectionHeader(title: label)
             PackWiseCard {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                    TextField("Name (optional)", text: adult.name)
-                        .textInputAutocapitalization(.words)
+                    nameField(adult.name)
                     PackWiseRowDivider(inset: 0)
                     chipGroup(
                         title: "Devices",
@@ -369,6 +369,7 @@ struct TripSetupView: View {
                     )
                     PackWiseRowDivider(inset: 0)
                     TextField("Add note", text: adult.notes, axis: .vertical)
+                        .font(PackWiseFont.rowTitle)
                         .lineLimit(1...4)
                 }
             }
@@ -380,8 +381,7 @@ struct TripSetupView: View {
             PackWiseSectionHeader(title: label)
             PackWiseCard {
                 VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                    TextField("Name (optional)", text: child.name)
-                        .textInputAutocapitalization(.words)
+                    nameField(child.name)
                     PackWiseRowDivider(inset: 0)
                     HStack {
                         Text("Age group")
@@ -434,6 +434,19 @@ struct TripSetupView: View {
                     }
                 }
             }
+        }
+    }
+
+    /// A labeled optional name. The card heading is the stable position
+    /// (Adult 1, Child 1), so the typed name appears only here.
+    private func nameField(_ name: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+            Text("Name")
+                .font(PackWiseFont.rowSubtitle.weight(.semibold))
+                .foregroundStyle(PackWiseColor.textSecondary)
+            TextField("Optional", text: name)
+                .font(PackWiseFont.rowTitle)
+                .textInputAutocapitalization(.words)
         }
     }
 
@@ -511,6 +524,7 @@ struct TripSetupView: View {
                     Image(systemName: "plus")
                         .foregroundStyle(PackWiseColor.accent)
                     TextField("Add something", text: $customText)
+                        .font(PackWiseFont.rowTitle)
                         .focused($customFieldFocused)
                         .onSubmit { addCustom() }
                     if !customText.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -613,6 +627,7 @@ struct TripSetupView: View {
     /// the style step; the boolean chip stays in the enum for old trips.
     private var preferencesStep: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
+            devicesYouAreBringing
             ForEach(PreferenceGroup.allCases, id: \.self) { group in
                 VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
                     PackWiseSectionHeader(title: group.title)
@@ -630,6 +645,55 @@ struct TripSetupView: View {
                                     draft.chips.insert(chip)
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Task 8.1: one device model. Your phone is implicit — PackWise runs on
+    /// it — so it is stated, not offered as a fake choice. Every other device
+    /// is an explicit choice stored on your traveler, never on the trip.
+    private var devicesYouAreBringing: some View {
+        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+            PackWiseSectionHeader(title: "Devices you're bringing")
+            HStack(spacing: PackWiseSpacing.regular) {
+                PackWiseIconBadge(symbol: ContextChip.bringingPhone.symbol, tint: ContextChip.bringingPhone.tint)
+                VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                    Text("Phone")
+                        .font(PackWiseFont.rowTitle)
+                        .foregroundStyle(PackWiseColor.textPrimary)
+                    Text("Included automatically")
+                        .font(PackWiseFont.rowSubtitle)
+                        .foregroundStyle(PackWiseColor.textSecondary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "checkmark")
+                    .font(PackWiseFont.rowTitle)
+                    .foregroundStyle(PackWiseColor.textTertiary)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, PackWiseSpacing.regular)
+            .padding(.vertical, PackWiseSpacing.snug + 2)
+            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+            .background(PackWiseColor.surfaceAlt, in: RoundedRectangle(cornerRadius: PackWiseRadius.control, style: .continuous))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Phone, included automatically")
+            // Devices are attributes of you, like the chips below — the same
+            // chip treatment companions' device choices use.
+            PackWiseFlowLayout {
+                ForEach(ContextChip.primaryDevices) { chip in
+                    PackWiseChip(
+                        title: chip.chipTitle,
+                        symbol: chip.symbol,
+                        tint: chip.tint,
+                        isSelected: draft.chips.contains(chip)
+                    ) {
+                        if draft.chips.contains(chip) {
+                            draft.chips.remove(chip)
+                        } else {
+                            draft.chips.insert(chip)
                         }
                     }
                 }
@@ -946,15 +1010,14 @@ struct TripSetupView: View {
 }
 
 /// The About you / trip preference groups (design Section 11). Only known,
-/// relevant controls appear; traveler device signals never do — You own your
-/// phone implicitly, and companions choose devices in traveler details.
+/// relevant controls appear. Devices are their own section above these
+/// groups (Task 8.1), so no device chip appears here.
 enum PreferenceGroup: CaseIterable {
-    case health, devicesAndWork, clothingAndComfort, trip
+    case health, clothingAndComfort, trip
 
     var title: String {
         switch self {
         case .health: "Health"
-        case .devicesAndWork: "Devices & work"
         case .clothingAndComfort: "Clothing & comfort"
         case .trip: "This trip"
         }
@@ -963,7 +1026,6 @@ enum PreferenceGroup: CaseIterable {
     var chips: [ContextChip] {
         switch self {
         case .health: [.dailyMedication, .wearContacts]
-        case .devicesAndWork: [.bringingLaptop]
         case .clothingAndComfort: [.usuallyWorkOut, .runWhileTraveling, .needFormalOutfit, .getColdEasily]
         case .trip: [.travelingInternationally]
         }
@@ -1020,10 +1082,19 @@ enum TripReviewSummary {
                 value: draft.laundry.setupTitle
             ),
             Section(
+                title: "Your devices",
+                symbol: ContextChip.bringingPhone.symbol,
+                tint: ContextChip.bringingPhone.tint,
+                value: (["Phone"] + ContextChip.primaryDevices.filter(draft.chips.contains).map(\.chipTitle)).joined(separator: ", ")
+            ),
+            Section(
                 title: "Preferences",
                 symbol: "slider.horizontal.3",
                 tint: PackWiseColor.accent,
-                value: draft.tripChips.isEmpty ? "None" : ContextChip.allCases.filter(draft.tripChips.contains).map(\.chipTitle).joined(separator: ", ")
+                value: {
+                    let chips = ContextChip.allCases.filter { draft.tripChips.contains($0) && !ContextChip.primaryDevices.contains($0) }
+                    return chips.isEmpty ? "None" : chips.map(\.chipTitle).joined(separator: ", ")
+                }()
             ),
         ]
     }

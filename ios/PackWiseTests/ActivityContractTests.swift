@@ -647,11 +647,12 @@ struct ActivityContractTests {
             "nightlife": ["clothing.nice_outfit"],
             "shopping": ["essentials.reusable_bag"],
             "museums": ["clothing.light_sweater"],
-            "wildlife": ["activities.binoculars", "electronics.camera"],
+            "wildlife": ["activities.binoculars"],
             "snorkeling": ["activities.snorkel", "footwear.water_shoes"],
             "boatTrip": ["activities.dry_bag", "health.motion_sickness"],
-            "yoga": ["activities.yoga_mat_travel"],
-            "photography": ["electronics.camera", "electronics.memory_card"]
+            "yoga": ["activities.yoga_mat_travel"]
+            // photography is context-only since Task 8.1: its only content was
+            // camera gear, which is now the traveler's own device choice.
             // running/walking/hiking/camping/swimming/beachDays/work/
             // niceDinner/sightseeing are pinned by their own named tests and
             // golden fixtures.
@@ -677,8 +678,11 @@ struct ActivityContractTests {
         #expect(try addedBy("museums").contains("clothing.light_sweater"))
     }
 
+    /// Task 8.1: binoculars, never a camera — a camera is a device choice.
     @Test func wildlifeAddsBinocularsAndACamera() throws {
-        #expect(try addedBy("wildlife").isSuperset(of: ["activities.binoculars", "electronics.camera"]))
+        let added = try addedBy("wildlife")
+        #expect(added.contains("activities.binoculars"))
+        #expect(!added.contains("electronics.camera"))
     }
 
     @Test func snorkelingAddsSnorkelGearAndWaterShoes() throws {
@@ -693,7 +697,15 @@ struct ActivityContractTests {
         #expect(try addedBy("yoga").contains("activities.yoga_mat_travel"))
     }
 
+    /// Task 8.1: photography alone never adds camera gear; the camera is the
+    /// traveler's explicit device choice, which brings its charger and card.
     @Test func photographyAddsACameraAndMemoryCard() throws {
-        #expect(try addedBy("photography").isSuperset(of: ["electronics.camera", "electronics.memory_card"]))
+        let added = try addedBy("photography")
+        #expect(added.isDisjoint(with: ["electronics.camera", "electronics.camera_charger", "electronics.memory_card"]))
+        let engine = try makeEngine()
+        var context = try campingContext(activities: ["sightseeing", "photography"])
+        context.party = .solo(chips: [.bringingCamera])
+        let ids = Set(engine.generate(context: context).compactMap(\.canonicalItemID))
+        #expect(ids.isSuperset(of: ["electronics.camera", "electronics.camera_charger", "electronics.memory_card"]))
     }
 }

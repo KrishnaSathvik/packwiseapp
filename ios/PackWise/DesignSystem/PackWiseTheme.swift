@@ -49,22 +49,33 @@ extension Color {
     }
 }
 
-/// The type ramp. SF Pro at fixed sheet sizes; `.rounded` is never used.
+/// The type ramp. SF Pro; `.rounded` is never used.
+///
+/// Every role is anchored to a Dynamic Type text style whose default size is
+/// the sheet size (Task 8.1), so the hierarchy is unchanged at the standard
+/// setting and scales together at every other one. Screens never set a
+/// point size of their own.
 enum PackWiseFont {
-    /// "Where are you going?"
-    static let screenTitle = Font.system(size: 28, weight: .bold)
-    /// The gray line under a screen title.
-    static let screenSubtitle = Font.system(size: 15, weight: .regular)
-    static let cardTitle = Font.system(size: 17, weight: .semibold)
-    /// "Upcoming", "Past Trips" — title case on list screens.
-    static let sectionTitle = Font.system(size: 16, weight: .semibold)
-    /// "WEATHER", "PACKING" — uppercase, only inside a long detail screen.
-    static let microLabel = Font.system(size: 12, weight: .semibold)
-    static let rowTitle = Font.system(size: 16, weight: .medium)
-    static let rowSubtitle = Font.system(size: 13, weight: .regular)
-    static let button = Font.system(size: 17, weight: .semibold)
-    /// "74%", "4 / 6".
-    static let numeral = Font.system(size: 15, weight: .semibold)
+    /// "Where are you going?" — title, 28pt at the default size.
+    static let screenTitle = Font.system(.title, design: .default, weight: .bold)
+    /// The gray line under a screen title — subheadline, 15pt.
+    static let screenSubtitle = Font.system(.subheadline, design: .default, weight: .regular)
+    /// Card and hero titles — headline, 17pt semibold.
+    static let cardTitle = Font.system(.headline, design: .default, weight: .semibold)
+    /// "Upcoming", "Past Trips" — callout, 16pt semibold.
+    static let sectionTitle = Font.system(.callout, design: .default, weight: .semibold)
+    /// "WEATHER", "PACKING", setup step count — caption, 12pt semibold.
+    static let microLabel = Font.system(.caption, design: .default, weight: .semibold)
+    /// Row and option titles, field values — callout, 16pt medium.
+    static let rowTitle = Font.system(.callout, design: .default, weight: .medium)
+    /// Row secondary copy and helpers — footnote, 13pt.
+    static let rowSubtitle = Font.system(.footnote, design: .default, weight: .regular)
+    /// Primary and secondary buttons — headline, 17pt semibold.
+    static let button = Font.system(.headline, design: .default, weight: .semibold)
+    /// "74%", "4 / 6" — subheadline, 15pt semibold.
+    static let numeral = Font.system(.subheadline, design: .default, weight: .semibold)
+    /// Selection state glyphs (check circles and squares) — title2, 22pt.
+    static let selectionGlyph = Font.system(.title2, design: .default, weight: .regular)
 }
 
 enum PackWiseImageSlot {

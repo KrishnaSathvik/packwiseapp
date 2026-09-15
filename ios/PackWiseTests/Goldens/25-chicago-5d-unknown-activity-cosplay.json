@@ -1,4 +1,14 @@
 {
+  "eligibility" : [
+    {
+      "items" : [
+        "electronics.power_bank"
+      ],
+      "owner" : "primary",
+      "reason" : "device_signal.bringingPowerBank",
+      "result" : "requiresExplicitSignal"
+    }
+  ],
   "engineVersion" : "v2",
   "fixture" : "25-chicago-5d-unknown-activity-cosplay",
   "items" : [
@@ -450,41 +460,6 @@
       ],
       "signals" : [
         "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.power_bank",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Portable charger",
-      "importance" : "important",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Chicago"
-          },
-          "reasonCode" : "activity.sightseeing",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You'll have sightseeing days in Chicago.",
-      "reasonArguments" : {
-        "destination" : "Chicago"
-      },
-      "reasonCode" : "activity.sightseeing",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
       ]
     },
     {

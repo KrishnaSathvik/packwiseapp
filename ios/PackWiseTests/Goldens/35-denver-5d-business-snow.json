@@ -14,6 +14,16 @@
       "suppressed" : "clothing.light_jacket"
     }
   ],
+  "eligibility" : [
+    {
+      "items" : [
+        "electronics.headphones"
+      ],
+      "owner" : "primary",
+      "reason" : "device_signal.bringingHeadphones",
+      "result" : "requiresExplicitSignal"
+    }
+  ],
   "engineVersion" : "v2",
   "fixture" : "35-denver-5d-business-snow",
   "items" : [
@@ -564,41 +574,6 @@
       ],
       "signals" : [
         "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.headphones",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Headphones",
-      "importance" : "normal",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Denver"
-          },
-          "reasonCode" : "activity.work",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You'll be working on this trip.",
-      "reasonArguments" : {
-        "destination" : "Denver"
-      },
-      "reasonCode" : "activity.work",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
       ]
     },
     {

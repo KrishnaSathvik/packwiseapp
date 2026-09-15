@@ -251,7 +251,8 @@ struct TripSetupDraftTests {
 
         let sections = TripReviewSummary.sections(draft: draft, party: draft.party)
         let values = Dictionary(uniqueKeysWithValues: sections.map { ($0.title, $0.value) })
-        #expect(sections.map(\.title) == ["Trip types", "Travelers", "Activities", "Bags", "Packing style", "Laundry", "Preferences"])
+        #expect(sections.map(\.title) == ["Trip types", "Travelers", "Activities", "Bags", "Packing style", "Laundry", "Your devices", "Preferences"])
+        #expect(values["Your devices"] == "Phone", "the implicit phone is always stated")
         #expect(values["Trip types"] == "Vacation, Beach", "stable order, every type")
         #expect(values["Travelers"] == "You + 3 adults · You, Adult 1, Adult 2, Adult 3")
         #expect(values["Activities"] == "Snorkeling")
@@ -265,9 +266,83 @@ struct TripSetupDraftTests {
         #expect(TripReviewSummary.sections(draft: draft, party: draft.party).first { $0.title == "Bags" }?.value == "Personal item only, Checked bag")
     }
 
+    /// Task 8.1: You's phone is implicit; every other device You bring is an
+    /// explicit About you choice stored on your traveler — never trip context,
+    /// never API chips, never another traveler's.
+    @Test func primaryDeviceChoicesStayOnYouAndNeverBecomeTripContext() throws {
+        let catalog = try SharedLibrary.catalog()
+        let engine = PackingEngine(catalog: catalog, rules: Self.rules)
+        func items(_ draft: TripDraft) throws -> (TripRecord, [PackingItemDraft]) {
+            let context = ModelContext(try PackWisePersistence.container(inMemory: true))
+            let trip = try Self.save(draft, in: context)
+            return (trip, engine.generate(context: trip.context(preferences: Self.preferences(), weather: nil)))
+        }
+        let devices: Set<String> = ["electronics.laptop", "electronics.laptop_charger", "electronics.tablet", "electronics.headphones",
+                                    "electronics.power_bank", "electronics.camera", "electronics.camera_charger", "electronics.memory_card"]
+
+        // Solo, a trip whose rules used to add headphones, a power bank, and a camera.
+        var solo = TripDraft.fresh(preferences: Self.preferences())
+        solo.destination = try Self.destination()
+        solo.toggleTripType(.vacation)
+        solo.toggleActivity("sightseeing")
+        solo.toggleActivity("photography")
+        let (_, none) = try items(solo)
+        let noneIDs = Set(none.compactMap(\.canonicalItemID))
+        #expect(noneIDs.isSuperset(of: ["essentials.phone", "electronics.phone_charger"]), "implicit phone")
+        #expect(noneIDs.isDisjoint(with: devices), "no device without a choice: \(noneIDs.intersection(devices))")
+
+        let expected: [(ContextChip, Set<String>)] = [
+            (.bringingLaptop, ["electronics.laptop", "electronics.laptop_charger"]),
+            (.bringingHeadphones, ["electronics.headphones"]),
+            (.bringingPowerBank, ["electronics.power_bank"]),
+            (.bringingCamera, ["electronics.camera", "electronics.camera_charger", "electronics.memory_card"]),
+            (.bringingTablet, ["electronics.tablet"]),
+        ]
+        for (chip, ids) in expected {
+            var draft = solo
+            draft.chips = [chip]
+            let (trip, generated) = try items(draft)
+            let got = Set(generated.compactMap(\.canonicalItemID)).intersection(devices)
+            #expect(got == ids, "\(chip): \(got)")
+            if chip != .bringingLaptop {
+                #expect(!trip.contextChips.contains(chip), "\(chip) is never a trip chip")
+                #expect(trip.party.primary.chips.contains(chip), "\(chip) lives on You's traveler record")
+                #expect(TripDraft.from(trip: trip).chips.contains(chip), "\(chip) round-trips through edit")
+            }
+        }
+
+        // A party: You's choices stay yours; Adult 1's stay theirs.
+        var party = solo
+        party.chips = [.bringingHeadphones, .bringingPowerBank]
+        party.setTravelMode(.group)
+        party.setOtherAdultCount(2)
+        party.otherAdults[0].chips = [.bringingCamera, .bringingHeadphones]
+        let (trip, generated) = try items(party)
+        let travelers = trip.party.travelers
+        func ids(_ traveler: Traveler) -> Set<String> {
+            Set(generated.filter { $0.travelerID == traveler.id }.compactMap(\.canonicalItemID)).intersection(devices)
+        }
+        #expect(ids(travelers[0]) == ["electronics.headphones", "electronics.power_bank"])
+        #expect(ids(travelers[1]) == ["electronics.headphones"], "Adult 1's own headphones; the camera is shared")
+        #expect(ids(travelers[2]).isEmpty, "Adult 2 chose nothing and inherits nothing")
+        #expect(generated.filter { $0.ownershipType == .shared }.compactMap(\.canonicalItemID).contains("electronics.camera"))
+        #expect(trip.contextChips.allSatisfy { !ContextChip.travelerDeviceSignals.contains($0) })
+    }
+
+    @Test func travelerEditorHeadingsAreStructuralWhileNamesIdentifyEverywhereElse() {
+        var draft = TripDraft()
+        draft.setTravelMode(.family)
+        draft.setOtherAdultCount(2)
+        draft.setChildCount(1)
+        draft.otherAdults[0].name = "Alex"
+        let party = draft.party
+        #expect(party.travelers.map(party.positionLabel(for:)) == ["You", "Adult 1", "Adult 2", "Child 1"])
+        #expect(party.travelers.map(party.label(for:)) == ["You", "Alex", "Adult 2", "Child 1"])
+    }
+
     @Test func preferenceGroupsNeverOfferDeviceSignalsOrLaundry() {
         let offered = PreferenceGroup.allCases.flatMap(\.chips)
-        #expect(Set(offered).isDisjoint(with: ContextChip.travelerDeviceSignals))
+        #expect(Set(offered).isDisjoint(with: ContextChip.travelerDevices), "devices are their own About you section")
         #expect(!offered.contains(.laundryAvailable), "laundry is the style step's control")
         #expect(Set(offered).count == offered.count)
     }

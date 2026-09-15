@@ -17,11 +17,12 @@
   "homeCountryCode": "US",
   "homeCountrySource": "userConfirmed",
   "mustInclude": [
-    "electronics.camera",
-    "electronics.camera_charger",
     "clothing.rain_jacket"
   ],
-  "mustNotInclude": [],
+  "mustNotInclude": [
+    "electronics.camera",
+    "electronics.power_bank"
+  ],
   "note": "Iceland for a week of landscape photography. Waterfalls, black sand beaches, hoping for northern lights. It will be cold and windy out there.",
   "mustInfer": [
     "photography"
@@ -41,5 +42,5 @@
     "clothing.beanie",
     "health.hand_warmers"
   ],
-  "expectationNotes": "mustInclude expected clothing.windbreaker until 2026-09-01: that expectation predated the coverage resolver and demanded two shells (windbreaker + rain jacket) for one wind need. The rain shell now covers wind, so the eval asserts the covering item instead."
+  "expectationNotes": "mustInclude expected clothing.windbreaker until 2026-09-01: that expectation predated the coverage resolver and demanded two shells (windbreaker + rain jacket) for one wind need. The rain shell now covers wind, so the eval asserts the covering item instead. Task 8.1 (2026-09-15): removed electronics.camera, electronics.camera_charger from mustInclude — devices other than the traveler's implicit phone are explicit traveler choices, never implied by an activity or trip type, and this fixture's trip-level context cannot carry a traveler device choice. mustNotInclude now pins that photography alone never adds a camera."
 }

@@ -17,7 +17,8 @@ struct TripDraft {
     var bagTypes: Set<BagType> = []
     var packingStyle: PackingStyle = .balanced
     var laundry: LaundryAccess = .none
-    /// The primary traveler's About you choices plus trip-level chips.
+    /// The primary traveler's About you choices (including device signals)
+    /// plus trip-level chips.
     var chips: Set<ContextChip> = []
     var notes: String = ""
     var travelMode: TravelMode = .solo
@@ -39,7 +40,8 @@ struct TripDraft {
     var party: TripParty {
         TripPartyBuilder.make(
             mode: travelMode,
-            selfChips: tripChips.subtracting(ContextChip.tripLevel),
+            // You's device signals live on your traveler record only.
+            selfChips: chips.subtracting(ContextChip.tripLevel),
             otherAdults: otherAdults,
             children: travelMode == .family ? childProfiles : [],
             existing: existingParty
@@ -154,6 +156,7 @@ struct TripDraft {
         draft.packingStyle = trip.packingStyle
         draft.laundry = trip.laundryAccess
         draft.chips = Set(trip.contextChips).subtracting(ContextChip.travelerDeviceSignals)
+            .union(party.primary.chips.intersection(ContextChip.travelerDeviceSignals))
         draft.notes = trip.userNotes
         draft.travelMode = party.travelMode
         draft.otherAdults = party.travelers

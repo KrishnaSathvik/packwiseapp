@@ -83,7 +83,7 @@ struct MultiSelectionCard: View {
 
     private var checkbox: some View {
         Image(systemName: isSelected ? "checkmark.square.fill" : "square")
-            .font(.system(size: 22, weight: isSelected ? .regular : .light))
+            .font(PackWiseFont.selectionGlyph.weight(isSelected ? .regular : .light))
             .foregroundStyle(isSelected ? PackWiseColor.accent : PackWiseColor.textTertiary)
             .accessibilityHidden(true)
     }

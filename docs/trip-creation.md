@@ -81,8 +81,8 @@ Group
 
 **Me + partner**, **Family**, and **Group** share one traveler-details card per person besides you:
 
-- **Adults** (the partner, or each other adult): optional name, **Devices** (Phone / Laptop / Tablet), the differences that matter (medication, contacts, workout, formal, cold), and a note.
-- **Children**: optional name, age group (teen / child / toddler / infant), and the needs for that age. Only a **teen** is offered **Devices**; younger children never get device choices by default. No birth dates.
+- **Adults** (the partner, or each other adult): heading **Adult n**, optional **Name**, **Devices** (Phone / Laptop / Tablet / Headphones / Power bank / Camera), the differences that matter (medication, contacts, workout, formal, cold), and a note.
+- **Children**: heading **Child n**, optional **Name**, age group (teen / child / toddler / infant), and the needs for that age. Only a **teen** is offered **Devices**; younger children never get device choices by default. No birth dates.
 
 **Family** counts **Other adults** and **Children**; **Group** counts **Other adults** (at least one). You are implicit, so the count never includes you. Review reads unambiguously, e.g. `You + 3 adults` or `You + 1 adult, 2 children`. Empty names display stable positional labels — You, Adult 1, Adult 2, Child 1 — which never overwrite a name.
 
@@ -220,7 +220,7 @@ Clothing & comfort  Work out · Running · Formal outfit · Get cold easily
 This trip           International
 ```
 
-Traveler device signals for other people live in their traveler cards, never here. Setup does not collect a free-text note today; an existing trip's note is kept.
+Above the chips, **Devices you're bringing** states **Phone — Included automatically** (PackWise runs on it) and offers Laptop, Tablet, Headphones, Power bank, and Camera as explicit choices. Nothing else is assumed: a trip type or activity never adds a device, except that a solo Business or Work trip is its traveler's laptop. Other travelers choose their devices in their traveler cards. Setup does not collect a free-text note today; an existing trip's note is kept.
 
 Example: `I'll probably do laundry halfway through.`
 

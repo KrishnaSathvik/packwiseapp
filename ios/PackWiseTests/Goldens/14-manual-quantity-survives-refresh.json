@@ -28,6 +28,16 @@
       "suppressed" : "footwear.walking_shoes"
     }
   ],
+  "eligibility" : [
+    {
+      "items" : [
+        "electronics.headphones"
+      ],
+      "owner" : "primary",
+      "reason" : "device_signal.bringingHeadphones",
+      "result" : "requiresExplicitSignal"
+    }
+  ],
   "engineVersion" : "v2",
   "fixture" : "14-manual-quantity-survives-refresh",
   "items" : [
@@ -572,42 +582,6 @@
       ],
       "signals" : [
         "destination"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.headphones",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Headphones",
-      "importance" : "normal",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "tripType" : "vacation"
-          },
-          "reasonCode" : "trip_type.generic",
-          "sourceSignals" : [
-            "tripType"
-          ],
-          "tripType" : "vacation"
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Suggested for a vacation trip.",
-      "reasonArguments" : {
-        "tripType" : "vacation"
-      },
-      "reasonCode" : "trip_type.generic",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "tripType"
       ]
     },
     {

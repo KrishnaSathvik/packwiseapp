@@ -146,8 +146,13 @@ struct PackingEngine: Sendable {
         var drops: ConstraintDrops = []
         var ineligible: EligibilityDrops = []
         let primary = context.effectiveParty.primary
+        // The solo traveler's own chips too (Task 8.1): device choices live on
+        // the traveler record, not the trip's chips. Identical chip facts the
+        // trip context already added merge rather than duplicate.
+        var collected = Dictionary(uniqueKeysWithValues: ruleSuggestions(for: context, snapshot: snapshot).map { ($0.canonicalItemID, $0) })
+        addTravelerSuggestions(primary, context: context, into: &collected)
         let suggestions = eligibleSuggestions(
-            ruleSuggestions(for: context, snapshot: snapshot),
+            Array(collected.values),
             for: primary,
             signals: travelerChips(primary, context: context),
             isSoleTraveler: true,
@@ -1192,6 +1197,9 @@ struct PackingEngine: Sendable {
         case .laundryAvailable: "You expect to do laundry."
         case .bringingPhone: "Bringing a phone."
         case .bringingTablet: "Bringing a tablet."
+        case .bringingHeadphones: "Bringing headphones."
+        case .bringingPowerBank: "Bringing a power bank."
+        case .bringingCamera: "Bringing a camera."
         }
     }
 }

@@ -2,6 +2,14 @@
   "eligibility" : [
     {
       "items" : [
+        "electronics.power_bank"
+      ],
+      "owner" : "partner",
+      "reason" : "device_signal.bringingPowerBank",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
         "electronics.phone_charger",
         "essentials.phone"
       ],
@@ -13,8 +21,8 @@
       "items" : [
         "electronics.power_bank"
       ],
-      "owner" : "partner",
-      "reason" : "device_signal_required",
+      "owner" : "primary",
+      "reason" : "device_signal.bringingPowerBank",
       "result" : "requiresExplicitSignal"
     }
   ],
@@ -1194,41 +1202,6 @@
       ],
       "signals" : [
         "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.power_bank",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Portable charger",
-      "importance" : "important",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Seattle"
-          },
-          "reasonCode" : "activity.sightseeing",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You'll have sightseeing days in Seattle.",
-      "reasonArguments" : {
-        "destination" : "Seattle"
-      },
-      "reasonCode" : "activity.sightseeing",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
       ]
     },
     {

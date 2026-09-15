@@ -1,4 +1,14 @@
 {
+  "eligibility" : [
+    {
+      "items" : [
+        "electronics.headphones"
+      ],
+      "owner" : "primary",
+      "reason" : "device_signal.bringingHeadphones",
+      "result" : "requiresExplicitSignal"
+    }
+  ],
   "engineVersion" : "v2",
   "fixture" : "07-chicago-5d-business-checked",
   "items" : [
@@ -472,41 +482,6 @@
       ],
       "signals" : [
         "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.headphones",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Headphones",
-      "importance" : "normal",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Chicago"
-          },
-          "reasonCode" : "activity.work",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You'll be working on this trip.",
-      "reasonArguments" : {
-        "destination" : "Chicago"
-      },
-      "reasonCode" : "activity.work",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
       ]
     },
     {

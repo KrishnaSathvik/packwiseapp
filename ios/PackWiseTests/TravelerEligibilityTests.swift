@@ -290,14 +290,13 @@ struct TravelerEligibilityTests {
         #expect(decision == .requiresExplicitSignal(.phone))
     }
 
-    /// D1 (Task 7.2): PackWise running on the primary traveler's phone is an
-    /// implicit phone-ownership signal — a phone and its charger, nothing
-    /// more. It is not generic device ownership: the primary's headphones and
-    /// power bank are an interim carryover pending the Task 8 device model,
-    /// and a laptop still needs its own signal.
+    /// D1 (Tasks 7.2–8.1): PackWise running on the primary traveler's phone
+    /// is an implicit phone-ownership signal — a phone and what charges it,
+    /// nothing more. Every other device, the primary's included, needs its
+    /// own explicit signal; the interim carryover is gone.
     @Test func implicitPrimaryPhoneIsNotGenericDeviceOwnership() {
         let phoneFamily = Set(Self.rules.party.eligibility.families.filter { $0.value == .phoneOwnership }.keys)
-        #expect(phoneFamily == ["essentials.phone", "electronics.phone_charger"])
+        #expect(phoneFamily == ["essentials.phone", "electronics.phone_charger", "miscellaneous.car_charger"])
 
         func decide(_ id: String, _ traveler: Traveler, signals: Set<ContextChip> = []) -> EligibilityDecision {
             TravelerEligibilityResolver.evaluate(canonicalItemID: id, traveler: traveler, explicitNeeds: [], signals: signals,
@@ -306,8 +305,17 @@ struct TravelerEligibilityTests {
         let you = Traveler.primarySelf()
         #expect(decide("essentials.phone", you) == .eligible(.implicitPrimaryPhone))
         #expect(decide("electronics.phone_charger", you) == .eligible(.implicitPrimaryPhone), "the charger follows the owned phone")
-        for id in ["electronics.headphones", "electronics.power_bank", "electronics.camera"] {
-            #expect(decide(id, you) == .eligible(.primaryTravelerInterim), "\(id) is not proven by the phone")
+        let explicit: [(String, ContextChip)] = [
+            ("electronics.headphones", .bringingHeadphones), ("electronics.power_bank", .bringingPowerBank),
+            ("electronics.camera", .bringingCamera), ("electronics.camera_charger", .bringingCamera), ("electronics.memory_card", .bringingCamera),
+        ]
+        for (id, chip) in explicit {
+            #expect(decide(id, you) == .requiresExplicitSignal(.device(chip)), "\(id) is not proven by the phone")
+            #expect(decide(id, you, signals: [chip]) == .eligible(.travelerSignal), "\(id) with You's own choice")
+            #expect(decide(id, you, signals: [.bringingPhone, .bringingLaptop]) != .eligible(.travelerSignal), "\(id): another device never stands in")
+        }
+        for id in ["electronics.earbuds_case", "electronics.kindle", "electronics.watch_charger"] {
+            #expect(decide(id, you) == .requiresExplicitSignal(.device(nil)), "\(id): no signal, no automatic row, even for You")
         }
         #expect(decide("electronics.tablet", you) == .requiresExplicitSignal(.device(.bringingTablet)),
                 "Task 8: a tablet is a chosen device, never implied by the phone")
@@ -320,7 +328,7 @@ struct TravelerEligibilityTests {
                          Traveler(role: .child, ageGroup: .teen), Traveler(role: .child, ageGroup: .child)] {
             #expect(decide("essentials.phone", traveler) == .requiresExplicitSignal(.phone), "\(traveler.role)/\(traveler.ageGroup)")
             #expect(decide("electronics.phone_charger", traveler) == .requiresExplicitSignal(.phone))
-            #expect(decide("electronics.headphones", traveler) == .requiresExplicitSignal(.device(nil)))
+            #expect(decide("electronics.headphones", traveler) == .requiresExplicitSignal(.device(.bringingHeadphones)))
         }
     }
 
@@ -422,22 +430,29 @@ struct TravelerEligibilityTests {
         let phone = try #require(entries.first { $0.reason == "device_signal.phone" })
         #expect(phone.result == .requiresExplicitSignal)
         #expect(phone.items == ["electronics.phone_charger", "essentials.phone"])
-        let device = try #require(entries.first { $0.reason == "device_signal_required" })
+        let device = try #require(entries.first { $0.reason == "device_signal.bringingPowerBank" })
         #expect(device.items.contains("electronics.power_bank"))
         #expect(entries.contains { $0.reason == "adult_or_teen_only" && $0.items.contains("essentials.wallet") })
-        #expect(generation.eligibilityDecisions.allSatisfy { $0.travelerID != party.primary.id }, "adults lose nothing")
+        #expect(generation.eligibilityDecisions.filter { $0.travelerID == party.primary.id }.allSatisfy { $0.reason.hasPrefix("device_signal.") },
+                "You lose nothing but devices you didn't choose")
     }
 
     @Test func soloRecordsNoEligibilityDecisionsAndAdultPartiesOnlyWithheldDevices() throws {
+        let deviceOnly: (EngineGeneration) -> Bool = { generation in
+            generation.eligibilityDecisions.allSatisfy { $0.reason.hasPrefix("device_signal.") && !$0.items.contains { $0.hasPrefix("electronics.laptop") } }
+        }
         let solo = Self.engine.generateDetailed(context: try Self.context(party: .solo(), chips: [.bringingLaptop, .dailyMedication]))
-        #expect(solo.eligibilityDecisions.isEmpty)
+        #expect(deviceOnly(solo), "solo withholds only unchosen devices: \(solo.eligibilityDecisions)")
         let soloBusiness = Self.engine.generateDetailed(context: try Self.context(party: .solo(), tripTypes: [.business], activities: ["work"]))
-        #expect(soloBusiness.eligibilityDecisions.isEmpty, "a solo trip's own context is its only traveler's")
+        #expect(deviceOnly(soloBusiness), "a solo trip's work context is its traveler's laptop; nothing else is implied")
+        #expect(soloBusiness.items.contains { $0.canonicalItemID == "electronics.laptop" })
+        #expect(!soloBusiness.items.contains { $0.canonicalItemID == "electronics.headphones" }, "Task 8.1: Work never implies headphones")
 
         let group = TripParty(travelMode: .group, travelers: [.primarySelf()] + (1...3).map { _ in Traveler(role: .otherAdult, ageGroup: .adult) })
         let generation = Self.engine.generateDetailed(context: try Self.context(city: "Tokyo", party: group, tripTypes: [.business], activities: ["work"]))
         let primaryWithheld = generation.eligibilityDecisions.filter { $0.travelerID == group.primary.id }
-        #expect(primaryWithheld.map(\.reason) == ["device_signal.bringingLaptop"], "unattributed work context withholds only the laptop from You…")
+        #expect(primaryWithheld.map(\.reason) == ["device_signal.bringingHeadphones", "device_signal.bringingLaptop"],
+                "unattributed work context withholds the laptop and headphones from You…")
         #expect(generation.eligibilityDecisions.allSatisfy { $0.result == .requiresExplicitSignal && $0.reason.hasPrefix("device_signal") },
                 "…and adults lose nothing but unevidenced devices: \(generation.eligibilityDecisions)")
         #expect(!generation.items.contains { $0.canonicalItemID == "electronics.laptop" }, "no one has a laptop signal")

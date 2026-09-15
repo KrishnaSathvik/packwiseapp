@@ -173,6 +173,9 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
     /// vocabulary: they live in `base.json` `traveler_device_chips`.
     case bringingPhone
     case bringingTablet
+    case bringingHeadphones
+    case bringingPowerBank
+    case bringingCamera
 
     var id: String { rawValue }
 
@@ -189,6 +192,9 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
         case .laundryAvailable: "I'll have laundry"
         case .bringingPhone: "Bringing a phone"
         case .bringingTablet: "Bringing a tablet"
+        case .bringingHeadphones: "Bringing headphones"
+        case .bringingPowerBank: "Bringing a power bank"
+        case .bringingCamera: "Bringing a camera"
         }
     }
 
@@ -211,18 +217,25 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
         [.dailyMedication, .wearContacts, .usuallyWorkOut, .needFormalOutfit, .getColdEasily]
     }
 
-    /// Device choices in a companion's traveler details, in display order.
-    /// Laptop reuses the existing `bringingLaptop` signal. The primary
-    /// traveler is not asked: their phone is implicit (PackWise runs on it)
-    /// and their laptop lives in About you.
+    /// Device choices in a companion's traveler details, in display order
+    /// (Tasks 8–8.1). Every device is explicit for everyone except the
+    /// primary traveler's phone. Laptop reuses the existing `bringingLaptop`
+    /// signal.
     static var travelerDevices: [ContextChip] {
-        [.bringingPhone, .bringingLaptop, .bringingTablet]
+        [.bringingPhone, .bringingLaptop, .bringingTablet, .bringingHeadphones, .bringingPowerBank, .bringingCamera]
     }
 
-    /// Signals that only ever belong to one traveler's details — never the
-    /// trip's own chips, and never sent as trip context.
+    /// The primary traveler's device choices in About you: everything but the
+    /// phone, which is implicit because PackWise runs on it.
+    static var primaryDevices: [ContextChip] {
+        travelerDevices.filter { $0 != .bringingPhone }
+    }
+
+    /// Signals that only ever belong to one traveler's details — stored on
+    /// that traveler, never as the trip's own chips, and never sent as trip
+    /// context. (`bringingLaptop` predates them and remains a trip chip too.)
     static var travelerDeviceSignals: Set<ContextChip> {
-        [.bringingPhone, .bringingTablet]
+        [.bringingPhone, .bringingTablet, .bringingHeadphones, .bringingPowerBank, .bringingCamera]
     }
 
     /// The About you choices for the primary traveler, in display order.

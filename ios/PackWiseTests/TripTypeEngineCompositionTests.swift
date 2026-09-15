@@ -75,12 +75,13 @@ struct TripTypeEngineCompositionTests {
 
             let suppressed = Set(generation.coverageSuppressions.map(\.canonicalItemID))
             let trimmed = Set(generation.constraintDecisions.flatMap(\.items))
+            let ineligible = Set(generation.eligibilityDecisions.flatMap(\.items))
             for tripType in TripType.stableOrder where types.contains(tripType) {
                 let contract = Self.contracts.contract(for: tripType)
                 for id in Self.contracts.candidateItemIDs(for: contract.needs) {
                     guard let item = items.first(where: { $0.canonicalItemID == id }) else {
-                        #expect(suppressed.contains(id) || trimmed.contains(id),
-                                "\(label): \(tripType) candidate \(id) vanished without a coverage or constraint decision")
+                        #expect(suppressed.contains(id) || trimmed.contains(id) || ineligible.contains(id),
+                                "\(label): \(tripType) candidate \(id) vanished without a coverage, constraint, or eligibility decision")
                         continue
                     }
                     #expect(item.provenance.contains(.tripType(tripType)), "\(label): \(id) lost \(tripType) provenance")

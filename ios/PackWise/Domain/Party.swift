@@ -245,7 +245,14 @@ struct TripParty: Hashable, Codable, Sendable {
     func label(for traveler: Traveler) -> String {
         let trimmed = traveler.name.trimmingCharacters(in: .whitespacesAndNewlines)
         if traveler.role == .self { return trimmed.isEmpty || trimmed == "You" ? "You" : trimmed }
-        if !trimmed.isEmpty { return trimmed }
+        return trimmed.isEmpty ? positionLabel(for: traveler) : trimmed
+    }
+
+    /// The structural position label — You, Adult 1, Child 1 — ignoring the
+    /// name. Traveler editors use it as the card heading so a typed name is
+    /// never shown twice (Task 8.1).
+    func positionLabel(for traveler: Traveler) -> String {
+        if traveler.role == .self { return "You" }
         if traveler.role == .child {
             let children = travelers.filter { $0.role == .child }
             return "Child \((children.firstIndex { $0.id == traveler.id } ?? 0) + 1)"
@@ -427,7 +434,7 @@ enum TripPartyBuilder {
         children: [ChildDraft],
         existing: TripParty? = nil
     ) -> TripParty {
-        let primary = reusedSelf(from: existing, chips: selfChips.subtracting(ContextChip.travelerDeviceSignals))
+        let primary = reusedSelf(from: existing, chips: selfChips)
         let partnerIDs = Set(existing?.travelers.filter { $0.role == .partner }.map(\.id) ?? [])
         func adult(_ draft: AdultDraft, role: TravelerRole) -> Traveler {
             Traveler(id: draft.id, name: draft.name, role: role, ageGroup: .adult, chips: draft.chips, notes: draft.notes)

@@ -28,25 +28,19 @@ enum EligibilityFamily: Hashable, Sendable {
     /// Only when the traveler's own explicit child need is selected. Age,
     /// a Family trip, or another traveler's preference never substitutes.
     case explicitChildNeed(ChildNeed)
-    /// Phone and phone charger only (Task 7.2). The primary traveler carries
-    /// an implicit phone-ownership signal: PackWise is running on their phone.
-    /// That proves a phone — and the charger that follows it — and nothing
-    /// else. Every other traveler, at any age, needs an explicit
+    /// Phone, phone charger, and car charger only (Tasks 7.2–8.1). The primary
+    /// traveler carries an implicit phone-ownership signal: PackWise is
+    /// running on their phone. That proves a phone — and what charges it —
+    /// and nothing else. Every other traveler, at any age, needs an explicit
     /// traveler-scoped phone signal: `bringingPhone`, set in traveler details
     /// (Task 8).
     case phoneOwnership
-    /// Every other personal device (Task 7.1): ownership needs evidence,
-    /// never age, and is never proven by owning a phone.
-    ///
-    /// - A named signal (`bringingLaptop`) must be attributed to the
-    ///   traveler: their own chip or preference, or — on a solo list only —
-    ///   the trip's own context, which can belong to no one else.
-    /// - With no named signal (power bank, headphones, earbuds, tablet,
-    ///   camera…) setup has no per-traveler device input yet. The primary
-    ///   traveler keeps these rows as an **interim carryover** of today's
-    ///   lists (`primaryTravelerInterim`), explicitly not justified by the
-    ///   implicit phone signal; the Task 8 traveler device model replaces
-    ///   it. Companions get none.
+    /// Every other personal device (Tasks 7.1–8.1): ownership needs evidence,
+    /// never age, and is never proven by owning a phone. The signal must be
+    /// attributed to the traveler — their own chip or preference, or on a
+    /// solo list only the trip's own context. An item with no named signal
+    /// reaches no one automatically, the primary traveler included; the
+    /// Task 7.2 interim carryover is gone.
     case deviceSignalRequired(ContextChip?)
     /// Medication and contacts: only from the traveler's own signal, never
     /// presumed at any age.
@@ -75,9 +69,6 @@ enum EligibilityReason: String, Hashable, Sendable {
     /// The primary traveler's implicit phone-ownership signal (see
     /// `EligibilityFamily.phoneOwnership`).
     case implicitPrimaryPhone = "implicit_primary_phone"
-    /// Interim: the primary traveler for an unsignaled non-phone device,
-    /// pending the Task 8 traveler device model. Not phone evidence.
-    case primaryTravelerInterim = "primary_traveler_interim"
     /// A solo list's trip context, attributed to its only traveler.
     case soleTravelerContext = "sole_traveler_context"
     case travelerSignal = "traveler_signal"
@@ -119,9 +110,11 @@ enum TravelerEligibilityResolver {
     ///   - explicitNeeds: the traveler's own selected child needs.
     ///   - signals: context chips attributed to this traveler only (the
     ///     primary's own chips and preferences, or a companion's own chips).
-    ///   - isSoleTraveler: the list has one traveler, so trip-wide context
-    ///     (a Business trip, a Work activity) is unambiguously theirs. Never
-    ///     true on a party list, where that context names no one.
+    ///   - isSoleTraveler: the list has one traveler, so trip-wide work
+    ///     context (a Business trip, a Work activity) is unambiguously theirs
+    ///     and counts as their laptop signal. Never true on a party list,
+    ///     where that context names no one, and never a signal for any other
+    ///     device.
     static func evaluate(
         canonicalItemID: String,
         traveler: Traveler,
@@ -149,13 +142,16 @@ enum TravelerEligibilityResolver {
             return explicitNeeds.contains(need) ? .eligible(.explicitChildNeed) : .requiresExplicitSignal(.childNeed(need))
         case .deviceSignalRequired(let signal?):
             if signals.contains(signal) { return .eligible(.travelerSignal) }
-            if isSoleTraveler { return .eligible(.soleTravelerContext) }
+            // D2: a solo trip's Business/Work context is its traveler's work
+            // device — the laptop family only. Headphones, a power bank, or a
+            // camera are never implied by a trip, solo or not (Task 8.1).
+            if isSoleTraveler && signal == .bringingLaptop { return .eligible(.soleTravelerContext) }
             return .requiresExplicitSignal(.device(signal))
         case .phoneOwnership:
             if traveler.role == .self { return .eligible(.implicitPrimaryPhone) }
             return signals.contains(.bringingPhone) ? .eligible(.travelerSignal) : .requiresExplicitSignal(.phone)
         case .deviceSignalRequired(nil):
-            return traveler.role == .self ? .eligible(.primaryTravelerInterim) : .requiresExplicitSignal(.device(nil))
+            return .requiresExplicitSignal(.device(nil))
         case .travelerSignalRequired(let signal):
             return signals.contains(signal) ? .eligible(.travelerSignal) : .requiresExplicitSignal(.traveler(signal))
         case .travelerDocument(.all):

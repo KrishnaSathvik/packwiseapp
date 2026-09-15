@@ -1,4 +1,14 @@
 {
+  "eligibility" : [
+    {
+      "items" : [
+        "electronics.power_bank"
+      ],
+      "owner" : "primary",
+      "reason" : "device_signal.bringingPowerBank",
+      "result" : "requiresExplicitSignal"
+    }
+  ],
   "engineVersion" : "v2",
   "fixture" : "47-v2-festival-citybreak-austin",
   "items" : [
@@ -388,42 +398,6 @@
       ],
       "signals" : [
         "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.power_bank",
-      "carrier" : "primary",
-      "category" : "electronics",
-      "displayName" : "Portable charger",
-      "importance" : "important",
-      "owner" : "primary",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "tripType" : "festival"
-          },
-          "reasonCode" : "trip_type.generic",
-          "sourceSignals" : [
-            "tripType"
-          ],
-          "tripType" : "festival"
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Suggested for a festival trip.",
-      "reasonArguments" : {
-        "tripType" : "festival"
-      },
-      "reasonCode" : "trip_type.generic",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "tripType"
       ]
     },
     {

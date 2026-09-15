@@ -194,6 +194,23 @@ struct M1LoopTests {
         #expect(trip.items.contains { $0.canonicalItemID == "clothing.tshirt" && $0.packedQuantity == 4 })
     }
 
+    #if DEBUG
+    /// Checkpoint V (run with Task 8.1): every reference state the whole-product
+    /// contact sheet needs is a capturable Debug preview screen, so no major
+    /// surface silently drops out of the review.
+    @Test func checkpointVReferenceStatesAreAllCapturable() {
+        let required = [
+            "onboarding", "onboardingTrip", "onboardingPersonal", "tripsHome",
+            "setupDestination", "setupDates", "setupTravelers", "setupTravelersFamilyDetails", "setupTravelersGroup",
+            "setupTripTypes", "setupActivities", "setupBags", "setupStyleLaundry", "setupPreferences", "setupReview",
+            "tripDetail", "packingList", "packingListFamily", "addItem", "addItemCategory", "itemDetailSheet",
+        ]
+        for id in required {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing reference state \(id)")
+        }
+    }
+    #endif
+
     @Test func mergedActivityIDsNormalizeOnRead() throws {
         // A trip saved before fineDining was merged still holds the old value.
         // Left alone it would lose its packing rule and be rejected by the

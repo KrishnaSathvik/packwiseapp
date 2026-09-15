@@ -189,6 +189,9 @@ extension ContextChip {
         case .laundryAvailable: "washer"
         case .bringingPhone: "iphone"
         case .bringingTablet: "ipad"
+        case .bringingHeadphones: "headphones"
+        case .bringingPowerBank: "battery.100percent.bolt"
+        case .bringingCamera: "camera"
         }
     }
 
@@ -205,6 +208,9 @@ extension ContextChip {
         case .laundryAvailable: .purple
         case .bringingPhone: .blue
         case .bringingTablet: .indigo
+        case .bringingHeadphones: .purple
+        case .bringingPowerBank: .green
+        case .bringingCamera: .pink
         }
     }
 
@@ -223,6 +229,9 @@ extension ContextChip {
         case .laundryAvailable: "Laundry"
         case .bringingPhone: "Phone"
         case .bringingTablet: "Tablet"
+        case .bringingHeadphones: "Headphones"
+        case .bringingPowerBank: "Power bank"
+        case .bringingCamera: "Camera"
         }
     }
 }

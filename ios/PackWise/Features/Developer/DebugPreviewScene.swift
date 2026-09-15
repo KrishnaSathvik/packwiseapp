@@ -21,6 +21,8 @@ enum DebugPreviewScreen: String {
     case tripDetailSeasonal
     case packingList
     case packingListScrolled
+    /// The family trip's generated list in its current (pre-Task 11) state.
+    case packingListFamily
     /// Legacy full-screen item detail plus real-sheet states for comparison.
     case itemDetail
     case itemDetailSheet
@@ -35,6 +37,7 @@ enum DebugPreviewScreen: String {
     case setupTravelers
     case setupTravelersFamily
     case setupTravelersFamilyDetails
+    case setupTravelersGroup
     case setupTripTypes
     case setupActivities
     case setupBags
@@ -88,6 +91,8 @@ struct DebugPreviewScene: View {
                 NavigationStack { PackingListView(trip: seed.trip) }
             case .packingListScrolled:
                 NavigationStack { PackingListView(trip: seed.trip, focusedCategory: .toiletries) }
+            case .packingListFamily:
+                NavigationStack { PackingListView(trip: seed.familyTrip) }
             case .tripsHome, .tripsHomeEmpty:
                 TripsHomeView()
             case .setupDestination:
@@ -103,6 +108,9 @@ struct DebugPreviewScene: View {
             case .setupTravelersFamilyDetails:
                 TripSetupView(existingTrip: seed.familyTrip, initialStep: .travelers)
                     .environment(\.setupCaptureScrollAnchor, UnitPoint(x: 0.5, y: 0.28))
+            case .setupTravelersGroup:
+                TripSetupView(existingTrip: seed.groupTrip, initialStep: .travelers)
+                    .environment(\.setupCaptureScrollAnchor, UnitPoint(x: 0.5, y: 0.3))
             case .setupTripTypes:
                 setup(.tripTypes)
             case .setupActivities:
@@ -217,6 +225,9 @@ final class DebugTripSeed {
     let familyTrip: TripRecord
     /// Finished and fully packed, for the past-trip treatment.
     let completedTrip: TripRecord
+    /// You plus three other adults, one named with device choices, for the
+    /// expanded group branch of the travelers step.
+    let groupTrip: TripRecord
 
     /// For the empty Trips Home. Trips Home reads its own @Query, so an empty
     /// state needs a store with nothing in it.
@@ -362,6 +373,35 @@ final class DebugTripSeed {
         // A V2 reference state: two trip types, two bags.
         try? repository.applyTripTypes([.vacation, .beach], on: familyTrip)
         familyTrip.activitiesRaw = "beachDays,sightseeing"
+        // A real generated list, so the family Packing List shows its current state.
+        if let catalog = try? SharedLibrary.catalog(), let rules = try? SharedLibrary.rules() {
+            let familyContext = familyTrip.context(preferences: .deviceDefaults(), weather: nil)
+            repository.replaceItems(on: familyTrip, with: PackingEngine(catalog: catalog, rules: rules).generate(context: familyContext))
+        }
+
+        groupTrip = TripRecord(
+            destination: destination,
+            startDate: calendar.date(byAdding: .day, value: 120, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: 124, to: start)!,
+            durationDays: 5,
+            durationNights: 4,
+            tripType: .business,
+            activities: ["work"],
+            bagType: .carryOn,
+            packingStyle: .light,
+            status: .planning
+        )
+        context.insert(groupTrip)
+        repository.attach(
+            party: TripPartyBuilder.make(
+                mode: .group,
+                selfChips: [.bringingHeadphones],
+                otherAdults: [AdultDraft(name: "Jordan", chips: [.bringingPhone, .bringingLaptop]), AdultDraft(), AdultDraft()],
+                children: []
+            ),
+            bagTypes: [.carryOn],
+            on: groupTrip
+        )
 
         completedTrip = TripRecord(
             destination: Destination(

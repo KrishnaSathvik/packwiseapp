@@ -114,9 +114,9 @@ ELIGIBILITY_FAMILIES = {
     "deviceSignalRequired", "travelerSignalRequired", "travelerDocument",
 }
 RETIRED_PARTY_KEYS = ("skipForYoungChildren", "skipForInfantsAndToddlers")
-# Task 7.2: the implicit primary-phone signal proves a phone and its charger,
-# nothing else.
-PHONE_OWNERSHIP_ITEMS = {"essentials.phone", "electronics.phone_charger"}
+# Task 7.2: the implicit primary-phone signal proves a phone and what charges
+# it (wall and car charger), nothing else.
+PHONE_OWNERSHIP_ITEMS = {"essentials.phone", "electronics.phone_charger", "miscellaneous.car_charger"}
 DEVICE_FAMILIES = {"phoneOwnership", "deviceSignalRequired"}
 
 

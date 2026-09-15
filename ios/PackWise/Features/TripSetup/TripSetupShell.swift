@@ -68,7 +68,7 @@ struct TripSetupShell<Content: View>: View {
     private var heading: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
             Text("Step \(step.number) of \(SetupStep.count)")
-                .font(PackWiseFont.rowSubtitle.weight(.semibold))
+                .font(PackWiseFont.microLabel)
                 .foregroundStyle(PackWiseColor.accent)
                 .accessibilityLabel("Step \(step.number) of \(SetupStep.count)")
             Text(step.title)

@@ -41,6 +41,17 @@
     ],
     "bringingTablet": [
       "electronics.tablet"
+    ],
+    "bringingHeadphones": [
+      "electronics.headphones"
+    ],
+    "bringingPowerBank": [
+      "electronics.power_bank"
+    ],
+    "bringingCamera": [
+      "electronics.camera",
+      "electronics.camera_charger",
+      "electronics.memory_card"
     ]
   },
   "context_chips": {
