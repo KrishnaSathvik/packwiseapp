@@ -75,7 +75,8 @@ struct FamilySharingTests {
         let umbrella = try #require(Self.rows(items, "essentials.umbrella_compact").first)
         #expect(umbrella.ownershipType == .shared && umbrella.quantity == 1)
         let chargers = Self.rows(items, "electronics.phone_charger")
-        #expect(chargers.count == 2 && chargers.allSatisfy { $0.ownershipType == .personal }, "one per device owner")
+        #expect(chargers.count == 1 && chargers.allSatisfy { $0.ownershipType == .personal && $0.travelerID == Self.couple.primary.id },
+                "one per evidenced device owner (Task 7.1): only You; the partner has no device signal")
     }
 
     @Test func familyWithToddlerKeepsClothingPersonalAndSharesConsumablesOnce() throws {
@@ -149,13 +150,108 @@ struct FamilySharingTests {
         let expected: [String: Int] = [
             "activities.binoculars": 1, "health.motion_sickness": 1, "kids.sunscreen": 1,
             "toiletries.laundry_sheets": 1, "kids.carrier": 1, "essentials.reusable_bag": 1,
-            "activities.dry_bag": 2  // scaleByParty per 4: six travelers → 2
+            "activities.dry_bag": 1  // scaleByParty per 4: four eligible (toddler and infant excluded) → 1, not six → 2
         ]
         for (id, quantity) in expected {
             let found = Self.rows(items, id)
             #expect(found.count == 1 && found.first?.ownershipType == .shared && found.first?.quantity == quantity,
                     "\(id): \(found.map { "\($0.ownershipType.rawValue)×\($0.quantity)" })")
         }
+    }
+
+    // MARK: - Eligible-consumer scaling (Task 7.1)
+
+    /// Shared quantities scale by the travelers eligible to use the item,
+    /// never the raw party size. Rows are chosen so the two counts differ.
+    @Test func sharedQuantitiesScaleFromEligibleConsumers() throws {
+        func party(_ ages: [AgeGroup]) -> TripParty {
+            let you = Traveler.primarySelf()
+            let others = ages.map { age in
+                age.isAdult ? Traveler(role: .otherAdult, ageGroup: age) : Traveler(role: .child, ageGroup: age, guardianTravelerID: you.id)
+            }
+            return TripParty(travelMode: ages.contains { !$0.isAdult } ? .family : .group, travelers: [you] + others)
+        }
+        struct Row {
+            var name: String
+            var party: TripParty
+            var city = "Chicago"
+            var activities = ["sightseeing", "walking"]
+            var weather: String? = nil
+            var item: String
+            var consumers: Int
+            var quantity: Int
+        }
+        let rows = [
+            Row(name: "You + Adult 1 + infant: toothpaste", party: party([.adult, .infant]), item: "toiletries.toothpaste", consumers: 2, quantity: 1),
+            Row(name: "You + Adult 1 + toddler: body wash", party: party([.adult, .toddler]), item: "toiletries.body_wash", consumers: 3, quantity: 1),
+            Row(name: "four-person family with an infant: body wash", party: party([.adult, .child, .infant]), item: "toiletries.body_wash", consumers: 3, quantity: 1),
+            Row(name: "four-person family with an infant: sunscreen (universal)", party: party([.adult, .child, .infant]), city: "Miami",
+                weather: "MiamiHotBeach", item: "toiletries.sunscreen", consumers: 4, quantity: 2),
+            Row(name: "four adults + infant: toothpaste per 4 → 1, not five → 2", party: party([.adult, .adult, .adult, .infant]),
+                item: "toiletries.toothpaste", consumers: 4, quantity: 1),
+            Row(name: "two adults + child + toddler: laundry bag per 3 → 1, not four → 2", party: party([.adult, .child, .toddler]),
+                item: "travel_comfort.laundry_bag", consumers: 3, quantity: 1),
+            Row(name: "three adults + child: laundry bag, all eligible → 2", party: party([.adult, .adult, .child]),
+                item: "travel_comfort.laundry_bag", consumers: 4, quantity: 2),
+        ]
+        for row in rows {
+            let items = Self.engine.generate(context: try Self.context(city: row.city, party: row.party, activities: row.activities, weatherFixture: row.weather))
+            let found = Self.rows(items, row.item)
+            let shared = try #require(found.first, "\(row.name): missing")
+            #expect(found.count == 1 && shared.ownershipType == .shared, "\(row.name)")
+            #expect(shared.quantity == row.quantity, "\(row.name): quantity \(shared.quantity)")
+            #expect(shared.quantityReasonArguments["eligibleConsumerCount"] == "\(row.consumers)", "\(row.name): \(shared.quantityReasonArguments)")
+            #expect(shared.quantityReasonArguments["travelerCount"] == "\(row.party.travelers.count)", "\(row.name): party count stays evidence")
+            for word in ["eligib", "infant", "toddler", "consumer"] {
+                #expect(!shared.quantityReason.localizedCaseInsensitiveContains(word), "\(row.name): prose leaks \(word)")
+            }
+        }
+    }
+
+    /// Device scaling keeps its own basis: the adapter reads deviceCount, and
+    /// its evidence never claims party or consumer scaling.
+    @Test func travelAdapterScalesByDeviceCountNotConsumers() throws {
+        let items = Self.engine.generate(context: try Self.context(city: "Tokyo", party: Self.group))
+        let adapter = try #require(Self.rows(items, "electronics.travel_adapter").first)
+        #expect(adapter.quantityReasonArguments["sharingPolicy"] == SharingPolicy.scaleByDevices.rawValue)
+        #expect(adapter.quantityReasonArguments["deviceCount"] == "4" && adapter.quantityReasonArguments["eligibleConsumerCount"] == nil)
+    }
+
+    /// Manual quantity, Not Needed, owner, and carrier all survive the
+    /// Task 7.1 refinements.
+    @Test func userAuthoritySurvivesEligibilityAndScalingRefinements() throws {
+        let you = Traveler.primarySelf()
+        let partner = Traveler(role: .partner, ageGroup: .adult)
+        let infant = Traveler(role: .child, ageGroup: .infant, guardianTravelerID: you.id)
+        let party = TripParty(travelMode: .family, travelers: [you, partner, infant])
+        var context = try Self.context(party: party)
+        context.preferences.usuallyBringLaptop = true
+        var existing = Self.engine.generate(context: context)
+
+        let toothpaste = try #require(existing.firstIndex { $0.canonicalItemID == "toiletries.toothpaste" })
+        existing[toothpaste].quantity = 3
+        existing[toothpaste].isUserModified = true
+        existing[toothpaste].assignedTravelerID = partner.id
+        let pasteID = existing[toothpaste].id
+        let partnerCharger = PackingItemDraft(
+            canonicalItemID: "electronics.phone_charger", displayName: "Phone charger", category: .electronics,
+            quantity: 2, importance: .important, sourceSignals: [.baseEssential], reason: "", isUserModified: true,
+            ownershipType: .personal, travelerID: partner.id, assignedTravelerID: you.id
+        )
+        existing.append(partnerCharger)
+        let overrides = [RecommendationOverrideDraft(canonicalItemID: "electronics.laptop", action: "removed", travelerID: you.id, ownershipType: .personal)]
+
+        let regenerated = Self.engine.generate(context: context, existing: existing, overrides: overrides)
+        let keptPaste = try #require(regenerated.first { $0.id == pasteID })
+        #expect(keptPaste.quantity == 3 && keptPaste.ownershipType == .shared && keptPaste.assignedTravelerID == partner.id,
+                "manual shared quantity and carrier survive eligible-consumer scaling")
+        let keptCharger = try #require(regenerated.first { $0.id == partnerCharger.id })
+        #expect(keptCharger.quantity == 2 && keptCharger.travelerID == partner.id && keptCharger.assignedTravelerID == you.id,
+                "an edited companion device row keeps owner, carrier, and quantity without a device signal")
+        #expect(!regenerated.contains { $0.canonicalItemID == "electronics.laptop" && $0.travelerID == you.id }, "Not Needed on You's laptop holds")
+        #expect(PartyInvariants.violations(party: party, items: regenerated).isEmpty)
+        let diff = Self.engine.recommendationDiff(context: context, existing: existing, overrides: overrides)
+        #expect(!diff.removeCandidates.contains { $0.id == pasteID || $0.id == partnerCharger.id })
     }
 
     // MARK: - Evidence
@@ -172,7 +268,12 @@ struct FamilySharingTests {
             let policy = try #require(args["sharingPolicy"].flatMap(SharingPolicy.init(rawValue:)), "\(item.canonicalItemID ?? "")")
             #expect(args["quantity"] == "\(item.quantity)")
             switch policy {
-            case .scaleByParty, .scaleByDurationAndParty: #expect(args["travelerCount"] == "4" && args["per"] != nil)
+            case .scaleByParty, .scaleByDurationAndParty:
+                #expect(args["travelerCount"] == "4" && args["per"] != nil)
+                let consumers = try #require(args["eligibleConsumerCount"].flatMap(Int.init), "\(item.canonicalItemID ?? "") names its consumers")
+                let per = try #require(args["per"].flatMap(Int.init))
+                let days = args["days"].flatMap(Int.init) ?? 1
+                #expect(item.quantity == max(1, (consumers * days + per - 1) / per), "quantity scales from eligible consumers")
             case .scaleByDevices: #expect(args["deviceCount"] == "3" && args["per"] != nil)
             case .singlePerParty, .personalOnly: Issue.record("\(item.canonicalItemID ?? ""): \(policy) resolved above one")
             }
@@ -216,7 +317,8 @@ struct FamilySharingTests {
         let source = try String(contentsOf: URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("PackWise/Domain/Packing/ConstraintResolver.swift"), encoding: .utf8)
-        for token in ["ageGroup", ".needs", ".chips", "isYoungChild", "EligibilityFamily", "TravelerEligibilityResolver"] {
+        for token in ["ageGroup", ".needs", ".chips", "isYoungChild", "EligibilityFamily", "TravelerEligibilityResolver",
+                      ".adults", ".travelers", ".children", "TripParty"] {
             #expect(!source.contains(token), "ConstraintResolver mentions \(token)")
         }
         for policy in Self.rules.party.sharingPolicies.keys {

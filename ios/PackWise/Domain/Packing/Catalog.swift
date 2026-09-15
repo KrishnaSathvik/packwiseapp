@@ -391,7 +391,8 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
     /// quantity families (care, warm-layer rotation, party sharing) — the
     /// same role reasonArguments already plays for the inclusion reason.
     /// Closed key vocabulary: quantity, days, rate, name, travelerCount,
-    /// rainDays. Empty for fixed singletons and for the clothing family,
+    /// rainDays, and for party sharing sharingPolicy, per, deviceCount, and
+    /// eligibleConsumerCount (Task 7.1). Empty for fixed singletons and for the clothing family,
     /// which already has quantityEvidence.
     var quantityReasonArguments: [String: String] = [:]
     /// itemCapabilities[canonicalItemID] ∩ activeNeeds, computed once inside

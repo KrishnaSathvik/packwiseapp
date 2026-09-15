@@ -156,74 +156,104 @@ extension ConstraintResolver {
         var isShared: Bool { if case .shared = self { true } else { false } }
     }
 
+    /// The counts a shared quantity scales from (Product Experience V2,
+    /// Task 7.1). Computed by the engine from eligibility's result, so
+    /// sharing scales by who can use an item without ever asking why:
+    ///
+    ///     eligibility → eligible travelers → SharingBasis → shared quantity
+    struct SharingBasis: Hashable, Sendable {
+        /// Everyone on the trip. Evidence only; no policy scales from it.
+        var partyTravelerCount: Int
+        /// Travelers eligible to use this item — what `scaleByParty` and
+        /// `scaleByDurationAndParty` scale by. A traveler eligibility removed
+        /// is never counted.
+        var eligibleConsumerCount: Int
+        /// What `scaleByDevices` scales by (unchanged Phase 7 semantics).
+        var deviceCount: Int
+    }
+
+    /// Membership only: whether an item takes the shared path at all. No
+    /// quantity, so no basis is needed.
+    ///
+    /// Required amendment: a `.personalOnly` item never reaches the
+    /// shared-draft path at all — `generateForParty` calls this, so the
+    /// early return is what keeps such an item on the ordinary per-traveler
+    /// personal path with a real `travelerID`, closing the
+    /// fallthrough-to-ownerless-shared-draft bug the personalOnly contract
+    /// tests guard. This is the fix, not a stub — do not remove it.
+    static func isShared(_ canonicalItemID: String, rules: PartyRulesFile) -> Bool {
+        guard rules.sharedByDefault.contains(canonicalItemID) else { return false }
+        return policy(for: canonicalItemID, rules: rules).policy != .personalOnly
+    }
+
     static func sharingResolution(
         for canonicalItemID: String,
         rules: PartyRulesFile,
         context: TripContext,
-        party: TripParty
+        basis: SharingBasis
     ) -> SharingResolution {
-        guard rules.sharedByDefault.contains(canonicalItemID) else { return .personal }
-        let policy = rules.sharingPolicies[canonicalItemID]
-            ?? SharingPolicyRule(policy: .singlePerParty, per: nil, min: 1, value: 1)
-        // Required amendment: a `.personalOnly` item never reaches the
-        // shared-draft path at all — `generateForParty` calls `.isShared`,
-        // so this early return is what keeps such an item on the ordinary
-        // per-traveler personal path with a real `travelerID`, closing the
-        // fallthrough-to-ownerless-shared-draft bug the personalOnly
-        // contract tests guard. This is the fix, not a stub — do not remove
-        // it.
-        guard policy.policy != .personalOnly else { return .personal }
-        let quantity = sharedQuantity(policy, context: context, party: party)
-        let reason = sharedQuantityReason(canonicalItemID, quantity: quantity, context: context, party: party)
+        guard isShared(canonicalItemID, rules: rules) else { return .personal }
+        let quantity = sharedQuantity(policy(for: canonicalItemID, rules: rules), context: context, basis: basis)
+        let reason = sharedQuantityReason(canonicalItemID, quantity: quantity, context: context)
         return .shared(quantity: quantity, reason: reason)
     }
 
     /// The structured scaling basis behind a shared quantity (Product
-    /// Experience V2, Task 7), written into the item's
+    /// Experience V2, Tasks 7 and 7.1), written into the item's
     /// `quantityReasonArguments` — the one Phase 8 quantity trace. Names the
-    /// policy and exactly the counts that policy reads: travelers for party
-    /// scaling, device owners for device scaling, and days as well for
-    /// duration scaling. Nil for personal items.
+    /// policy, the resolved `quantity`, the divisor `per`, and exactly the
+    /// counts that policy reads: `travelerCount` is the whole party and
+    /// `eligibleConsumerCount` the travelers the quantity actually scaled
+    /// from; device scaling names `deviceCount`, duration scaling `days`.
+    /// Nil for personal items.
     static func sharingEvidence(
         for canonicalItemID: String,
         rules: PartyRulesFile,
         context: TripContext,
-        party: TripParty
+        basis: SharingBasis
     ) -> [String: String]? {
-        guard case .shared(let quantity, _) = sharingResolution(for: canonicalItemID, rules: rules, context: context, party: party) else {
+        guard case .shared(let quantity, _) = sharingResolution(for: canonicalItemID, rules: rules, context: context, basis: basis) else {
             return nil
         }
-        let rule = rules.sharingPolicies[canonicalItemID] ?? SharingPolicyRule(policy: .singlePerParty, per: nil, min: 1, value: 1)
+        let rule = policy(for: canonicalItemID, rules: rules)
         var evidence = ["quantity": "\(quantity)", "sharingPolicy": rule.policy.rawValue]
         switch rule.policy {
         case .singlePerParty, .personalOnly:
-            evidence["travelerCount"] = "\(party.travelers.count)"
+            evidence["travelerCount"] = "\(basis.partyTravelerCount)"
+            evidence["eligibleConsumerCount"] = "\(basis.eligibleConsumerCount)"
         case .scaleByParty:
-            evidence["travelerCount"] = "\(party.travelers.count)"
+            evidence["travelerCount"] = "\(basis.partyTravelerCount)"
+            evidence["eligibleConsumerCount"] = "\(basis.eligibleConsumerCount)"
             evidence["per"] = "\(max(1, rule.per ?? 1))"
         case .scaleByDevices:
-            evidence["deviceCount"] = "\(max(1, party.adults.count))"
+            evidence["deviceCount"] = "\(max(1, basis.deviceCount))"
             evidence["per"] = "\(max(1, rule.per ?? 1))"
         case .scaleByDurationAndParty:
-            evidence["travelerCount"] = "\(party.travelers.count)"
+            evidence["travelerCount"] = "\(basis.partyTravelerCount)"
+            evidence["eligibleConsumerCount"] = "\(basis.eligibleConsumerCount)"
             evidence["days"] = "\(context.durationDays)"
             evidence["per"] = "\(max(1, rule.per ?? 1))"
         }
         return evidence
     }
 
-    private static func sharedQuantity(_ rule: SharingPolicyRule, context: TripContext, party: TripParty) -> Int {
+    private static func policy(for canonicalItemID: String, rules: PartyRulesFile) -> SharingPolicyRule {
+        rules.sharingPolicies[canonicalItemID] ?? SharingPolicyRule(policy: .singlePerParty, per: nil, min: 1, value: 1)
+    }
+
+    private static func sharedQuantity(_ rule: SharingPolicyRule, context: TripContext, basis: SharingBasis) -> Int {
         let minimum = rule.min ?? 1
         let per = max(1, rule.per ?? 1)
+        let consumers = max(1, basis.eligibleConsumerCount)
         switch rule.policy {
         case .singlePerParty, .personalOnly:
             return rule.value ?? 1
         case .scaleByParty:
-            return max(minimum, Int((Double(party.travelers.count) / Double(per)).rounded(.up)))
+            return max(minimum, Int((Double(consumers) / Double(per)).rounded(.up)))
         case .scaleByDevices:
-            return max(minimum, Int((Double(max(1, party.adults.count)) / Double(per)).rounded(.up)))
+            return max(minimum, Int((Double(max(1, basis.deviceCount)) / Double(per)).rounded(.up)))
         case .scaleByDurationAndParty:
-            return max(minimum, Int((Double(party.travelers.count * context.durationDays) / Double(per)).rounded(.up)))
+            return max(minimum, Int((Double(consumers * context.durationDays) / Double(per)).rounded(.up)))
         }
     }
 
@@ -236,7 +266,7 @@ extension ConstraintResolver {
     /// group" case), preserving today's templated-string behavior without
     /// giving `ConstraintResolver` a `PackingRulesFile` dependency it
     /// doesn't otherwise need.
-    private static func sharedQuantityReason(_ canonical: String, quantity: Int, context: TripContext, party: TripParty) -> String {
+    private static func sharedQuantityReason(_ canonical: String, quantity: Int, context: TripContext) -> String {
         if canonical == "essentials.umbrella_compact", let weather = context.weather, weather.rainDays > 0 {
             // Templates can't pluralize, so the phrases arrive pre-built:
             // never "1 days", never "1 umbrellas", and a couple is a group,

@@ -6,7 +6,8 @@ import Foundation
 //
 // Eligibility answers only whether a generated recommendation is appropriate
 // for a traveler, given age, that traveler's own explicit needs, and signals
-// attributed to that traveler. It never decides how many, whether an item is
+// attributed to that traveler. Age answers "can this traveler use it?", never
+// "does this traveler own it?" — device ownership needs evidence (Task 7.1). It never decides how many, whether an item is
 // shared, who carries it, or what covers it. It never infers attribution: a
 // signal belongs to the traveler it was set on, and trip-wide context (a Work
 // activity, a Business trip type) names no one. Explicit user rows — added or
@@ -27,9 +28,13 @@ enum EligibilityFamily: Hashable, Sendable {
     /// Only when the traveler's own explicit child need is selected. Age,
     /// a Family trip, or another traveler's preference never substitutes.
     case explicitChildNeed(ChildNeed)
-    /// Personal devices. Adults and teens are presumed to manage their own
-    /// devices; a younger traveler needs a device signal set on that traveler
-    /// (today only `bringingLaptop` exists, so phones never reach a child).
+    /// Personal devices (Task 7.1): ownership needs evidence, never age.
+    /// A named signal (`bringingLaptop`) must be attributed to the traveler:
+    /// their own chip or preference, or — on a solo list only — the trip's
+    /// own context, which can belong to no one else. With no named signal
+    /// (phone, charger, power bank, headphones…) setup collects no per-traveler
+    /// device signal, so only the primary traveler, who runs PackWise on their
+    /// own phone, carries ownership evidence. Companions of any age get none.
     case deviceSignalRequired(ContextChip?)
     /// Medication and contacts: only from the traveler's own signal, never
     /// presumed at any age.
@@ -55,7 +60,11 @@ enum EligibilityReason: String, Hashable, Sendable {
     case universal
     case ageAppropriate = "age_appropriate"
     case explicitChildNeed = "explicit_child_need"
-    case presumedDeviceOwner = "presumed_device_owner"
+    /// The primary traveler for an unsignaled device (see
+    /// `EligibilityFamily.deviceSignalRequired`).
+    case primaryTravelerDevice = "primary_traveler_device"
+    /// A solo list's trip context, attributed to its only traveler.
+    case soleTravelerContext = "sole_traveler_context"
     case travelerSignal = "traveler_signal"
     case travelerDocument = "traveler_document"
     case adultOrTeenOnly = "adult_or_teen_only"
@@ -93,11 +102,15 @@ enum TravelerEligibilityResolver {
     ///   - explicitNeeds: the traveler's own selected child needs.
     ///   - signals: context chips attributed to this traveler only (the
     ///     primary's own chips and preferences, or a companion's own chips).
+    ///   - isSoleTraveler: the list has one traveler, so trip-wide context
+    ///     (a Business trip, a Work activity) is unambiguously theirs. Never
+    ///     true on a party list, where that context names no one.
     static func evaluate(
         canonicalItemID: String,
         traveler: Traveler,
         explicitNeeds: Set<ChildNeed>,
         signals: Set<ContextChip>,
+        isSoleTraveler: Bool = false,
         catalog: PackingCatalog,
         rules: EligibilityRules
     ) -> EligibilityDecision {
@@ -117,10 +130,12 @@ enum TravelerEligibilityResolver {
             return groups.contains(age) ? .eligible(.ageAppropriate) : .ineligible(.notForAgeGroup)
         case .explicitChildNeed(let need):
             return explicitNeeds.contains(need) ? .eligible(.explicitChildNeed) : .requiresExplicitSignal(.childNeed(need))
-        case .deviceSignalRequired(let signal):
-            if adultOrTeen { return .eligible(.presumedDeviceOwner) }
-            if let signal, signals.contains(signal) { return .eligible(.travelerSignal) }
+        case .deviceSignalRequired(let signal?):
+            if signals.contains(signal) { return .eligible(.travelerSignal) }
+            if isSoleTraveler { return .eligible(.soleTravelerContext) }
             return .requiresExplicitSignal(.device(signal))
+        case .deviceSignalRequired(nil):
+            return traveler.role == .self ? .eligible(.primaryTravelerDevice) : .requiresExplicitSignal(.device(nil))
         case .travelerSignalRequired(let signal):
             return signals.contains(signal) ? .eligible(.travelerSignal) : .requiresExplicitSignal(.traveler(signal))
         case .travelerDocument(.all):

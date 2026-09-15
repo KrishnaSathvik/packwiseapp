@@ -110,6 +110,15 @@
       "owner" : "child-2",
       "reason" : "device_signal_required",
       "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.phone_charger",
+        "essentials.phone"
+      ],
+      "owner" : "partner",
+      "reason" : "device_signal_required",
+      "result" : "requiresExplicitSignal"
     }
   ],
   "engineVersion" : "v2",
@@ -1564,80 +1573,10 @@
       ]
     },
     {
-      "canonicalItemID" : "electronics.phone_charger",
-      "carrier" : "partner",
-      "category" : "electronics",
-      "displayName" : "Phone charger",
-      "importance" : "important",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.electronics",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Dead batteries cut days short.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.electronics",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "essentials.keys",
       "carrier" : "partner",
       "category" : "essentials",
       "displayName" : "Keys",
-      "importance" : "critical",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.essentials",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "The pocket check before you head out.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.essentials",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "essentials.phone",
-      "carrier" : "partner",
-      "category" : "essentials",
-      "displayName" : "Phone",
       "importance" : "critical",
       "owner" : "partner",
       "provenance" : [
@@ -2778,6 +2717,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "2",
         "quantity" : "1",
         "sharingPolicy" : "singlePerParty",
         "travelerCount" : "4"
@@ -2817,6 +2757,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "4",
         "quantity" : "1",
         "sharingPolicy" : "singlePerParty",
         "travelerCount" : "4"
@@ -2854,6 +2795,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "2",
         "quantity" : "1",
         "sharingPolicy" : "singlePerParty",
         "travelerCount" : "4"
@@ -2891,6 +2833,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "4",
         "per" : "4",
         "quantity" : "1",
         "sharingPolicy" : "scaleByParty",
@@ -2939,6 +2882,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "4",
         "quantity" : "1",
         "sharingPolicy" : "singlePerParty",
         "travelerCount" : "4"
@@ -2977,6 +2921,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "4",
         "per" : "4",
         "quantity" : "1",
         "sharingPolicy" : "scaleByParty",
@@ -3015,6 +2960,7 @@
       "quantity" : 2,
       "quantityReason" : "2 for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "4",
         "per" : "3",
         "quantity" : "2",
         "sharingPolicy" : "scaleByParty",
@@ -3053,6 +2999,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "4",
         "per" : "4",
         "quantity" : "1",
         "sharingPolicy" : "scaleByParty",
@@ -3088,11 +3035,12 @@
           ]
         }
       ],
-      "quantity" : 2,
-      "quantityReason" : "2 for the group — not one per person.",
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "3",
         "per" : "3",
-        "quantity" : "2",
+        "quantity" : "1",
         "sharingPolicy" : "scaleByParty",
         "travelerCount" : "4"
       },

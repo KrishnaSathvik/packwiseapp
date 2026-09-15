@@ -109,17 +109,21 @@ struct ConstraintTests {
 
     // MARK: - Party sharing resolution
 
-    /// The one function `generateForParty`/`addCompanions`/`applyQuantities`
-    /// all ask instead of independently testing `sharedByDefault` membership.
+    /// The one function `applyQuantities` asks, and `isShared` the one
+    /// membership check `generateForParty`/`addCompanions` ask, instead of
+    /// independently testing `sharedByDefault` membership.
     @Test func sharingResolutionMatchesTodaysSharedByDefaultMembership() throws {
         let rules = try SharedLibrary.rules()
         let solo = TripParty.solo()
         let couple = TripParty(travelMode: .couple, travelers: [Traveler.primarySelf(), Traveler(name: "Sam", role: .partner, ageGroup: .adult)])
         let ctx = context(destination: try destination("Chicago"), party: couple)
+        let coupleBasis = ConstraintResolver.SharingBasis(partyTravelerCount: 2, eligibleConsumerCount: 2, deviceCount: 2)
+        let soloBasis = ConstraintResolver.SharingBasis(partyTravelerCount: 1, eligibleConsumerCount: 1, deviceCount: 1)
 
         // Shared, singlePerParty (no explicit policy row falls to the default).
+        #expect(ConstraintResolver.isShared("health.first_aid", rules: rules.party))
         let firstAid = ConstraintResolver.sharingResolution(
-            for: "health.first_aid", rules: rules.party, context: ctx, party: couple
+            for: "health.first_aid", rules: rules.party, context: ctx, basis: coupleBasis
         )
         guard case .shared(let quantity, _) = firstAid else {
             Issue.record("expected health.first_aid to resolve shared")
@@ -128,11 +132,12 @@ struct ConstraintTests {
         #expect(quantity == 1)
 
         // Not in sharedByDefault → personal, regardless of party size.
+        #expect(!ConstraintResolver.isShared("miscellaneous.flashlight", rules: rules.party))
         #expect(ConstraintResolver.sharingResolution(
-            for: "miscellaneous.flashlight", rules: rules.party, context: ctx, party: couple
+            for: "miscellaneous.flashlight", rules: rules.party, context: ctx, basis: coupleBasis
         ) == .personal)
         #expect(ConstraintResolver.sharingResolution(
-            for: "miscellaneous.flashlight", rules: rules.party, context: context(destination: try destination("Chicago"), party: solo), party: solo
+            for: "miscellaneous.flashlight", rules: rules.party, context: context(destination: try destination("Chicago"), party: solo), basis: soloBasis
         ) == .personal)
     }
 
@@ -189,9 +194,11 @@ struct ConstraintTests {
         let rules = try rulesWithSyntheticPersonalOnly()
         let result = ConstraintResolver.sharingResolution(
             for: "toiletries.toothbrush", rules: rules.party,
-            context: context(destination: try destination("Chicago")), party: .solo()
+            context: context(destination: try destination("Chicago")),
+            basis: ConstraintResolver.SharingBasis(partyTravelerCount: 1, eligibleConsumerCount: 1, deviceCount: 1)
         )
         #expect(result == .personal)
+        #expect(!ConstraintResolver.isShared("toiletries.toothbrush", rules: rules.party))
     }
 
     // MARK: - Explicit authority gate
@@ -709,6 +716,7 @@ struct ConstraintTests {
         #expect(!sunscreen.quantityReason.localizedCaseInsensitiveContains("one for the group"))
         #expect(sunscreen.quantityReasonArguments["quantity"] == "2")
         #expect(sunscreen.quantityReasonArguments["travelerCount"] == "4")
+        #expect(sunscreen.quantityReasonArguments["eligibleConsumerCount"] == "4", "sunscreen is universal: all four scale it")
     }
 
     /// The quantity==1 case must still read "One", not "1" — the wording

@@ -123,7 +123,7 @@ SEASONAL_REASON_PREFIX = "weather.seasonal"
 # site started writing this field, the same drift ActivityNeed/
 # PackingCapability/WeatherSignal already guard against.
 CLOSED_QUANTITY_REASON_ARGUMENT_KEYS: FrozenSet[str] = frozenset(
-    {"quantity", "days", "rate", "name", "travelerCount", "rainDays", "sharingPolicy", "per", "deviceCount"}
+    {"quantity", "days", "rate", "name", "travelerCount", "rainDays", "sharingPolicy", "per", "deviceCount", "eligibleConsumerCount"}
 )
 
 

@@ -134,10 +134,7 @@
       }
     },
     "teen": {
-      "add": [
-        "electronics.earbuds_case",
-        "electronics.phone_charger"
-      ],
+      "add": [],
       "candidates": {},
       "quantityMultipliers": {}
     },
@@ -324,7 +321,7 @@
     "clothing.shorts": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
     "clothing.skirt": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
     "clothing.dress": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
-    "clothing.formal_outfit": {"family": "adultOrTeen"},
+    "clothing.formal_outfit": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
     "clothing.blazer": {"family": "adultOrTeen"},
     "clothing.tie": {"family": "adultOrTeen"},
     "clothing.light_sweater": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
@@ -347,7 +344,7 @@
     "clothing.belt": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
     "clothing.pajamas_backup": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
     "clothing.compression_socks": {"family": "adultOrTeen"},
-    "clothing.hat_sun": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.hat_sun": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler", "infant"]},
     "documents.passport": {"family": "travelerDocument", "travelers": "all"},
     "documents.id": {"family": "travelerDocument", "travelers": "adultOrTeen"},
     "documents.boarding_pass": {"family": "travelerDocument", "travelers": "all"},

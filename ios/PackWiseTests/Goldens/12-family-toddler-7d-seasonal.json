@@ -35,6 +35,17 @@
       "owner" : "child",
       "reason" : "device_signal_required",
       "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.headphones",
+        "electronics.phone_charger",
+        "electronics.power_bank",
+        "essentials.phone"
+      ],
+      "owner" : "partner",
+      "reason" : "device_signal_required",
+      "result" : "requiresExplicitSignal"
     }
   ],
   "engineVersion" : "v2",
@@ -946,151 +957,10 @@
       ]
     },
     {
-      "canonicalItemID" : "electronics.headphones",
-      "carrier" : "partner",
-      "category" : "electronics",
-      "displayName" : "Headphones",
-      "importance" : "normal",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "tripType" : "vacation"
-          },
-          "reasonCode" : "trip_type.generic",
-          "sourceSignals" : [
-            "tripType"
-          ],
-          "tripType" : "vacation"
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Suggested for a vacation trip.",
-      "reasonArguments" : {
-        "tripType" : "vacation"
-      },
-      "reasonCode" : "trip_type.generic",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "tripType"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.phone_charger",
-      "carrier" : "partner",
-      "category" : "electronics",
-      "displayName" : "Phone charger",
-      "importance" : "important",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.electronics",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "Dead batteries cut days short.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.electronics",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.power_bank",
-      "carrier" : "partner",
-      "category" : "electronics",
-      "displayName" : "Portable charger",
-      "importance" : "important",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-            "destination" : "Miami"
-          },
-          "reasonCode" : "activity.sightseeing",
-          "sourceSignals" : [
-            "activity"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "You'll have sightseeing days in Miami.",
-      "reasonArguments" : {
-        "destination" : "Miami"
-      },
-      "reasonCode" : "activity.sightseeing",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "activity"
-      ]
-    },
-    {
       "canonicalItemID" : "essentials.keys",
       "carrier" : "partner",
       "category" : "essentials",
       "displayName" : "Keys",
-      "importance" : "critical",
-      "owner" : "partner",
-      "provenance" : [
-        {
-          "reasonArguments" : {
-
-          },
-          "reasonCode" : "base.essential.essentials",
-          "sourceSignals" : [
-            "baseEssential"
-          ]
-        }
-      ],
-      "quantity" : 1,
-      "quantityReason" : "",
-      "quantityReasonArguments" : {
-
-      },
-      "reason" : "The pocket check before you head out.",
-      "reasonArguments" : {
-
-      },
-      "reasonCode" : "base.essential.essentials",
-      "satisfiedCapabilities" : [
-
-      ],
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "essentials.phone",
-      "carrier" : "partner",
-      "category" : "essentials",
-      "displayName" : "Phone",
       "importance" : "critical",
       "owner" : "partner",
       "provenance" : [
@@ -2218,6 +2088,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "2",
         "quantity" : "1",
         "sharingPolicy" : "singlePerParty",
         "travelerCount" : "3"
@@ -2255,6 +2126,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "2",
         "quantity" : "1",
         "sharingPolicy" : "singlePerParty",
         "travelerCount" : "3"
@@ -2293,6 +2165,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "1",
         "quantity" : "1",
         "sharingPolicy" : "singlePerParty",
         "travelerCount" : "3"
@@ -2332,6 +2205,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "1",
         "quantity" : "1",
         "sharingPolicy" : "singlePerParty",
         "travelerCount" : "3"
@@ -2370,6 +2244,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "3",
         "per" : "4",
         "quantity" : "1",
         "sharingPolicy" : "scaleByParty",
@@ -2408,6 +2283,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "3",
         "per" : "4",
         "quantity" : "1",
         "sharingPolicy" : "scaleByParty",
@@ -2446,6 +2322,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "3",
         "per" : "3",
         "quantity" : "1",
         "sharingPolicy" : "scaleByParty",
@@ -2484,6 +2361,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "3",
         "per" : "4",
         "quantity" : "1",
         "sharingPolicy" : "scaleByParty",
@@ -2522,6 +2400,7 @@
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
       "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "2",
         "per" : "3",
         "quantity" : "1",
         "sharingPolicy" : "scaleByParty",

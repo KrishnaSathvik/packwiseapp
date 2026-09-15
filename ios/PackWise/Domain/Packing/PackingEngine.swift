@@ -150,6 +150,7 @@ struct PackingEngine: Sendable {
             ruleSuggestions(for: context, snapshot: snapshot),
             for: primary,
             signals: travelerChips(primary, context: context),
+            isSoleTraveler: true,
             existingKey: { "canonical:\($0)" },
             existing: existing,
             ineligible: &ineligible
@@ -188,6 +189,9 @@ struct PackingEngine: Sendable {
             snapshot: TripContextCompiler.compile(tripContext, rules: rules)
         )
         var sharedCollected: [String: RuleSuggestion] = [:]
+        // Who each shared item is for: the travelers eligibility passed it
+        // for. Shared quantities scale from this, never the raw party size.
+        var sharedConsumers: [String: Set<UUID>] = [:]
         var result: [PackingItemDraft] = existing.filter(\.isUserAdded)
 
         for traveler in party.travelers {
@@ -208,8 +212,9 @@ struct PackingEngine: Sendable {
             )
             var personal: [RuleSuggestion] = []
             for suggestion in eligible {
-                if ConstraintResolver.sharingResolution(for: suggestion.canonicalItemID, rules: rules.party, context: context, party: party).isShared {
+                if ConstraintResolver.isShared(suggestion.canonicalItemID, rules: rules.party) {
                     mergeSuggestion(suggestion, into: &sharedCollected)
+                    sharedConsumers[suggestion.canonicalItemID, default: []].insert(traveler.id)
                 } else {
                     personal.append(suggestion)
                 }
@@ -242,7 +247,7 @@ struct PackingEngine: Sendable {
         result = result.filter { seen.insert($0.id).inserted }
         let (covered, suppressions) = applyCoverage(result, snapshot: snapshot)
         let completed = addCompanions(covered, context: context, overrides: overrides)
-        return (applyQuantities(completed, context: context, snapshot: snapshot), suppressions, drops, ineligible)
+        return (applyQuantities(completed, context: context, snapshot: snapshot, sharedConsumers: sharedConsumers), suppressions, drops, ineligible)
     }
 
     private func tripWideContext(_ context: TripContext) -> TripContext {
@@ -397,6 +402,7 @@ struct PackingEngine: Sendable {
         _ suggestions: [RuleSuggestion],
         for traveler: Traveler,
         signals: Set<ContextChip>,
+        isSoleTraveler: Bool = false,
         existingKey: (String) -> String,
         existing: [PackingItemDraft],
         ineligible: inout EligibilityDrops
@@ -414,6 +420,7 @@ struct PackingEngine: Sendable {
                     traveler: traveler,
                     explicitNeeds: traveler.needs,
                     signals: signals,
+                    isSoleTraveler: isSoleTraveler,
                     catalog: catalog,
                     rules: rules.party.eligibility
                 )
@@ -889,7 +896,7 @@ struct PackingEngine: Sendable {
             for companionID in catalogItem.companions {
                 guard let companion = catalog.item(id: companionID) else { continue }
                 let sharedCompanion = !context.effectiveParty.usesSimpleList
-                    && ConstraintResolver.sharingResolution(for: companionID, rules: rules.party, context: context, party: context.effectiveParty).isShared
+                    && ConstraintResolver.isShared(companionID, rules: rules.party)
                 let ownership: PackingOwnership = sharedCompanion ? .shared : item.ownershipType
                 let travelerID = sharedCompanion ? nil : item.travelerID
                 let group = "\(ownership.rawValue):\(travelerID?.uuidString ?? "shared")"
@@ -984,10 +991,39 @@ struct PackingEngine: Sendable {
         "\(item.ownershipType.rawValue):\(item.travelerID?.uuidString ?? "shared")"
     }
 
+    /// The counts a shared row's quantity scales from. Consumers are the
+    /// travelers eligibility passed the item for during generation; a shared
+    /// companion (never generated per traveler) asks the eligibility
+    /// authority directly. The device count keeps Phase 7's adult/teen
+    /// semantics, computed here so sharing itself reads no age.
+    private func sharingBasis(
+        for canonical: String,
+        context: TripContext,
+        party: TripParty,
+        sharedConsumers: [String: Set<UUID>]
+    ) -> ConstraintResolver.SharingBasis {
+        let consumers = sharedConsumers[canonical]?.count ?? party.travelers.filter { traveler in
+            TravelerEligibilityResolver.evaluate(
+                canonicalItemID: canonical,
+                traveler: traveler,
+                explicitNeeds: traveler.needs,
+                signals: travelerChips(traveler, context: context),
+                catalog: catalog,
+                rules: rules.party.eligibility
+            ).isEligible
+        }.count
+        return ConstraintResolver.SharingBasis(
+            partyTravelerCount: party.travelers.count,
+            eligibleConsumerCount: max(1, consumers),
+            deviceCount: party.adults.count
+        )
+    }
+
     private func applyQuantities(
         _ items: [PackingItemDraft],
         context: TripContext,
-        snapshot: TripContextSnapshot
+        snapshot: TripContextSnapshot,
+        sharedConsumers: [String: Set<UUID>] = [:]
     ) -> [PackingItemDraft] {
         let engine = QuantityEngine(policies: rules.quantities.policies, reasons: rules.reasons)
         let clothingEngine = ClothingQuantityEngine(reasons: rules.reasons)
@@ -1016,7 +1052,8 @@ struct PackingEngine: Sendable {
             if ConstraintResolver.hasUserAuthority(item) { return copy }
 
             if item.ownershipType == .shared {
-                let resolution = ConstraintResolver.sharingResolution(for: canonical, rules: rules.party, context: context, party: party)
+                let basis = sharingBasis(for: canonical, context: context, party: party, sharedConsumers: sharedConsumers)
+                let resolution = ConstraintResolver.sharingResolution(for: canonical, rules: rules.party, context: context, basis: basis)
                 if case .shared(let quantity, let fallback) = resolution {
                     copy.quantity = quantity
                     if canonical == "essentials.umbrella_compact", let weather = context.weather, weather.rainDays > 0 {
@@ -1027,7 +1064,7 @@ struct PackingEngine: Sendable {
                             ["rainDaysPhrase": rainDaysPhrase, "umbrellaPhrase": umbrellaPhrase],
                             fallback: fallback
                         )
-                        copy.quantityReasonArguments = (ConstraintResolver.sharingEvidence(for: canonical, rules: rules.party, context: context, party: party) ?? [:])
+                        copy.quantityReasonArguments = (ConstraintResolver.sharingEvidence(for: canonical, rules: rules.party, context: context, basis: basis) ?? [:])
                             .merging(["rainDays": "\(weather.rainDays)"]) { current, _ in current }
                     } else {
                         let quantityPhrase = quantity == 1 ? "One" : "\(quantity)"
@@ -1036,7 +1073,7 @@ struct PackingEngine: Sendable {
                             ["quantityPhrase": quantityPhrase],
                             fallback: fallback
                         )
-                        copy.quantityReasonArguments = ConstraintResolver.sharingEvidence(for: canonical, rules: rules.party, context: context, party: party) ?? [:]
+                        copy.quantityReasonArguments = ConstraintResolver.sharingEvidence(for: canonical, rules: rules.party, context: context, basis: basis) ?? [:]
                     }
                     return copy
                 }

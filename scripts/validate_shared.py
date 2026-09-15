@@ -117,7 +117,11 @@ RETIRED_PARTY_KEYS = ("skipForYoungChildren", "skipForInfantsAndToddlers")
 
 
 def eligibility_eligible(entry: dict, age: str, needs: set, chips: set) -> bool:
-    """Mirror of TravelerEligibilityResolver for rule-consistency checks only."""
+    """Mirror of TravelerEligibilityResolver for rule-consistency checks only.
+
+    Evaluated for a companion traveler on a party list: an age-group rule
+    applies to companions, so no primary-traveler or sole-traveler device
+    evidence exists here (Task 7.1 — age is never device ownership)."""
     adult_or_teen = age in ("adult", "teen")
     family = entry["family"]
     if family == "universal":
@@ -129,7 +133,7 @@ def eligibility_eligible(entry: dict, age: str, needs: set, chips: set) -> bool:
     if family == "explicitChildNeed":
         return entry["need"] in needs
     if family == "deviceSignalRequired":
-        return adult_or_teen or (entry.get("signal") is not None and entry["signal"] in chips)
+        return entry.get("signal") is not None and entry["signal"] in chips
     if family == "travelerSignalRequired":
         return entry["signal"] in chips
     if family == "travelerDocument":

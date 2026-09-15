@@ -26,11 +26,17 @@ struct TravelerEligibilityTests {
         homeCountry: String = "US",
         days: Int = 5,
         month: Int = 10,
+        weatherFixture: String? = nil,
         preferences edit: (inout TravelerPreferences) -> Void = { _ in }
     ) throws -> TripContext {
         let destination = try #require(try SharedLibrary.testDestinations().first { $0.city == city })
         let start = Calendar.current.date(from: DateComponents(year: 2026, month: month, day: 5))!
         let end = Calendar.current.date(byAdding: .day, value: days - 1, to: start)!
+        var weather: TripWeatherContext?
+        if let weatherFixture {
+            let fixture = try #require(try SharedLibrary.weatherFixtures()[weatherFixture])
+            weather = MockWeatherService.context(from: fixture, start: start, end: end, fixtureID: fixture.id)
+        }
         var preferences = TravelerPreferences.deviceDefaults()
         preferences.homeCountryCode = homeCountry
         preferences.homeCountrySource = .userConfirmed
@@ -42,7 +48,7 @@ struct TravelerEligibilityTests {
             tripTypes: tripTypes, activities: activities, datedActivities: [], bagTypes: [.checked],
             packingStyle: .balanced, transportation: .unknown, laundryAccess: .none,
             travelerCount: party.travelers.count, userNotes: "", contextChips: chips,
-            weather: nil, preferences: preferences, party: party
+            weather: weather, preferences: preferences, party: party
         )
     }
 
@@ -168,8 +174,9 @@ struct TravelerEligibilityTests {
 
         let (teenParty, teen) = Self.family(child: Traveler(role: .child, ageGroup: .teen))
         let teenIDs = Self.ids(Self.engine.generate(context: try Self.context(party: teenParty)), for: teen)
-        #expect(teenIDs.isSuperset(of: ["essentials.phone", "electronics.phone_charger", "documents.id", "toiletries.deodorant"]),
-                "a teen is presumed to manage their own phone and ID")
+        #expect(teenIDs.isSuperset(of: ["documents.id", "toiletries.deodorant"]), "a teen keeps age-appropriate ID and care items")
+        #expect(teenIDs.isDisjoint(with: Self.devices + ["electronics.earbuds_case"]),
+                "Task 7.1: age is not device ownership — teen got \(teenIDs.intersection(Self.devices + ["electronics.earbuds_case"]))")
     }
 
     // MARK: - Attribution
@@ -219,6 +226,145 @@ struct TravelerEligibilityTests {
         #expect(phone == .requiresExplicitSignal(.device(nil)), "a laptop signal is not a phone signal")
     }
 
+    // MARK: - Device ownership (Task 7.1)
+
+    /// Age answers "can this traveler use it?", never "does this traveler
+    /// own it?". A laptop needs a signal attributed to its traveler; trip-wide
+    /// Business/Work context names no one on a party list.
+    @Test func deviceOwnershipRequiresATravelerScopedSignal() throws {
+        let laptop: Set<String> = ["electronics.laptop", "electronics.laptop_charger"]
+        let adult1 = Traveler(role: .otherAdult, ageGroup: .adult)
+        let businessFamily = TripParty(travelMode: .group, travelers: [.primarySelf(), adult1])
+
+        struct Row {
+            var name: String
+            var party: TripParty
+            var tripTypes: Set<TripType>
+            var laptopPreference: Bool
+            /// Role → whether that traveler gets the laptop and its charger.
+            var expected: [(TravelerRole, AgeGroup, Bool)]
+        }
+        let rows = [
+            Row(name: "solo adult + Laptop", party: .solo(), tripTypes: [.vacation], laptopPreference: true,
+                expected: [(.self, .adult, true)]),
+            Row(name: "solo Business, no preference: the trip is the traveler's own", party: .solo(), tripTypes: [.business], laptopPreference: false,
+                expected: [(.self, .adult, true)]),
+            Row(name: "Business party, only You has Laptop", party: businessFamily, tripTypes: [.business], laptopPreference: true,
+                expected: [(.self, .adult, true), (.otherAdult, .adult, false)]),
+            Row(name: "Business party, no signal anywhere → nobody", party: businessFamily, tripTypes: [.business], laptopPreference: false,
+                expected: [(.self, .adult, false), (.otherAdult, .adult, false)]),
+        ]
+        for row in rows {
+            let items = Self.engine.generate(context: try Self.context(party: row.party, tripTypes: row.tripTypes, activities: ["work"]) {
+                $0.usuallyBringLaptop = row.laptopPreference
+            })
+            for (role, age, gets) in row.expected {
+                let traveler = try #require(row.party.travelers.first { $0.role == role && $0.ageGroup == age })
+                let mine = row.party.usesSimpleList
+                    ? Set(items.compactMap(\.canonicalItemID))
+                    : Self.ids(items, for: traveler)
+                #expect(mine.isSuperset(of: laptop) == gets && (gets || mine.isDisjoint(with: laptop)),
+                        "\(row.name): \(role) laptop rows \(mine.intersection(laptop))")
+            }
+        }
+    }
+
+    @Test func unsignaledDevicesReachOnlyThePrimaryTraveler() throws {
+        let partner = Traveler(role: .partner, ageGroup: .adult)
+        let (party, teen) = { () -> (TripParty, Traveler) in
+            let you = Traveler.primarySelf()
+            let teen = Traveler(role: .child, ageGroup: .teen, guardianTravelerID: you.id)
+            return (TripParty(travelMode: .family, travelers: [you, partner, teen]), teen)
+        }()
+        let items = Self.engine.generate(context: try Self.context(party: party))
+        #expect(Self.ids(items, for: party.primary).isSuperset(of: ["essentials.phone", "electronics.phone_charger"]),
+                "You run PackWise on your own phone")
+        for companion in [partner, teen] {
+            #expect(Self.ids(items, for: companion).isDisjoint(with: Self.devices + ["electronics.earbuds_case"]),
+                    "\(companion.role): no device signal, no device")
+        }
+        let decision = TravelerEligibilityResolver.evaluate(
+            canonicalItemID: "essentials.phone", traveler: partner, explicitNeeds: [], signals: [],
+            catalog: Self.catalog, rules: Self.rules.party.eligibility
+        )
+        #expect(decision == .requiresExplicitSignal(.device(nil)))
+    }
+
+    @Test func aTeensOwnLaptopSignalIsHonoredWithoutAddingOtherDevices() throws {
+        let you = Traveler.primarySelf()
+        let teen = Traveler(role: .child, ageGroup: .teen, guardianTravelerID: you.id, chips: [.bringingLaptop])
+        let party = TripParty(travelMode: .family, travelers: [you, Traveler(role: .partner, ageGroup: .adult), teen])
+        let mine = Self.ids(Self.engine.generate(context: try Self.context(party: party)), for: teen)
+        #expect(mine.isSuperset(of: ["electronics.laptop", "electronics.laptop_charger"]))
+        #expect(mine.isDisjoint(with: ["essentials.phone", "electronics.phone_charger", "electronics.power_bank"]),
+                "a laptop signal is not a phone signal")
+        #expect(!Self.ids(Self.engine.generate(context: try Self.context(party: party)), for: you).contains("electronics.laptop"),
+                "the teen's signal never propagates to You")
+    }
+
+    /// An explicitly added device for any traveler is user intent, never
+    /// evaluated; a user-added laptop still brings its charger.
+    @Test func explicitlyAddedChildAndCompanionElectronicsSurvive() throws {
+        let (party, child) = Self.family(child: Traveler(role: .child, ageGroup: .child))
+        let partner = try #require(party.travelers.first { $0.role == .partner })
+        let context = try Self.context(party: party, tripTypes: [.business], activities: ["work"])
+        func added(_ id: String, _ name: String, for traveler: Traveler) -> PackingItemDraft {
+            PackingItemDraft(canonicalItemID: id, displayName: name, category: .electronics, quantity: 1, importance: .normal,
+                             sourceSignals: [], reason: "", isUserAdded: true, ownershipType: .personal, travelerID: traveler.id)
+        }
+        let tablet = added("electronics.tablet", "Tablet", for: child)
+        let laptop = added("electronics.laptop", "Laptop", for: partner)
+        let regenerated = Self.engine.generate(context: context, existing: [tablet, laptop])
+        #expect(regenerated.contains { $0.id == tablet.id && $0.travelerID == child.id })
+        #expect(regenerated.contains { $0.id == laptop.id && $0.travelerID == partner.id })
+        #expect(Self.ids(regenerated, for: partner).contains("electronics.laptop_charger"), "companion follows the user's laptop")
+        let diff = Self.engine.recommendationDiff(context: context, existing: [tablet, laptop], overrides: [])
+        #expect(!diff.removeCandidates.contains { $0.id == tablet.id || $0.id == laptop.id })
+    }
+
+    // MARK: - Formal events (Task 7.1)
+
+    @Test func childrenAtAWeddingGetAFormalOutfitButNoAdultAccessories() throws {
+        for age in [AgeGroup.child, .toddler] {
+            let (party, kid) = Self.family(child: Traveler(role: .child, ageGroup: age))
+            let items = Self.engine.generate(context: try Self.context(party: party, tripTypes: [.weddingEvent]))
+            let mine = Self.ids(items, for: kid)
+            #expect(mine.contains("clothing.formal_outfit"), "\(age) at a wedding gets an event outfit")
+            #expect(mine.isDisjoint(with: ["footwear.dress_shoes", "clothing.blazer", "clothing.dress_shirt", "clothing.tie"]),
+                    "\(age) got adult formal accessories: \(mine)")
+            #expect(Self.ids(items, for: party.primary).contains("clothing.formal_outfit"))
+        }
+        let (infantParty, infant) = Self.family(child: Traveler(role: .child, ageGroup: .infant))
+        #expect(!Self.ids(Self.engine.generate(context: try Self.context(party: infantParty, tripTypes: [.weddingEvent])), for: infant)
+            .contains("clothing.formal_outfit"), "infant clothing stays the infant model")
+        let (plainParty, plainChild) = Self.family(child: Traveler(role: .child, ageGroup: .child))
+        #expect(!Self.ids(Self.engine.generate(context: try Self.context(party: plainParty)), for: plainChild).contains("clothing.formal_outfit"),
+                "no formal context, no formal outfit")
+    }
+
+    // MARK: - Infant sun protection (Task 7.1)
+
+    @Test func sunnyInfantTripsAddASunHatOnlyWithSunContext() throws {
+        let (party, infant) = Self.family(child: Traveler(role: .child, ageGroup: .infant))
+        let sunny = Self.ids(Self.engine.generate(context: try Self.context(city: "Miami", party: party, month: 7, weatherFixture: "MiamiHotBeach")), for: infant)
+        #expect(sunny.contains("clothing.hat_sun"), "infant + hot/high-UV → sun hat")
+        #expect(sunny.isDisjoint(with: ["essentials.sunglasses", "kids.sunscreen"]), "no new infant sun-care inference")
+
+        let beach = Self.ids(Self.engine.generate(context: try Self.context(city: "Miami", party: party, tripTypes: [.beach], month: 7)), for: infant)
+        #expect(beach.contains("clothing.hat_sun"), "beach sun-exposure need → sun hat")
+
+        let mild = Self.ids(Self.engine.generate(context: try Self.context(city: "Seattle", party: party, weatherFixture: "SeattleWetCity")), for: infant)
+        #expect(!mild.contains("clothing.hat_sun"), "no sun need, no hat")
+
+        for age in [AgeGroup.toddler, .child, .adult] {
+            let decision = TravelerEligibilityResolver.evaluate(
+                canonicalItemID: "clothing.hat_sun", traveler: Traveler(role: age.isAdult ? .otherAdult : .child, ageGroup: age),
+                explicitNeeds: [], signals: [], catalog: Self.catalog, rules: Self.rules.party.eligibility
+            )
+            #expect(decision.isEligible, "\(age) unchanged")
+        }
+    }
+
     // MARK: - Travel documents (design 9.3)
 
     @Test func internationalFamilyDocumentsFollowTheApprovedMatrix() throws {
@@ -246,11 +392,19 @@ struct TravelerEligibilityTests {
         #expect(generation.eligibilityDecisions.allSatisfy { $0.travelerID != party.primary.id }, "adults lose nothing")
     }
 
-    @Test func soloAndAdultPartiesRecordNoEligibilityDecisions() throws {
+    @Test func soloRecordsNoEligibilityDecisionsAndAdultPartiesOnlyWithheldDevices() throws {
         let solo = Self.engine.generateDetailed(context: try Self.context(party: .solo(), chips: [.bringingLaptop, .dailyMedication]))
         #expect(solo.eligibilityDecisions.isEmpty)
+        let soloBusiness = Self.engine.generateDetailed(context: try Self.context(party: .solo(), tripTypes: [.business], activities: ["work"]))
+        #expect(soloBusiness.eligibilityDecisions.isEmpty, "a solo trip's own context is its only traveler's")
+
         let group = TripParty(travelMode: .group, travelers: [.primarySelf()] + (1...3).map { _ in Traveler(role: .otherAdult, ageGroup: .adult) })
-        #expect(Self.engine.generateDetailed(context: try Self.context(city: "Tokyo", party: group, tripTypes: [.business], activities: ["work"])).eligibilityDecisions.isEmpty)
+        let generation = Self.engine.generateDetailed(context: try Self.context(city: "Tokyo", party: group, tripTypes: [.business], activities: ["work"]))
+        let primaryWithheld = generation.eligibilityDecisions.filter { $0.travelerID == group.primary.id }
+        #expect(primaryWithheld.map(\.reason) == ["device_signal.bringingLaptop"], "unattributed work context withholds only the laptop from You…")
+        #expect(generation.eligibilityDecisions.allSatisfy { $0.result == .requiresExplicitSignal && $0.reason.hasPrefix("device_signal") },
+                "…and adults lose nothing but unevidenced devices: \(generation.eligibilityDecisions)")
+        #expect(!generation.items.contains { $0.canonicalItemID == "electronics.laptop" }, "no one has a laptop signal")
     }
 
     // MARK: - User authority
