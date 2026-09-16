@@ -182,7 +182,7 @@ People filters are generated from the party, not hardcoded.
 
 ```text
 Krishna + Maya          All | Krishna | Maya | Shared
-You + Maya + 2 kids     All | You | Maya | Kids | Shared
+You + Maya + 2 kids     All | You | Maya | Arjun | Child 2 | Shared
 You + Partner + Arjun   All | You | Partner | Arjun | Shared
 ```
 

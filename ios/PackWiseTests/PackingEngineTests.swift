@@ -464,7 +464,10 @@ struct PackingEngineTests {
         #expect(!childIDs.contains("documents.id"))
     }
 
-    @Test func partyListFiltersUseNamesAndCollapseKids() {
+    /// One traveler, one scope (Task 11.1): children are never folded into a
+    /// generic Kids bucket, because two children differ in age, needs,
+    /// quantities, and packed state.
+    @Test func partyListFiltersGiveEveryTravelerTheirOwnScope() {
         let krishna = Traveler.primarySelf(name: "Krishna")
         let maya = Traveler(name: "Maya", role: .partner, ageGroup: .adult)
         let arjun = Traveler(name: "Arjun", role: .child, ageGroup: .child)
@@ -477,7 +480,8 @@ struct PackingEngineTests {
         #expect(oneChild.listFilters() == [.all, .traveler(krishna.id), .traveler(maya.id), .traveler(arjun.id), .shared])
 
         let twoKids = TripParty(travelMode: .family, travelers: [krishna, maya, arjun, emma])
-        #expect(twoKids.listFilters() == [.all, .traveler(krishna.id), .traveler(maya.id), .kids, .shared])
+        #expect(twoKids.listFilters() == [.all, .traveler(krishna.id), .traveler(maya.id), .traveler(arjun.id), .traveler(emma.id), .shared])
+        #expect(twoKids.listFilters().count == twoKids.travelers.count + 2, "All + one per traveler + Shared")
     }
 
     @Test func partyInvariantsRejectBrokenOwnership() {

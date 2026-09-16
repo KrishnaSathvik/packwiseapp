@@ -205,7 +205,6 @@ enum PackingListAggregator {
         switch scope {
         case .all: true
         case .shared: item.ownershipType == .shared
-        case .kids: item.ownershipType == .personal && party.children.contains { $0.id == item.travelerID }
         case .traveler(let id): item.ownershipType == .personal && item.travelerID == id
         }
     }
@@ -259,7 +258,6 @@ enum PackingListAggregator {
             let title: String = switch scope {
             case .all: "All"
             case .shared: TripParty.sharedLabel
-            case .kids: "Kids"
             case .traveler(let id): party.travelers.first { $0.id == id }.map(party.label(for:)) ?? "Traveler"
             }
             return PackingListScopeLabel(scope: scope, title: title)
@@ -277,6 +275,11 @@ enum PackingListAggregator {
     /// only when they share a canonical ID and a category, and only when
     /// there are at least two of them. Custom rows without a canonical ID
     /// never aggregate: a look-alike name is not an identity.
+    ///
+    /// A section's counts measure the whole category for the current
+    /// People scope (Task 11.1): Status, search, and Hide packed change
+    /// which rows are shown, not what the header means. A section with
+    /// no visible rows is omitted.
     static func sections(
         items: [PackingListItem],
         party: TripParty,
@@ -285,12 +288,19 @@ enum PackingListAggregator {
     ) -> [PackingListSection] {
         let labels = labelTable(for: party)
         let position = Dictionary(uniqueKeysWithValues: party.travelers.enumerated().map { ($1.id, $0) })
-        let visible = scoped(items: items, party: party, query: query)
+        let inScope = items.filter { matches($0, scope: query.scope, party: party) }
+        let visible = inScope
+            .filter { matches($0, search: query.search, labels: labels) }
             .filter { matches($0, status: query.status) && !(query.hidePacked && $0.isPacked) }
         let aggregates = query.scope == .all && !party.usesSimpleList
 
         var byCategory: [PackingCategory: [PackingListItem]] = [:]
         for item in visible { byCategory[item.category, default: []].append(item) }
+        var scopeByCategory: [PackingCategory: (completed: Int, total: Int)] = [:]
+        for item in inScope {
+            let current = scopeByCategory[item.category] ?? (0, 0)
+            scopeByCategory[item.category] = (current.completed + (item.isPacked ? 1 : 0), current.total + 1)
+        }
 
         return order.compactMap { category in
             guard let categoryItems = byCategory[category], !categoryItems.isEmpty else { return nil }
@@ -331,11 +341,12 @@ enum PackingListAggregator {
                 if byName != .orderedSame { return byName == .orderedAscending }
                 return sortKey(lhs, position: position) < sortKey(rhs, position: position)
             }
+            let progress = scopeByCategory[category] ?? (0, 0)
             return PackingListSection(
                 category: category,
                 rows: rows,
-                completedCount: categoryItems.filter(\.isPacked).count,
-                totalCount: categoryItems.count
+                completedCount: progress.completed,
+                totalCount: progress.total
             )
         }
     }

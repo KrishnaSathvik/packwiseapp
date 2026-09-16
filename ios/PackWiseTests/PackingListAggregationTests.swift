@@ -169,6 +169,82 @@ struct PackingListAggregationTests {
         #expect(labels.map(\.scope) == Self.family.listFilters())
     }
 
+    // MARK: - Task 11.1: one People scope per traveler
+
+    private static let child2 = Traveler(name: "Mia", role: .child, ageGroup: .toddler, guardianTravelerID: you.id)
+    private static let twoChildFamily = TripParty(travelMode: .family, travelers: [you, alex, child1, child2])
+
+    @Test func twoChildrenGetTwoDistinctScopesWithNameOrStableFallback() throws {
+        let labels = PackingListAggregator.scopeLabels(for: Self.twoChildFamily)
+        #expect(labels.map(\.title) == ["All", "You", "Alex", "Child 1", "Mia", "Shared"])
+        #expect(labels.map(\.scope) == [.all, .traveler(Self.you.id), .traveler(Self.alex.id), .traveler(Self.child1.id), .traveler(Self.child2.id), .shared])
+        #expect(!labels.contains { $0.title == "Kids" })
+    }
+
+    @Test func aChildScopeShowsOnlyThatChildsRecords() throws {
+        let items = [
+            Self.personal("kids.snacks", "Snacks", .kids, for: Self.child1, quantity: 3),
+            Self.personal("kids.snacks", "Snacks", .kids, for: Self.child2, quantity: 5),
+            Self.personal("kids.diapers", "Diapers", .kids, for: Self.child2, quantity: 12),
+            Self.personal("toiletries.toothbrush", "Toothbrush", .toiletries, for: Self.you),
+            Self.shared("toiletries.sunscreen", "Kid sunscreen", .toiletries),
+        ]
+        let rows = Self.rows(items, party: Self.twoChildFamily, query: PackingListQuery(scope: .traveler(Self.child1.id)))
+        #expect(rows.count == 1)
+        #expect(rows.flatMap(\.recordIDs) == [items[0].id], "nothing from Mia, You, or Shared leaks in")
+        let mia = Self.rows(items, party: Self.twoChildFamily, query: PackingListQuery(scope: .traveler(Self.child2.id)))
+        #expect(Set(mia.flatMap(\.recordIDs)) == Set([items[1].id, items[2].id]))
+        #expect(Self.groups(mia).isEmpty, "a traveler scope is raw records")
+    }
+
+    // MARK: - Task 11.1: header progress follows People only
+
+    /// Clothing for the family: 8 records, 3 packed. Every Status, search,
+    /// and Hide packed variation keeps the header at 3 / 8; only People moves it.
+    private static func clothingFixture() -> [PackingListItem] {
+        var items: [PackingListItem] = []
+        for (index, traveler) in family.travelers.enumerated() {
+            items.append(personal("clothing.tshirt", "T-shirts", .clothing, for: traveler, quantity: 5, packed: index < 2 ? 5 : 0))
+            items.append(personal("clothing.socks", "Socks", .clothing, for: traveler, quantity: 6, packed: index == 0 ? 6 : 0, importance: index == 1 ? .important : .normal))
+        }
+        return items
+    }
+
+    private static func clothingHeader(_ query: PackingListQuery, party: TripParty = family) -> String? {
+        PackingListAggregator.sections(items: clothingFixture(), party: party, order: order, query: query)
+            .first { $0.category == .clothing }
+            .map { "\($0.completedCount) / \($0.totalCount)" }
+    }
+
+    @Test func categoryHeaderProgressIsStableAcrossStatusSearchAndHidePacked() throws {
+        #expect(Self.clothingHeader(PackingListQuery()) == "3 / 8")
+        #expect(Self.clothingHeader(PackingListQuery(status: .toPack)) == "3 / 8")
+        #expect(Self.clothingHeader(PackingListQuery(status: .packed)) == "3 / 8")
+        #expect(Self.clothingHeader(PackingListQuery(status: .important)) == "3 / 8")
+        #expect(Self.clothingHeader(PackingListQuery(hidePacked: true)) == "3 / 8")
+        #expect(Self.clothingHeader(PackingListQuery(search: "shirt")) == "3 / 8")
+        #expect(Self.clothingHeader(PackingListQuery(status: .toPack, search: "sock", hidePacked: true)) == "3 / 8")
+
+        // The rows below the header still follow the filters.
+        let toPack = PackingListAggregator.sections(items: Self.clothingFixture(), party: Self.family, order: Self.order, query: PackingListQuery(status: .toPack))
+        let tshirts = try #require(Self.groups(toPack.flatMap(\.rows)).first { $0.canonicalItemID == "clothing.tshirt" })
+        #expect(tshirts.members.map(\.travelerLabel) == ["Adult 2", "Child 1"])
+        #expect(tshirts.progressText == "0 / 2")
+    }
+
+    @Test func aFilterThatHidesEveryRowHidesTheSectionRatherThanShowingAnEmptyHeader() throws {
+        let sections = PackingListAggregator.sections(items: Self.clothingFixture(), party: Self.family, order: Self.order, query: PackingListQuery(search: "zzz"))
+        #expect(sections.isEmpty)
+    }
+
+    @Test func changingPeopleChangesTheHeaderDenominator() throws {
+        #expect(Self.clothingHeader(PackingListQuery(scope: .traveler(Self.you.id))) == "2 / 2")
+        #expect(Self.clothingHeader(PackingListQuery(scope: .traveler(Self.alex.id))) == "1 / 2")
+        #expect(Self.clothingHeader(PackingListQuery(scope: .traveler(Self.child1.id))) == "0 / 2")
+        #expect(Self.clothingHeader(PackingListQuery(scope: .traveler(Self.alex.id), status: .toPack)) == "1 / 2", "Status still does not move it")
+        #expect(Self.clothingHeader(PackingListQuery(scope: .shared)) == nil, "no shared clothing, no section")
+    }
+
     // MARK: - 22. Search, status, scope
 
     @Test func searchMatchesBeforeAggregation() throws {

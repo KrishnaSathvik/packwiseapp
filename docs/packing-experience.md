@@ -93,9 +93,11 @@ Couple and family add a second filter row generated from the party:
 
 ```text
 All | Krishna | Maya | Shared
-All | You | Maya | Kids | Shared
-All | You | Partner | Arjun | Shared
+All | You | Maya | Arjun | Emma | Shared
+All | You | Adult 1 | Child 1 | Child 2 | Shared
 ```
+
+One traveler is one scope (Task 11.1); children are never folded into a "Kids" bucket, and a large party scrolls the chips.
 
 Shared items can ask **Who is bringing it?** That is the carrier (`assignedTravelerID`), not the owner. See [travelers-and-parties.md](travelers-and-parties.md).
 
@@ -107,6 +109,8 @@ Status: To pack 81 | Packed 0 | Important
 ```
 
 Solo hides People. Party All groups identical canonical personal rows and shows traveler completion/quantity detail; tapping reveals the real records. Traveler and Shared filters always show real rows. This is presentation aggregation, not ownership collapse.
+
+Category headers measure the whole category for the current People scope — "Clothing 14 / 27" — and stay put while Status, search, or Hide packed change which rows are shown. Only People moves the denominator, because only People changes whose checklist is measured.
 
 ## Packing item UX
 

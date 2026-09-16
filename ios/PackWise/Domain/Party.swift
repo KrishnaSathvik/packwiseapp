@@ -275,19 +275,12 @@ struct TripParty: Hashable, Codable, Sendable {
         return parts.isEmpty ? "Just you" : "You + " + parts.joined(separator: ", ")
     }
 
+    /// The People scopes: All, one per traveler in party order, Shared
+    /// (Task 11.1). One traveler is one scope — children are never folded
+    /// into a generic bucket, because two children differ in age, needs,
+    /// quantities, and packed state. A large party scrolls the chips.
     func listFilters() -> [PartyListFilter] {
-        var filters: [PartyListFilter] = [.all]
-        for traveler in travelers where traveler.role != .child {
-            filters.append(.traveler(traveler.id))
-        }
-        let kids = travelers.filter { $0.role == .child }
-        if kids.count == 1, let kid = kids.first {
-            filters.append(.traveler(kid.id))
-        } else if kids.count > 1 {
-            filters.append(.kids)
-        }
-        filters.append(.shared)
-        return filters
+        [.all] + travelers.map { .traveler($0.id) } + [.shared]
     }
 
     func containsTraveler(_ id: UUID) -> Bool {
@@ -369,14 +362,12 @@ enum PartyInvariants {
 enum PartyListFilter: Hashable, Identifiable, Sendable {
     case all
     case traveler(UUID)
-    case kids
     case shared
 
     var id: String {
         switch self {
         case .all: "all"
         case .traveler(let id): "traveler-\(id.uuidString)"
-        case .kids: "kids"
         case .shared: "shared"
         }
     }
