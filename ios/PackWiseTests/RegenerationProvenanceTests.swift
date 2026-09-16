@@ -10,6 +10,57 @@ import Testing
 /// but cause changed. These tests reproduce the gap live, then prove the
 /// fix while pinning every explicit-user-authority field untouched.
 struct RegenerationProvenanceTests {
+    @Test(arguments: [1, 5, 30, 35, 56, 1000, Int.max])
+    @MainActor func quantityEditorDomainSurvivesStoreReopen(quantity: Int) throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("quantity.store")
+        let owner = UUID()
+        let carrier = UUID()
+        func saveEditedRecord() throws {
+            let container = try PackWisePersistence.container(storeURL: url)
+            let context = ModelContext(container)
+            let trip = TripRecord(destination: try destination("Chicago"), startDate: .now,
+                                  endDate: .now, durationDays: 1, durationNights: 0,
+                                  tripType: .other, activities: [], bagType: .carryOn, packingStyle: .balanced)
+            context.insert(trip)
+            let record = PackingItemRecord(from: PackingItemDraft(
+                canonicalItemID: "kids.diapers", displayName: "Diapers", category: .kids,
+                quantity: quantity, importance: .important, sourceSignals: [.party], reason: "For your child."
+            ), trip: trip)
+            context.insert(record)
+            record.travelerID = owner
+            record.assignedTravelerID = carrier
+            record.packedQuantity = 1
+            #expect(QuantityEditorPolicy.range.contains(record.quantity))
+            #expect(record.quantity == quantity) // Opening must not clamp or claim authority.
+            #expect(!record.isUserModified)
+            if quantity > QuantityEditorPolicy.range.lowerBound {
+                record.quantity -= 1
+                record.quantity += 1
+            }
+            if quantity < QuantityEditorPolicy.range.upperBound {
+                record.quantity += 1
+                record.quantity -= 1
+            }
+            record.isUserModified = true
+            try context.save()
+        }
+        try saveEditedRecord()
+        for _ in 0..<2 {
+            let reopened = try PackWisePersistence.container(storeURL: url)
+            let context = ModelContext(reopened)
+            let record = try #require(context.fetch(FetchDescriptor<PackingItemRecord>()).first)
+            #expect(record.quantity == quantity)
+            #expect(record.isUserModified)
+            #expect(record.packedQuantity == 1)
+            #expect(record.category == .kids)
+            #expect(record.travelerID == owner)
+            #expect(record.assignedTravelerID == carrier)
+        }
+    }
+
     private func makeEngine() throws -> PackingEngine {
         PackingEngine(catalog: try SharedLibrary.catalog(), rules: try SharedLibrary.rules())
     }
@@ -110,7 +161,7 @@ struct RegenerationProvenanceTests {
 
         let manual = try #require(trip.items.first { $0.canonicalItemID == "clothing.underwear" })
         manual.isUserModified = true
-        manual.quantity = 11
+        manual.quantity = 35
 
         let notNeededCandidate = try #require(trip.items.first { $0.canonicalItemID == "toiletries.toothbrush" })
         repo.markNotNeeded(notNeededCandidate, on: trip)

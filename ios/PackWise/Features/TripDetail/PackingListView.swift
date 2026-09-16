@@ -614,7 +614,7 @@ struct AddItemSheet: View {
                             }
                             .buttonStyle(.plain)
                             PackWiseRowDivider(inset: 0)
-                            Stepper("Quantity  \(draft.quantity)", value: $draft.quantity, in: 1...20)
+                            Stepper("Quantity  \(draft.quantity)", value: $draft.quantity, in: QuantityEditorPolicy.range)
                             PackWiseRowDivider(inset: 0)
                             VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
                                 Toggle(isOn: $draft.important) {
@@ -1021,7 +1021,7 @@ struct ItemDetailView: View {
             VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
                 headerIdentity
                 PackWiseRowDivider(inset: 0)
-                Stepper("Quantity  \(item.quantity)", value: $item.quantity, in: 1...30)
+                Stepper("Quantity  \(item.quantity)", value: $item.quantity, in: QuantityEditorPolicy.range)
                     .onChange(of: item.quantity) {
                         item.isUserModified = true
                         item.updatedAt = .now
@@ -1177,4 +1177,11 @@ extension PackingItemRecord {
         guard let trip else { return .init(isPrimaryTraveler: false) }
         return .owner(travelerID, in: trip.party)
     }
+}
+
+/// Quantity storage and generation use positive Int values. Duration and
+/// shared-consumer scaling have no product cap, so neither editor invents one.
+/// Opening an editor never rewrites its value; Stepper disables at the bounds.
+enum QuantityEditorPolicy {
+    static let range = 1...Int.max
 }
