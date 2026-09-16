@@ -398,6 +398,41 @@ enum HomeCountrySource: String, Codable, Sendable {
     case userConfirmed
 }
 
+/// The country a trip is taken from — the trip's own copy of the home
+/// country that was true when it was created (Task 9.2). `Me.homeCountry`
+/// seeds it for a *new* trip and is never consulted for that trip again, so
+/// editing Me later changes the next fresh trip only. Conceptually it is the
+/// trip's origin, not "home country at creation": a later release can let a
+/// trip start from somewhere else without changing the model.
+///
+/// A device-suggested code is a guess, not a fact (implementation decision
+/// "Home country"), so only a confirmed origin can make a trip international.
+struct TripOrigin: Hashable, Codable, Sendable {
+    var countryCode: String?
+    var source: HomeCountrySource
+
+    init(countryCode: String?, source: HomeCountrySource) {
+        self.countryCode = countryCode?.isEmpty == true ? nil : countryCode
+        self.source = source
+    }
+
+    /// The seed for a new trip: Me's home country as it is right now.
+    init(seededFrom preferences: TravelerPreferences) {
+        self.init(countryCode: preferences.homeCountryCode, source: preferences.homeCountrySource)
+    }
+
+    /// No origin on record. Never international on its own; a trip in this
+    /// state is one the origin backfill has not reached yet.
+    static let unknown = TripOrigin(countryCode: nil, source: .deviceSuggested)
+
+    /// The one international decision (design: "international = destination
+    /// ≠ home"), shared by the engine and every screen that orders by it.
+    func isInternational(destinationCountryCode: String) -> Bool {
+        guard source == .userConfirmed, let countryCode else { return false }
+        return destinationCountryCode.uppercased() != countryCode.uppercased()
+    }
+}
+
 enum Transportation: String, Codable, CaseIterable, Sendable {
     case flight
     case drive
@@ -479,18 +514,22 @@ struct TripContext: Hashable, Sendable {
     var userNotes: String
     var contextChips: Set<ContextChip>
     var weather: TripWeatherContext?
+    /// Me at generation time. The engine reads no home-country value from
+    /// here (Task 9.2) and no habit (Tasks 8.2–9.1); what remains in use is
+    /// unit and style context.
     var preferences: TravelerPreferences
     var party: TripParty = .solo()
+    /// The trip's own origin country; see `TripOrigin`. Defaults to unknown
+    /// so a context built without one is never international by accident.
+    var origin: TripOrigin = .unknown
 
     var effectiveParty: TripParty {
         party.travelers.isEmpty ? .solo() : party
     }
 
     var isInternationalConfirmed: Bool {
-        if contextChips.contains(.travelingInternationally) { return true }
-        guard preferences.homeCountrySource == .userConfirmed,
-              let home = preferences.homeCountryCode, !home.isEmpty else { return false }
-        return destination.countryCode.uppercased() != home.uppercased()
+        contextChips.contains(.travelingInternationally)
+            || origin.isInternational(destinationCountryCode: destination.countryCode)
     }
 
     var hasLaundry: Bool {

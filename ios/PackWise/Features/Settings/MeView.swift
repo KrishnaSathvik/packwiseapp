@@ -82,6 +82,9 @@ private struct MeContent: View {
                         prefs.homeCountryCode = value.uppercased()
                     }
             }
+            Text("Used for trips you create from now on.")
+                .font(.footnote)
+                .foregroundStyle(PackWiseColor.textSecondary)
             if prefs.homeCountrySourceRaw != HomeCountrySource.userConfirmed.rawValue {
                 Text("Suggested from this iPhone. Confirm before PackWise treats trips as international.")
                     .font(.footnote)

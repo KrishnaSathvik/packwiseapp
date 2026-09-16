@@ -513,7 +513,7 @@ struct TripDetailView: View {
 
     private var categorySummaries: [CategorySummary] {
         let order = PackingCategory.displayOrder(
-            international: trip.contextChips.contains(.travelingInternationally) || isInternational,
+            international: trip.isInternational,
             outdoor: trip.tripType == .outdoor
         )
         return order.compactMap { category in
@@ -533,11 +533,6 @@ struct TripDetailView: View {
 
     private var remainingCategoryCount: Int {
         max(0, categorySummaries.count - visibleCategorySummaries.count)
-    }
-
-    private var isInternational: Bool {
-        let home = preferenceRecords.first?.homeCountryCode ?? Locale.current.region?.identifier ?? "US"
-        return trip.destinationCountryCode.uppercased() != home.uppercased()
     }
 
     // MARK: - Weather plumbing

@@ -104,6 +104,8 @@ homeCountrySource: userConfirmed | deviceSuggested
 
 Prefill from device region. Do not treat device region as fact. Strong international-document recommendations require `userConfirmed` or an explicit “traveling internationally” chip.
 
+Since Task 9.2 the home country is a new-trip default, not a live trip input. `TripDraft.fresh` copies it into the trip's `originCountry` (`TripOrigin`: code + source); `TripRecord.context` hands the engine that origin, and `TripRecord.isInternational` is the one decision screens order by. Editing Me later changes the next fresh trip only. Trips saved before the boundary gain an origin exactly once on store open (`TripOriginBackfill`): their own evidence (the chip, an international row) keeps their classification, a generated list with no international row stays domestic, and only a trip with no rows takes today's Me. There is no setup control for origin yet; the name leaves room for “traveling from somewhere other than home” later.
+
 Never claim “Visa required.” Visa/entry docs are a reminder to check requirements. Do not assert plug types without a maintained data source.
 
 ## Catalog

@@ -10,6 +10,9 @@ import Foundation
 /// - bags: any of the four physical bags, independently; none is "not sure".
 struct TripDraft {
     var destination: Destination?
+    /// Where this trip is taken from (Task 9.2). Seeded from Me for a fresh
+    /// trip, restored from the trip on edit; there is no setup control yet.
+    var origin: TripOrigin = .unknown
     var startDate = Calendar.current.startOfDay(for: Date.now)
     var endDate = Calendar.current.date(byAdding: .day, value: 4, to: Calendar.current.startOfDay(for: Date.now)) ?? Date.now
     var tripTypes: Set<TripType> = []
@@ -141,6 +144,9 @@ struct TripDraft {
         var draft = TripDraft()
         draft.packingStyle = preferences.packingStyle
         draft.bagTypes = preferences.preferredBagTypes
+        // Me's home country seeds this trip's origin (Task 9.2). From here on
+        // the trip owns it; editing Me later reaches the next new trip only.
+        draft.origin = TripOrigin(seededFrom: preferences)
         // Me's habits prefill You only (Tasks 8.2–9.1). Deselecting one here
         // changes this trip, never the preference; companions start with no
         // choices regardless.
@@ -152,6 +158,7 @@ struct TripDraft {
         let party = trip.party
         var draft = TripDraft()
         draft.destination = trip.destination
+        draft.origin = trip.origin ?? .unknown
         draft.startDate = trip.startDate
         draft.endDate = trip.endDate
         draft.tripTypes = trip.tripTypes

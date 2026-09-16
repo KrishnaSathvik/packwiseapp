@@ -35,7 +35,8 @@ struct TripSetupDraftTests {
             tripType: TripType.stableOrder.first(where: draft.tripTypes.contains) ?? .other,
             activities: draft.activities, bagType: .notSure, packingStyle: draft.packingStyle,
             contextChips: ContextChip.allCases.filter(draft.tripChips.contains),
-            travelMode: draft.travelMode, laundryAccess: draft.laundry
+            travelMode: draft.travelMode, laundryAccess: draft.laundry,
+            origin: draft.origin
         )
         context.insert(trip)
         try repo.applyTripTypes(draft.tripTypes, on: trip)

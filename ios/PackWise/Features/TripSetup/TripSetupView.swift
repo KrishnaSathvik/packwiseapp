@@ -856,7 +856,8 @@ struct TripSetupView: View {
             contextChips: ContextChip.allCases.filter(draft.tripChips.contains),
             travelerCount: party.travelers.count,
             travelMode: party.travelMode,
-            laundryAccess: draft.laundry
+            laundryAccess: draft.laundry,
+            origin: draft.origin
         )
         modelContext.insert(trip)
         try? repository.applyTripTypes(draft.tripTypes, on: trip)

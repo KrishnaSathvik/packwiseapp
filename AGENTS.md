@@ -62,7 +62,7 @@ M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `Tri
 - iOS 18, `com.packwiseapp.app`, display name PackWise
 - Deterministic engine first; GPT protocol exists from day one
 - Real WeatherKit in M2A (closed); mock fixtures remain for tests/previews
-- Home country preference; international = destination ≠ home
+- Home country is a Me profile fact that seeds a *new* trip's `originCountry` (Task 9.2). The trip owns that origin from then on: international = destination ≠ `trip.originCountry` (confirmed), or the "Traveling internationally" chip. The engine and every screen read the trip, never today's Me; changing Me reaches the next fresh trip only. Pre-9.2 trips gain an origin once through `TripOriginBackfill`
 - Trip types are a true multi-select set; no hidden primary trip type controls behavior
 - Bags are a true multi-select set of personal item / carry-on / checked bag / backpack; an empty set means “Not sure yet” and applies no bag constraint
 - Road Trip is trip context, never a luggage type

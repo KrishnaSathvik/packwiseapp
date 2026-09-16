@@ -82,7 +82,6 @@ struct PackingListView: View {
 
     @Environment(AppDependencies.self) private var dependencies
     @Environment(\.modelContext) private var modelContext
-    @Query private var preferenceRecords: [PackingPreferenceRecord]
 
     @State private var filter: PackingFilter = .all
     @State private var partyFilter: PartyListFilter = .all
@@ -413,12 +412,7 @@ struct PackingListView: View {
     // MARK: - Data
 
     private var visibleCategories: [PackingCategory] {
-        PackingCategory.displayOrder(international: trip.contextChips.contains(.travelingInternationally) || isInternational, outdoor: trip.tripType == .outdoor)
-    }
-
-    private var isInternational: Bool {
-        let home = preferenceRecords.first?.homeCountryCode ?? Locale.current.region?.identifier ?? "US"
-        return trip.destinationCountryCode.uppercased() != home.uppercased()
+        PackingCategory.displayOrder(international: trip.isInternational, outdoor: trip.tripType == .outdoor)
     }
 
     private var partyFilterOptions: [PartyListFilter] {

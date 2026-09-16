@@ -559,7 +559,8 @@ struct GoldenEngineTests {
             contextChips: [],
             weather: weather,
             preferences: prefs,
-            party: party ?? .solo()
+            party: party ?? .solo(),
+            origin: TripOrigin(seededFrom: prefs)
         )
     }
 

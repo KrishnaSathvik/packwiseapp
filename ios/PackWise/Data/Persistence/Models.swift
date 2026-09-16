@@ -57,6 +57,11 @@ final class TripRecord {
     var travelModeRaw: String = "solo"
     var transportationRaw: String = "unknown"
     var laundryAccessRaw: String = "none"
+    /// The trip's own origin country (Task 9.2); see `TripOrigin`. An empty
+    /// `originCountrySourceRaw` means the trip predates the column and has
+    /// not been reached by `TripOriginBackfill` yet.
+    var originCountryCode: String = ""
+    var originCountrySourceRaw: String = ""
     var createdAt: Date
     var updatedAt: Date
 
@@ -96,6 +101,7 @@ final class TripRecord {
         travelMode: TravelMode = .solo,
         transportation: Transportation = .unknown,
         laundryAccess: LaundryAccess = .none,
+        origin: TripOrigin? = nil,
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {
@@ -126,6 +132,8 @@ final class TripRecord {
         self.travelModeRaw = travelMode.rawValue
         self.transportationRaw = transportation.rawValue
         self.laundryAccessRaw = laundryAccess.rawValue
+        self.originCountryCode = origin?.countryCode ?? ""
+        self.originCountrySourceRaw = origin?.source.rawValue ?? ""
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.items = []
@@ -218,6 +226,29 @@ final class TripRecord {
         return contextChips.contains(.laundryAvailable) ? .possible : .none
     }
 
+    /// The trip's own origin, or nil until `TripOriginBackfill` has given a
+    /// pre-9.2 trip one. Writing nil is not allowed: a trip never gives an
+    /// origin back.
+    var origin: TripOrigin? {
+        get {
+            guard let source = HomeCountrySource(rawValue: originCountrySourceRaw) else { return nil }
+            return TripOrigin(countryCode: originCountryCode, source: source)
+        }
+        set {
+            guard let newValue else { return }
+            originCountryCode = newValue.countryCode ?? ""
+            originCountrySourceRaw = newValue.source.rawValue
+        }
+    }
+
+    /// The single international decision for this trip, as the engine sees
+    /// it: the "Traveling internationally" chip, or a confirmed origin that
+    /// differs from the destination. Screens order by this; never by Me.
+    var isInternational: Bool {
+        contextChips.contains(.travelingInternationally)
+            || (origin ?? .unknown).isInternational(destinationCountryCode: destinationCountryCode)
+    }
+
     func context(preferences: TravelerPreferences, weather: TripWeatherContext?) -> TripContext {
         let resolvedParty = party
         return TripContext(
@@ -238,7 +269,8 @@ final class TripRecord {
             contextChips: Set(contextChips),
             weather: weather,
             preferences: preferences,
-            party: resolvedParty
+            party: resolvedParty,
+            origin: origin ?? .unknown
         )
     }
 }
@@ -798,21 +830,20 @@ final class PostTripFeedbackRecord {
     }
 }
 
-/// The current store shape (5.0.0): the live `@Model` types declared in this
+/// The current store shape (6.0.0): the live `@Model` types declared in this
 /// file. It is the only version allowed to reference them — every earlier
 /// version is a frozen snapshot in `SchemaHistory.swift`, because versions
 /// that alias the same live types share a checksum and make CoreData abort
-/// any migration between them. 5.0.0 is 4.1.0 plus Product Hardening Phase 8's
-/// persisted trace facts on `PackingItemRecord` (`quantityEvidenceRaw`,
-/// `quantityReasonArgumentsRaw`, `satisfiedCapabilitiesRaw`,
-/// `bagStyleConstraintFactRaw`), all defaulted to empty.
+/// any migration between them. 6.0.0 is 5.0.0 plus Task 9.2's trip-owned
+/// origin country on `TripRecord` (`originCountryCode`,
+/// `originCountrySourceRaw`), both defaulted to empty.
 ///
 /// Adding, removing, or retyping any stored property on these types changes
 /// this checksum. Such a change must first freeze the current shape as a new
 /// snapshot in `SchemaHistory.swift`, then add a new newest version and a
 /// migration stage — never edit a released shape in place.
-enum PackWiseSchemaV5: VersionedSchema {
-    static var versionIdentifier: Schema.Version { Schema.Version(5, 0, 0) }
+enum PackWiseSchemaV6: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(6, 0, 0) }
     static var models: [any PersistentModel.Type] {
         [
             TripRecord.self,
@@ -991,11 +1022,11 @@ enum PackWiseSchemaV4Migration {
 
 enum PackWiseMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self, PackWiseSchemaV4.self, PackWiseSchemaV4_1.self, PackWiseSchemaV5.self]
+        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self, PackWiseSchemaV4.self, PackWiseSchemaV4_1.self, PackWiseSchemaV5.self, PackWiseSchemaV6.self]
     }
 
     static var stages: [MigrationStage] {
-        [migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV4_1, migrateV4_1toV5]
+        [migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV4_1, migrateV4_1toV5, migrateV5toV6]
     }
 
     static let migrateV1toV2 = MigrationStage.lightweight(
@@ -1032,10 +1063,18 @@ enum PackWiseMigrationPlan: SchemaMigrationPlan {
         fromVersion: PackWiseSchemaV4_1.self,
         toVersion: PackWiseSchemaV5.self
     )
+
+    /// Adds Task 9.2's trip-owned origin columns, defaulted to empty. An
+    /// empty `originCountrySourceRaw` is never a real value, so it doubles
+    /// as the "not yet owned" marker for `TripOriginBackfill`.
+    static let migrateV5toV6 = MigrationStage.lightweight(
+        fromVersion: PackWiseSchemaV5.self,
+        toVersion: PackWiseSchemaV6.self
+    )
 }
 
 /// The schema the app opens. Always the last entry of `PackWiseMigrationPlan.schemas`.
-typealias PackWiseCurrentSchema = PackWiseSchemaV5
+typealias PackWiseCurrentSchema = PackWiseSchemaV6
 
 /// The data step for Tasks 8.2–9.1: Me's habits (work out, laptop, contacts,
 /// medication) stopped being engine input and became new-trip prefills. A
@@ -1084,6 +1123,66 @@ enum MeHabitChoiceBackfill {
             record.apply(traveler)
         }
         return gained
+    }
+}
+
+/// The data step for Task 9.2: a trip saved before it owned an origin gains
+/// one exactly once, on the next store open, and Me is never consulted for
+/// that trip again.
+///
+/// Precedence, per trip with an empty `originCountrySourceRaw`:
+///
+/// 1. The trip's own evidence decides its classification. A "Traveling
+///    internationally" chip already keeps it international whatever the
+///    origin. A generated row caused by `destination.international` means it
+///    was international when generated: if today's Me explains that, Me is
+///    the origin; if Me contradicts it (Me now equals the destination), the
+///    chip is added so the trip says so itself. A generated list with no
+///    such row was built without a confirmed origin, so the trip keeps Me's
+///    code as an *unconfirmed* origin and stays domestic.
+/// 2. A trip with nothing to say (no generated rows) is seeded from Me.
+///
+/// Idempotent: an owned origin is skipped by the fetch predicate, so this
+/// runs on every open. Never touches rows, quantities, packed state,
+/// overrides, travelers, trip types, activities, or bags.
+enum TripOriginBackfill {
+    static let internationalReasonCode = "destination.international"
+
+    /// The number of trips that gained an origin.
+    @discardableResult
+    static func run(in context: ModelContext) throws -> Int {
+        let unowned = try context.fetch(FetchDescriptor<TripRecord>(
+            predicate: #Predicate { $0.originCountrySourceRaw == "" }
+        ))
+        guard !unowned.isEmpty else { return 0 }
+        let me = try context.fetch(FetchDescriptor<PackingPreferenceRecord>()).first?.preferences ?? .deviceDefaults()
+        for trip in unowned { materialize(trip, me: me) }
+        try context.save()
+        return unowned.count
+    }
+
+    static func materialize(_ trip: TripRecord, me: TravelerPreferences) {
+        let seeded = TripOrigin(seededFrom: me)
+        let generated = trip.items.filter { !$0.isUserAdded }
+        let listSaysInternational = generated.contains { item in
+            item.reasonCode == internationalReasonCode
+                || item.draft.provenance.contains { $0.reasonCode == internationalReasonCode }
+                || (item.recommendationTraceRaw?.contains("\"\(internationalReasonCode)\"") ?? false)
+        }
+        let seededSaysInternational = seeded.isInternational(destinationCountryCode: trip.destinationCountryCode)
+
+        if trip.contextChips.contains(.travelingInternationally) || generated.isEmpty {
+            trip.origin = seeded
+        } else if listSaysInternational {
+            trip.origin = seeded
+            if !seededSaysInternational {
+                trip.contextChipsRaw = (trip.contextChips + [.travelingInternationally]).map(\.rawValue).joined(separator: ",")
+            }
+        } else if seededSaysInternational {
+            trip.origin = TripOrigin(countryCode: seeded.countryCode, source: .deviceSuggested)
+        } else {
+            trip.origin = seeded
+        }
     }
 }
 
@@ -1153,6 +1252,7 @@ enum PackWisePersistence {
         // near-zero-cost work on every subsequent launch.
         let diagnostics = try PackWiseSchemaV4Migration.migrateV3Records(in: ModelContext(container))
         try MeHabitChoiceBackfill.run(in: ModelContext(container))
+        try TripOriginBackfill.run(in: ModelContext(container))
         #if DEBUG
         if !diagnostics.isEmpty {
             print("[PackWise] V4 migration normalized \(diagnostics.count) legacy value(s): \(diagnostics)")

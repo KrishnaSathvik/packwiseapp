@@ -34,7 +34,8 @@ struct FamilySharingTests {
             tripTypes: [.vacation], activities: activities, datedActivities: [], bagTypes: [.checked],
             packingStyle: .balanced, transportation: .unknown, laundryAccess: .none,
             travelerCount: party.travelers.count, userNotes: "", contextChips: [],
-            weather: weather, preferences: preferences, party: party
+            weather: weather, preferences: preferences, party: party,
+            origin: TripOrigin(seededFrom: preferences)
         )
     }
 

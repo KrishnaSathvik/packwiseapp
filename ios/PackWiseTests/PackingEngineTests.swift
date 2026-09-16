@@ -47,7 +47,8 @@ struct PackingEngineTests {
             userNotes: laundry == .planned ? "I'll probably do laundry halfway through." : "",
             contextChips: chips,
             weather: weather,
-            preferences: prefs
+            preferences: prefs,
+            origin: TripOrigin(seededFrom: prefs)
         )
     }
 
@@ -229,7 +230,8 @@ struct PackingEngineTests {
                 contextChips: chips,
                 weather: weather,
                 preferences: prefs,
-                party: party ?? .solo(chips: chips)
+                party: party ?? .solo(chips: chips),
+                origin: TripOrigin(seededFrom: prefs)
             )
             let existing = (eval.existing ?? []).map { row in
                 PackingItemDraft(
