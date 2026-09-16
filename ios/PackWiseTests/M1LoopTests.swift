@@ -228,6 +228,61 @@ struct M1LoopTests {
     }
     #endif
 
+    // MARK: - Task 10: every non-empty category on Trip Detail
+
+    private static func entries(_ categories: [PackingCategory], packedEvery: Int = 0) -> [(category: PackingCategory, isPacked: Bool)] {
+        var result: [(category: PackingCategory, isPacked: Bool)] = []
+        for category in categories {
+            for index in 0..<3 {
+                result.append((category, packedEvery > 0 && index % packedEvery == 0))
+            }
+        }
+        return result
+    }
+
+    @Test func tripDetailShowsEveryNonEmptyCategoryInDisplayOrder() {
+        let order = PackingCategory.displayOrder(international: false, outdoor: false)
+        #expect(order.count == 11)
+        let summaries = TripDetailCategoryOverview.summaries(
+            of: Self.entries(order.reversed(), packedEvery: 3),
+            order: order
+        )
+        #expect(summaries.map(\.category) == order, "all eleven, in the canonical order, not insertion order")
+        #expect(summaries.allSatisfy { $0.total == 3 && $0.packed == 1 })
+    }
+
+    @Test func tripDetailHidesEmptyCategoriesWithoutPlaceholders() {
+        let order = PackingCategory.displayOrder(international: true, outdoor: false)
+        let summaries = TripDetailCategoryOverview.summaries(
+            of: Self.entries([.clothing, .documents, .miscellaneous]),
+            order: order
+        )
+        #expect(summaries.map(\.category) == [.documents, .clothing, .miscellaneous])
+        #expect(TripDetailCategoryOverview.summaries(of: [], order: order).isEmpty)
+    }
+
+    @Test func categoryOrderDerivesOutdoorFromTheTripTypeSet() {
+        #expect(PackingCategory.displayOrder(international: false, tripTypes: [.beach, .outdoor])
+            == PackingCategory.displayOrder(international: false, outdoor: true),
+            "a multi-type trip that includes Outdoor orders as outdoor")
+        #expect(PackingCategory.displayOrder(international: true, tripTypes: [.beach])
+            == PackingCategory.displayOrder(international: true, outdoor: false))
+        #expect(PackingCategory.displayOrder(international: false, tripTypes: [])
+            == PackingCategory.allCases)
+    }
+
+    #if DEBUG
+    /// Task 10: the all-categories Trip Detail is capturable, top and scrolled.
+    @Test func task10ReferenceStatesAreAllCapturable() {
+        for id in ["tripDetailAllCategories", "tripDetailAllCategoriesMiddle", "tripDetailAllCategoriesScrolled", "packingListScrolled"] {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing Task 10 state \(id)")
+        }
+        #expect(DebugPreviewScreen.tripDetailAllCategoriesScrolled.initialScrollAnchor == .bottom)
+        #expect(DebugPreviewScreen.tripDetailAllCategoriesMiddle.initialScrollAnchor == .center)
+        #expect(DebugPreviewScreen.tripDetailAllCategories.initialScrollAnchor == nil)
+    }
+    #endif
+
     @Test func mergedActivityIDsNormalizeOnRead() throws {
         // A trip saved before fineDining was merged still holds the old value.
         // Left alone it would lose its packing rule and be rejected by the

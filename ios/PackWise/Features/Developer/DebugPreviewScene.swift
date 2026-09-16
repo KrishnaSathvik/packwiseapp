@@ -82,6 +82,20 @@ enum DebugPreviewScreen: String {
     case weatherDetail
     case weatherDetailSeasonal
     case tripDetailCompleted
+    /// Task 10: Trip Detail with every one of the eleven categories non-empty,
+    /// opened at the top and opened at the bottom (simctl cannot scroll).
+    case tripDetailAllCategories
+    case tripDetailAllCategoriesMiddle
+    case tripDetailAllCategoriesScrolled
+
+    /// Where the screen's page opens, when a capture needs more than its top.
+    var initialScrollAnchor: UnitPoint? {
+        switch self {
+        case .tripDetailAllCategoriesMiddle: .center
+        case .tripDetailAllCategoriesScrolled: .bottom
+        default: nil
+        }
+    }
 
     /// The screen named by `-PackWiseScreen`, if the app was launched with one.
     static var requested: DebugPreviewScreen? {
@@ -114,6 +128,8 @@ struct DebugPreviewScene: View {
             switch screen {
             case .tripDetail:
                 NavigationStack { TripDetailView(trip: seed.trip) }
+            case .tripDetailAllCategories, .tripDetailAllCategoriesMiddle, .tripDetailAllCategoriesScrolled:
+                NavigationStack { TripDetailView(trip: seed.allCategoriesTrip) }
             case .tripDetailSeasonal:
                 NavigationStack { TripDetailView(trip: seed.seasonalTrip) }
             case .packingList:
@@ -397,6 +413,9 @@ final class DebugTripSeed {
     /// You plus three other adults, one named with device choices, for the
     /// expanded group branch of the travelers step.
     let groupTrip: TripRecord
+    /// The Chicago trip with an item in every category, so Trip Detail's
+    /// Packing block can be checked with all eleven rows (Task 10).
+    let allCategoriesTrip: TripRecord
 
     /// Visuals with no trusted imagery and a failing map: the offline state.
     static let offlineVisuals = MapKitDestinationVisualService(
@@ -505,6 +524,32 @@ final class DebugTripSeed {
             record.packedQuantity = record.quantity
         }
         repository.storeWeather(Self.forecast(start: start, calendar: calendar), on: trip)
+
+        allCategoriesTrip = TripRecord(
+            destination: destination,
+            startDate: calendar.date(byAdding: .day, value: 20, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: 24, to: start)!,
+            durationDays: 5,
+            durationNights: 4,
+            tripType: .cityBreak,
+            activities: ["sightseeing", "walking"],
+            bagType: .carryOn,
+            packingStyle: .balanced,
+            status: .packing,
+            travelerCount: 2,
+            travelMode: .family
+        )
+        context.insert(allCategoriesTrip)
+        // Fresh drafts, not `seeded`: item IDs are unique across the store,
+        // so reusing the main trip's drafts would move its rows here.
+        let allCategoryItems = Self.items() + Self.remainingCategoryItems()
+        for item in allCategoryItems {
+            repository.addItem(item.draft, to: allCategoriesTrip, syncWeatherChange: false)
+        }
+        let allPackedNames = Set(allCategoryItems.filter(\.packed).map(\.draft.displayName))
+        for record in allCategoriesTrip.items where allPackedNames.contains(record.displayName) {
+            record.packedQuantity = record.quantity
+        }
 
         // A generated list nobody has started, and a finished trip, so Trips
         // Home shows all three of its states at once.
@@ -731,6 +776,23 @@ final class DebugTripSeed {
     /// Rebuilt per call. `PackingItemRecord.id` is unique and copied from the
     /// draft, so reusing one draft across two trips makes SwiftData upsert and
     /// silently migrate the item from one trip to the other.
+    /// One or two rows for each category `items()` leaves empty, so a trip
+    /// seeded with both has all eleven.
+    private static func remainingCategoryItems() -> [Seeded] {
+        [
+        item("documents.id", "Government ID", .documents, importance: .critical, packed: true),
+        item("documents.tickets", "Tickets and reservations", .documents, importance: .important),
+        item("kids.snacks", "Snacks for the kids", .kids, quantity: 4),
+        item("kids.extra_outfits", "Extra outfits", .kids, quantity: 2, packed: true),
+        item("health.pain_reliever", "Pain reliever", .health),
+        item("health.band_aids", "Band-aids", .health, packed: true),
+        item("activities.daypack", "Daypack", .activities, packed: true),
+        item("travel_comfort.neck_pillow", "Neck pillow", .travelComfort),
+        item("travel_comfort.book", "Book", .travelComfort, packed: true),
+        item("misc.laundry_bag", "Laundry bag", .miscellaneous),
+        ]
+    }
+
     private static func items() -> [Seeded] {
         [
         item("essentials.passport", "Passport", .essentials, importance: .critical, packed: true),

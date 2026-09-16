@@ -14,6 +14,34 @@ enum StatusBarOverHero {
     }
 }
 
+/// One Trip Detail category row: what the overview shows for a category
+/// that has at least one item.
+struct CategorySummary: Equatable {
+    var category: PackingCategory
+    var packed: Int
+    var total: Int
+}
+
+/// The Packing block on Trip Detail (Task 10): every category with at least
+/// one item, in the trip's display order, and nothing for an empty one. No
+/// cap and no "N more categories" row — the screen scrolls instead.
+enum TripDetailCategoryOverview {
+    static func summaries(
+        of items: [(category: PackingCategory, isPacked: Bool)],
+        order: [PackingCategory]
+    ) -> [CategorySummary] {
+        order.compactMap { category in
+            let matching = items.filter { $0.category == category }
+            guard !matching.isEmpty else { return nil }
+            return CategorySummary(
+                category: category,
+                packed: matching.filter(\.isPacked).count,
+                total: matching.count
+            )
+        }
+    }
+}
+
 /// Trip overview.
 ///
 /// Understanding the trip and doing the packing are separate jobs, so this
@@ -69,6 +97,12 @@ struct TripDetailView: View {
             } action: { _, underHero in
                 heroUnderStatusBar = underHero
             }
+            #if DEBUG
+            // Screen captures cannot scroll the simulator, so a Debug launch
+            // may ask for the page to open at its bottom. Compiled out of
+            // Release with the rest of the capture harness.
+            .defaultScrollAnchor(DebugPreviewScreen.requested?.initialScrollAnchor)
+            #endif
         }
         .ignoresSafeArea(edges: .top)
         .background(PackWiseColor.screen)
@@ -433,7 +467,7 @@ struct TripDetailView: View {
             }
             PackWiseCard {
                 VStack(spacing: 0) {
-                    ForEach(Array(visibleCategorySummaries.enumerated()), id: \.element.category) { index, summary in
+                    ForEach(Array(categorySummaries.enumerated()), id: \.element.category) { index, summary in
                         if index > 0 {
                             PackWiseRowDivider()
                         }
@@ -441,19 +475,6 @@ struct TripDetailView: View {
                             openList = PackingListDestination(category: summary.category)
                         } label: {
                             categoryRow(summary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    if remainingCategoryCount > 0 {
-                        PackWiseRowDivider()
-                        Button {
-                            openList = PackingListDestination(category: nil)
-                        } label: {
-                            Text("\(remainingCategoryCount) more categories")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(PackWiseColor.accent)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.vertical, PackWiseSpacing.regular)
                         }
                         .buttonStyle(.plain)
                     }
@@ -475,64 +496,66 @@ struct TripDetailView: View {
     /// fraction — the bar is what makes the block scannable at a glance,
     /// which a column of "4 / 6" is not.
     private func categoryRow(_ summary: CategorySummary) -> some View {
-        HStack(spacing: PackWiseSpacing.regular) {
+        HStack(alignment: .center, spacing: PackWiseSpacing.regular) {
             PackWiseIconBadge(
                 symbol: summary.category.style.symbol,
                 tint: summary.category.style.tint
             )
-            Text(summary.category.title)
-                .font(.body)
-                .lineLimit(1)
-            Spacer(minLength: PackWiseSpacing.snug)
-            Text("\(summary.packed) / \(summary.total)")
-                .font(.subheadline)
-                .foregroundStyle(PackWiseColor.textSecondary)
-                .monospacedDigit()
-            PackWiseProgressBar(
-                fraction: summary.total == 0 ? 0 : Double(summary.packed) / Double(summary.total),
-                tint: PackWiseColor.success,
-                height: 6
-            )
-            .frame(width: 52)
+            if dynamicTypeSize.isAccessibilitySize {
+                // Eleven rows at accessibility sizes: the title keeps its
+                // line, and the count and bar drop under it instead of
+                // squeezing the title to a single clipped word.
+                VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                    Text(summary.category.title)
+                        .font(.body)
+                    HStack(spacing: PackWiseSpacing.snug) {
+                        categoryProgressText(summary)
+                        categoryProgressBar(summary)
+                    }
+                }
+                Spacer(minLength: PackWiseSpacing.snug)
+            } else {
+                Text(summary.category.title)
+                    .font(.body)
+                    .lineLimit(1)
+                Spacer(minLength: PackWiseSpacing.snug)
+                categoryProgressText(summary)
+                categoryProgressBar(summary)
+            }
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(PackWiseColor.textTertiary)
         }
         .padding(.vertical, PackWiseSpacing.regular)
+        .frame(minHeight: 44)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(summary.category.title), \(summary.packed) of \(summary.total) packed")
         .accessibilityAddTraits(.isButton)
     }
 
-    private struct CategorySummary {
-        var category: PackingCategory
-        var packed: Int
-        var total: Int
+    private func categoryProgressText(_ summary: CategorySummary) -> some View {
+        Text("\(summary.packed) / \(summary.total)")
+            .font(.subheadline)
+            .foregroundStyle(PackWiseColor.textSecondary)
+            .monospacedDigit()
+            .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private func categoryProgressBar(_ summary: CategorySummary) -> some View {
+        PackWiseProgressBar(
+            fraction: summary.total == 0 ? 0 : Double(summary.packed) / Double(summary.total),
+            tint: PackWiseColor.success,
+            height: 6
+        )
+        .frame(width: 52)
     }
 
     private var categorySummaries: [CategorySummary] {
-        let order = PackingCategory.displayOrder(
-            international: trip.isInternational,
-            outdoor: trip.tripType == .outdoor
+        TripDetailCategoryOverview.summaries(
+            of: trip.items.map { ($0.category, $0.isPacked) },
+            order: PackingCategory.displayOrder(international: trip.isInternational, tripTypes: trip.tripTypes)
         )
-        return order.compactMap { category in
-            let items = trip.items.filter { $0.category == category }
-            guard !items.isEmpty else { return nil }
-            return CategorySummary(
-                category: category,
-                packed: items.filter(\.isPacked).count,
-                total: items.count
-            )
-        }
-    }
-
-    private var visibleCategorySummaries: [CategorySummary] {
-        Array(categorySummaries.prefix(5))
-    }
-
-    private var remainingCategoryCount: Int {
-        max(0, categorySummaries.count - visibleCategorySummaries.count)
     }
 
     // MARK: - Weather plumbing

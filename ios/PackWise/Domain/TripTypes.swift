@@ -331,6 +331,13 @@ enum PackingCategory: String, Codable, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// The one category order screens use. Outdoor is derived from the
+    /// trip's whole type set (Task 10): a Beach + Outdoor trip is outdoor,
+    /// which the singular compatibility accessor would deny.
+    static func displayOrder(international: Bool, tripTypes: Set<TripType>) -> [PackingCategory] {
+        displayOrder(international: international, outdoor: tripTypes.contains(.outdoor))
+    }
+
     static func displayOrder(international: Bool, outdoor: Bool) -> [PackingCategory] {
         var order = PackingCategory.allCases
         if international {

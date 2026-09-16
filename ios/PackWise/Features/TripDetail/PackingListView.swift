@@ -412,7 +412,7 @@ struct PackingListView: View {
     // MARK: - Data
 
     private var visibleCategories: [PackingCategory] {
-        PackingCategory.displayOrder(international: trip.isInternational, outdoor: trip.tripType == .outdoor)
+        PackingCategory.displayOrder(international: trip.isInternational, tripTypes: trip.tripTypes)
     }
 
     private var partyFilterOptions: [PartyListFilter] {
