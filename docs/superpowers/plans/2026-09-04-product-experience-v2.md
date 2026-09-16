@@ -24,6 +24,7 @@ Task 4  Multi-trip-type engine composition
 Task 5  Multi-bag luggage semantics
 Task 6  Traveler eligibility, including documents
 Task 7  Catalog-wide sharing audit
+Task 7.1 Family eligibility and sharing refinement (device evidence, child formal, infant sun hat, eligible-consumer scaling)
 Checkpoint V  One contact sheet for all major V2 reference states
 Tasks 8–13 Production UX wiring and recommendation naming
 Tasks 16–18 Authority, full automation, and physical-device exit gate
@@ -189,11 +190,11 @@ git commit -m "feat: migrate trips to multi-value context safely"
 - Produces: `PackingNeed`, `RecommendationProvenance`, `PackingNeedContribution`, `TripTypeContract`, `TripTypeContractResolver.contributions(for:)`.
 - Contract rule: trip-type JSON contains closed need IDs and suggested activity IDs, never canonical item IDs.
 
-- [ ] **Step 1: Re-read and pin the approved table in design Section 8.1 before production code.** Encode a table-driven test for the exact needs, unselected suggested activities, and non-implications of Vacation, City Break, Beach, Business, Outdoor, Road Trip, Wedding/Event, Ski/Snow, Festival, Visiting Family, and Other. If an implementation concern would change a row, stop for product approval and commit that spec change first.
+- [x] **Step 1: Re-read and pin the approved table in design Section 8.1 before production code.** (2026-09-14: `docs/engine-audits/2026-09-14-trip-type-contract-matrix.md`, committed first; `everyKnownTripTypeMatchesTheApprovedMatrixExactly`. No row changed.) Encode a table-driven test for the exact needs, unselected suggested activities, and non-implications of Vacation, City Break, Beach, Business, Outdoor, Road Trip, Wedding/Event, Ski/Snow, Festival, Visiting Family, and Other. If an implementation concern would change a row, stop for product approval and commit that spec change first.
 
-- [ ] **Step 2: Write validator and decoder tests.** Reject unknown need IDs, duplicate stable values, and canonical-looking item IDs in a trip-type contract. Assert `.other` has no deterministic need contribution.
+- [x] **Step 2: Write validator and decoder tests.** (`scripts/tests/test_trip_type_contracts.py`, `theDecoderRejectsEveryInvalidContractShape`.) Reject unknown need IDs, duplicate stable values, and canonical-looking item IDs in a trip-type contract. Assert `.other` has no deterministic need contribution.
 
-- [ ] **Step 3: Write combination tests for all ten required trip-type sets.** Assert normalized needs and provenance, not only final item counts. Include insertion-order determinism.
+- [x] **Step 3: Write combination tests for all ten required trip-type sets.** (Design 8.1's ten, plus insertion-order permutations and a shared-need dedupe.) Assert normalized needs and provenance, not only final item counts. Include insertion-order determinism.
 
 ```swift
 @Test func businessAndCityBreakComposeNeedsWithoutPrimaryType() throws {
@@ -205,9 +206,9 @@ git commit -m "feat: migrate trips to multi-value context safely"
 }
 ```
 
-- [ ] **Step 4: Write suggestion-vs-selection tests.** Selecting City Break may order Walking/Museums/Nice Dinner as suggestions, but `TripContext.activities` stays empty until an explicit selection action. Changing trip types preserves the exact selected activity set and never adds/removes activities.
+- [x] **Step 4: Write suggestion-vs-selection tests.** (Domain boundary only; setup's pre-existing auto-selection is finding F-1 for Task 8.) Selecting City Break may order Walking/Museums/Nice Dinner as suggestions, but `TripContext.activities` stays empty until an explicit selection action. Changing trip types preserves the exact selected activity set and never adds/removes activities.
 
-- [ ] **Step 5: Run shared validation and the focused Swift tests; confirm both fail on the old direct-item contract.**
+- [x] **Step 5: Run shared validation and the focused Swift tests; confirm both fail on the old direct-item contract.** (Python red on the missing validator; Swift red on missing contract types.)
 
 ```bash
 python3 scripts/validate_shared.py
@@ -216,9 +217,9 @@ xcodebuild -project ios/PackWise.xcodeproj -scheme PackWise \
   -only-testing:PackWiseTests/TripTypeCompositionTests test
 ```
 
-- [ ] **Step 6: Implement the typed contract decoder and convert every trip type exactly as approved.** Preserve current legitimate semantics through central need→candidate/capability mappings; do not copy each old list into Swift. Suggested activity IDs feed display ordering only and cannot write `TripContext.activities`.
+- [x] **Step 6: Implement the typed contract decoder and convert every trip type exactly as approved.** (Central need→candidate map is a lossless partition of the old lists; the engine reads a temporary derived list until Task 4.) Preserve current legitimate semantics through central need→candidate/capability mappings; do not copy each old list into Swift. Suggested activity IDs feed display ordering only and cannot write `TripContext.activities`.
 
-- [ ] **Step 7: Run validation/tests and commit the contract layer.**
+- [x] **Step 7: Run validation/tests and commit the contract layer.**
 
 ```bash
 git add shared/rules/trip-types.json scripts/validate_shared.py \
@@ -243,15 +244,15 @@ git commit -m "feat: model trip types as typed packing needs"
 - Consumes: `TripContext.tripTypes` and Task 3 contributions.
 - Produces: one candidate collection, combined structured provenance, stable context signatures, and coverage based on the full need set.
 
-- [ ] **Step 1: Add failing final-output tests for Vacation+Beach, Vacation+City Break+Beach, Business+City Break, Road Trip+Outdoor, Wedding/Event+Vacation, Festival+City Break, Visiting Family+Vacation, and Outdoor+Ski/Snow.** Assert no duplicate recommendation keys, baseline clothing is not multiplied, and expected capabilities remain covered.
+- [x] **Step 1: Add failing final-output tests for Vacation+Beach, Vacation+City Break+Beach, Business+City Break, Road Trip+Outdoor, Wedding/Event+Vacation, Festival+City Break, Visiting Family+Vacation, and Outdoor+Ski/Snow.** Assert no duplicate recommendation keys, baseline clothing is not multiplied, and expected capabilities remain covered.
 
-- [ ] **Step 2: Add trace assertions.** Walking shoes must retain City Break/Sightseeing/Walking facts when present; no trace may expose an invented primary trip type.
+- [x] **Step 2: Add trace assertions.** (2026-09-14: trace authority decided first, `dfd6e4f`; City Break's trace example uses the daypack, see the Task 4 record.) Walking shoes must retain City Break/Sightseeing/Walking facts when present; no trace may expose an invented primary trip type.
 
-- [ ] **Step 3: Replace the singular trip-type branch with contribution collection before candidate generation.** Merge provenance on an existing recommendation key instead of adding another row. Extend `CoverageResolver.needs` to consume normalized needs while retaining one greedy coverage pass.
+- [x] **Step 3: Replace the singular trip-type branch with contribution collection before candidate generation.** (`TripContext.tripType` deleted.) Merge provenance on an existing recommendation key instead of adding another row. Extend `CoverageResolver.needs` to consume normalized needs while retaining one greedy coverage pass.
 
-- [ ] **Step 4: Update weather/context signatures to sort trip types, run focused tests, and generate a semantic golden diff.** Record for every changed golden: added IDs, removed IDs, quantity changes, coverage suppressions, constraint decisions, and reason/provenance changes.
+- [x] **Step 4: Update weather/context signatures to sort trip types, run focused tests, and generate a semantic golden diff.** (Existing 38 unchanged; 10 combination fixtures reviewed against each member alone.) Record for every changed golden: added IDs, removed IDs, quantity changes, coverage suppressions, constraint decisions, and reason/provenance changes.
 
-- [ ] **Step 5: Commit only after the semantic diff matches the contract intent.**
+- [x] **Step 5: Commit only after the semantic diff matches the contract intent.** (`c11926a`; record `docs/plans/2026-09-14-product-v2-task-4-trip-type-composition.md`.)
 
 ```bash
 git add ios/PackWise/Domain/Packing/PackingEngine.swift ios/PackWise/Domain/Packing/CoverageResolver.swift \
@@ -275,15 +276,15 @@ git commit -m "feat: compose multiple trip types in one packing plan"
 - Produces: `LuggageContext.resolve(_:)`, `LuggageContext.Capacity`, luggage-aware quantity/optional-item constraint inputs.
 - Rule: `.checkedAvailable` always defeats carry-on-only/personal-item-only trimming; style remains independent.
 
-- [ ] **Step 1: Write the complete luggage truth-table tests.** Cover empty, each single bag, Personal+Carry-on, Carry-on+Checked, Personal+Carry-on+Checked, Backpack+Checked, Backpack+Carry-on, and set-order determinism.
+- [x] **Step 1: Write the complete luggage truth-table tests.** (2026-09-14: all 16 subsets, `LuggageContextTests`.) Cover empty, each single bag, Personal+Carry-on, Carry-on+Checked, Personal+Carry-on+Checked, Backpack+Checked, Backpack+Carry-on, and set-order determinism.
 
-- [ ] **Step 2: Add behavioral tests.** The same prepared trip with Carry-on only may trim optional items; Carry-on+Checked must not emit a carry-on trim decision; Light+Checked may still reduce style-sensitive quantities.
+- [x] **Step 2: Add behavioral tests.** (`MultiBagEngineTests`, `ConstraintTests`, `ClothingQuantityTests`.) The same prepared trip with Carry-on only may trim optional items; Carry-on+Checked must not emit a carry-on trim decision; Light+Checked may still reduce style-sensitive quantities.
 
-- [ ] **Step 3: Run focused tests and verify failures on singular `BagType` APIs.**
+- [x] **Step 3: Run focused tests and verify failures on singular `BagType` APIs.**
 
-- [ ] **Step 4: Implement luggage derivation and change quantity/constraint APIs from `BagType` to `LuggageContext`.** Remove all branches where the mere presence of carry-on wins over checked. Keep transportation separate.
+- [x] **Step 4: Implement luggage derivation and change quantity/constraint APIs from `BagType` to `LuggageContext`.** Remove all branches where the mere presence of carry-on wins over checked. Keep transportation separate.
 
-- [ ] **Step 5: Update goldens/fixtures to `bagTypes`, record semantic diffs, run focused tests, and commit.**
+- [x] **Step 5: Update goldens/fixtures to `bagTypes`, record semantic diffs, run focused tests, and commit.** (`fe0895e`, trace evidence `42ea686`; record: `docs/plans/2026-09-14-product-v2-task-5-multi-bag-luggage.md`.)
 
 ```bash
 git add ios/PackWise/Domain/Packing/LuggageContext.swift ios/PackWise/Domain/Packing/PackingEngine.swift \
@@ -309,17 +310,17 @@ git commit -m "feat: apply deterministic multi-bag capacity semantics"
 - Produces: `TravelerEligibilityResolver.evaluate(...) -> EligibilityDecision` and closed eligibility metadata.
 - Replaces: distributed `shouldSkip` decisions as the final eligibility authority; temporary adapters may feed the resolver during migration.
 
-- [ ] **Step 1: Write failing toddler tests.** With no explicit signal, exclude phone, phone charger, headphones, deodorant, medication, laptop, and Photo ID while retaining tops, sleepwear, socks, and suitable shoes. With explicit diapers/stroller/car-seat/medication/comfort needs, include only the selected need families. Never implement a category-wide Documents exclusion.
+- [x] **Step 1: Write failing toddler tests.** (2026-09-15: `TravelerEligibilityTests`; record `docs/plans/2026-09-15-product-v2-family-sharing-audit.md`.) With no explicit signal, exclude phone, phone charger, headphones, deodorant, medication, laptop, and Photo ID while retaining tops, sleepwear, socks, and suitable shoes. With explicit diapers/stroller/car-seat/medication/comfort needs, include only the selected need families. Never implement a category-wide Documents exclusion.
 
-- [ ] **Step 2: Write attribution tests.** A primary traveler’s medication/laptop chip cannot make the child eligible; an unassigned note/chip cannot claim coverage for anyone.
+- [x] **Step 2: Write attribution tests.** A primary traveler’s medication/laptop chip cannot make the child eligible; an unassigned note/chip cannot claim coverage for anyone.
 
-- [ ] **Step 3: Write the approved travel-document matrix tests from design Section 9.3.** On a confirmed international family trip, every traveler including a toddler receives a personal passport and traveler-specific Visa/entry docs; Photo ID follows adult/teen eligibility and is not blindly assigned to the toddler; Travel insurance info resolves once as shared/single-per-party.
+- [x] **Step 3: Write the approved travel-document matrix tests from design Section 9.3.** On a confirmed international family trip, every traveler including a toddler receives a personal passport and traveler-specific Visa/entry docs; Photo ID follows adult/teen eligibility and is not blindly assigned to the toddler; Travel insurance info resolves once as shared/single-per-party.
 
-- [ ] **Step 4: Add closed eligibility metadata and validator coverage.** Missing metadata for sensitive families and each canonical document family fails validation rather than defaulting permissively.
+- [x] **Step 4: Add closed eligibility metadata and validator coverage.** Missing metadata for sensitive families and each canonical document family fails validation rather than defaulting permissively.
 
-- [ ] **Step 5: Insert eligibility before quantity/sharing, record suppressions in the audit ledger, delete redundant skip branching, and run focused tests.**
+- [x] **Step 5: Insert eligibility before quantity/sharing, record suppressions in the audit ledger, delete redundant skip branching, and run focused tests.**
 
-- [ ] **Step 6: Commit the eligibility layer.**
+- [x] **Step 6: Commit the eligibility layer.** (`3ca4bf3`)
 
 ```bash
 git add ios/PackWise/Domain/Packing/TravelerEligibilityResolver.swift ios/PackWise/Domain/Packing/Catalog.swift \
@@ -341,13 +342,13 @@ git commit -m "feat: enforce traveler eligibility before recommendation"
 
 - Produces: reviewed eligibility/sharing classification table for every relevant canonical ID and executable rule coverage.
 
-- [ ] **Step 1: Inventory every canonical item and write the audit table.** Explicitly adjudicate Passport, Photo ID, Visa/entry docs, Travel insurance info, toothpaste, shampoo, body wash, pain reliever, laundry bag, packing cubes, toiletry bag, chargers, adapters, sunscreen, umbrellas, medicines, books, and electronics across eligibility and sharing axes.
+- [x] **Step 1: Inventory every canonical item and write the audit table.** (all 202 items; same record.) Explicitly adjudicate Passport, Photo ID, Visa/entry docs, Travel insurance info, toothpaste, shampoo, body wash, pain reliever, laundry bag, packing cubes, toiletry bag, chargers, adapters, sunscreen, umbrellas, medicines, books, and electronics across eligibility and sharing axes.
 
-- [ ] **Step 2: Add failing tests for shared toiletries, personal clothing, personal footwear, shared umbrella, device-scaled adapters/chargers, and party/duration-scaled consumables.** Include solo, couple, family with two other adults+toddler, and group with three additional adults.
+- [x] **Step 2: Add failing tests for shared toiletries, personal clothing, personal footwear, shared umbrella, device-scaled adapters/chargers, and party/duration-scaled consumables.** Include solo, couple, family with two other adults+toddler, and group with three additional adults.
 
-- [ ] **Step 3: Update rules and central shared-quantity semantics.** Do not store policy on generated item records; preserve owner/carrier invariants.
+- [x] **Step 3: Update rules and central shared-quantity semantics.** Do not store policy on generated item records; preserve owner/carrier invariants.
 
-- [ ] **Step 4: Run shared validation, party invariants, engine tests, and commit the audit plus rule changes.**
+- [x] **Step 4: Run shared validation, party invariants, engine tests, and commit the audit plus rule changes.** (`df38dd5`)
 
 ```bash
 python3 scripts/validate_shared.py
@@ -412,19 +413,19 @@ git commit -m "test: establish product v2 visual reference"
 - Produces: nine-step `SetupStep`, set-valued `TripDraft`, reusable `TripSetupShell`, reusable `MultiSelectionCard`/grid.
 - Consumes: repository set APIs and stable ordering.
 
-- [ ] **Step 1: Add state tests for fresh/edit drafts.** Assert multi-bag preference prefill, legacy-empty bags, multi-type round trip, family ID reuse, and review summaries. Assert suggested activities remain absent from `TripContext.activities` until tapped and selected activities remain byte-for-byte stable when trip types change.
+- [x] **Step 1: Add state tests for fresh/edit drafts.** Assert multi-bag preference prefill, legacy-empty bags, multi-type round trip, family ID reuse, and review summaries. Assert suggested activities remain absent from `TripContext.activities` until tapped and selected activities remain byte-for-byte stable when trip types change.
 
-- [ ] **Step 2: Change `TripDraft` to `tripTypes`/`bagTypes` and split the nine logical steps.** Require at least one trip type; allow empty bags.
+- [x] **Step 2: Change `TripDraft` to `tripTypes`/`bagTypes` and split the nine logical steps.** Require at least one trip type; allow empty bags.
 
-- [ ] **Step 3: Implement the shared shell with bottom safe-area action.** Remove confirmation-action Next from the toolbar; retain native Back/cancel and accessible “Step n of 9.” Verify keyboard avoidance and Dynamic Type.
+- [x] **Step 3: Implement the shared shell with bottom safe-area action.** Remove confirmation-action Next from the toolbar; retain native Back/cancel and accessible “Step n of 9.” Verify keyboard avoidance and Dynamic Type.
 
-- [ ] **Step 4: Implement related multi-select surfaces for trip types, activities, and bags.** Suggested activities are the stable union from selected trip types and affect display/order only. Only a user tap changes `draft.activities`; changing trip types never auto-adds or removes an activity.
+- [x] **Step 4: Implement related multi-select surfaces for trip types, activities, and bags.** Suggested activities are the stable union from selected trip types and affect display/order only. Only a user tap changes `draft.activities`; changing trip types never auto-adds or removes an activity.
 
-- [ ] **Step 5: Implement unambiguous traveler counts/labels, the combined style/laundry screen, and the matching Me default-bags multi-select.** Family and Group both count Other adults because You is implicit; Family separately counts Children. Review renders one interpretation (`You + 3 adults` or `4 adults`). Derived labels are stable and distinct.
+- [x] **Step 5: Implement unambiguous traveler counts/labels, the combined style/laundry screen, and the matching Me default-bags multi-select.** Family and Group both count Other adults because You is implicit; Family separately counts Children. Review renders one interpretation (`You + 3 adults` or `4 adults`). Derived labels are stable and distinct.
 
-- [ ] **Step 6: Update Review with separate wrapping sections for all context values and run focused tests/build.**
+- [x] **Step 6: Update Review with separate wrapping sections for all context values and run focused tests/build.**
 
-- [ ] **Step 7: Capture all nine setup screens on the simulator, compare as one flow, fix only systemic shell/primitive issues, and commit.**
+- [x] **Step 7: Capture all nine setup screens on the simulator, compare as one flow, fix only systemic shell/primitive issues, and commit.**
 
 ```bash
 git add ios/PackWise/Features/TripSetup ios/PackWise/Features/Settings/MeView.swift ios/PackWise/DesignSystem/PackWisePrimitives.swift \
@@ -643,7 +644,7 @@ git commit -m "fix: repair and instrument current-trip WeatherKit"
 - Modify: `shared/fixtures/trips/*.json`, `shared/fixtures/golden/golden-fixtures.json`
 - Modify: `ios/PackWise/Data/{SharedResources.swift,Intelligence/IntelligenceDTO.swift}`
 - Modify: `api/src/{types,validation,canonical}.ts`, `api/src/model/inputs.ts`, affected tests
-- Regenerate: `api/generated/**` only through `scripts/build_intelligence_schemas.py` and `scripts/build_shared.py`
+- Regenerate: `api/generated/**` only through `scripts/build_intelligence_schemas.py` (the only generator; `shared/` JSON is hand-maintained source of truth, gated by `scripts/validate_shared.py`)
 - Modify: `AGENTS.md`, `.cursor/rules/{packwise-architecture,packwise-intelligence,packwise-scope,packwise-ux}.mdc`
 - Modify: `docs/{README,trip-creation,travelers-and-parties,packing-experience,navigation-and-onboarding,architecture,packing-engine,design-system,roadmap,implementation-decisions,device-pass-checklist,m3a2-verification-runbook}.md`
 
@@ -653,25 +654,24 @@ git commit -m "fix: repair and instrument current-trip WeatherKit"
 - Constraint: interpretation remains gated off; this changes contract shape, not M3B behavior.
 - Compatibility: until Tasks 3–5 consume multi-value context, boundary adapters accept singleton arrays and empty bags but explicitly return `unsupportedButSafe` for multiple values. They never select a first/primary value. Tasks 4 and 5 remove those guards as their engine semantics land.
 
-- [ ] **Step 1: Add failing schema/API tests.** Require one-or-more known `tripTypes`, zero-or-more known physical `bagTypes`, reject legacy singular fields in new requests, reject unknown values, and verify canonical stable ordering.
+- [x] **Step 1: Add failing schema/API tests.** (2026-09-14, `api/test/tripContext.test.ts` red on missing canonicalization; Swift DTO tests red on missing fields. Record: `docs/plans/2026-09-14-product-v2-task-15-array-contract.md`.) Require one-or-more known `tripTypes`, zero-or-more known physical `bagTypes`, reject legacy singular fields in new requests, reject unknown values, and verify canonical stable ordering.
 
-- [ ] **Step 2: Convert existing request/eval fixtures to singleton `tripTypes` arrays and zero/singleton `bagTypes` arrays.** Keep legacy-store migration fixtures separate. Add multi-value contract fixtures only where the temporary adapter can validate/round-trip them without invoking unfinished engine behavior.
+- [x] **Step 2: Convert existing request/eval fixtures to singleton `tripTypes` arrays and zero/singleton `bagTypes` arrays.** (12 trip evals + 17 golden fixtures; 10 contract-only combinations in `shared/fixtures/contexts/`; goldens byte-identical.) Keep legacy-store migration fixtures separate. Add multi-value contract fixtures only where the temporary adapter can validate/round-trip them without invoking unfinished engine behavior.
 
-- [ ] **Step 3: Update Swift DTO and TypeScript validation/model input shapes in the same change.** Add explicit temporary singleton/empty compatibility guards at unfinished engine call sites; multiple values return `unsupportedButSafe` and never choose a primary. Do not enable note enrichment or gap wiring.
+- [x] **Step 3: Update Swift DTO and TypeScript validation/model input shapes in the same change.** (`56c59bd`. The API accepts multi-value context per the Task 15 instruction; the fail-safe guards are the temporary `TripContext`/`TripRecord` singleton accessors, which resolve multi-value sets to `.other`/`.notSure`.) Add explicit temporary singleton/empty compatibility guards at unfinished engine call sites; multiple values return `unsupportedButSafe` and never choose a primary. Do not enable note enrichment or gap wiring.
 
-- [ ] **Step 4: Regenerate artifacts using only the generators, then run validation/preflight/tests.**
+- [x] **Step 4: Regenerate artifacts using only the generators, then run validation/preflight/tests.** (`build_intelligence_schemas.py` → schema `2026-09-14`, build `43fc852c9f70f9f9`. `build_shared.py` was an unrunnable one-shot bootstrap whose inputs no longer exist; Task 15.1 removed it.)
 
 ```bash
 python3 scripts/build_intelligence_schemas.py
-python3 scripts/build_shared.py
 python3 scripts/validate_shared.py
 npm --prefix api test
 npm --prefix api run preflight
 ```
 
-- [ ] **Step 5: Align canonical docs and rules with the approved V2 decisions and freeze Phase 9/M3B behind the V2 exit gate.** Remove stale singular, top-Next, fake road-trip-bag, truncated-category, and shipped-memory claims.
+- [x] **Step 5: Align canonical docs and rules with the approved V2 decisions and freeze Phase 9/M3B behind the V2 exit gate.** (Docs already carried the V2 target; added implemented-vs-target status, the array contract, and V4-as-current.) Remove stale singular, top-Next, fake road-trip-bag, truncated-category, and shipped-memory claims.
 
-- [ ] **Step 6: Commit contracts, generated artifacts, fixtures, and aligned documentation.**
+- [x] **Step 6: Commit contracts, generated artifacts, fixtures, and aligned documentation.** (Four bounded commits instead of one; each green at its boundary.)
 
 ```bash
 git add shared api ios/PackWise/Data/SharedResources.swift ios/PackWise/Data/Intelligence/IntelligenceDTO.swift \

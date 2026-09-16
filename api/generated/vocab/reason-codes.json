@@ -2,6 +2,7 @@
   "all": [
     "activity.beachDays",
     "activity.boatTrip",
+    "activity.camping",
     "activity.generic",
     "activity.hiking",
     "activity.museums",
@@ -65,7 +66,12 @@
     "party.age_group",
     "party.shared",
     "party.shared_umbrella",
+    "preference.bringingCamera",
+    "preference.bringingHeadphones",
     "preference.bringingLaptop",
+    "preference.bringingPhone",
+    "preference.bringingPowerBank",
+    "preference.bringingTablet",
     "preference.dailyMedication",
     "preference.generic",
     "preference.getColdEasily",
@@ -133,6 +139,7 @@
   "arguments": {
     "activity.beachDays": [],
     "activity.boatTrip": [],
+    "activity.camping": [],
     "activity.generic": [],
     "activity.hiking": [],
     "activity.museums": [],
@@ -224,12 +231,19 @@
       "ageGroup",
       "name"
     ],
-    "party.shared": [],
+    "party.shared": [
+      "quantityPhrase"
+    ],
     "party.shared_umbrella": [
       "rainDaysPhrase",
       "umbrellaPhrase"
     ],
+    "preference.bringingCamera": [],
+    "preference.bringingHeadphones": [],
     "preference.bringingLaptop": [],
+    "preference.bringingPhone": [],
+    "preference.bringingPowerBank": [],
+    "preference.bringingTablet": [],
     "preference.dailyMedication": [],
     "preference.generic": [],
     "preference.getColdEasily": [],

@@ -3,13 +3,17 @@
   "destinationFixture": "Singapore",
   "weatherFixture": "MiamiHotBeach",
   "days": 10,
-  "tripType": "vacation",
+  "tripTypes": [
+    "vacation"
+  ],
   "activities": [
     "sightseeing",
     "walking",
     "niceDinner"
   ],
-  "bag": "checked",
+  "bagTypes": [
+    "checked"
+  ],
   "style": "balanced",
   "chips": [
     "travelingInternationally"

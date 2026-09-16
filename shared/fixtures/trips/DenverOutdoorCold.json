@@ -3,11 +3,13 @@
   "destinationFixture": "Denver",
   "weatherFixture": "DenverColdOutdoor",
   "days": 5,
-  "tripType": "outdoor",
+  "tripTypes": [
+    "outdoor"
+  ],
   "activities": [
     "hiking"
   ],
-  "bag": "notSure",
+  "bagTypes": [],
   "style": "balanced",
   "homeCountryCode": "US",
   "homeCountrySource": "userConfirmed",

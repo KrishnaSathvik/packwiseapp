@@ -140,7 +140,7 @@
     {
       "id": "travel_comfort.reusable_bottle",
       "localizationKey": "packing.travel_comfort.reusable_bottle",
-      "display_name": "Empty security bottle set",
+      "display_name": "Travel toiletry bottles",
       "category": "travel_comfort",
       "importance": "optional",
       "symbol": "bottle",
@@ -230,7 +230,7 @@
     {
       "id": "travel_comfort.empty_security_bottle",
       "localizationKey": "packing.travel_comfort.empty_security_bottle",
-      "display_name": "Empty security bottle",
+      "display_name": "Empty water bottle",
       "category": "travel_comfort",
       "importance": "normal",
       "symbol": "waterbottle",

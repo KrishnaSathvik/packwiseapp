@@ -17,10 +17,42 @@ import SwiftUI
 ///
 ///     xcrun simctl launch booted com.packwiseapp.app -PackWiseScreen tripDetail
 enum DebugPreviewScreen: String {
+    case languageSolo, languageMulti, languageSingle, languageCombined
+    case languageWeather, languageActivity, languageDevice, languageChild
+    case languageShared, languageQuantity, languageGroup
     case tripDetail
     case tripDetailSeasonal
     case packingList
     case packingListScrolled
+    /// The family trip's generated list, aggregated in the All scope (Task 11).
+    case packingListFamily
+    /// Task 11 list states: couple All; family per-person and Shared scopes;
+    /// the family list scrolled; each Status; searches; and opened groups.
+    case packingListCouple
+    case packingListFamilyYou
+    case packingListFamilyAdult1
+    case packingListFamilyChild1
+    case packingListFamilyShared
+    case packingListFamilyMiddle
+    case packingListFamilyBottom
+    case packingListFamilyToPack
+    case packingListFamilyPacked
+    case packingListFamilyImportant
+    case packingListFamilyHidePacked
+    case packingListFamilySearchItem
+    case packingListFamilySearchTraveler
+    case packingListFamilySearchNone
+    case packingListFamilyGroupTshirts
+    case packingListFamilyGroupToothbrush
+    /// Task 12: Add Item after choosing Toiletries; the chooser with
+    /// Toiletries checked; Item Detail with the chooser pushed; Item Detail
+    /// after a move to Miscellaneous; the family list after Maya's T-shirts
+    /// moved to Miscellaneous.
+    case addItemChosen
+    case addItemCategoryChosen
+    case itemDetailCategory
+    case itemDetailMoved
+    case packingListFamilyMoved
     /// Legacy full-screen item detail plus real-sheet states for comparison.
     case itemDetail
     case itemDetailSheet
@@ -31,13 +63,45 @@ enum DebugPreviewScreen: String {
     case tripsHomeEmpty
     case setupDestination
     case setupDestinationFallback
+    /// Task 9 destination states: empty with no trips, recents, searching,
+    /// compact results, confirmed places, a long name, and offline visuals.
+    case setupDestinationEmpty
+    case setupDestinationRecents
+    case setupDestinationSearching
+    case setupDestinationResults
+    case setupDestinationChicago
+    case setupDestinationKhammam
+    case setupDestinationLong
+    case setupDestinationOffline
+    /// Task 9.1 search states: a successful search with no matches, a failed
+    /// search, and a failed search while changing a selected destination.
+    case setupDestinationNoMatch
+    case setupDestinationUnavailable
+    case setupDestinationUnavailableKept
+    /// Review's destination hero on a map (Khammam) and offline (graphical).
+    case setupReviewMap
+    case setupReviewOffline
+    /// Trip Detail's hero with the map provider failing.
+    case tripDetailOffline
+    /// Task 9.1 status bar: Trip Detail over a trusted photo and while the
+    /// visual is still loading; then after popping back to, and pushing on
+    /// to, light screens.
+    case tripDetailTrusted
+    case tripDetailLoading
+    case statusBarAfterPop
+    case statusBarAfterPush
+    /// Task 9.1 weather line: a long destination with no forecast yet.
+    case tripsHomeLong
     case setupDates
-    case setupParty
-    case setupPartyFamily
-    case setupType
+    case setupTravelers
+    case setupTravelersFamily
+    case setupTravelersFamilyDetails
+    case setupTravelersGroup
+    case setupTripTypes
     case setupActivities
-    case setupBagStyle
-    case setupExtras
+    case setupBags
+    case setupStyleLaundry
+    case setupPreferences
     case setupReview
     case reviewChanges
     case weatherChanged
@@ -48,6 +112,20 @@ enum DebugPreviewScreen: String {
     case weatherDetail
     case weatherDetailSeasonal
     case tripDetailCompleted
+    /// Task 10: Trip Detail with every one of the eleven categories non-empty,
+    /// opened at the top and opened at the bottom (simctl cannot scroll).
+    case tripDetailAllCategories
+    case tripDetailAllCategoriesMiddle
+    case tripDetailAllCategoriesScrolled
+
+    /// Where the screen's page opens, when a capture needs more than its top.
+    var initialScrollAnchor: UnitPoint? {
+        switch self {
+        case .tripDetailAllCategoriesMiddle: .center
+        case .tripDetailAllCategoriesScrolled: .bottom
+        default: nil
+        }
+    }
 
     /// The screen named by `-PackWiseScreen`, if the app was launched with one.
     static var requested: DebugPreviewScreen? {
@@ -69,6 +147,19 @@ struct DebugPreviewScene: View {
             .modelContainer(screen == .tripsHomeEmpty ? DebugTripSeed.emptyContainer : seed.container)
     }
 
+    @ViewBuilder
+    private func languageDetail(_ trip: TripRecord, _ canonicalID: String) -> some View {
+        if let item = trip.items.first(where: { $0.canonicalItemID == canonicalID }) {
+            NavigationStack {
+                ItemDetailView(item: item, travelers: trip.party.travelers)
+            }
+        }
+    }
+
+    private func familyList(_ state: PackingListDebugState) -> some View {
+        NavigationStack { PackingListView(trip: seed.familyTrip, debugPresentation: .list(state)) }
+    }
+
     /// The later steps need a populated draft, so they open on the seeded trip.
     private func setup(_ step: SetupStep) -> some View {
         TripSetupView(existingTrip: seed.trip, initialStep: step)
@@ -80,34 +171,138 @@ struct DebugPreviewScene: View {
             switch screen {
             case .tripDetail:
                 NavigationStack { TripDetailView(trip: seed.trip) }
+            case .tripDetailAllCategories, .tripDetailAllCategoriesMiddle, .tripDetailAllCategoriesScrolled:
+                NavigationStack { TripDetailView(trip: seed.allCategoriesTrip) }
             case .tripDetailSeasonal:
                 NavigationStack { TripDetailView(trip: seed.seasonalTrip) }
             case .packingList:
                 NavigationStack { PackingListView(trip: seed.trip) }
             case .packingListScrolled:
                 NavigationStack { PackingListView(trip: seed.trip, focusedCategory: .toiletries) }
+            case .packingListFamily:
+                NavigationStack { PackingListView(trip: seed.familyTrip) }
+            case .packingListCouple:
+                NavigationStack { PackingListView(trip: seed.coupleTrip) }
+            case .packingListFamilyYou:
+                familyList(PackingListDebugState(scope: .traveler(0)))
+            case .packingListFamilyAdult1:
+                familyList(PackingListDebugState(scope: .traveler(1)))
+            case .packingListFamilyChild1:
+                familyList(PackingListDebugState(scope: .traveler(2)))
+            case .packingListFamilyShared:
+                familyList(PackingListDebugState(scope: .shared))
+            case .packingListFamilyMiddle:
+                familyList(PackingListDebugState(scrollTo: .toiletries))
+            case .packingListFamilyBottom:
+                familyList(PackingListDebugState(scrollTo: .travelComfort))
+            case .packingListFamilyToPack:
+                familyList(PackingListDebugState(status: .toPack))
+            case .packingListFamilyPacked:
+                familyList(PackingListDebugState(status: .packed))
+            case .packingListFamilyImportant:
+                familyList(PackingListDebugState(status: .important))
+            case .packingListFamilyHidePacked:
+                familyList(PackingListDebugState(hidePacked: true, scrollTo: .toiletries))
+            case .packingListFamilySearchItem:
+                familyList(PackingListDebugState(search: "tooth"))
+            case .packingListFamilySearchTraveler:
+                familyList(PackingListDebugState(search: "Maya"))
+            case .packingListFamilySearchNone:
+                familyList(PackingListDebugState(search: "snorkel mask"))
+            case .packingListFamilyGroupTshirts:
+                familyList(PackingListDebugState(openGroup: "clothing.tshirt"))
+            case .packingListFamilyGroupToothbrush:
+                familyList(PackingListDebugState(openGroup: "toiletries.toothbrush"))
+            case .addItemChosen:
+                NavigationStack { PackingListView(trip: seed.trip, debugPresentation: .addItemChosen(.toiletries)) }
+            case .addItemCategoryChosen:
+                NavigationStack { PackingListView(trip: seed.trip, debugPresentation: .addItemCategoryChosen(.toiletries)) }
+            case .itemDetailCategory:
+                NavigationStack { PackingListView(trip: seed.trip, debugPresentation: .itemDetailCategory) }
+            case .itemDetailMoved:
+                NavigationStack { PackingListView(trip: seed.trip, debugPresentation: .itemDetailMoved(.miscellaneous)) }
+            case .packingListFamilyMoved:
+                familyList(PackingListDebugState(search: "T-shirt", move: PackingListDebugMove(canonicalItemID: "clothing.tshirt", travelerIndex: 1, category: .miscellaneous)))
             case .tripsHome, .tripsHomeEmpty:
                 TripsHomeView()
             case .setupDestination:
                 setup(.destination)
             case .setupDestinationFallback:
                 TripSetupView(existingTrip: seed.completedTrip, initialStep: .destination)
+            case .setupDestinationEmpty:
+                TripSetupView()
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationRecents:
+                TripSetupView()
+            case .setupDestinationNoMatch:
+                TripSetupView(captureSearch: DebugDestinationSearch(mode: .noMatches), captureQuery: "Zzqxv")
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationUnavailable:
+                TripSetupView(captureSearch: DebugDestinationSearch(mode: .fails), captureQuery: "Khammam")
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationUnavailableKept:
+                TripSetupView(captureSearch: DebugDestinationSearch(mode: .fails), captureQuery: "Khammam",
+                              captureDestination: DebugDestinationSearch.chicago, captureChanging: true)
+            case .setupDestinationSearching:
+                TripSetupView(captureSearch: DebugDestinationSearch(mode: .suspends), captureQuery: "Kham")
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationResults:
+                TripSetupView(captureSearch: DebugDestinationSearch(), captureQuery: "Chi")
+                    .modelContainer(DebugTripSeed.emptyContainer)
+            case .setupDestinationChicago:
+                TripSetupView(captureDestination: DebugDestinationSearch.chicago)
+            case .setupDestinationKhammam:
+                TripSetupView(captureDestination: DebugDestinationSearch.khammam)
+            case .setupDestinationLong:
+                TripSetupView(captureDestination: DebugDestinationSearch.longName)
+            case .setupDestinationOffline:
+                TripSetupView(captureDestination: DebugDestinationSearch.khammam)
+                    .environment(\.destinationVisuals, DebugTripSeed.offlineVisuals)
+            case .setupReviewMap:
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .review, captureDestination: DebugDestinationSearch.khammam)
+            case .setupReviewOffline:
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .review, captureDestination: DebugDestinationSearch.longName)
+                    .environment(\.destinationVisuals, DebugTripSeed.offlineVisuals)
+            case .tripDetailOffline:
+                NavigationStack { TripDetailView(trip: seed.trip) }
+                    .environment(\.destinationVisuals, DebugTripSeed.offlineVisuals)
+            case .tripDetailTrusted:
+                NavigationStack { TripDetailView(trip: seed.trip) }
+                    .environment(\.destinationVisuals, DebugTripSeed.trustedVisuals)
+            case .tripDetailLoading:
+                NavigationStack { TripDetailView(trip: seed.trip) }
+                    .environment(\.destinationVisuals, DebugTripSeed.loadingVisuals)
+            case .statusBarAfterPop:
+                DebugStatusBarNavigation(trip: seed.trip, pushesOnward: false)
+            case .statusBarAfterPush:
+                DebugStatusBarNavigation(trip: seed.trip, pushesOnward: true)
+            case .tripsHomeLong:
+                TripsHomeView()
+                    .modelContainer(DebugTripSeed.longDestinationContainer)
             case .setupDates:
                 setup(.dates)
-            case .setupParty:
-                setup(.party)
-            case .setupPartyFamily:
-                TripSetupView(existingTrip: seed.familyTrip, initialStep: .party)
-            case .setupType:
-                setup(.type)
+            case .setupTravelers:
+                setup(.travelers)
+            case .setupTravelersFamily:
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .travelers)
+            case .setupTravelersFamilyDetails:
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .travelers)
+                    .environment(\.setupCaptureScrollAnchor, UnitPoint(x: 0.5, y: 0.28))
+            case .setupTravelersGroup:
+                TripSetupView(existingTrip: seed.groupTrip, initialStep: .travelers)
+                    .environment(\.setupCaptureScrollAnchor, UnitPoint(x: 0.5, y: 0.3))
+            case .setupTripTypes:
+                setup(.tripTypes)
             case .setupActivities:
                 setup(.activities)
-            case .setupBagStyle:
-                setup(.bagAndStyle)
-            case .setupExtras:
-                setup(.extras)
+            case .setupBags:
+                setup(.bags)
+            case .setupStyleLaundry:
+                setup(.styleAndLaundry)
+            case .setupPreferences:
+                setup(.preferences)
             case .setupReview:
-                setup(.review)
+                TripSetupView(existingTrip: seed.familyTrip, initialStep: .review)
             case .reviewChanges:
                 NavigationStack {
                     RecommendationDiffScreen(
@@ -165,6 +360,26 @@ struct DebugPreviewScene: View {
                     .navigationTitle("Chicago")
                     .navigationBarTitleDisplayMode(.inline)
                 }
+            case .languageSolo:
+                NavigationStack { PackingListView(trip: seed.languageSoloTrip, debugPresentation: .list(.init(scrollTo: .footwear))) }
+            case .languageMulti:
+                NavigationStack { PackingListView(trip: seed.languageTrip, debugPresentation: .list(.init(scrollTo: .toiletries))) }
+            case .languageSingle, .languageWeather:
+                languageDetail(seed.languageSoloTrip, "clothing.rain_jacket")
+            case .languageCombined:
+                languageDetail(seed.languageTrip, "toiletries.sunscreen")
+            case .languageActivity:
+                languageDetail(seed.languageSoloTrip, "activities.daypack")
+            case .languageDevice:
+                languageDetail(seed.languageSoloTrip, "electronics.laptop_charger")
+            case .languageChild:
+                languageDetail(seed.familyTrip, "kids.diapers")
+            case .languageShared:
+                languageDetail(seed.familyTrip, "toiletries.sunscreen")
+            case .languageQuantity:
+                languageDetail(seed.languageSoloTrip, "clothing.tshirt")
+            case .languageGroup:
+                familyList(PackingListDebugState(openGroup: "clothing.hat_sun"))
             case .itemDetail:
                 if let item = seed.trip.items.first(where: { $0.displayName == "Rain jacket" }) {
                     NavigationStack {
@@ -197,6 +412,96 @@ struct DebugPreviewScene: View {
     }
 }
 
+/// Capture-only destination search: real places with their real
+/// coordinates, returned without the network, or never (to hold the
+/// searching state on screen).
+struct DebugDestinationSearch: DestinationSearching {
+    enum Mode: Sendable { case results, suspends, noMatches, fails }
+    var mode: Mode = .results
+
+    static let chicago = Destination(
+        displayName: "Chicago", city: "Chicago", region: "IL", country: "United States", countryCode: "US",
+        latitude: 41.8781, longitude: -87.6298, timeZone: "America/Chicago", mapKitIdentifier: nil, fixtureID: nil
+    )
+    static let khammam = Destination(
+        displayName: "Khammam", city: "Khammam", region: "Telangana", country: "India", countryCode: "IN",
+        latitude: 17.2473, longitude: 80.1514, timeZone: "Asia/Kolkata", mapKitIdentifier: nil, fixtureID: nil
+    )
+    static let longName = Destination(
+        displayName: "Saint-Rémy-de-Provence", city: "Saint-Rémy-de-Provence", region: "Provence-Alpes-Côte d'Azur",
+        country: "France", countryCode: "FR", latitude: 43.7888, longitude: 4.8317, timeZone: "Europe/Paris",
+        mapKitIdentifier: nil, fixtureID: nil
+    )
+
+    func search(query: String) async throws -> [Destination] {
+        switch mode {
+        case .suspends:
+            try await Task.sleep(for: .seconds(3600))
+            return []
+        case .noMatches:
+            return []
+        case .fails:
+            throw DestinationSearchError.unavailable
+        case .results:
+            break
+        }
+        return [
+            Self.chicago,
+            Destination(displayName: "Chicago Heights", city: "Chicago Heights", region: "IL", country: "United States", countryCode: "US",
+                        latitude: 41.5061, longitude: -87.6356, timeZone: "America/Chicago", mapKitIdentifier: nil, fixtureID: nil),
+            Destination(displayName: "Chico", city: "Chico", region: "CA", country: "United States", countryCode: "US",
+                        latitude: 39.7285, longitude: -121.8375, timeZone: "America/Los_Angeles", mapKitIdentifier: nil, fixtureID: nil),
+            Destination(displayName: "Chiang Mai", city: "Chiang Mai", region: "Chiang Mai", country: "Thailand", countryCode: "TH",
+                        latitude: 18.7883, longitude: 98.9853, timeZone: "Asia/Bangkok", mapKitIdentifier: nil, fixtureID: nil),
+        ]
+    }
+}
+
+/// Walks a navigation stack for the status-bar check: Trip Detail opens on a
+/// light root, then pops back to it, or pushes on to a light screen.
+struct DebugStatusBarNavigation: View {
+    let trip: TripRecord
+    var pushesOnward: Bool
+    @State private var path: [String] = []
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            List { Text(pushesOnward ? "Root" : "Root after popping Trip Detail") }
+                .navigationTitle("Trips")
+                .navigationDestination(for: String.self) { step in
+                    if step == "detail" {
+                        TripDetailView(trip: trip)
+                    } else {
+                        Text("A light screen pushed after Trip Detail")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(PackWiseColor.screen)
+                            .navigationTitle("Light")
+                    }
+                }
+        }
+        .task {
+            path = ["detail"]
+            try? await Task.sleep(for: .seconds(1.5))
+            if pushesOnward { path.append("light") } else { path.removeAll() }
+        }
+    }
+}
+
+/// A map provider that never answers, holding the loading state.
+struct DebugSuspendedMapSnapshots: DestinationMapSnapshotting {
+    func snapshot(for request: DestinationMapRequest) async throws -> UIImage {
+        try await Task.sleep(for: .seconds(3600))
+        throw CancellationError()
+    }
+}
+
+/// A map provider that always fails, as offline.
+struct DebugOfflineMapSnapshots: DestinationMapSnapshotting {
+    func snapshot(for request: DestinationMapRequest) async throws -> UIImage {
+        throw URLError(.notConnectedToInternet)
+    }
+}
+
 /// Chicago, five days, part way packed — the trip the reference board draws.
 @MainActor
 @Observable
@@ -210,6 +515,64 @@ final class DebugTripSeed {
     let familyTrip: TripRecord
     /// Finished and fully packed, for the past-trip treatment.
     let completedTrip: TripRecord
+    /// You plus three other adults, one named with device choices, for the
+    /// expanded group branch of the travelers step.
+    let groupTrip: TripRecord
+    /// The Chicago trip with an item in every category, so Trip Detail's
+    /// Packing block can be checked with all eleven rows (Task 10).
+    let allCategoriesTrip: TripRecord
+    /// You and Alex, with a generated list, for the couple list states (Task 11).
+    let coupleTrip: TripRecord
+    let languageTrip: TripRecord
+    let languageSoloTrip: TripRecord
+
+    /// Visuals with no trusted imagery and a failing map: the offline state.
+    static let offlineVisuals = MapKitDestinationVisualService(
+        directory: nil,
+        trusted: { _ in nil },
+        mapSnapshots: DebugOfflineMapSnapshots()
+    )
+
+    /// A trusted photo for every destination, to check the hero over a bright
+    /// image (the onboarding photograph has a pale sky at its top).
+    static let trustedVisuals = MapKitDestinationVisualService(
+        directory: nil,
+        trusted: { _ in UIImage(named: PackWiseImageSlot.welcome) },
+        mapSnapshots: DebugOfflineMapSnapshots()
+    )
+
+    static let loadingVisuals = MapKitDestinationVisualService(
+        directory: nil,
+        trusted: { _ in nil },
+        mapSnapshots: DebugSuspendedMapSnapshots()
+    )
+
+    /// One upcoming trip with a long destination name and no forecast yet.
+    static let longDestinationContainer: ModelContainer = {
+        let container = try! PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        context.insert(PackingPreferenceRecord(from: .deviceDefaults()))
+        let start = Calendar.current.date(byAdding: .day, value: 5, to: Calendar.current.startOfDay(for: .now))!
+        let trip = TripRecord(
+            destination: DebugDestinationSearch.longName,
+            startDate: start,
+            endDate: Calendar.current.date(byAdding: .day, value: 6, to: start)!,
+            durationDays: 7,
+            durationNights: 6,
+            tripType: .vacation,
+            activities: ["sightseeing"],
+            bagType: .carryOn,
+            packingStyle: .balanced,
+            status: .planning
+        )
+        context.insert(trip)
+        let repository = TripRepository(context: context)
+        for item in items().prefix(10) {
+            repository.addItem(item.draft, to: trip, syncWeatherChange: false)
+        }
+        try? context.save()
+        return container
+    }()
 
     /// For the empty Trips Home. Trips Home reads its own @Query, so an empty
     /// state needs a store with nothing in it.
@@ -270,6 +633,32 @@ final class DebugTripSeed {
             record.packedQuantity = record.quantity
         }
         repository.storeWeather(Self.forecast(start: start, calendar: calendar), on: trip)
+
+        allCategoriesTrip = TripRecord(
+            destination: destination,
+            startDate: calendar.date(byAdding: .day, value: 20, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: 24, to: start)!,
+            durationDays: 5,
+            durationNights: 4,
+            tripType: .cityBreak,
+            activities: ["sightseeing", "walking"],
+            bagType: .carryOn,
+            packingStyle: .balanced,
+            status: .packing,
+            travelerCount: 2,
+            travelMode: .family
+        )
+        context.insert(allCategoriesTrip)
+        // Fresh drafts, not `seeded`: item IDs are unique across the store,
+        // so reusing the main trip's drafts would move its rows here.
+        let allCategoryItems = Self.items() + Self.remainingCategoryItems()
+        for item in allCategoryItems {
+            repository.addItem(item.draft, to: allCategoriesTrip, syncWeatherChange: false)
+        }
+        let allPackedNames = Set(allCategoryItems.filter(\.packed).map(\.draft.displayName))
+        for record in allCategoriesTrip.items where allPackedNames.contains(record.displayName) {
+            record.packedQuantity = record.quantity
+        }
 
         // A generated list nobody has started, and a finished trip, so Trips
         // Home shows all three of its states at once.
@@ -342,13 +731,84 @@ final class DebugTripSeed {
         repository.attach(
             party: TripPartyBuilder.make(
                 mode: .family,
-                adultCount: 2,
-                childProfiles: [
-                    ChildDraft(name: "Ada", ageGroup: .toddler, needs: Set(ChildNeed.suggested(for: .toddler).prefix(2)))
+                selfChips: [],
+                otherAdults: [AdultDraft(name: "Maya", chips: [.bringingPhone, .bringingLaptop])],
+                children: [
+                    ChildDraft(name: "Ada", ageGroup: .toddler, needs: Set(ChildNeed.suggested(for: .toddler).prefix(2))),
+                    ChildDraft(ageGroup: .teen, chips: [.bringingPhone])
                 ]
             ),
-            bagType: .checked,
+            bagTypes: [.carryOn, .checked],
             on: familyTrip
+        )
+        // A V2 reference state: two trip types, two bags.
+        try? repository.applyTripTypes([.vacation, .beach], on: familyTrip)
+        familyTrip.activitiesRaw = "beachDays,sightseeing"
+        // A real generated list, so the family Packing List shows its current state.
+        if let catalog = try? SharedLibrary.catalog(), let rules = try? SharedLibrary.rules() {
+            let familyContext = familyTrip.context(preferences: .deviceDefaults(), weather: nil)
+            repository.replaceItems(on: familyTrip, with: PackingEngine(catalog: catalog, rules: rules).generate(context: familyContext))
+        }
+        // Part way packed, unevenly, so the All scope shows partial groups:
+        // You have done your toiletries and footwear, Maya her toothbrush.
+        let familyYou = familyTrip.party.primary.id
+        let maya = familyTrip.party.travelers.first { $0.name == "Maya" }?.id
+        for record in familyTrip.items {
+            let mine = record.travelerID == familyYou && (record.category == .toiletries || record.category == .footwear)
+            let hers = record.travelerID == maya && record.canonicalItemID == "toiletries.toothbrush"
+            if mine || hers { record.packedQuantity = record.quantity }
+        }
+
+        coupleTrip = TripRecord(
+            destination: destination,
+            startDate: calendar.date(byAdding: .day, value: 40, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: 44, to: start)!,
+            durationDays: 5,
+            durationNights: 4,
+            tripType: .cityBreak,
+            activities: ["sightseeing"],
+            bagType: .carryOn,
+            packingStyle: .balanced,
+            status: .packing,
+            travelerCount: 2,
+            travelMode: .couple
+        )
+        context.insert(coupleTrip)
+        repository.attach(
+            party: TripPartyBuilder.make(mode: .couple, selfChips: [], otherAdults: [AdultDraft(name: "Alex")], children: []),
+            bagTypes: [.carryOn],
+            on: coupleTrip
+        )
+        if let catalog = try? SharedLibrary.catalog(), let rules = try? SharedLibrary.rules() {
+            let coupleContext = coupleTrip.context(preferences: .deviceDefaults(), weather: nil)
+            repository.replaceItems(on: coupleTrip, with: PackingEngine(catalog: catalog, rules: rules).generate(context: coupleContext))
+        }
+        for record in coupleTrip.items where record.travelerID == coupleTrip.party.primary.id && record.category == .toiletries {
+            record.packedQuantity = record.quantity
+        }
+
+        groupTrip = TripRecord(
+            destination: destination,
+            startDate: calendar.date(byAdding: .day, value: 120, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: 124, to: start)!,
+            durationDays: 5,
+            durationNights: 4,
+            tripType: .business,
+            activities: ["work"],
+            bagType: .carryOn,
+            packingStyle: .light,
+            status: .planning
+        )
+        context.insert(groupTrip)
+        repository.attach(
+            party: TripPartyBuilder.make(
+                mode: .group,
+                selfChips: [.bringingHeadphones],
+                otherAdults: [AdultDraft(name: "Jordan", chips: [.bringingPhone, .bringingLaptop]), AdultDraft(), AdultDraft()],
+                children: []
+            ),
+            bagTypes: [.carryOn],
+            on: groupTrip
         )
 
         completedTrip = TripRecord(
@@ -382,6 +842,27 @@ final class DebugTripSeed {
             record.packedQuantity = record.quantity
         }
 
+        // Task 13 uses actual engine output, not hand-authored display reasons.
+        func languageSeed(types: Set<TripType>, weather: TripWeatherContext?) -> TripRecord {
+            let record = TripRecord(destination: destination, startDate: start,
+                endDate: calendar.date(byAdding: .day, value: 6, to: start)!,
+                durationDays: 7, durationNights: 6, tripType: .other,
+                activities: weather == nil ? [] : ["sightseeing"], bagType: .personalItem,
+                packingStyle: .balanced, status: .packing)
+            context.insert(record)
+            repository.attach(party: TripPartyBuilder.make(mode: .solo,
+                selfChips: [.bringingLaptop, .bringingPhone], otherAdults: [], children: []),
+                bagTypes: [.personalItem], on: record)
+            try? repository.applyTripTypes(types, on: record)
+            if let catalog = try? SharedLibrary.catalog(), let rules = try? SharedLibrary.rules() {
+                repository.replaceItems(on: record, with: PackingEngine(catalog: catalog, rules: rules)
+                    .generate(context: record.context(preferences: .deviceDefaults(), weather: weather)))
+            }
+            return record
+        }
+        languageTrip = languageSeed(types: [.beach, .festival], weather: nil)
+        languageSoloTrip = languageSeed(types: [.cityBreak], weather: Self.forecast(start: start, calendar: calendar))
+
         try? context.save()
     }
 
@@ -401,10 +882,12 @@ final class DebugTripSeed {
             item("essentials.sunglasses", "Sunglasses", .essentials, reason: "Little sun expected", signals: [.weather]).draft
         ],
         quantityChanges: [
-            QuantityChangeSuggestion(
-                item: item("clothing.tshirts", "T-shirts", .clothing, quantity: 4).draft,
-                suggestedQuantity: 5
-            )
+            {
+                let existing = item("clothing.tshirts", "T-shirts", .clothing, quantity: 4).draft
+                var fresh = existing
+                fresh.quantity = 5
+                return QuantityChangeSuggestion(existing: existing, fresh: fresh)
+            }()
         ]
     )
 
@@ -460,6 +943,23 @@ final class DebugTripSeed {
     /// Rebuilt per call. `PackingItemRecord.id` is unique and copied from the
     /// draft, so reusing one draft across two trips makes SwiftData upsert and
     /// silently migrate the item from one trip to the other.
+    /// One or two rows for each category `items()` leaves empty, so a trip
+    /// seeded with both has all eleven.
+    private static func remainingCategoryItems() -> [Seeded] {
+        [
+        item("documents.id", "Government ID", .documents, importance: .critical, packed: true),
+        item("documents.tickets", "Tickets and reservations", .documents, importance: .important),
+        item("kids.snacks", "Snacks for the kids", .kids, quantity: 4),
+        item("kids.extra_outfits", "Extra outfits", .kids, quantity: 2, packed: true),
+        item("health.pain_reliever", "Pain reliever", .health),
+        item("health.band_aids", "Band-aids", .health, packed: true),
+        item("activities.daypack", "Daypack", .activities, packed: true),
+        item("travel_comfort.neck_pillow", "Neck pillow", .travelComfort),
+        item("travel_comfort.book", "Book", .travelComfort, packed: true),
+        item("misc.laundry_bag", "Laundry bag", .miscellaneous),
+        ]
+    }
+
     private static func items() -> [Seeded] {
         [
         item("essentials.passport", "Passport", .essentials, importance: .critical, packed: true),

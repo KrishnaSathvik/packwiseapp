@@ -36,10 +36,10 @@ struct PackingEngineTests {
             endDate: end,
             durationDays: math.days,
             durationNights: math.nights,
-            tripType: type,
+            tripTypes: [type],
             activities: activities,
             datedActivities: activities.map { DatedActivity(activityID: $0, date: nil) },
-            bagType: bag,
+            bagTypes: Set([bag].filter(BagType.stableOrder.contains)),
             packingStyle: style,
             transportation: .unknown,
             laundryAccess: laundry,
@@ -47,7 +47,8 @@ struct PackingEngineTests {
             userNotes: laundry == .planned ? "I'll probably do laundry halfway through." : "",
             contextChips: chips,
             weather: weather,
-            preferences: prefs
+            preferences: prefs,
+            origin: TripOrigin(seededFrom: prefs)
         )
     }
 
@@ -217,10 +218,10 @@ struct PackingEngineTests {
                 endDate: end,
                 durationDays: math.days,
                 durationNights: math.nights,
-                tripType: TripType(rawValue: eval.tripType) ?? .other,
+                tripTypes: Set(eval.tripTypes.map { TripType(rawValue: $0)! }),
                 activities: eval.activities,
                 datedActivities: eval.activities.map { DatedActivity(activityID: $0, date: nil) },
-                bagType: BagType(rawValue: eval.bag) ?? .notSure,
+                bagTypes: Set(eval.bagTypes.map { BagType(rawValue: $0)! }),
                 packingStyle: PackingStyle(rawValue: eval.style) ?? .balanced,
                 transportation: .unknown,
                 laundryAccess: chips.contains(.laundryAvailable) ? .planned : .none,
@@ -229,7 +230,8 @@ struct PackingEngineTests {
                 contextChips: chips,
                 weather: weather,
                 preferences: prefs,
-                party: party ?? .solo(chips: chips)
+                party: party ?? .solo(chips: chips),
+                origin: TripOrigin(seededFrom: prefs)
             )
             let existing = (eval.existing ?? []).map { row in
                 PackingItemDraft(
@@ -444,23 +446,28 @@ struct PackingEngineTests {
     }
 
     @Test func schoolAgeChildKeepsCarryablesButNotAdultCareItems() throws {
-        // A school-age child plausibly has headphones, a book, and their own
-        // packing organizers; deodorant, adult pain relief, and a photo ID
-        // stay off the list.
+        // A school-age child plausibly has a book and their own packing
+        // organizers; deodorant, adult pain relief, and a photo ID stay off
+        // the list. Product Experience V2, Task 6: headphones are a personal
+        // device, and age alone is not evidence a child owns one — this test
+        // previously required them.
         let adult = Traveler.primarySelf()
         let child = Traveler(name: "Sam", role: .child, ageGroup: .child)
         var ctx = context(destination: try destination("Chicago"), days: 7, type: .vacation, bag: .checked, style: .balanced, chips: [], laundry: .none)
         ctx.party = TripParty(travelMode: .family, travelers: [adult, child])
         let items = try makeEngine().generate(context: ctx)
         let childIDs = Set(items.filter { $0.travelerID == child.id }.map(\.canonicalItemID))
-        #expect(childIDs.contains("electronics.headphones"))
+        #expect(!childIDs.contains("electronics.headphones"))
         #expect(childIDs.contains("travel_comfort.book"))
         #expect(!childIDs.contains("toiletries.deodorant"))
         #expect(!childIDs.contains("health.pain_reliever"))
         #expect(!childIDs.contains("documents.id"))
     }
 
-    @Test func partyListFiltersUseNamesAndCollapseKids() {
+    /// One traveler, one scope (Task 11.1): children are never folded into a
+    /// generic Kids bucket, because two children differ in age, needs,
+    /// quantities, and packed state.
+    @Test func partyListFiltersGiveEveryTravelerTheirOwnScope() {
         let krishna = Traveler.primarySelf(name: "Krishna")
         let maya = Traveler(name: "Maya", role: .partner, ageGroup: .adult)
         let arjun = Traveler(name: "Arjun", role: .child, ageGroup: .child)
@@ -473,7 +480,8 @@ struct PackingEngineTests {
         #expect(oneChild.listFilters() == [.all, .traveler(krishna.id), .traveler(maya.id), .traveler(arjun.id), .shared])
 
         let twoKids = TripParty(travelMode: .family, travelers: [krishna, maya, arjun, emma])
-        #expect(twoKids.listFilters() == [.all, .traveler(krishna.id), .traveler(maya.id), .kids, .shared])
+        #expect(twoKids.listFilters() == [.all, .traveler(krishna.id), .traveler(maya.id), .traveler(arjun.id), .traveler(emma.id), .shared])
+        #expect(twoKids.listFilters().count == twoKids.travelers.count + 2, "All + one per traveler + Shared")
     }
 
     @Test func partyInvariantsRejectBrokenOwnership() {
@@ -649,7 +657,7 @@ struct PackingEngineTests {
         let diff = engine.recommendationDiff(context: hiking, existing: existing, overrides: [])
         #expect(diff.add.contains { $0.canonicalItemID == "footwear.hiking_shoes" })
         #expect(!diff.removeCandidates.contains { $0.displayName == "Portable fan" })
-        #expect(!diff.quantityChanges.contains { $0.item.canonicalItemID == "clothing.pants" })
+        #expect(!diff.quantityChanges.contains { $0.existing.canonicalItemID == "clothing.pants" })
         #expect(existing.contains { $0.canonicalItemID == "clothing.tshirt" && $0.isPacked })
     }
 
@@ -709,7 +717,7 @@ struct PackingEngineTests {
         let existing = engine.generate(context: before)
         let after = context(destination: dest, days: 15, bag: .carryOn, style: .balanced, chips: [.laundryAvailable], laundry: .planned)
         let diff = engine.recommendationDiff(context: after, existing: existing, overrides: [])
-        let tshirt = diff.quantityChanges.first { $0.item.canonicalItemID == "clothing.tshirt" }
+        let tshirt = diff.quantityChanges.first { $0.existing.canonicalItemID == "clothing.tshirt" }
         #expect(tshirt?.suggestedQuantity == 7)
     }
 
@@ -741,5 +749,130 @@ struct PackingEngineTests {
         #expect(family.primary.id == familyAgain.primary.id)
         #expect(family.travelers.contains { $0.id == child.id })
         #expect(familyAgain.travelers.contains { $0.id == child.id })
+    }
+
+    // MARK: - Surfaced-input contract completeness (Phase 1, Task 5)
+
+    /// One record per trip/bag/style/laundry/activity/context-chip value a
+    /// user can surface, from `docs/engine-audits/surfaced-input-contracts.json`.
+    /// Field-for-field mirror of `ContractRecord` in
+    /// `scripts/audit_engine_inputs.py`, and `record[...]` in
+    /// `scripts/tests/test_audit_engine_inputs.py`.
+    struct SurfacedInputContract: Codable {
+        var kind: String
+        var id: String
+        var exposed: Bool
+        var engineContract: String
+        var fixtureIDs: [String]
+        /// File-qualified `<SwiftFile>::<testFunctionName>` references. A
+        /// deterministic input needs at least one fixture *or* one named test;
+        /// `scripts/audit_engine_inputs.py` verifies each function exists in
+        /// the file named here, so the reference cannot be fabricated.
+        var testIDs: [String]?
+        var iconContract: String
+        var ownerScope: String
+        var note: String?
+    }
+
+    struct SurfacedInputContractFile: Codable {
+        var version: Int
+        var records: [SurfacedInputContract]
+    }
+
+    // ios/PackWiseTests -> ios -> repo root, same path-building GoldenEngineTests
+    // uses for shared/fixtures/golden/golden-fixtures.json.
+    private static let surfacedInputContractsFile = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()  // PackingEngineTests.swift -> ios/PackWiseTests
+        .deletingLastPathComponent()  // ios/PackWiseTests -> ios
+        .deletingLastPathComponent()  // ios -> repo root
+        .appendingPathComponent("docs/engine-audits/surfaced-input-contracts.json")
+
+    private static let legalEngineContracts: Set<String> = ["deterministic", "contextOnly", "missing"]
+
+    private func loadSurfacedInputContracts() throws -> [SurfacedInputContract] {
+        let file = try JSONDecoder().decode(
+            SurfacedInputContractFile.self,
+            from: Data(contentsOf: Self.surfacedInputContractsFile)
+        )
+        return file.records
+    }
+
+    @Test func surfacedInputContractCoversEveryTripBagStyleLaundryChipOption() throws {
+        let records = try loadSurfacedInputContracts()
+
+        func ids(kind: String) -> Set<String> {
+            Set(records.filter { $0.kind == kind }.map(\.id))
+        }
+
+        #expect(ids(kind: "tripType") == Set(TripType.allCases.map(\.rawValue)))
+        #expect(ids(kind: "bagType") == Set(BagType.allCases.map(\.rawValue)))
+        #expect(ids(kind: "packingStyle") == Set(PackingStyle.allCases.map(\.rawValue)))
+        #expect(ids(kind: "laundryAccess") == Set(LaundryAccess.allCases.map(\.rawValue)))
+        #expect(ids(kind: "contextChip") == Set(ContextChip.allCases.map(\.rawValue)))
+    }
+
+    /// The engine's activity vocabulary is `rules.activities`' keys — the
+    /// surfaced vocabulary every id resolves against. Since Phase 5, camping
+    /// is a real key like any other, so no id needs adding by hand here.
+    /// Every trip-type contract's suggested activities are a subset of those
+    /// keys (setup reads only the contracts since Task 8), so covering
+    /// the rule vocabulary covers every suggested-chip activity too.
+    @Test func surfacedInputContractCoversEverySuggestedActivity() throws {
+        let records = try loadSurfacedInputContracts()
+        let rules = try SharedLibrary.rules()
+
+        let suggestedChipActivities = Set(TripType.allCases.flatMap { rules.tripTypeContracts.contract(for: $0).suggestedActivityIDs })
+        let engineActivityVocabulary = Set(rules.activities.keys)
+        let unmatched = suggestedChipActivities.subtracting(engineActivityVocabulary)
+        #expect(
+            suggestedChipActivities.isSubset(of: engineActivityVocabulary),
+            "A suggested-activity chip references an id with no rule entry: \(unmatched)"
+        )
+
+        let contractActivityIDs = Set(records.filter { $0.kind == "activity" }.map(\.id))
+        #expect(contractActivityIDs == engineActivityVocabulary)
+    }
+
+    @Test func surfacedInputContractHasNoDuplicatesAndOnlyLegalContracts() throws {
+        let records = try loadSurfacedInputContracts()
+        var seen: Set<String> = []
+        for record in records {
+            let key = "\(record.kind)/\(record.id)"
+            #expect(seen.insert(key).inserted, "duplicate contract row for \(key)")
+            #expect(
+                Self.legalEngineContracts.contains(record.engineContract),
+                "\(key) has an illegal engineContract: \(record.engineContract)"
+            )
+            #expect(!record.iconContract.isEmpty, "\(key) is missing an iconContract")
+        }
+    }
+
+    /// Phase 5 closed the Phase 1 finding by giving camping a real contract,
+    /// not by relabelling the row. The ledger must now record a deterministic
+    /// effect backed by fixtures that actually exercise it.
+    @Test func campingIsRecordedDeterministicWithFixtureEvidence() throws {
+        let records = try loadSurfacedInputContracts()
+        let camping = try #require(records.first { $0.kind == "activity" && $0.id == "camping" })
+        #expect(camping.engineContract == "deterministic")
+        #expect(camping.fixtureIDs.contains("28-yellowstone-4d-camping-mild"))
+        #expect(camping.fixtureIDs.contains("18-reykjavik-64d-roadtrip-camping-seasonal"))
+        #expect(camping.iconContract == "tent")
+    }
+
+    /// `other` is a declared identity, not a failed lookup — the one earned
+    /// `contextOnly` relabel in the ledger, evidenced by named tests.
+    @Test func otherIsRecordedContextOnlyWithTestEvidence() throws {
+        let records = try loadSurfacedInputContracts()
+        let other = try #require(records.first { $0.kind == "tripType" && $0.id == "other" })
+        #expect(other.engineContract == "contextOnly")
+        #expect(other.testIDs?.contains("ActivityContractTests.swift::otherIsADeclaredIdentityTripType") == true)
+    }
+
+    /// From Phase 5 on the DEAD bucket is expected to be empty. A row
+    /// reappearing here is a regression, not a finding to file away.
+    @Test func noSurfacedInputRemainsMissing() throws {
+        let records = try loadSurfacedInputContracts()
+        let dead = records.filter { $0.engineContract == "missing" }.map { "\($0.kind)/\($0.id)" }
+        #expect(dead.isEmpty, "surfaced inputs still doing nothing: \(dead)")
     }
 }

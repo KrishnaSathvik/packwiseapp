@@ -3,12 +3,16 @@
   "destinationFixture": "Chicago",
   "weatherFixture": "ChicagoRainyFall",
   "days": 5,
-  "tripType": "cityBreak",
+  "tripTypes": [
+    "cityBreak"
+  ],
   "activities": [
     "sightseeing",
     "walking"
   ],
-  "bag": "carryOn",
+  "bagTypes": [
+    "carryOn"
+  ],
   "style": "balanced",
   "homeCountryCode": "US",
   "homeCountrySource": "userConfirmed",

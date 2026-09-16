@@ -71,6 +71,19 @@ export function requiredReasonArguments(code: string): string[] {
   return reasonFile().arguments[code] ?? [];
 }
 
+type TripContextVocabulary = { tripTypes: string[]; bagTypes: string[] };
+
+let tripContextVocab: TripContextVocabulary | undefined;
+
+/**
+ * The closed trip-type and physical-bag vocabularies, each in its stable
+ * canonical order (mirrors `TripType.stableOrder` / `BagType.stableOrder`).
+ */
+export function tripContextVocabulary(): TripContextVocabulary {
+  tripContextVocab ??= readJSON<TripContextVocabulary>("vocab", "trip-context.json");
+  return tripContextVocab;
+}
+
 let vocab: { chips: string[]; activities: string[] } | undefined;
 
 export function vocabulary(): { chips: string[]; activities: string[] } {

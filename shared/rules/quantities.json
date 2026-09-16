@@ -65,6 +65,10 @@
       "kind": "long_trip_backup",
       "threshold_days": 6
     },
+    "swimwear": {
+      "kind": "fixed",
+      "value": 1
+    },
     "workout_top": {
       "kind": "workout",
       "light_divisor": 3,

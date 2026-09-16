@@ -1,41 +1,17 @@
 import SwiftData
 import SwiftUI
 
-enum PackingFilter: String, CaseIterable, Identifiable {
-    case all = "All"
-    case left = "Left to pack"
-    case packed = "Packed"
-    case important = "Important"
-
-    var id: String { rawValue }
-}
-
-/// Presentation-only wording for recommendations that share one engine
-/// signal but have different practical consequences. Structured provenance
-/// remains unchanged.
-enum PackingReasonPresentation {
-    static func inclusionReason(
-        canonicalItemID: String?,
-        reasonCode: String,
-        tripType: TripType?,
-        original: String
-    ) -> String {
-        if reasonCode == "activity.sightseeing" {
-            switch canonicalItemID {
-            case "health.blister_pads":
-                return "Helpful for long walking and sightseeing days."
-            case "activities.daypack":
-                return "Useful for carrying daily essentials while sightseeing."
-            case "electronics.power_bank":
-                return "Sightseeing can keep you away from outlets for long periods."
-            default:
-                break
-            }
-        }
-        if reasonCode == "trip_type.generic", let tripType {
-            return "Useful for your \(tripType.title.lowercased())."
-        }
-        return original
+/// Phase 8, Task 6: presentation over `RecommendationTrace.Authority` —
+/// reads persisted trace only, never calls `PackingEngine`,
+/// `CoverageResolver`, `ConstraintResolver`, or `WeatherSignalExtractor`.
+enum PackingTracePresentation {
+    /// One short, honest line distinguishing a user's own decision from the
+    /// engine's — never invents provenance for a user-authority row.
+    static func authorityLine(_ authority: RecommendationTrace.Authority) -> String? {
+        if authority.isCustomItem { return "Added by you." }
+        if authority.isUserModified { return "You changed this." }
+        if authority.isUserAdded { return "Added by you." }
+        return nil
     }
 }
 
@@ -45,11 +21,46 @@ enum PackingListDebugPresentation {
     case itemDetailLarge
     case addItem
     case addItemCategory
+    /// Task 12: Add Item with a chosen category; the chooser with that
+    /// category checked; Item Detail with the chooser pushed; Item Detail
+    /// after a category move.
+    case addItemChosen(PackingCategory)
+    case addItemCategoryChosen(PackingCategory)
+    case itemDetailCategory
+    case itemDetailMoved(PackingCategory)
+    /// Task 11 capture states: a preset People/Status/search state, an
+    /// opened group, or a scroll target.
+    case list(PackingListDebugState)
+}
+
+struct PackingListDebugState {
+    enum Scope { case all, traveler(Int), shared }
+    var scope: Scope = .all
+    var status: PackingStatusFilter? = nil
+    var hidePacked = false
+    var search = ""
+    /// Canonical ID of a personal group to open.
+    var openGroup: String? = nil
+    var scrollTo: PackingCategory? = nil
+    /// Task 12: move one traveler's record to another category first.
+    var move: PackingListDebugMove? = nil
+}
+
+struct PackingListDebugMove {
+    var canonicalItemID: String
+    var travelerIndex: Int
+    var category: PackingCategory
 }
 #endif
 
-private enum AddItemRoute: Hashable {
+enum AddItemRoute: Hashable {
     case category
+}
+
+/// What Item Detail can push in whichever stack hosts it (Task 12).
+enum ItemDetailRoute: Hashable {
+    /// Choose Category for the record with this ID.
+    case category(UUID)
 }
 
 /// The checklist.
@@ -68,24 +79,27 @@ struct PackingListView: View {
 
     @Environment(AppDependencies.self) private var dependencies
     @Environment(\.modelContext) private var modelContext
-    @Query private var preferenceRecords: [PackingPreferenceRecord]
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    @State private var filter: PackingFilter = .all
     @State private var partyFilter: PartyListFilter = .all
+    @State private var status: PackingStatusFilter?
     @State private var search = ""
     @State private var adding = false
     @State private var hidePacked = false
     @State private var selectedItem: PackingItemRecord?
-    @State private var newItemName = ""
-    @State private var newItemQuantity = 1
-    @State private var newItemCategory: PackingCategory = .clothing
-    @State private var newItemOwner: PartyListFilter = .all
-    @State private var newItemImportant = false
+    @State private var selectedGroup: PersonalItemGroup?
+    @State private var newItem = AddItemDraft()
     @State private var addPath: [AddItemRoute] = []
     @State private var itemDetailDetent: PresentationDetent = .medium
+    @State private var itemDetailPath: [ItemDetailRoute] = []
 #if DEBUG
     @State private var appliedDebugPresentation = false
+    @State private var debugScrollTarget: PackingCategory?
 #endif
+
+    /// The floating add control's footprint plus breathing room, so the last
+    /// row can always scroll clear of it (Task 11).
+    private static let addButtonClearance: CGFloat = PackWiseSize.floatingControl + PackWiseSpacing.loose * 2 + PackWiseSpacing.regular
 
     var body: some View {
         VStack(spacing: 0) {
@@ -102,21 +116,27 @@ struct PackingListView: View {
         .searchable(
             text: $search,
             placement: .navigationBarDrawer(displayMode: .always),
-            prompt: "Search items"
+            prompt: "Search items or people"
         )
         .overlay(alignment: .bottomTrailing) { addButton }
         .sheet(item: $selectedItem) { item in
-            NavigationStack {
-                ItemDetailView(
-                    item: item,
-                    travelers: trip.party.travelers,
-                    showsAssignment: !trip.party.usesSimpleList && item.ownershipType == .shared,
-                    onNotNeeded: !item.isUserAdded && item.canonicalItemID != nil
-                        ? { notNeeded(item) } : nil,
-                    onDelete: item.isUserAdded ? { delete(item) } : nil
-                )
+            NavigationStack(path: $itemDetailPath) {
+                itemDetail(item)
+                    .navigationDestination(for: ItemDetailRoute.self) { route in
+                        itemDetailDestination(route)
+                    }
             }
             .presentationDetents([.medium, .large], selection: $itemDetailDetent)
+            .presentationDragIndicator(.visible)
+        }
+        .sheet(item: $selectedGroup) { group in
+            PackingGroupDetailView(
+                group: group,
+                trip: trip,
+                onNotNeeded: { notNeeded($0) },
+                onDelete: { delete($0) }
+            )
+            .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $adding) { addSheet }
@@ -130,45 +150,18 @@ struct PackingListView: View {
     private var list: some View {
         ScrollViewReader { proxy in
             List {
-                ForEach(visibleCategories, id: \.self) { category in
-                    let items = filteredItems.filter { $0.category == category }
-                    if !items.isEmpty {
-                        Section {
-                            ForEach(items, id: \.id) { item in
-                                row(item)
-                            }
-                        } header: {
-                            HStack(spacing: PackWiseSpacing.snug) {
-                                if items.allSatisfy(\.isPacked) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.subheadline)
-                                        .foregroundStyle(PackWiseColor.success)
-                                        .accessibilityLabel("All packed")
-                                }
-                                PackWiseSectionHeader(
-                                    title: category.title,
-                                    style: .micro,
-                                    trailing: "\(items.filter(\.isPacked).count) / \(items.count)"
-                                )
-                            }
-                            .padding(.horizontal, PackWiseSpacing.comfortable)
-                            .padding(.top, PackWiseSpacing.snug)
-                            .padding(.bottom, PackWiseSpacing.tight)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            // A plain list pins its section headers. The header
-                            // was drawn without a fill, so rows scrolled
-                            // straight through it and the two rendered on top
-                            // of each other — "TOILETRIES" and the row above it
-                            // sharing the same pixels. The insets move to the
-                            // padding above so the fill spans the full width.
-                            .background(PackWiseColor.screen)
-                            .listRowInsets(EdgeInsets())
+                ForEach(sections) { section in
+                    Section {
+                        ForEach(section.rows) { row in
+                            presentationRow(row)
                         }
-                        .id(category)
+                    } header: {
+                        sectionHeader(section)
                     }
+                    .id(section.category)
                 }
 
-                if filteredItems.isEmpty {
+                if sections.isEmpty {
                     emptyState
                         .listRowSeparator(.hidden)
                 }
@@ -176,19 +169,85 @@ struct PackingListView: View {
             .listStyle(.plain)
             // So the last rows can scroll clear of the floating add button
             // rather than sitting underneath it.
-            .contentMargins(.bottom, 76, for: .scrollContent)
+            .contentMargins(.bottom, Self.addButtonClearance, for: .scrollContent)
             .onAppear {
-                guard let focusedCategory else { return }
-                proxy.scrollTo(focusedCategory, anchor: .top)
+                guard let target = scrollTarget else { return }
+                proxy.scrollTo(target, anchor: .top)
             }
+#if DEBUG
+            // The capture state is applied by the outer view's onAppear,
+            // which runs after this list's own, so scroll once it lands.
+            .onChange(of: debugScrollTarget) { _, target in
+                guard let target else { return }
+                proxy.scrollTo(target, anchor: .top)
+            }
+#endif
         }
     }
 
-    private func row(_ item: PackingItemRecord) -> some View {
+    private var scrollTarget: PackingCategory? {
+#if DEBUG
+        focusedCategory ?? debugScrollTarget
+#else
+        focusedCategory
+#endif
+    }
+
+    private func sectionHeader(_ section: PackingListSection) -> some View {
+        HStack(spacing: PackWiseSpacing.snug) {
+            if section.isComplete {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(PackWiseColor.success)
+                    .accessibilityLabel("All packed")
+            }
+            PackWiseSectionHeader(
+                title: section.category.title,
+                style: .micro,
+                trailing: "\(section.completedCount) / \(section.totalCount)"
+            )
+        }
+        .padding(.horizontal, PackWiseSpacing.comfortable)
+        .padding(.top, PackWiseSpacing.snug)
+        .padding(.bottom, PackWiseSpacing.tight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // A plain list pins its section headers. The header was drawn
+        // without a fill, so rows scrolled straight through it and the two
+        // rendered on top of each other. The insets move to the padding
+        // above so the fill spans the full width.
+        .background(PackWiseColor.screen)
+        .listRowInsets(EdgeInsets())
+    }
+
+    @ViewBuilder
+    private func presentationRow(_ row: PackingListPresentationRow) -> some View {
+        switch row {
+        case .individual(let entry):
+            if let record = recordsByID[entry.id] {
+                recordRow(record, caption: showsOwners ? entry.travelerLabel : nil)
+            }
+        case .shared(let entry):
+            if let record = recordsByID[entry.id] {
+                recordRow(record, caption: entry.secondaryText)
+            }
+        case .personalGroup(let group):
+            PackingGroupRow(group: group)
+                .contentShape(Rectangle())
+                .onTapGesture { selectedGroup = group }
+        }
+    }
+
+    /// Owner captions belong to the All scope of a party list. A traveler's
+    /// own scope is their checklist, so the name would only repeat.
+    private var showsOwners: Bool {
+        !trip.party.usesSimpleList && partyFilter == .all
+    }
+
+    private func recordRow(_ item: PackingItemRecord, caption: String?) -> some View {
         PackingRow(
             item: item,
-            travelerName: travelerName(for: item),
-            showsOwner: !trip.party.usesSimpleList
+            travelerName: caption,
+            showsOwner: caption != nil
         )
         .contentShape(Rectangle())
         .onTapGesture { selectedItem = item }
@@ -220,16 +279,42 @@ struct PackingListView: View {
         }
     }
 
+    private func itemDetail(_ item: PackingItemRecord) -> some View {
+        ItemDetailView(
+            item: item,
+            travelers: trip.party.travelers,
+            showsAssignment: !trip.party.usesSimpleList && item.ownershipType == .shared,
+            onNotNeeded: !item.isUserAdded && item.canonicalItemID != nil
+                ? { notNeeded(item) } : nil,
+            onDelete: item.isUserAdded ? { delete(item) } : nil,
+            onChooseCategory: { itemDetailPath.append(.category(item.id)) }
+        )
+    }
+
+    /// The same Choose Category screen Add Item pushes, bound to one record.
+    @ViewBuilder
+    private func itemDetailDestination(_ route: ItemDetailRoute) -> some View {
+        switch route {
+        case .category(let id):
+            if let record = recordsByID[id] {
+                CategorySelectorView(selection: Binding(
+                    get: { record.category },
+                    set: { ItemCategoryEdit.apply($0, to: record) }
+                ))
+            }
+        }
+    }
+
     @ViewBuilder
     private var emptyState: some View {
         if !search.isEmpty {
             ContentUnavailableView.search(text: search)
         } else {
             ContentUnavailableView(
-                filter == .packed ? "Nothing packed yet" : "Nothing here",
+                status == .packed ? "Nothing packed yet" : "Nothing here",
                 systemImage: "suitcase",
                 description: Text(
-                    filter == .packed
+                    status == .packed
                         ? "Items you pack will show up here."
                         : "No items match this filter."
                 )
@@ -239,32 +324,41 @@ struct PackingListView: View {
 
     // MARK: - Filters
 
+    /// Two dimensions, each named: who the rows belong to, and where they
+    /// stand. A solo list has one person and shows no People row at all.
     private var filters: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            if !trip.party.usesSimpleList {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: PackWiseSpacing.snug) {
-                        ForEach(partyFilterOptions, id: \.id) { option in
-                            SelectableChip(title: partyFilterTitle(option), selected: partyFilter == option) {
-                                partyFilter = option
-                            }
+            let people = PackingListAggregator.scopeLabels(for: trip.party)
+            if !people.isEmpty {
+                scopeRow("People") {
+                    ForEach(people, id: \.scope) { option in
+                        PackWiseChip(
+                            title: option.title,
+                            symbol: partyFilter == option.scope ? "checkmark" : nil,
+                            isSelected: partyFilter == option.scope
+                        ) {
+                            partyFilter = option.scope
                         }
                     }
-                    .padding(.horizontal, PackWiseSpacing.comfortable)
                 }
             }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: PackWiseSpacing.snug) {
-                    ForEach(PackingFilter.allCases) { option in
-                        SelectableChip(title: filterTitle(option), selected: filter == option) {
-                            filter = option
-                        }
-                    }
-                    SelectableChip(title: "Hide packed", selected: hidePacked) {
-                        hidePacked.toggle()
+            scopeRow("Status") {
+                ForEach(PackingStatusFilter.allCases) { option in
+                    PackWiseChip(
+                        title: statusTitle(option),
+                        symbol: status == option ? "checkmark" : nil,
+                        isSelected: status == option
+                    ) {
+                        status = status == option ? nil : option
                     }
                 }
-                .padding(.horizontal, PackWiseSpacing.comfortable)
+                PackWiseChip(
+                    title: "Hide packed",
+                    symbol: hidePacked ? "checkmark" : "eye.slash",
+                    isSelected: hidePacked
+                ) {
+                    hidePacked.toggle()
+                }
             }
         }
         .padding(.vertical, PackWiseSpacing.snug)
@@ -273,10 +367,46 @@ struct PackingListView: View {
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
     }
 
-    /// Counts sit on the filter itself so the split is legible before tapping.
-    private func filterTitle(_ option: PackingFilter) -> String {
-        let count = scopedItems.filter { matches($0, filter: option) }.count
-        return option == .important ? option.rawValue : "\(option.rawValue) \(count)"
+    /// A named row of chips. At accessibility sizes the name sits above the
+    /// chips instead of beside them, so it never wraps mid-word.
+    private func scopeRow<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        let label = Text(title)
+            .font(.caption.weight(.semibold))
+            .kerning(0.5)
+            .textCase(.uppercase)
+            .foregroundStyle(PackWiseColor.textSecondary)
+            .accessibilityHidden(true)
+        let chips = ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: PackWiseSpacing.snug) {
+                content()
+            }
+            .padding(.trailing, PackWiseSpacing.comfortable)
+        }
+        return Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                    label.padding(.leading, PackWiseSpacing.comfortable)
+                    chips.padding(.leading, PackWiseSpacing.comfortable)
+                }
+            } else {
+                HStack(alignment: .center, spacing: PackWiseSpacing.snug) {
+                    label
+                        .frame(width: 58, alignment: .leading)
+                        .padding(.leading, PackWiseSpacing.comfortable)
+                    chips
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(title)
+    }
+
+    /// Counts sit on the chip so the split is legible before tapping; they
+    /// count underlying records in the current People scope and search.
+    private func statusTitle(_ option: PackingStatusFilter) -> String {
+        guard option != .important else { return option.rawValue }
+        let count = statusCounts[option] ?? 0
+        return "\(option.rawValue) \(count)"
     }
 
     private var addButton: some View {
@@ -286,7 +416,7 @@ struct PackingListView: View {
             Image(systemName: "plus")
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(.white)
-                .frame(width: 52, height: 52)
+                .frame(width: PackWiseSize.floatingControl, height: PackWiseSize.floatingControl)
                 .background(PackWiseColor.accent, in: Circle())
                 .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
         }
@@ -295,172 +425,44 @@ struct PackingListView: View {
     }
 
     /// A full sheet with a proper primary action — not a grayed nav-bar
-    /// "Add".
+    /// "Add". Its own view, driven by a binding, so it always renders the
+    /// current draft rather than the state at presentation time.
     private var addSheet: some View {
-        NavigationStack(path: $addPath) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
-                    PackWiseCard {
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                            TextField("Item name", text: $newItemName)
-                                .font(.title3)
-                            PackWiseRowDivider(inset: 0)
-                            NavigationLink(value: AddItemRoute.category) {
-                                HStack {
-                                    Text("Category")
-                                        .foregroundStyle(PackWiseColor.textPrimary)
-                                    Spacer()
-                                    Text(newItemCategory.title)
-                                        .foregroundStyle(PackWiseColor.textSecondary)
-                                }
-                            }
-                            PackWiseRowDivider(inset: 0)
-                            Stepper("Quantity  \(newItemQuantity)", value: $newItemQuantity, in: 1...20)
-                            PackWiseRowDivider(inset: 0)
-                            VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
-                                Toggle(isOn: $newItemImportant) {
-                                    HStack(spacing: PackWiseSpacing.snug) {
-                                        Image(systemName: "exclamationmark.circle.fill")
-                                            .foregroundStyle(PackWiseColor.accent)
-                                        Text("Important")
-                                    }
-                                }
-                                Text("Important items are flagged and stay visible in the Important filter.")
-                                    .font(.footnote)
-                                    .foregroundStyle(PackWiseColor.textSecondary)
-                            }
-                            if !trip.party.usesSimpleList {
-                                PackWiseRowDivider(inset: 0)
-                                HStack {
-                                    Text("For")
-                                    Spacer()
-                                    Picker("For", selection: $newItemOwner) {
-                                        Text("Shared").tag(PartyListFilter.shared)
-                                        ForEach(trip.party.travelers) { traveler in
-                                            Text(traveler.displayName).tag(PartyListFilter.traveler(traveler.id))
-                                        }
-                                    }
-                                    .labelsHidden()
-                                    .pickerStyle(.menu)
-                                }
-                            }
-                        }
-                    }
-
-                    Button("Save item") { addCustomItem() }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .disabled(newItemName.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-                .padding(PackWiseSpacing.comfortable)
-            }
-            .background(PackWiseColor.screen)
-            .navigationTitle("Add Item")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { adding = false } }
-            }
-            .navigationDestination(for: AddItemRoute.self) { route in
-                switch route {
-                case .category: categorySelection
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-    }
-
-    private var categorySelection: some View {
-        List(PackingCategory.allCases) { category in
-            Button {
-                newItemCategory = category
-            } label: {
-                HStack(spacing: PackWiseSpacing.regular) {
-                    PackWiseIconBadge(symbol: category.style.symbol, tint: category.style.tint)
-                    Text(category.title)
-                        .foregroundStyle(PackWiseColor.textPrimary)
-                    Spacer()
-                    if newItemCategory == category {
-                        Image(systemName: "checkmark")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(PackWiseColor.accent)
-                            .accessibilityLabel("Selected")
-                    }
-                }
-                .frame(minHeight: PackWiseSize.tapTarget)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityAddTraits(newItemCategory == category ? .isSelected : [])
-        }
-        .listStyle(.plain)
-        .navigationTitle("Choose Category")
-        .navigationBarTitleDisplayMode(.inline)
+        AddItemSheet(
+            draft: $newItem,
+            path: $addPath,
+            party: trip.party,
+            onSave: addCustomItem,
+            onCancel: { adding = false }
+        )
     }
 
     // MARK: - Data
 
     private var visibleCategories: [PackingCategory] {
-        PackingCategory.displayOrder(international: trip.contextChips.contains(.travelingInternationally) || isInternational, outdoor: trip.tripType == .outdoor)
+        PackingCategory.displayOrder(international: trip.isInternational, tripTypes: trip.tripTypes)
     }
 
-    private var isInternational: Bool {
-        let home = preferenceRecords.first?.homeCountryCode ?? Locale.current.region?.identifier ?? "US"
-        return trip.destinationCountryCode.uppercased() != home.uppercased()
+    private var query: PackingListQuery {
+        PackingListQuery(scope: partyFilter, status: status, search: search, hidePacked: hidePacked)
     }
 
-    private var partyFilterOptions: [PartyListFilter] {
-        trip.party.listFilters()
+    private var listItems: [PackingListItem] {
+        trip.items.map(PackingListItem.init(record:))
     }
 
-    private func partyFilterTitle(_ filter: PartyListFilter) -> String {
-        switch filter {
-        case .all: "All"
-        case .shared: "Shared"
-        case .kids: "Kids"
-        case .traveler(let id):
-            trip.party.travelers.first { $0.id == id }?.displayName ?? "Traveler"
-        }
+    /// The rows on screen: filtered underlying records, aggregated within
+    /// each category. Presentation only; see `PackingListAggregator`.
+    private var sections: [PackingListSection] {
+        PackingListAggregator.sections(items: listItems, party: trip.party, order: visibleCategories, query: query)
     }
 
-    private func travelerName(for item: PackingItemRecord) -> String? {
-        if item.ownershipType == .shared { return "Shared" }
-        return trip.party.travelers.first { $0.id == item.travelerID }?.displayName
+    private var statusCounts: [PackingStatusFilter: Int] {
+        PackingListAggregator.statusCounts(items: listItems, party: trip.party, query: query)
     }
 
-    private func matches(_ item: PackingItemRecord, filter: PackingFilter) -> Bool {
-        switch filter {
-        case .all: true
-        case .left: !item.isPacked
-        case .packed: item.isPacked
-        case .important: item.importance == .critical || item.importance == .important
-        }
-    }
-
-    /// Everything the party filter and search allow, before the packed/left
-    /// split — so the filter chips can count what each option would show.
-    private var scopedItems: [PackingItemRecord] {
-        trip.items
-            .filter { item in
-                switch partyFilter {
-                case .all: true
-                case .shared: item.ownershipType == .shared
-                case .kids:
-                    item.ownershipType == .personal && trip.party.children.contains { $0.id == item.travelerID }
-                case .traveler(let id):
-                    item.ownershipType == .personal && item.travelerID == id
-                }
-            }
-            .filter { item in
-                search.isEmpty
-                    || item.displayName.localizedCaseInsensitiveContains(search)
-                    || (item.canonicalItemID?.localizedCaseInsensitiveContains(search) ?? false)
-            }
-    }
-
-    private var filteredItems: [PackingItemRecord] {
-        scopedItems
-            .filter { matches($0, filter: filter) }
-            .filter { !(hidePacked && $0.isPacked) }
-            .sorted { $0.displayName < $1.displayName }
+    private var recordsByID: [UUID: PackingItemRecord] {
+        Dictionary(trip.items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
 #if DEBUG
@@ -477,9 +479,51 @@ struct PackingListView: View {
         case .addItem:
             adding = true
         case .addItemCategory:
-            newItemCategory = .clothing
+            newItem.category = .clothing
             addPath = [.category]
             adding = true
+        case .addItemChosen(let category):
+            newItem.name = "Sun hat"
+            newItem.category = category
+            adding = true
+        case .addItemCategoryChosen(let category):
+            newItem.category = category
+            addPath = [.category]
+            adding = true
+        case .itemDetailCategory:
+            itemDetailDetent = .large
+            let record = trip.items.first { $0.canonicalItemID == "clothing.tshirts" } ?? trip.items.first
+            itemDetailPath = record.map { [.category($0.id)] } ?? []
+            selectedItem = record
+        case .itemDetailMoved(let category):
+            itemDetailDetent = .large
+            if let record = trip.items.first(where: { $0.canonicalItemID == "clothing.tshirts" }) ?? trip.items.first {
+                ItemCategoryEdit.apply(category, to: record)
+                selectedItem = record
+            }
+        case .list(let state):
+            if let move = state.move, trip.party.travelers.indices.contains(move.travelerIndex) {
+                let traveler = trip.party.travelers[move.travelerIndex]
+                if let record = trip.items.first(where: { $0.canonicalItemID == move.canonicalItemID && $0.travelerID == traveler.id }) {
+                    ItemCategoryEdit.apply(move.category, to: record)
+                }
+            }
+            switch state.scope {
+            case .all: partyFilter = .all
+            case .shared: partyFilter = .shared
+            case .traveler(let index):
+                let travelers = trip.party.travelers
+                if travelers.indices.contains(index) { partyFilter = .traveler(travelers[index].id) }
+            }
+            status = state.status
+            hidePacked = state.hidePacked
+            search = state.search
+            debugScrollTarget = state.scrollTo
+            if let canonical = state.openGroup {
+                selectedGroup = sections.flatMap(\.rows).compactMap { row -> PersonalItemGroup? in
+                    if case .personalGroup(let group) = row, group.canonicalItemID == canonical { group } else { nil }
+                }.first
+            }
         }
     }
 #endif
@@ -505,14 +549,14 @@ struct PackingListView: View {
     }
 
     private func addCustomItem() {
-        let name = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = newItem.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let match = dependencies.catalog.search(name).first
         let ownership: PackingOwnership
         let travelerID: UUID?
         if trip.party.usesSimpleList {
             ownership = .personal
             travelerID = trip.party.primary.id
-        } else if case .traveler(let id) = newItemOwner {
+        } else if case .traveler(let id) = newItem.owner {
             ownership = .personal
             travelerID = id
         } else {
@@ -522,9 +566,11 @@ struct PackingListView: View {
         let draft = PackingItemDraft(
             canonicalItemID: match?.id,
             displayName: match?.displayName ?? name,
-            category: match?.category ?? newItemCategory,
-            quantity: newItemQuantity,
-            importance: newItemImportant ? .important : (match?.importance ?? .normal),
+            // The chosen category is the user's; a catalog match supplies
+            // only what the user did not decide.
+            category: newItem.category,
+            quantity: newItem.quantity,
+            importance: newItem.important ? .important : (match?.importance ?? .normal),
             sourceSignals: [.userPreference],
             reason: "Added by you",
             isUserAdded: true,
@@ -533,10 +579,279 @@ struct PackingListView: View {
         )
         TripRepository(context: modelContext).addItem(draft, to: trip)
         try? modelContext.save()
-        newItemName = ""
-        newItemQuantity = 1
-        newItemImportant = false
+        newItem = AddItemDraft()
         adding = false
+    }
+}
+
+
+/// Add Item: name, category (pushed chooser), quantity, Important, and who
+/// it is for. Holds nothing itself — the draft is the caller's — and creates
+/// the item only through Save.
+struct AddItemSheet: View {
+    @Binding var draft: AddItemDraft
+    @Binding var path: [AddItemRoute]
+    let party: TripParty
+    var onSave: () -> Void
+    var onCancel: () -> Void
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
+                    PackWiseCard {
+                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                            TextField("Item name", text: $draft.name)
+                                .font(.title3)
+                            PackWiseRowDivider(inset: 0)
+                            // Pushed inside this sheet's own stack (Task 12):
+                            // a dedicated Choose Category screen, not a menu.
+                            Button {
+                                dismissKeyboard()
+                                path = [.category]
+                            } label: {
+                                CategoryRowLabel(category: draft.category)
+                            }
+                            .buttonStyle(.plain)
+                            PackWiseRowDivider(inset: 0)
+                            Stepper("Quantity  \(draft.quantity)", value: $draft.quantity, in: QuantityEditorPolicy.range)
+                            PackWiseRowDivider(inset: 0)
+                            VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                                Toggle(isOn: $draft.important) {
+                                    HStack(spacing: PackWiseSpacing.snug) {
+                                        Image(systemName: "exclamationmark.circle.fill")
+                                            .foregroundStyle(PackWiseColor.accent)
+                                        Text("Important")
+                                    }
+                                }
+                                Text("Important items are flagged and stay visible in the Important filter.")
+                                    .font(.footnote)
+                                    .foregroundStyle(PackWiseColor.textSecondary)
+                            }
+                            if !party.usesSimpleList {
+                                PackWiseRowDivider(inset: 0)
+                                HStack {
+                                    Text("For")
+                                    Spacer()
+                                    Picker("For", selection: $draft.owner) {
+                                        Text("Shared").tag(PartyListFilter.shared)
+                                        ForEach(party.travelers) { traveler in
+                                            Text(party.label(for: traveler)).tag(PartyListFilter.traveler(traveler.id))
+                                        }
+                                    }
+                                    .labelsHidden()
+                                    .pickerStyle(.menu)
+                                }
+                            }
+                        }
+                    }
+
+                    Button("Save item", action: onSave)
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(draft.name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                .padding(PackWiseSpacing.comfortable)
+            }
+            .background(PackWiseColor.screen)
+            .navigationTitle("Add Item")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: onCancel) }
+            }
+            .navigationDestination(for: AddItemRoute.self) { route in
+                switch route {
+                case .category: CategorySelectorView(selection: $draft.category)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+/// One personal item across several travelers, presented once (Task 11).
+/// The leading glyph reports the group's state and is not a control: a
+/// group has no single record to pack. Tapping opens the real records.
+struct PackingGroupRow: View {
+    let group: PersonalItemGroup
+
+    var body: some View {
+        HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
+            Image(systemName: stateSymbol)
+                .font(.title3)
+                .foregroundStyle(stateTint)
+                .frame(width: 26, height: 26)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.snug) {
+                    Text(group.displayName)
+                        .strikethrough(group.isComplete)
+                        .foregroundStyle(group.isComplete ? PackWiseColor.textSecondary : PackWiseColor.textPrimary)
+                    Spacer(minLength: PackWiseSpacing.tight)
+                    Text(group.progressText)
+                        .font(.subheadline)
+                        .foregroundStyle(PackWiseColor.textSecondary)
+                        .monospacedDigit()
+                    if let importanceTint {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(importanceTint)
+                    }
+                }
+                HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.tight) {
+                    Text(group.travelerSummary)
+                        .font(.footnote)
+                        .foregroundStyle(PackWiseColor.textSecondary)
+                    Spacer(minLength: PackWiseSpacing.tight)
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(PackWiseColor.textTertiary)
+                }
+            }
+        }
+        .padding(.vertical, PackWiseSpacing.snug)
+        .frame(minHeight: PackWiseSize.tapTarget)
+        .listRowInsets(EdgeInsets(
+            top: 0,
+            leading: PackWiseSpacing.comfortable,
+            bottom: 0,
+            trailing: PackWiseSpacing.comfortable
+        ))
+        .alignmentGuide(.listRowSeparatorLeading) { _ in
+            26 + PackWiseSpacing.regular
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(group.accessibilityLabel)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Shows each traveler's item")
+    }
+
+    private var stateSymbol: String {
+        if group.isComplete { return "checkmark.circle.fill" }
+        return group.completedTravelerCount > 0 ? "circle.lefthalf.filled" : "circle"
+    }
+
+    private var stateTint: Color {
+        group.completedTravelerCount > 0 ? PackWiseColor.success : PackWiseColor.textTertiary
+    }
+
+    private var importanceTint: Color? {
+        switch group.importance {
+        case .critical: PackWiseColor.important
+        case .important: PackWiseColor.accent
+        default: nil
+        }
+    }
+}
+
+/// The real records behind a group row, each with its own pack control and
+/// its own detail. Nothing here edits the group: there is no such record.
+struct PackingGroupDetailView: View {
+    let group: PersonalItemGroup
+    @Bindable var trip: TripRecord
+    var onNotNeeded: (PackingItemRecord) -> Void
+    var onDelete: (PackingItemRecord) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var path = NavigationPath()
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            List {
+                Section {
+                    ForEach(members, id: \.id) { record in
+                        NavigationLink(value: record.id) {
+                            PackingRow(item: record, title: label(for: record) ?? record.displayName, showsReasonDisclosure: false)
+                        }
+                        .swipeActions(edge: .leading) {
+                            Button("Pack") { pack(record) }
+                                .tint(PackWiseColor.accent)
+                        }
+                        .swipeActions(edge: .trailing) {
+                            if record.isUserAdded {
+                                Button("Delete", role: .destructive) { onDelete(record) }
+                            } else if record.canonicalItemID != nil {
+                                Button("Not Needed") { onNotNeeded(record) }
+                                    .tint(PackWiseColor.important)
+                            }
+                        }
+                    }
+                } header: {
+                    summary
+                }
+            }
+            .listStyle(.plain)
+            .background(PackWiseColor.screen)
+            .navigationTitle(group.displayName)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
+            .navigationDestination(for: UUID.self) { id in
+                if let record = members.first(where: { $0.id == id }) {
+                    ItemDetailView(
+                        item: record,
+                        travelers: trip.party.travelers,
+                        onNotNeeded: !record.isUserAdded && record.canonicalItemID != nil ? { onNotNeeded(record) } : nil,
+                        onDelete: record.isUserAdded ? { onDelete(record) } : nil,
+                        onChooseCategory: { path.append(ItemDetailRoute.category(record.id)) }
+                    )
+                }
+            }
+            .navigationDestination(for: ItemDetailRoute.self) { route in
+                switch route {
+                case .category(let id):
+                    if let record = members.first(where: { $0.id == id }) {
+                        CategorySelectorView(selection: Binding(
+                            get: { record.category },
+                            set: { ItemCategoryEdit.apply($0, to: record) }
+                        ))
+                    }
+                }
+            }
+        }
+    }
+
+    /// Live records, in the group's traveler order. A record that was
+    /// marked Not Needed drops out on its own.
+    private var members: [PackingItemRecord] {
+        group.recordIDs.compactMap { id in trip.items.first { $0.id == id } }
+    }
+
+    private var summary: some View {
+        let packed = members.filter(\.isPacked).count
+        return HStack(spacing: PackWiseSpacing.snug) {
+            PackWiseIconBadge(symbol: group.category.style.symbol, tint: group.category.style.tint)
+            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                Text("\(members.count) travelers · \(packed) of \(members.count) packed")
+                    .font(.subheadline)
+                    .foregroundStyle(PackWiseColor.textSecondary)
+                Text(group.category.title)
+                    .font(.caption)
+                    .foregroundStyle(PackWiseColor.textTertiary)
+            }
+        }
+        .textCase(nil)
+        .padding(.horizontal, PackWiseSpacing.comfortable)
+        .padding(.vertical, PackWiseSpacing.snug)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PackWiseColor.screen)
+        .listRowInsets(EdgeInsets())
+    }
+
+    private func label(for record: PackingItemRecord) -> String? {
+        trip.party.travelers.first { $0.id == record.travelerID }.map(trip.party.label(for:))
+    }
+
+    private func pack(_ record: PackingItemRecord) {
+        record.packedQuantity = record.quantity
+        record.updatedAt = .now
+        trip.updatedAt = .now
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 }
 
@@ -546,6 +861,10 @@ struct PackingRow: View {
     @Bindable var item: PackingItemRecord
     var travelerName: String? = nil
     var showsOwner: Bool = false
+    /// Replaces the item name as the row title — inside a group sheet every
+    /// row is the same item, so the traveler is the title (Task 11).
+    var title: String? = nil
+    var showsReasonDisclosure = true
 
     var body: some View {
         HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
@@ -561,7 +880,7 @@ struct PackingRow: View {
 
             VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
                 HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.snug) {
-                    Text(item.displayName)
+                    Text(title ?? item.displayName)
                         .strikethrough(item.isPacked)
                         .foregroundStyle(item.isPacked ? PackWiseColor.textSecondary : PackWiseColor.textPrimary)
                     Spacer(minLength: PackWiseSpacing.tight)
@@ -573,6 +892,7 @@ struct PackingRow: View {
                     if item.quantity > 1 {
                         // A styled badge, not plain gray text.
                         Text("×\(item.quantity)")
+                            .accessibilityLabel("Quantity \(item.quantity)")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(PackWiseColor.textSecondary)
                             .monospacedDigit()
@@ -599,9 +919,12 @@ struct PackingRow: View {
                         Text(presentedReason)
                             .font(.footnote)
                             .foregroundStyle(PackWiseColor.textSecondary)
-                        Image(systemName: "chevron.right")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(PackWiseColor.textTertiary)
+                        if showsReasonDisclosure {
+                            Image(systemName: "chevron.right")
+                                .accessibilityHidden(true)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(PackWiseColor.textTertiary)
+                        }
                     }
                 }
             }
@@ -651,23 +974,12 @@ struct PackingRow: View {
         }
     }
 
-    /// A reason earns a line only when it says something about *this* trip.
-    ///
-    /// Baseline essentials all carry copy of the form "a core item for almost
-    /// every trip". Correct provenance, but repeated under fifteen rows it is
-    /// noise, and the user already knows what a toothbrush is.
     private var showsReason: Bool {
-        guard !item.reason.isEmpty else { return false }
-        return item.sourceSignals.contains { $0 != .baseEssential }
+        RecommendationReasonRenderer.reason(for: item.draft, context: item.reasonPresentationContext)?.showsInList == true
     }
 
     private var presentedReason: String {
-        PackingReasonPresentation.inclusionReason(
-            canonicalItemID: item.canonicalItemID,
-            reasonCode: item.reasonCode,
-            tripType: item.trip?.tripType,
-            original: item.reason
-        )
+        RecommendationReasonRenderer.reason(for: item.draft, context: item.reasonPresentationContext)?.text ?? ""
     }
 }
 
@@ -679,6 +991,10 @@ struct ItemDetailView: View {
     var onNotNeeded: (() -> Void)?
     /// Present only for user-added items; deleting records no override.
     var onDelete: (() -> Void)?
+
+    /// Asks the hosting stack to push Choose Category (Task 12); the host
+    /// owns navigation, this sheet owns the record.
+    var onChooseCategory: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -705,28 +1021,16 @@ struct ItemDetailView: View {
             VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
                 headerIdentity
                 PackWiseRowDivider(inset: 0)
-                Stepper("Quantity  \(item.quantity)", value: $item.quantity, in: 1...30)
+                Stepper("Quantity  \(item.quantity)", value: $item.quantity, in: QuantityEditorPolicy.range)
                     .onChange(of: item.quantity) {
                         item.isUserModified = true
                         item.updatedAt = .now
                     }
                 PackWiseRowDivider(inset: 0)
-                // Outside a Form a Picker renders its selection only, so the
-                // label is supplied explicitly.
-                Group {
-                    if dynamicTypeSize.isAccessibilitySize {
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                            Text("Category")
-                            categoryPicker
-                        }
-                    } else {
-                        HStack {
-                            Text("Category")
-                            Spacer()
-                            categoryPicker
-                        }
-                    }
+                Button(action: onChooseCategory) {
+                    CategoryRowLabel(category: item.category)
                 }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -765,55 +1069,38 @@ struct ItemDetailView: View {
         }
     }
 
-    private var categoryPicker: some View {
-        Picker("Category", selection: $item.categoryRaw) {
-            ForEach(PackingCategory.allCases) { category in
-                Text(category.title).tag(category.rawValue)
-            }
-        }
-        .labelsHidden()
-        .pickerStyle(.menu)
-    }
-
+    @ViewBuilder
     private var reasons: some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            PackWiseSectionHeader(title: "Why it's on your list")
-            PackWiseCard {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                    Text(item.reason.isEmpty ? "Added for this trip." : presentedReason)
-                    if !item.quantityReason.isEmpty {
-                        PackWiseRowDivider(inset: 0)
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                            Text("Why this quantity")
-                                .font(.subheadline.weight(.semibold))
-                            Text(item.quantityReason)
+        if RecommendationReasonRenderer.reason(for: item.draft, context: item.reasonPresentationContext) != nil
+            || RecommendationReasonRenderer.quantityExplanation(for: item.draft) != nil
+            || PackingTracePresentation.authorityLine(RecommendationTrace.authority(for: item.draft)) != nil {
+            VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                PackWiseSectionHeader(title: "Why it's on your list")
+                PackWiseCard {
+                    VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                        if let authorityLine = PackingTracePresentation.authorityLine(
+                            RecommendationTrace.authority(for: item.draft)
+                        ) {
+                            Text(authorityLine)
+                                .font(.caption)
                                 .foregroundStyle(PackWiseColor.textSecondary)
                         }
-                    }
-                    if !item.sourceSignals.isEmpty {
-                        PackWiseRowDivider(inset: 0)
-                        PackWiseFlowLayout {
-                            ForEach(item.sourceSignals, id: \.self) { signal in
-                                Text(signal.customerLabel)
-                                    .font(.caption.weight(.medium))
-                                    .padding(.horizontal, PackWiseSpacing.snug)
-                                    .padding(.vertical, PackWiseSpacing.tight)
-                                    .background(PackWiseColor.surfaceAlt, in: Capsule())
+                        if let reason = RecommendationReasonRenderer.reason(for: item.draft, context: item.reasonPresentationContext) {
+                            Text(reason.text)
+                        }
+                        if let quantityReason = RecommendationReasonRenderer.quantityExplanation(for: item.draft) {
+                            PackWiseRowDivider(inset: 0)
+                            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                                Text("Why this quantity")
+                                    .font(.subheadline.weight(.semibold))
+                                Text(quantityReason)
+                                    .foregroundStyle(PackWiseColor.textSecondary)
                             }
                         }
                     }
                 }
             }
         }
-    }
-
-    private var presentedReason: String {
-        PackingReasonPresentation.inclusionReason(
-            canonicalItemID: item.canonicalItemID,
-            reasonCode: item.reasonCode,
-            tripType: item.trip?.tripType,
-            original: item.reason
-        )
     }
 
     private var assignment: some View {
@@ -882,4 +1169,19 @@ struct ItemDetailView: View {
             }
         }
     }
+}
+
+/// Presentation identity only. No trip metadata, live weather or device lookup.
+extension PackingItemRecord {
+    var reasonPresentationContext: RecommendationReasonRenderer.PresentationContext {
+        guard let trip else { return .init(isPrimaryTraveler: false) }
+        return .owner(travelerID, in: trip.party)
+    }
+}
+
+/// Quantity storage and generation use positive Int values. Duration and
+/// shared-consumer scaling have no product cap, so neither editor invents one.
+/// Opening an editor never rewrites its value; Stepper disables at the bounds.
+enum QuantityEditorPolicy {
+    static let range = 1...Int.max
 }

@@ -2,7 +2,7 @@
 
 Visual source of truth: the 10-screen sheet at [design/ui-flow-overview.png](../design/ui-flow-overview.png). It is the only sheet; where it is silent, derive from its rules rather than inventing.
 
-> **Ruling (2026-08-31):** the app matches the sheet exactly. The palette is the fixed hex set in `ios/PackWise/DesignSystem/PackWiseTheme.swift` and the app renders light-only (`.preferredColorScheme(.light)`). Dark Mode is a later project with its own reference sheet — do not approximate one. The "semantic colors / Dark Mode from day one" guidance below this line is superseded where it conflicts.
+> **Ruling (2026-08-31):** the app matches the sheet exactly. The palette is the fixed hex set in `ios/PackWise/DesignSystem/PackWiseTheme.swift` and the app renders light-only (`UIUserInterfaceStyle = Light` in Info.plist since Task 9.1 — a root `.preferredColorScheme` would override per-screen status-bar requests). Dark Mode is a later project with its own reference sheet — do not approximate one. The "semantic colors / Dark Mode from day one" guidance below this line is superseded where it conflicts.
 
 ## Direction
 
@@ -64,40 +64,58 @@ The packing list prioritizes utility.
 
 ### Where destination imagery comes from
 
-MapKit, never a stock-photo service. A vendor for three prettier screens
-would add a network dependency and a licensing pipeline to a local-first app.
+MapKit and the asset catalog, never a stock-photo service. A vendor for three
+prettier screens would add a network dependency and a licensing pipeline to a
+local-first app, and an unrelated photo is worse than none.
+
+One policy for every surface (Task 9, `MapKitDestinationVisualService`):
 
 ```text
-destination coordinate
-  ├── MKLookAroundSceneRequest → MKLookAroundSnapshotter
-  ├── MKMapSnapshotter
-  └── gradient + SF Symbol
+trusted imagery        bundled Destination-<name> asset, only ever of that place
+  ↓ unavailable
+street imagery         Look Around, landmark-gated — OFF in production
+  ↓ unavailable
+MKMapSnapshotter       flat satellite imagery of the destination's region
+  ↓ offline / failure
+graphical              brand blue, one route motif in the decoration band
 ```
 
-Policy differs per surface:
+Street imagery is off because the only evidence so far failed: Checkpoint V's
+Chicago hero was glass office doors. Turn it on only with a usefulness rule
+proven on real destinations.
 
-```text
-trip thumbnail        Look Around → map → graphical
-destination preview   map → graphical
-trip hero             Look Around → map → graphical
-```
+The map is satellite, not the standard style: standard maps draw their own
+city labels under the destination title, and satellite is dark enough for
+white text under the shared scrim. The span follows the destination's
+granularity (city, region, country). Snapshots are cached by a deterministic
+key (rounded coordinate, scale, purpose, size, style version) in memory and in
+Caches — disposable derived UI data, never core trip data.
 
-Destination search prefers the map deliberately. That screen answers "did I
-select the right Chicago?", and a map answers it better than a street-level
-view of an arbitrary intersection.
+Offline, a cold cache renders the graphical tier at once; failures are not
+persisted and retry after a minute. The view has an explicit loading state in
+the final geometry, so text never moves when a visual resolves.
 
-Look Around returns real street-level imagery, not guaranteed postcard
-photography, and coverage is absent outside many metros. All three tiers must
-look **intentional** — the graphical tier is a designed state, never a broken
-image placeholder.
+### Destination heroes
 
-Both snapshotters need the network, so cache on trip creation while the
-coordinate is already known. The cache is disposable derived UI data in the
-Caches directory, never core trip data. Offline with a cold cache renders the
-graphical tier immediately rather than holding a spinner.
+Review, the Trips Home card, and Trip Detail are sizes of one primitive,
+`DestinationHero`: the same visual policy, scrim, typography
+(`heroTitle` / `heroCardTitle` / `heroMetadata`), and text safe region.
 
-Look Around snapshots carry Apple's Maps attribution in the bottom-left
-corner. It is a licensing requirement and must not be covered.
+- The visual is a background: text sets the height above the minimum, so large
+  text grows the hero downward.
+- Decoration — the graphical motif and the map marker — lives only in the band
+  above the text and below any hero controls. The marker hides rather than
+  cover text at large sizes.
+- Apple's imagery attribution sits in the bottom-left corner. It is a
+  licensing requirement: hero text keeps a constant clearance above it,
+  imagery fills from the bottom-leading corner so no aspect crops it
+  (`AttributionSafeImage`), and no card overlaps the hero — Trip Detail's
+  progress card sits below the hero as the final layout (Task 9.1).
+- Trip Detail requests light status-bar glyphs through its clear navigation
+  bar while the hero is under the status bar. Light-only comes from
+  `UIUserInterfaceStyle` in Info.plist; a root `.preferredColorScheme` would
+  override that request.
+- Increase Contrast strengthens the scrim.
 
 ## Motion
 

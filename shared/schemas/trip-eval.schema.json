@@ -1,14 +1,35 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Trip evaluation fixture",
-  "description": "A fixed scenario asserted against both the deterministic engine and the context-intelligence layer. mustInclude/mustNotInclude are final packing expectations. mustInfer/mustNotInfer are trip-note interpretation expectations. allowedSuggestions bounds which contextual gap suggestions are legitimate. Vocabulary membership is enforced by scripts/validate_shared.py.",
+  "description": "A fixed scenario asserted against both the deterministic engine and the context-intelligence layer. mustInclude/mustNotInclude are final packing expectations. mustInfer/mustNotInfer are trip-note interpretation expectations. allowedSuggestions bounds which contextual gap suggestions are legitimate. Vocabulary membership is enforced by scripts/validate_shared.py. Current fixtures use tripTypes/bagTypes arrays only; the retired singular tripType/bag fields are rejected. Legacy V3 persisted scalars belong to the Swift migration tests, not these fixtures.",
   "type": "object",
   "required": [
     "id",
     "destinationFixture",
+    "tripTypes",
+    "bagTypes",
     "mustInclude",
     "mustNotInclude"
   ],
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "tripType"
+        ]
+      },
+      {
+        "required": [
+          "bagType"
+        ]
+      },
+      {
+        "required": [
+          "bag"
+        ]
+      }
+    ]
+  },
   "properties": {
     "id": {
       "type": "string"
@@ -23,8 +44,26 @@
       "type": "integer",
       "minimum": 1
     },
-    "tripType": {
-      "type": "string"
+    "tripTypes": {
+      "type": "array",
+      "description": "One or more known trip types, stored in TripType.stableOrder. A set: there is no primary trip type.",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "vacation",
+          "cityBreak",
+          "beach",
+          "business",
+          "outdoor",
+          "roadTrip",
+          "weddingEvent",
+          "skiSnow",
+          "festival",
+          "visitingFamily",
+          "other"
+        ]
+      }
     },
     "activities": {
       "type": "array",
@@ -32,8 +71,18 @@
         "type": "string"
       }
     },
-    "bag": {
-      "type": "string"
+    "bagTypes": {
+      "type": "array",
+      "description": "Zero or more physical bags, stored in BagType.stableOrder. [] means not sure yet: no luggage constraint. notSure and roadTripLuggage are not bag values.",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "personalItem",
+          "carryOn",
+          "checked",
+          "backpack"
+        ]
+      }
     },
     "style": {
       "type": "string"

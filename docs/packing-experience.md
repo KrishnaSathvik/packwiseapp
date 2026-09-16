@@ -93,9 +93,11 @@ Couple and family add a second filter row generated from the party:
 
 ```text
 All | Krishna | Maya | Shared
-All | You | Maya | Kids | Shared
-All | You | Partner | Arjun | Shared
+All | You | Maya | Arjun | Emma | Shared
+All | You | Adult 1 | Child 1 | Child 2 | Shared
 ```
+
+One traveler is one scope (Task 11.1); children are never folded into a "Kids" bucket, and a large party scrolls the chips.
 
 Shared items can ask **Who is bringing it?** That is the carrier (`assignedTravelerID`), not the owner. See [travelers-and-parties.md](travelers-and-parties.md).
 
@@ -107,6 +109,8 @@ Status: To pack 81 | Packed 0 | Important
 ```
 
 Solo hides People. Party All groups identical canonical personal rows and shows traveler completion/quantity detail; tapping reveals the real records. Traveler and Shared filters always show real rows. This is presentation aggregation, not ownership collapse.
+
+Category headers measure the whole category for the current People scope — "Clothing 14 / 27" — and stay put while Status, search, or Hide packed change which rows are shown. Only People moves the denominator, because only People changes whose checklist is measured.
 
 ## Packing item UX
 
@@ -212,22 +216,19 @@ Tap an item. Bottom sheet.
 
 Product Experience V2 keeps one structured `RecommendationTrace` as the explanation source of truth: provenance, quantity evidence, satisfied capabilities, suppressions, constraints, and authority. Persisted trace JSON backs that model; legacy source/reason fields are migration inputs only and do not independently render customer copy.
 
+Task 13 implements one pure `RecommendationReasonRenderer` for list rows, Item Detail, each underlying grouped-family record, and recommendation-change rows. It reads only the record's trace, plus owner display identity. Current trip types, weather and suggested activities cannot invent reasons. Generic reasons stay out of list rows; detail uses one concise sentence. Broad source badges are omitted, and richer trace visualization is deferred.
+
+Display priority is explicit traveler needs/devices, specific selected activities, specific accepted weather, specific contributing trip contexts, then a generic fallback. Only curated compatible sources combine. Quantity/sharing evidence appears separately under “Why this quantity”; no internal IDs or policy names are displayed. Manual/custom items show user authority without a manufactured recommendation. Older records lacking structured inclusion facts omit the reason.
+
 Example:
 
-**Rain Jacket**
-
-**1**
+**Rain jacket** · **1**
 
 ### Why it's on your list
 
-> Rain is expected Saturday and your sightseeing plans include significant outdoor time.
+> Rain is expected during your trip.
 
-### Recommended by
-
-```text
-Forecast
-Activities
-```
+Full naming inventory and decisions: [Task 13 language audit](plans/2026-09-16-product-v2-task-13-language-audit.md).
 
 Never show:
 
@@ -388,16 +389,14 @@ Camera charger
 
 ## Filtering
 
-Simple chips only:
+Two named dimensions, chips only (Product Experience V2, Task 11):
 
 ```text
-All
-Left to pack
-Packed
-Important
+People   All | You | Maya | Child 1 | Shared     (party lists only)
+Status   To pack 63 | Packed 4 | Important · Hide packed
 ```
 
-Optional: **Hide packed items**
+Status is a toggle: nothing selected shows everything, so there is no second "All". Counts are underlying records in the current People scope and search. Every filter and the search apply to the records *before* aggregation, so a group appears when any of its records matches and shows only the records that do; Hide packed removes packed records, never a group whose other travelers are still unpacked.
 
 Do not create a large filter system.
 

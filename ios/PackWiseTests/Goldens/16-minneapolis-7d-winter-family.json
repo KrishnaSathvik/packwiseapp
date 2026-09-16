@@ -7,6 +7,9 @@
       "coveredBy" : [
         "clothing.winter_coat"
       ],
+      "coveredCapabilities" : {
+        "outerwear.wind_shell" : "clothing.winter_coat"
+      },
       "owner" : "child",
       "suppressed" : "clothing.windbreaker"
     },
@@ -17,6 +20,9 @@
       "coveredBy" : [
         "clothing.winter_coat"
       ],
+      "coveredCapabilities" : {
+        "outerwear.wind_shell" : "clothing.winter_coat"
+      },
       "owner" : "partner",
       "suppressed" : "clothing.windbreaker"
     },
@@ -27,121 +33,406 @@
       "coveredBy" : [
         "clothing.winter_coat"
       ],
+      "coveredCapabilities" : {
+        "outerwear.wind_shell" : "clothing.winter_coat"
+      },
       "owner" : "primary",
       "suppressed" : "clothing.windbreaker"
+    }
+  ],
+  "eligibility" : [
+    {
+      "items" : [
+        "documents.id",
+        "essentials.keys",
+        "essentials.wallet",
+        "health.blister_pads",
+        "health.pain_reliever",
+        "toiletries.deodorant"
+      ],
+      "owner" : "child",
+      "reason" : "adult_or_teen_only",
+      "result" : "ineligible"
+    },
+    {
+      "items" : [
+        "activities.daypack",
+        "travel_comfort.book",
+        "travel_comfort.compression_packing",
+        "travel_comfort.laundry_bag",
+        "travel_comfort.toiletry_bag"
+      ],
+      "owner" : "child",
+      "reason" : "not_for_age_group",
+      "result" : "ineligible"
+    },
+    {
+      "items" : [
+        "electronics.headphones"
+      ],
+      "owner" : "child",
+      "reason" : "device_signal.bringingHeadphones",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.power_bank"
+      ],
+      "owner" : "child",
+      "reason" : "device_signal.bringingPowerBank",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.phone_charger",
+        "essentials.phone"
+      ],
+      "owner" : "child",
+      "reason" : "device_signal.phone",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.headphones"
+      ],
+      "owner" : "partner",
+      "reason" : "device_signal.bringingHeadphones",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.power_bank"
+      ],
+      "owner" : "partner",
+      "reason" : "device_signal.bringingPowerBank",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.phone_charger",
+        "essentials.phone"
+      ],
+      "owner" : "partner",
+      "reason" : "device_signal.phone",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.headphones"
+      ],
+      "owner" : "primary",
+      "reason" : "device_signal.bringingHeadphones",
+      "result" : "requiresExplicitSignal"
+    },
+    {
+      "items" : [
+        "electronics.power_bank"
+      ],
+      "owner" : "primary",
+      "reason" : "device_signal.bringingPowerBank",
+      "result" : "requiresExplicitSignal"
     }
   ],
   "engineVersion" : "v2",
   "fixture" : "16-minneapolis-7d-winter-family",
   "items" : [
     {
-      "canonicalItemID" : "activities.daypack",
-      "category" : "activities",
-      "displayName" : "Daypack",
-      "importance" : "important",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "You'll have sightseeing days in Minneapolis.",
-      "reasonCode" : "activity.sightseeing",
-      "signals" : [
-        "activity"
-      ]
-    },
-    {
       "canonicalItemID" : "clothing.beanie",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Beanie / warm hat",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.gloves",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Gloves",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+        "hand_protection.cold"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.hoodie",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Hoodie",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Cold through your whole trip — plan to layer.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.sustained_cold",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.light_sweater",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Light sweater",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 3,
       "quantityReason" : "3 to rotate through 7 cold days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "quantity" : "3"
+      },
       "reason" : "Cold temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.cold",
+      "satisfiedCapabilities" : [
+        "outerwear.warmth_light"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.pants",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 5,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.4,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 5,
+        "requiredUses" : 7,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
       "quantityReason" : "5 pants for Child. 7 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.scarf",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Scarf",
       "importance" : "optional",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.freezing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Sub-freezing temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.freezing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Sleepwear",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 2,
-      "quantityReason" : "2 based on a 7-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 2,
+        "requiredUses" : 7,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "2 sleep sets with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential",
         "party"
@@ -149,140 +440,334 @@
     },
     {
       "canonicalItemID" : "clothing.socks",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 12,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.4,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 12,
+        "requiredUses" : 7,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
       "quantityReason" : "12 socks for Child. 7 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.thermal_bottom",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Thermal bottoms",
       "importance" : "optional",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.freezing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityReason" : "2 to rotate through 7 cold days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "quantity" : "2"
+      },
       "reason" : "Sub-freezing temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.freezing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.thermal_top",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Thermal top",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.freezing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 3,
       "quantityReason" : "3 to rotate through 7 cold days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "quantity" : "3"
+      },
       "reason" : "Sub-freezing temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.freezing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 13,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.75,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 13,
+        "requiredUses" : 7,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
       "quantityReason" : "13 t-shirts for Child. 7 travel days plus extra changes for a toddler.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.underwear",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 3,
+      "quantityEvidence" : {
+        "ageMultiplier" : 1.4,
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "diaperedBackup",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 3,
+        "requiredUses" : 7,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
       "quantityReason" : "Child is mostly in diapers — 3 pairs as backup.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.winter_coat",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Winter coat",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+        "outerwear.warmth_heavy",
+        "outerwear.wind_shell"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
-      "canonicalItemID" : "electronics.phone_charger",
-      "category" : "electronics",
-      "displayName" : "Phone charger",
-      "importance" : "important",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Dead batteries cut days short.",
-      "reasonCode" : "base.essential.electronics",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.power_bank",
-      "category" : "electronics",
-      "displayName" : "Portable charger",
-      "importance" : "important",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "You'll have sightseeing days in Minneapolis.",
-      "reasonCode" : "activity.sightseeing",
-      "signals" : [
-        "activity"
-      ]
-    },
-    {
       "canonicalItemID" : "footwear.boots",
+      "carrier" : "primary",
       "category" : "footwear",
       "displayName" : "Boots",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+        "footwear.cold"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "footwear.walking_shoes",
+      "carrier" : "primary",
       "category" : "footwear",
       "displayName" : "Walking shoes",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Minneapolis"
+          },
+          "reasonCode" : "activity.walking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.footwear",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll be on your feet a lot in Minneapolis.",
+      "reasonArguments" : {
+        "destination" : "Minneapolis"
+      },
       "reasonCode" : "activity.walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking"
+      ],
       "signals" : [
         "activity",
         "baseEssential"
@@ -290,1125 +775,2536 @@
     },
     {
       "canonicalItemID" : "kids.activities",
+      "carrier" : "primary",
       "category" : "kids",
-      "displayName" : "Small activities",
+      "displayName" : "Coloring supplies",
       "importance" : "optional",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "party"
       ]
     },
     {
       "canonicalItemID" : "kids.comfort_item",
+      "carrier" : "primary",
       "category" : "kids",
       "displayName" : "Comfort toy / blanket",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "userPreference"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "userPreference"
       ]
     },
     {
       "canonicalItemID" : "kids.diapers",
+      "carrier" : "primary",
       "category" : "kids",
       "displayName" : "Diapers",
       "importance" : "critical",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "userPreference"
+          ]
+        }
+      ],
       "quantity" : 35,
       "quantityReason" : "About 5 a day for Child — 35 for 7 days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "name" : "Child",
+        "quantity" : "35",
+        "rate" : "5"
+      },
       "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "userPreference"
       ]
     },
     {
       "canonicalItemID" : "kids.extra_outfits",
+      "carrier" : "primary",
       "category" : "kids",
       "displayName" : "Extra outfits",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 3,
       "quantityReason" : "3 spare outfits for Child — spills and surprises happen.",
+      "quantityReasonArguments" : {
+        "name" : "Child",
+        "quantity" : "3"
+      },
       "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "party"
       ]
     },
     {
       "canonicalItemID" : "kids.sippy",
+      "carrier" : "primary",
       "category" : "kids",
       "displayName" : "Sippy cup",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "party"
       ]
     },
     {
       "canonicalItemID" : "kids.snacks",
+      "carrier" : "primary",
       "category" : "kids",
-      "displayName" : "Kid snacks",
+      "displayName" : "Children’s snacks",
       "importance" : "normal",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "party"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "party"
       ]
     },
     {
-      "canonicalItemID" : "toiletries.body_wash",
-      "category" : "toiletries",
-      "displayName" : "Body wash",
-      "importance" : "normal",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonCode" : "base.essential.toiletries",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.shampoo",
-      "category" : "toiletries",
-      "displayName" : "Shampoo",
-      "importance" : "normal",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonCode" : "base.essential.toiletries",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Toothbrush",
       "importance" : "important",
       "owner" : "child",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.toothpaste",
-      "category" : "toiletries",
-      "displayName" : "Toothpaste",
-      "importance" : "important",
-      "owner" : "child",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "activities.daypack",
+      "carrier" : "partner",
       "category" : "activities",
       "displayName" : "Daypack",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Minneapolis"
+          },
+          "reasonCode" : "activity.sightseeing",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonArguments" : {
+        "destination" : "Minneapolis"
+      },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
     },
     {
       "canonicalItemID" : "clothing.beanie",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Beanie / warm hat",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.gloves",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Gloves",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+        "hand_protection.cold"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.hoodie",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Hoodie",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Cold through your whole trip — plan to layer.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.sustained_cold",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.light_sweater",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Light sweater",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 3,
       "quantityReason" : "3 to rotate through 7 cold days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "quantity" : "3"
+      },
       "reason" : "Cold temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.cold",
+      "satisfiedCapabilities" : [
+        "outerwear.warmth_light"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.pants",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 3,
-      "quantityReason" : "3 based on a 7-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 3,
+        "requiredUses" : 7,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "3 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.scarf",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Scarf",
       "importance" : "optional",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.freezing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Sub-freezing temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.freezing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Sleepwear",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 2,
-      "quantityReason" : "2 based on a 7-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 2,
+        "requiredUses" : 7,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "2 sleep sets with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.socks",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 8,
-      "quantityReason" : "8 based on a 7-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 8,
+        "requiredUses" : 7,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "8 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.thermal_bottom",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Thermal bottoms",
       "importance" : "optional",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.freezing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityReason" : "2 to rotate through 7 cold days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "quantity" : "2"
+      },
       "reason" : "Sub-freezing temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.freezing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.thermal_top",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Thermal top",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.freezing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 3,
       "quantityReason" : "3 to rotate through 7 cold days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "quantity" : "3"
+      },
       "reason" : "Sub-freezing temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.freezing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 7,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 7,
+        "requiredUses" : 7,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
       "quantityReason" : "Why 7 t-shirts? You're traveling for 7 days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.underwear",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 8,
-      "quantityReason" : "8 based on a 7-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 8,
+        "requiredUses" : 7,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "8 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.winter_coat",
+      "carrier" : "partner",
       "category" : "clothing",
       "displayName" : "Winter coat",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+        "outerwear.warmth_heavy",
+        "outerwear.wind_shell"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "documents.id",
+      "carrier" : "partner",
       "category" : "documents",
       "displayName" : "Photo ID",
       "importance" : "critical",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.documents",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Easy to forget, hard to replace.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.documents",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.headphones",
-      "category" : "electronics",
-      "displayName" : "Headphones",
-      "importance" : "normal",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Suggested for a vacation trip.",
-      "reasonCode" : "trip_type.generic",
-      "signals" : [
-        "tripType"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.phone_charger",
-      "category" : "electronics",
-      "displayName" : "Phone charger",
-      "importance" : "important",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Dead batteries cut days short.",
-      "reasonCode" : "base.essential.electronics",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.power_bank",
-      "category" : "electronics",
-      "displayName" : "Portable charger",
-      "importance" : "important",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "You'll have sightseeing days in Minneapolis.",
-      "reasonCode" : "activity.sightseeing",
-      "signals" : [
-        "activity"
       ]
     },
     {
       "canonicalItemID" : "essentials.keys",
+      "carrier" : "partner",
       "category" : "essentials",
       "displayName" : "Keys",
       "importance" : "critical",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.essentials",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "essentials.phone",
-      "category" : "essentials",
-      "displayName" : "Phone",
-      "importance" : "critical",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "The pocket check before you head out.",
-      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "essentials.wallet",
+      "carrier" : "partner",
       "category" : "essentials",
       "displayName" : "Wallet",
       "importance" : "critical",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "footwear.boots",
+      "carrier" : "partner",
       "category" : "footwear",
       "displayName" : "Boots",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+        "footwear.cold"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "footwear.walking_shoes",
+      "carrier" : "partner",
       "category" : "footwear",
       "displayName" : "Walking shoes",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Minneapolis"
+          },
+          "reasonCode" : "activity.walking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.footwear",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll be on your feet a lot in Minneapolis.",
+      "reasonArguments" : {
+        "destination" : "Minneapolis"
+      },
       "reasonCode" : "activity.walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking"
+      ],
       "signals" : [
         "activity",
         "baseEssential"
       ]
     },
     {
-      "canonicalItemID" : "health.blister_pads",
-      "category" : "health",
-      "displayName" : "Blister pads",
-      "importance" : "normal",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "You'll have sightseeing days in Minneapolis.",
-      "reasonCode" : "activity.sightseeing",
-      "signals" : [
-        "activity"
-      ]
-    },
-    {
-      "canonicalItemID" : "health.pain_reliever",
-      "category" : "health",
-      "displayName" : "Pain reliever",
-      "importance" : "normal",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Better to have and not need.",
-      "reasonCode" : "base.essential.health",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.body_wash",
-      "category" : "toiletries",
-      "displayName" : "Body wash",
-      "importance" : "normal",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonCode" : "base.essential.toiletries",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "toiletries.deodorant",
+      "carrier" : "partner",
       "category" : "toiletries",
       "displayName" : "Deodorant",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.shampoo",
-      "category" : "toiletries",
-      "displayName" : "Shampoo",
-      "importance" : "normal",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "partner",
       "category" : "toiletries",
       "displayName" : "Toothbrush",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.toothpaste",
-      "category" : "toiletries",
-      "displayName" : "Toothpaste",
-      "importance" : "important",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "travel_comfort.book",
+      "carrier" : "partner",
       "category" : "travel_comfort",
       "displayName" : "Book or magazine",
       "importance" : "optional",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "tripType" : "vacation"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "vacation"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for a vacation trip.",
+      "reasonArguments" : {
+        "tripType" : "vacation"
+      },
       "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "tripType"
       ]
     },
     {
       "canonicalItemID" : "travel_comfort.compression_packing",
+      "carrier" : "partner",
       "category" : "travel_comfort",
       "displayName" : "Packing cubes",
       "importance" : "normal",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.travel_comfort",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "travel_comfort.laundry_bag",
-      "category" : "travel_comfort",
-      "displayName" : "Laundry bag",
-      "importance" : "normal",
-      "owner" : "partner",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Keeps a full bag livable.",
-      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "carrier" : "partner",
       "category" : "travel_comfort",
       "displayName" : "Toiletry bag",
       "importance" : "important",
       "owner" : "partner",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "activities.daypack",
+      "carrier" : "primary",
       "category" : "activities",
       "displayName" : "Daypack",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Minneapolis"
+          },
+          "reasonCode" : "activity.sightseeing",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonArguments" : {
+        "destination" : "Minneapolis"
+      },
       "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "activity"
       ]
     },
     {
       "canonicalItemID" : "clothing.beanie",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Beanie / warm hat",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.gloves",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Gloves",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+        "hand_protection.cold"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.hoodie",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Hoodie",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Cold through your whole trip — plan to layer.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.sustained_cold",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.light_sweater",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Light sweater",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.sustained_cold",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 3,
       "quantityReason" : "3 to rotate through 7 cold days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "quantity" : "3"
+      },
       "reason" : "Cold temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.cold",
+      "satisfiedCapabilities" : [
+        "outerwear.warmth_light"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.pants",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Pants",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 3,
-      "quantityReason" : "3 based on a 7-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 3,
+        "requiredUses" : 7,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "3 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.scarf",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Scarf",
       "importance" : "optional",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.freezing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Sub-freezing temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.freezing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Sleepwear",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 2,
-      "quantityReason" : "2 based on a 7-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 2,
+        "requiredUses" : 7,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "2 sleep sets with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.socks",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Socks",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 8,
-      "quantityReason" : "8 based on a 7-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 8,
+        "requiredUses" : 7,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "8 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.thermal_bottom",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Thermal bottoms",
       "importance" : "optional",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.freezing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 2,
       "quantityReason" : "2 to rotate through 7 cold days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "quantity" : "2"
+      },
       "reason" : "Sub-freezing temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.freezing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.thermal_top",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Thermal top",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.freezing",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 3,
       "quantityReason" : "3 to rotate through 7 cold days.",
+      "quantityReasonArguments" : {
+        "days" : "7",
+        "quantity" : "3"
+      },
       "reason" : "Sub-freezing temperatures are expected.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.freezing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "T-shirts",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 7,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 7,
+        "requiredUses" : 7,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
       "quantityReason" : "Why 7 t-shirts? You're traveling for 7 days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.underwear",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Underwear",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 8,
-      "quantityReason" : "8 based on a 7-day trip.",
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 8,
+        "requiredUses" : 7,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "8 for 7 wear days.",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "clothing.winter_coat",
+      "carrier" : "primary",
       "category" : "clothing",
       "displayName" : "Winter coat",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+        "outerwear.warmth_heavy",
+        "outerwear.wind_shell"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "documents.id",
+      "carrier" : "primary",
       "category" : "documents",
       "displayName" : "Photo ID",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.documents",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Easy to forget, hard to replace.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.documents",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "electronics.headphones",
-      "category" : "electronics",
-      "displayName" : "Headphones",
-      "importance" : "normal",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Suggested for a vacation trip.",
-      "reasonCode" : "trip_type.generic",
-      "signals" : [
-        "tripType"
       ]
     },
     {
       "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "primary",
       "category" : "electronics",
       "displayName" : "Phone charger",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.electronics",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
-      "canonicalItemID" : "electronics.power_bank",
-      "category" : "electronics",
-      "displayName" : "Portable charger",
-      "importance" : "important",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "You'll have sightseeing days in Minneapolis.",
-      "reasonCode" : "activity.sightseeing",
-      "signals" : [
-        "activity"
-      ]
-    },
-    {
       "canonicalItemID" : "essentials.keys",
+      "carrier" : "primary",
       "category" : "essentials",
       "displayName" : "Keys",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "essentials.phone",
+      "carrier" : "primary",
       "category" : "essentials",
       "displayName" : "Phone",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "essentials.wallet",
+      "carrier" : "primary",
       "category" : "essentials",
       "displayName" : "Wallet",
       "importance" : "critical",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "footwear.boots",
+      "carrier" : "primary",
       "category" : "footwear",
       "displayName" : "Boots",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "weather.snow",
+          "sourceSignals" : [
+            "weather"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Snow is expected during your trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "weather.snow",
+      "satisfiedCapabilities" : [
+        "footwear.cold"
+      ],
       "signals" : [
         "weather"
       ]
     },
     {
       "canonicalItemID" : "footwear.walking_shoes",
+      "carrier" : "primary",
       "category" : "footwear",
       "displayName" : "Walking shoes",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Minneapolis"
+          },
+          "reasonCode" : "activity.walking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.footwear",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "You'll be on your feet a lot in Minneapolis.",
+      "reasonArguments" : {
+        "destination" : "Minneapolis"
+      },
       "reasonCode" : "activity.walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking"
+      ],
       "signals" : [
         "activity",
         "baseEssential"
       ]
     },
     {
-      "canonicalItemID" : "health.blister_pads",
-      "category" : "health",
-      "displayName" : "Blister pads",
-      "importance" : "normal",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "You'll have sightseeing days in Minneapolis.",
-      "reasonCode" : "activity.sightseeing",
-      "signals" : [
-        "activity"
-      ]
-    },
-    {
-      "canonicalItemID" : "health.pain_reliever",
-      "category" : "health",
-      "displayName" : "Pain reliever",
-      "importance" : "normal",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Better to have and not need.",
-      "reasonCode" : "base.essential.health",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.body_wash",
-      "category" : "toiletries",
-      "displayName" : "Body wash",
-      "importance" : "normal",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonCode" : "base.essential.toiletries",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
       "canonicalItemID" : "toiletries.deodorant",
+      "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Deodorant",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.shampoo",
-      "category" : "toiletries",
-      "displayName" : "Shampoo",
-      "importance" : "normal",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "primary",
       "category" : "toiletries",
       "displayName" : "Toothbrush",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.toiletries",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "toiletries.toothpaste",
-      "category" : "toiletries",
-      "displayName" : "Toothpaste",
-      "importance" : "important",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Small to pack, annoying to replace mid-trip.",
-      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "travel_comfort.book",
+      "carrier" : "primary",
       "category" : "travel_comfort",
       "displayName" : "Book or magazine",
       "importance" : "optional",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "tripType" : "vacation"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "vacation"
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Suggested for a vacation trip.",
+      "reasonArguments" : {
+        "tripType" : "vacation"
+      },
       "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "tripType"
       ]
     },
     {
       "canonicalItemID" : "travel_comfort.compression_packing",
+      "carrier" : "primary",
       "category" : "travel_comfort",
       "displayName" : "Packing cubes",
       "importance" : "normal",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.travel_comfort",
-      "signals" : [
-        "baseEssential"
-      ]
-    },
-    {
-      "canonicalItemID" : "travel_comfort.laundry_bag",
-      "category" : "travel_comfort",
-      "displayName" : "Laundry bag",
-      "importance" : "normal",
-      "owner" : "primary",
-      "quantity" : 1,
-      "quantityReason" : "",
-      "reason" : "Keeps a full bag livable.",
-      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "carrier" : "primary",
       "category" : "travel_comfort",
       "displayName" : "Toiletry bag",
       "importance" : "important",
       "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
       "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
       "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.blister_pads",
+      "carrier" : "unassigned",
+      "category" : "health",
+      "displayName" : "Blister pads",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Minneapolis"
+          },
+          "reasonCode" : "activity.sightseeing",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+            "destination" : "Minneapolis"
+          },
+          "reasonCode" : "activity.walking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "2",
+        "quantity" : "1",
+        "sharingPolicy" : "singlePerParty",
+        "travelerCount" : "3"
+      },
+      "reason" : "You'll have sightseeing days in Minneapolis.",
+      "reasonArguments" : {
+        "destination" : "Minneapolis"
+      },
+      "reasonCode" : "activity.sightseeing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "carrier" : "unassigned",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.health",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "2",
+        "quantity" : "1",
+        "sharingPolicy" : "singlePerParty",
+        "travelerCount" : "3"
+      },
+      "reason" : "Better to have and not need.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.health",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "baseEssential"
       ]
     },
     {
       "canonicalItemID" : "kids.stroller",
+      "carrier" : "unassigned",
       "category" : "kids",
       "displayName" : "Stroller",
       "importance" : "important",
       "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "userPreference"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "1",
+        "quantity" : "1",
+        "sharingPolicy" : "singlePerParty",
+        "travelerCount" : "3"
+      },
       "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "userPreference"
       ]
     },
     {
       "canonicalItemID" : "kids.wipes",
+      "carrier" : "unassigned",
       "category" : "kids",
       "displayName" : "Wipes",
       "importance" : "important",
       "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "ageGroup" : "toddler",
+            "name" : "Child"
+          },
+          "reasonCode" : "party.age_group",
+          "sourceSignals" : [
+            "userPreference"
+          ]
+        }
+      ],
       "quantity" : 1,
       "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "1",
+        "quantity" : "1",
+        "sharingPolicy" : "singlePerParty",
+        "travelerCount" : "3"
+      },
       "reason" : "Suggested for Child (toddler).",
+      "reasonArguments" : {
+        "ageGroup" : "toddler",
+        "name" : "Child"
+      },
       "reasonCode" : "party.age_group",
+      "satisfiedCapabilities" : [
+
+      ],
       "signals" : [
         "userPreference"
       ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "unassigned",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "3",
+        "per" : "4",
+        "quantity" : "1",
+        "sharingPolicy" : "scaleByParty",
+        "travelerCount" : "3"
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "unassigned",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "3",
+        "per" : "4",
+        "quantity" : "1",
+        "sharingPolicy" : "scaleByParty",
+        "travelerCount" : "3"
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "unassigned",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "3",
+        "per" : "4",
+        "quantity" : "1",
+        "sharingPolicy" : "scaleByParty",
+        "travelerCount" : "3"
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "carrier" : "unassigned",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "shared",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "One for the group — not one per person.",
+      "quantityReasonArguments" : {
+        "eligibleConsumerCount" : "2",
+        "per" : "3",
+        "quantity" : "1",
+        "sharingPolicy" : "scaleByParty",
+        "travelerCount" : "3"
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
     }
-  ]
+  ],
+  "luggage" : {
+    "appliesCapacityConstraint" : false,
+    "capacity" : "checkedAvailable",
+    "selectedBags" : [
+      "checked"
+    ]
+  }
 }

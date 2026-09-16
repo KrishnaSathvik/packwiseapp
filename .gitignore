@@ -19,6 +19,10 @@ ios/build/
 *.dSYM.zip
 *.dSYM
 
+# Python
+__pycache__/
+*.pyc
+
 # Secrets — never commit. .env.local holds the OpenAI key, the HMAC secret,
 # and the Upstash credentials.
 .env

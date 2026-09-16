@@ -189,7 +189,7 @@
     {
       "id": "toiletries.aftershave",
       "localizationKey": "packing.toiletries.aftershave",
-      "display_name": "Aftershave / serum",
+      "display_name": "Aftershave",
       "category": "toiletries",
       "importance": "optional",
       "symbol": "drop",

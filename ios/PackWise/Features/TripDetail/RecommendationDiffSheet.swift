@@ -46,7 +46,7 @@ struct RecommendationDiffScreen: View {
         self.onUpdate = onUpdate
         self.onFinished = onFinished
         _addIDs = State(initialValue: Set(diff.add.map(\.id)))
-        _quantityIDs = State(initialValue: Set(diff.quantityChanges.map(\.item.id)))
+        _quantityIDs = State(initialValue: Set(diff.quantityChanges.map(\.existing.id)))
     }
 
     var body: some View {
@@ -134,7 +134,7 @@ struct RecommendationDiffScreen: View {
                     symbol: "plus",
                     tint: PackWiseColor.success,
                     title: item.displayName,
-                    subtitle: item.reason.isEmpty ? nil : item.reason,
+                    subtitle: RecommendationReasonRenderer.reason(for: item, context: .owner(item.travelerID, in: trip.party))?.text,
                     isOn: binding(item.id, in: $addIDs)
                 )
             }
@@ -143,22 +143,25 @@ struct RecommendationDiffScreen: View {
 
     private var quantities: some View {
         section(title: "Quantity changes", count: quantityIDs.count) {
-            ForEach(Array(diff.quantityChanges.enumerated()), id: \.element.item.id) { index, change in
+            ForEach(Array(diff.quantityChanges.enumerated()), id: \.element.existing.id) { index, change in
                 if index > 0 { PackWiseRowDivider() }
                 changeRow(
                     symbol: "arrow.up.arrow.down",
                     tint: PackWiseColor.important,
-                    title: change.item.displayName,
+                    title: change.existing.displayName,
                     subtitle: quantitySubtitle(change),
-                    isOn: binding(change.item.id, in: $quantityIDs)
+                    isOn: binding(change.existing.id, in: $quantityIDs)
                 )
             }
         }
     }
 
     private func quantitySubtitle(_ change: QuantityChangeSuggestion) -> String {
-        let movement = "\(change.item.quantity) → \(change.suggestedQuantity)"
-        let reason = change.item.quantityReason
+        let movement = "\(change.existing.quantity) → \(change.suggestedQuantity)"
+        // The fresh draft's reason, not the existing (possibly stale) one —
+        // this row can now also represent a causal-only change (Phase 8,
+        // Task 3), so the reason shown must describe the new cause.
+        let reason = RecommendationReasonRenderer.quantityExplanation(for: change.fresh) ?? ""
         return reason.isEmpty ? movement : "\(movement) · \(reason)"
     }
 
@@ -176,7 +179,7 @@ struct RecommendationDiffScreen: View {
                             symbol: "minus",
                             tint: PackWiseColor.danger,
                             title: item.displayName,
-                            subtitle: item.reason.isEmpty ? "No longer suggested for this trip" : item.reason,
+                            subtitle: RecommendationReasonRenderer.reason(for: item, context: .owner(item.travelerID, in: trip.party))?.text ?? "No longer suggested for this trip",
                             isOn: binding(item.id, in: $removeIDs)
                         )
                     }

@@ -31,8 +31,9 @@ private struct MeContent: View {
         PackingStyle(rawValue: prefs.packingStyleRaw) ?? .balanced
     }
 
-    private var preferredBag: BagType {
-        BagType(rawValue: prefs.preferredBagRaw) ?? .notSure
+    private var defaultBagsSummary: String {
+        let bags = BagType.stableOrder.filter(prefs.preferredBagTypes.contains)
+        return bags.isEmpty ? "Not sure yet" : bags.map(\.title).joined(separator: ", ")
     }
 
     var body: some View {
@@ -81,6 +82,9 @@ private struct MeContent: View {
                         prefs.homeCountryCode = value.uppercased()
                     }
             }
+            Text("Used for trips you create from now on.")
+                .font(.footnote)
+                .foregroundStyle(PackWiseColor.textSecondary)
             if prefs.homeCountrySourceRaw != HomeCountrySource.userConfirmed.rawValue {
                 Text("Suggested from this iPhone. Confirm before PackWise treats trips as international.")
                     .font(.footnote)
@@ -108,22 +112,29 @@ private struct MeContent: View {
                 }
             }
             PackWiseRowDivider()
-            ViewThatFits(in: .horizontal) {
+            // The same four-bag multi-select as trip setup; new trips start
+            // from this set.
+            NavigationLink {
+                DefaultBagsView(prefs: prefs)
+            } label: {
                 HStack(spacing: PackWiseSpacing.regular) {
-                    PackWiseIconBadge(symbol: preferredBag.symbol, tint: preferredBag.tint)
-                    Text("Preferred bag")
-                    Spacer()
-                    preferredBagPicker
-                }
-                VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                    HStack(spacing: PackWiseSpacing.regular) {
-                        PackWiseIconBadge(symbol: preferredBag.symbol, tint: preferredBag.tint)
-                        Text("Preferred bag")
+                    PackWiseIconBadge(symbol: "suitcase", tint: PackWiseColor.info)
+                    VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                        Text("Default bags")
+                            .foregroundStyle(PackWiseColor.textPrimary)
+                        Text(defaultBagsSummary)
+                            .font(PackWiseFont.rowSubtitle)
+                            .foregroundStyle(PackWiseColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    preferredBagPicker
-                        .frame(maxWidth: .infinity, alignment: .trailing)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(PackWiseColor.textTertiary)
                 }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
             PackWiseRowDivider()
             // One summary row, as the sheet draws it — but the model keeps
             // two settings, so the row pushes to a screen with both controls.
@@ -172,17 +183,6 @@ private struct MeContent: View {
         .fixedSize()
     }
 
-    private var preferredBagPicker: some View {
-        Picker("Preferred bag", selection: $prefs.preferredBagRaw) {
-            ForEach(BagType.allCases) { bag in
-                Text(bag.title).tag(bag.rawValue)
-            }
-        }
-        .labelsHidden()
-        .pickerStyle(.menu)
-        .fixedSize()
-    }
-
     private var unitsRow: some View {
         HStack(spacing: PackWiseSpacing.regular) {
             PackWiseIconBadge(symbol: "ruler", tint: .teal)
@@ -207,6 +207,12 @@ private struct MeContent: View {
             Toggle("I wear contacts", isOn: $prefs.wearContacts)
             PackWiseRowDivider(inset: 0)
             Toggle("I always bring medication", isOn: $prefs.alwaysBringMedication)
+            // Defaults for new trips only (Tasks 8.2–9.1): each trip keeps its
+            // own About you choices. One line for all four, replacing the
+            // laptop row's own subtitle.
+            Text("Selected for you when you start a new trip.")
+                .font(PackWiseFont.rowSubtitle)
+                .foregroundStyle(PackWiseColor.textSecondary)
         }
     }
 
@@ -279,6 +285,46 @@ private struct UnitsDetailView: View {
         }
         .background(PackWiseColor.screen)
         .navigationTitle("Units")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Me's default bags: the four physical bags, independently selectable, with
+/// none meaning "not sure yet" — the same surface and rules as setup's bag
+/// step (Task 8).
+private struct DefaultBagsView: View {
+    @Bindable var prefs: PackingPreferenceRecord
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
+                Text("New trips start with these bags. You can change them on any trip.")
+                    .font(PackWiseFont.screenSubtitle)
+                    .foregroundStyle(PackWiseColor.textSecondary)
+                TripSetupSelectionGrid(items: BagType.stableOrder, columns: 1) { bag, layout in
+                    MultiSelectionCard(
+                        symbol: bag.symbol,
+                        tint: bag.tint,
+                        title: bag.title,
+                        subtitle: bag.setupSubtitle,
+                        isSelected: prefs.preferredBagTypes.contains(bag),
+                        layout: layout
+                    ) {
+                        var bags = prefs.preferredBagTypes
+                        if bags.contains(bag) { bags.remove(bag) } else { bags.insert(bag) }
+                        prefs.setPreferredBagTypes(bags)
+                    }
+                }
+                if prefs.preferredBagTypes.isEmpty {
+                    Label("None chosen — new trips start as not sure yet.", systemImage: "info.circle")
+                        .font(PackWiseFont.rowSubtitle)
+                        .foregroundStyle(PackWiseColor.textSecondary)
+                }
+            }
+            .padding(PackWiseSpacing.comfortable)
+        }
+        .background(PackWiseColor.screen)
+        .navigationTitle("Default bags")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

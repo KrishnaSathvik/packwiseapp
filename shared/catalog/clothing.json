@@ -535,7 +535,7 @@
         "trunks",
         "bikini"
       ],
-      "quantity_kind": "one",
+      "quantity_kind": "swimwear",
       "tags": [
         "swim"
       ],
@@ -631,7 +631,7 @@
     {
       "id": "clothing.nice_outfit",
       "localizationKey": "packing.clothing.nice_outfit",
-      "display_name": "Nice dinner outfit",
+      "display_name": "Smart casual outfit",
       "category": "clothing",
       "importance": "normal",
       "symbol": "fork.knife",

@@ -62,15 +62,17 @@ M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `Tri
 - iOS 18, `com.packwiseapp.app`, display name PackWise
 - Deterministic engine first; GPT protocol exists from day one
 - Real WeatherKit in M2A (closed); mock fixtures remain for tests/previews
-- Home country preference; international = destination ≠ home
+- Home country is a Me profile fact that seeds a *new* trip's `originCountry` (Task 9.2). The trip owns that origin from then on: international = destination ≠ `trip.originCountry` (confirmed), or the "Traveling internationally" chip. The engine and every screen read the trip, never today's Me; changing Me reaches the next fresh trip only. Pre-9.2 trips gain an origin once through `TripOriginBackfill`
 - Trip types are a true multi-select set; no hidden primary trip type controls behavior
 - Bags are a true multi-select set of personal item / carry-on / checked bag / backpack; an empty set means “Not sure yet” and applies no bag constraint
 - Road Trip is trip context, never a luggage type
+- Intelligence API trip context is `tripTypes[]` / `bagTypes[]` in stable order (schema `2026-09-14`); the singular fields are rejected, not read as a fallback. Until Tasks 3–5 land, the engine still consumes a singleton selection through temporary accessors that fail safe for multi-value sets
 - Units follow locale
 - Catalog source of truth: `shared/catalog/`
 - Destinations: MapKit in production; `shared/fixtures/test-destinations.json` is test/preview/weather-fixture matching only
 - WeatherKit attribution is mandatory wherever Apple weather is shown
 - Run `python3 scripts/validate_shared.py` after catalog/rule edits
+- Any change to a stored SwiftData property needs a new schema version: freeze the current shape in `ios/PackWise/Data/Persistence/SchemaHistory.swift` first. Versions that alias the live types share a checksum, and CoreData aborts every upgrade between them
 
 ## Implementation defaults
 
@@ -80,4 +82,4 @@ M3A-2 changes what runs, not what PackWise does. Wiring interpretation into `Tri
 - Repositories between views and SwiftData
 - Feature folders as specified in `docs/architecture.md`
 - Native iOS controls. SF Pro. SF Symbols. The fixed sheet palette in `DesignSystem/PackWiseTheme.swift`
-- Dark mode is **intentionally disabled** as of 2026-08-31 (`.preferredColorScheme(.light)` at the root). This turned off a previously working light/dark system, not an unbuilt feature — the reference sheet is light-only and dark had nothing to be checked against. Re-enable only alongside a dark reference sheet and dark counterparts for every `PackWiseColor` token
+- Dark mode is **intentionally disabled** as of 2026-08-31 (since Task 9.1, `UIUserInterfaceStyle = Light` in `ios/PackWise/Info.plist`; it was `.preferredColorScheme(.light)` at the root, which also pinned the status bar dark over Trip Detail's hero — never reintroduce a root color-scheme preference). This turned off a previously working light/dark system, not an unbuilt feature — the reference sheet is light-only and dark had nothing to be checked against. Re-enable only alongside a dark reference sheet and dark counterparts for every `PackWiseColor` token

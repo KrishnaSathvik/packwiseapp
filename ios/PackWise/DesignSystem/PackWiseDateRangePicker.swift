@@ -22,8 +22,14 @@ struct PackWiseDateRangePicker: View {
     private static let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
     /// The calendar was taking two thirds of the screen and leaving the rest
     /// empty. Six rows at 36pt still clear the 44pt target once the row gap
-    /// and the grid's own touch slop are counted.
-    private static let cellHeight: CGFloat = 36
+    /// and the grid's own touch slop are counted. Scales with the grid's
+    /// (capped) text size so the endpoint circle always holds its digits.
+    @ScaledMetric(relativeTo: .body) private var cellHeight: CGFloat = 36
+
+    /// Seven columns cannot grow past the phone's width, so the grid and its
+    /// weekday row stop scaling at the largest non-accessibility size (Task
+    /// 8.1); the month title and the summary around the picker keep scaling.
+    private static let gridTypeCap: DynamicTypeSize = .xxxLarge
 
     init(start: Binding<Date>, end: Binding<Date>, earliest: Date, calendar: Calendar = .current) {
         _start = start
@@ -36,14 +42,17 @@ struct PackWiseDateRangePicker: View {
     var body: some View {
         VStack(spacing: PackWiseSpacing.regular) {
             monthHeader
-            weekdayHeader
-            // The grid rows sit flush so the selected span draws as one
-            // continuous band rather than as six separate stripes.
-            LazyVGrid(columns: Self.columns, spacing: PackWiseSpacing.hairline) {
-                ForEach(Array(days.enumerated()), id: \.offset) { _, day in
-                    dayCell(day.date, inMonth: day.inMonth)
+            Group {
+                weekdayHeader
+                // The grid rows sit flush so the selected span draws as one
+                // continuous band rather than as six separate stripes.
+                LazyVGrid(columns: Self.columns, spacing: PackWiseSpacing.hairline) {
+                    ForEach(Array(days.enumerated()), id: \.offset) { _, day in
+                        dayCell(day.date, inMonth: day.inMonth)
+                    }
                 }
             }
+            .dynamicTypeSize(...Self.gridTypeCap)
         }
     }
 
@@ -52,7 +61,7 @@ struct PackWiseDateRangePicker: View {
     private var monthHeader: some View {
         HStack {
             Text(visibleMonth.formatted(.dateTime.month(.wide).year()))
-                .font(.headline)
+                .font(PackWiseFont.cardTitle)
             Spacer()
             Button {
                 shiftMonth(by: -1)
@@ -76,8 +85,10 @@ struct PackWiseDateRangePicker: View {
         HStack(spacing: 0) {
             ForEach(weekdaySymbols, id: \.self) { symbol in
                 Text(symbol)
-                    .font(.caption)
+                    .font(PackWiseFont.microLabel)
                     .foregroundStyle(PackWiseColor.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -104,7 +115,7 @@ struct PackWiseDateRangePicker: View {
                 .monospacedDigit()
                 .foregroundStyle(foreground(for: day, selectable: selectable && inMonth))
                 .frame(maxWidth: .infinity)
-                .frame(height: Self.cellHeight)
+                .frame(height: cellHeight)
                 .background(alignment: .center) { background(for: day) }
         }
         .buttonStyle(.plain)
@@ -122,10 +133,10 @@ struct PackWiseDateRangePicker: View {
             // rectangular selection that happens to stop somewhere.
             if isWithinRange(day) {
                 UnevenRoundedRectangle(
-                    topLeadingRadius: isRangeStart(day) ? Self.cellHeight / 2 : 0,
-                    bottomLeadingRadius: isRangeStart(day) ? Self.cellHeight / 2 : 0,
-                    bottomTrailingRadius: isRangeEnd(day) ? Self.cellHeight / 2 : 0,
-                    topTrailingRadius: isRangeEnd(day) ? Self.cellHeight / 2 : 0,
+                    topLeadingRadius: isRangeStart(day) ? cellHeight / 2 : 0,
+                    bottomLeadingRadius: isRangeStart(day) ? cellHeight / 2 : 0,
+                    bottomTrailingRadius: isRangeEnd(day) ? cellHeight / 2 : 0,
+                    topTrailingRadius: isRangeEnd(day) ? cellHeight / 2 : 0,
                     style: .continuous
                 )
                 .fill(PackWiseColor.accentWash)
@@ -133,7 +144,7 @@ struct PackWiseDateRangePicker: View {
             if isEndpoint(day) {
                 Circle()
                     .fill(PackWiseColor.accent)
-                    .frame(width: Self.cellHeight - 2, height: Self.cellHeight - 2)
+                    .frame(width: cellHeight - 2, height: cellHeight - 2)
             }
         }
     }

@@ -3,11 +3,15 @@
   "destinationFixture": "Chicago",
   "weatherFixture": "ChicagoRainyFall",
   "days": 3,
-  "tripType": "business",
+  "tripTypes": [
+    "business"
+  ],
   "activities": [
     "work"
   ],
-  "bag": "carryOn",
+  "bagTypes": [
+    "carryOn"
+  ],
   "style": "balanced",
   "homeCountryCode": "US",
   "homeCountrySource": "userConfirmed",

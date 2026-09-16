@@ -30,18 +30,20 @@ enum PackWiseSize {
     static let buttonHeight: CGFloat = 52
     /// Apple's minimum comfortable target. Never shrink below this.
     static let tapTarget: CGFloat = 44
+    /// The floating add control on the Packing List.
+    static let floatingControl: CGFloat = 52
     /// Compact destination thumbnail on a trip card.
     static let tripThumbnail: CGFloat = 56
-    /// Photo band at the top of the hero trip card on Trips Home.
-    static let tripCardPhotoHeight: CGFloat = 140
-    /// Full-bleed destination hero on Trip Detail.
-    static let heroHeight: CGFloat = 240
-    /// Extra hero height keeps two-line destination context clear at large text sizes.
-    static let heroAccessibilityHeight: CGFloat = 320
+    /// The confirmed destination's map thumbnail in trip setup.
+    static let destinationThumbnail: CGFloat = 64
+    /// Minimum height of the destination band on the Trips Home hero card and
+    /// the setup Review hero. Text grows it at larger sizes.
+    static let tripCardPhotoHeight: CGFloat = 150
+    /// Minimum height of the full-bleed destination hero on Trip Detail,
+    /// status region included. Text grows it at larger sizes.
+    static let heroHeight: CGFloat = 270
     /// Clears the status region while keeping hero controls inside the image.
     static let heroControlTopInset: CGFloat = 58
-    /// Destination confirmation image in trip setup.
-    static let previewHeight: CGFloat = 150
     static let progressBarHeight: CGFloat = 6
 }
 
@@ -187,6 +189,11 @@ extension ContextChip {
         case .travelingInternationally: "airplane"
         case .getColdEasily: "thermometer.snowflake"
         case .laundryAvailable: "washer"
+        case .bringingPhone: "iphone"
+        case .bringingTablet: "ipad"
+        case .bringingHeadphones: "headphones"
+        case .bringingPowerBank: "battery.100percent.bolt"
+        case .bringingCamera: "camera"
         }
     }
 
@@ -201,6 +208,11 @@ extension ContextChip {
         case .travelingInternationally: .blue
         case .getColdEasily: .teal
         case .laundryAvailable: .purple
+        case .bringingPhone: .blue
+        case .bringingTablet: .indigo
+        case .bringingHeadphones: .purple
+        case .bringingPowerBank: .green
+        case .bringingCamera: .pink
         }
     }
 
@@ -217,6 +229,11 @@ extension ContextChip {
         case .travelingInternationally: "International"
         case .getColdEasily: "Get cold easily"
         case .laundryAvailable: "Laundry"
+        case .bringingPhone: "Phone"
+        case .bringingTablet: "Tablet"
+        case .bringingHeadphones: "Headphones"
+        case .bringingPowerBank: "Power bank"
+        case .bringingCamera: "Camera"
         }
     }
 }

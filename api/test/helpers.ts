@@ -44,10 +44,10 @@ export function tripContext(overrides: Partial<TripContextDTO> = {}): TripContex
     startDate: "2026-09-01",
     endDate: "2026-09-05",
     durationDays: 5,
-    tripType: "cityBreak",
+    tripTypes: ["cityBreak"],
     activities: ["sightseeing", "walking"],
     contextChips: [],
-    bagType: "carryOn",
+    bagTypes: ["carryOn"],
     packingStyle: "balanced",
     travelerCount: 1,
     ...overrides,
@@ -58,9 +58,9 @@ export type TripEvalFixture = {
   id: string;
   destinationFixture: string;
   days: number;
-  tripType: string;
+  tripTypes: string[];
   activities: string[];
-  bag: string;
+  bagTypes: string[];
   style: string;
   chips?: string[];
   travelerCount?: number;
@@ -96,10 +96,10 @@ export function contextFromFixture(fixture: TripEvalFixture): TripContextDTO {
     startDate: "2026-09-01",
     endDate: "2026-09-05",
     durationDays: fixture.days,
-    tripType: fixture.tripType,
+    tripTypes: fixture.tripTypes,
     activities: fixture.activities,
     contextChips: fixture.chips ?? [],
-    bagType: fixture.bag,
+    bagTypes: fixture.bagTypes,
     packingStyle: fixture.style,
     travelerCount: fixture.party?.travelers.length ?? fixture.travelerCount ?? 1,
   };

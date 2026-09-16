@@ -1,0 +1,20 @@
+Final full iOS suite
+✔ Test run with 614 tests in 39 suites passed after 7.476 seconds.
+
+Clean Debug build
+** BUILD SUCCEEDED **
+
+Engine audit
+OK: 202 items, integrity checks passed
+Ran 121 tests in 0.293s
+✔ Test run with 107 tests in 5 suites passed after 0.615 seconds.
+All engine audit steps passed.
+
+API preflight
+OK: 202 items, integrity checks passed
+generated artifact ok — schema 2026-09-14, build 006ff8c4eacfae88
+ℹ tests 141
+ℹ pass 141
+ℹ fail 0
+
+Zero Swift compiler warnings. Xcode AppIntents metadata extraction notice remains.

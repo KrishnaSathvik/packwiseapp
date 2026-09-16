@@ -23,6 +23,17 @@ Frozen V2 decisions:
 - A whole-product contact sheet passes before production UI wiring.
 - M3B/M3C remain frozen until the complete V2 simulator and physical-device gate is green.
 
+### Implemented so far vs. approved target
+
+The decisions above are the approved V2 target. On the `product-v2-stage-a` branch, as of 2026-09-14:
+
+- **Implemented (Tasks 1, 2, 14, 15):** stable `TripType.stableOrder` / `BagType.stableOrder` codecs; SwiftData V4 with set-valued trip types, bag records, preferred bags, and memory fingerprints; WeatherKit request diagnostics; and array trip context at every request, fixture, and API boundary. `TripContext` carries the full `tripTypes`/`bagTypes` sets, and the Intelligence API contract (`schemaVersion` `2026-09-14`) accepts only `tripTypes[]` (one or more) and `bagTypes[]` (zero or more physical bags), rejecting the singular fields, `notSure`, and `roadTripLuggage`.
+- **Implemented since (Tasks 3–4):** typed trip-type need contracts, and engine composition of every selected trip type through the one pipeline with structured multi-source provenance persisted through the Phase 8 trace. `TripContext.tripType` no longer exists.
+- **Implemented since (Tasks 4.1–5):** the snapshot's normalized `PackingNeed`s are the one trip-type authority for candidates and coverage. The engine reads luggage only through `LuggageContext`: the selected bag set resolves once to a capacity (unspecified, very constrained, compact, carry-on constrained, moderate, checked available) that constraints and clothing caps consume, and a checked bag defeats every capacity trim. `TripContext.bagType` no longer exists.
+- **Implemented since (Tasks 6–7):** one traveler eligibility authority (`TravelerEligibilityResolver`) runs per traveler before sharing and quantity, from a closed eligibility family on every catalog item; age never justifies devices, medication, contacts, or child equipment, and no traveler's signal reaches another. Sharing follows an explicit policy for every shared item, and each shared quantity names its scaling basis in the quantity trace. Audit: [plans/2026-09-15-product-v2-family-sharing-audit.md](plans/2026-09-15-product-v2-family-sharing-audit.md).
+- **Not implemented yet:** setup and Me still edit one bag through `TripRecord.bagType`/`TripDraft.bagType`, and `TripRepository.applyBagTypes` still rejects more than one bag, until Task 8. Setup, Trip Detail, and Packing List still read `TripRecord.tripType` for presentation until Tasks 8/10/13, and setup and Me still edit one trip type and one bag until Task 8, so no shipped screen can create a multi-value trip yet.
+- Task record: [plans/2026-09-14-product-v2-task-15-array-contract.md](plans/2026-09-14-product-v2-task-15-array-contract.md).
+
 ## Repo
 
 ```text
@@ -92,6 +103,8 @@ homeCountrySource: userConfirmed | deviceSuggested
 ```
 
 Prefill from device region. Do not treat device region as fact. Strong international-document recommendations require `userConfirmed` or an explicit “traveling internationally” chip.
+
+Since Task 9.2 the home country is a new-trip default, not a live trip input. `TripDraft.fresh` copies it into the trip's `originCountry` (`TripOrigin`: code + source); `TripRecord.context` hands the engine that origin, and `TripRecord.isInternational` is the one decision screens order by. Editing Me later changes the next fresh trip only. Trips saved before the boundary gain an origin exactly once on store open (`TripOriginBackfill`): their own evidence (the chip, an international row) keeps their classification, a generated list with no international row stays domestic, and only a trip with no rows takes today's Me. There is no setup control for origin yet; the name leaves room for “traveling from somewhere other than home” later.
 
 Never claim “Visa required.” Visa/entry docs are a reminder to check requirements. Do not assert plug types without a maintained data source.
 

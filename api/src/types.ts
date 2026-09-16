@@ -15,10 +15,12 @@ export type TripContextDTO = {
   startDate: string;
   endDate: string;
   durationDays?: number;
-  tripType: string;
+  /** One or more known trip types. A set: unique, order not significant on the wire. */
+  tripTypes: string[];
   activities: string[];
   contextChips?: string[];
-  bagType: string;
+  /** Zero or more physical bags. Empty means luggage is not specified. */
+  bagTypes: string[];
   packingStyle: string;
   transportation?: string;
   laundryAccess?: string;

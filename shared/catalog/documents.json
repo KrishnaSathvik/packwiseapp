@@ -101,7 +101,7 @@
     {
       "id": "documents.visa",
       "localizationKey": "packing.documents.visa",
-      "display_name": "Visa / entry docs",
+      "display_name": "Visa or entry documents",
       "category": "documents",
       "importance": "critical",
       "symbol": "doc.badge.arrow.up",

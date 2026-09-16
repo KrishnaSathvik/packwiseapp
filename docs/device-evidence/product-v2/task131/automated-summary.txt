@@ -1,0 +1,38 @@
+
+## focused
+2026-09-16 15:05:46.436 appintentsmetadataprocessor[54994:13005926] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+2026-09-16 15:05:46.805 appintentsmetadataprocessor[54997:13005942] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+✔ Test run with 3 tests in 1 suite passed after 0.521 seconds.
+** TEST SUCCEEDED **
+
+## full-ios
+✔ Test run with 615 tests in 39 suites passed after 7.668 seconds.
+** TEST SUCCEEDED **
+
+## api
+OK: 202 items, integrity checks passed
+ℹ tests 141
+ℹ pass 141
+ℹ fail 0
+
+## engine-audit
+OK: 202 items, integrity checks passed
+Ran 121 tests in 0.273s
+OK
+2026-09-16 15:11:26.698 appintentsmetadataprocessor[65848:13032820] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+2026-09-16 15:11:27.049 appintentsmetadataprocessor[65871:13032860] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+✔ Test run with 107 tests in 5 suites passed after 0.553 seconds.
+** TEST SUCCEEDED **
+All engine audit steps passed.
+
+## device-build
+2026-09-16 15:10:25.740 appintentsmetadataprocessor[63725:13027472] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+** BUILD SUCCEEDED **
+
+## debug
+2026-09-16 15:16:02.951 appintentsmetadataprocessor[74961:13054952] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+** BUILD SUCCEEDED **
+
+## release
+2026-09-16 15:16:03.923 appintentsmetadataprocessor[74994:13055154] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+** BUILD SUCCEEDED **

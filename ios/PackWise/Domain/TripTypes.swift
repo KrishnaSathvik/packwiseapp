@@ -56,31 +56,6 @@ enum TripType: String, Codable, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    var suggestedActivityIDs: [String] {
-        switch self {
-        case .beach:
-            ["swimming", "beachDays", "snorkeling", "niceDinner", "running", "sightseeing", "boatTrip"]
-        case .cityBreak, .vacation:
-            ["sightseeing", "walking", "niceDinner", "nightlife", "running", "shopping", "museums", "work"]
-        case .business:
-            ["work", "niceDinner", "walking"]
-        case .outdoor:
-            ["hiking", "sightseeing", "running", "wildlife"]
-        case .roadTrip:
-            ["sightseeing", "walking", "hiking"]
-        case .weddingEvent:
-            ["niceDinner", "sightseeing"]
-        case .skiSnow:
-            ["sightseeing"]
-        case .festival:
-            ["nightlife", "sightseeing"]
-        case .visitingFamily:
-            ["sightseeing", "walking", "niceDinner"]
-        case .other:
-            ["sightseeing", "walking"]
-        }
-    }
-
     /// The one true persistence/API/signature order for `Set<TripType>`,
     /// per the product-approved matrix in design Section 8.1
     /// (`docs/plans/2026-09-04-product-experience-v2-design.md`). Every
@@ -122,15 +97,6 @@ enum BagType: String, Codable, CaseIterable, Identifiable, Sendable {
         case .backpack: "PackWise will lean compact and avoid bulky backups."
         case .roadTripLuggage: "Space is more flexible, but the list still stays trip-specific."
         case .notSure: "No bag constraint yet. Choose a bag later to tighten the list."
-        }
-    }
-
-    var appliesBagConstraint: Bool { self != .notSure }
-
-    var isSpaceConstrained: Bool {
-        switch self {
-        case .personalItem, .carryOn, .backpack: true
-        case .checked, .roadTripLuggage, .notSure: false
         }
     }
 
@@ -202,6 +168,14 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
     case travelingInternationally
     case getColdEasily
     case laundryAvailable
+    /// Traveler-scoped device signals (Task 8), set in a companion's traveler
+    /// details. Never trip context and never in the Intelligence API chip
+    /// vocabulary: they live in `base.json` `traveler_device_chips`.
+    case bringingPhone
+    case bringingTablet
+    case bringingHeadphones
+    case bringingPowerBank
+    case bringingCamera
 
     var id: String { rawValue }
 
@@ -216,6 +190,11 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
         case .travelingInternationally: "I'm traveling internationally"
         case .getColdEasily: "I get cold easily"
         case .laundryAvailable: "I'll have laundry"
+        case .bringingPhone: "Bringing a phone"
+        case .bringingTablet: "Bringing a tablet"
+        case .bringingHeadphones: "Bringing headphones"
+        case .bringingPowerBank: "Bringing a power bank"
+        case .bringingCamera: "Bringing a camera"
         }
     }
 
@@ -237,6 +216,81 @@ enum ContextChip: String, Codable, CaseIterable, Identifiable, Sendable {
     static var partnerDifferences: [ContextChip] {
         [.dailyMedication, .wearContacts, .usuallyWorkOut, .needFormalOutfit, .getColdEasily]
     }
+
+    /// Device choices in a companion's traveler details, in display order
+    /// (Tasks 8–8.1). Every device is explicit for everyone except the
+    /// primary traveler's phone. Laptop reuses the existing `bringingLaptop`
+    /// signal.
+    static var travelerDevices: [ContextChip] {
+        [.bringingPhone, .bringingLaptop, .bringingTablet, .bringingHeadphones, .bringingPowerBank, .bringingCamera]
+    }
+
+    /// The primary traveler's device choices in About you: everything but the
+    /// phone, which is implicit because PackWise runs on it.
+    static var primaryDevices: [ContextChip] {
+        travelerDevices.filter { $0 != .bringingPhone }
+    }
+
+    /// Signals that only ever belong to one traveler's details — stored on
+    /// that traveler, never as the trip's own chips, and never sent as trip
+    /// context. (`bringingLaptop` predates them and remains a trip chip too.)
+    static var travelerDeviceSignals: Set<ContextChip> {
+        [.bringingPhone, .bringingTablet, .bringingHeadphones, .bringingPowerBank, .bringingCamera]
+    }
+
+    /// The About you choices for the primary traveler, in display order.
+    static var aboutYou: [ContextChip] {
+        [.dailyMedication, .wearContacts, .bringingLaptop, .usuallyWorkOut, .runWhileTraveling, .needFormalOutfit, .getColdEasily]
+    }
+}
+
+/// A Me "Usually true for me" habit and the About you choice it prefills on
+/// a new trip.
+enum MeHabit: CaseIterable, Sendable {
+    case workOut
+    case laptop
+    case contacts
+    case medication
+
+    var chip: ContextChip {
+        switch self {
+        case .workOut: .usuallyWorkOut
+        case .laptop: .bringingLaptop
+        case .contacts: .wearContacts
+        case .medication: .dailyMedication
+        }
+    }
+
+    func isOn(in preferences: TravelerPreferences) -> Bool {
+        switch self {
+        case .workOut: preferences.usuallyWorkOut
+        case .laptop: preferences.usuallyBringLaptop
+        case .contacts: preferences.wearContacts
+        case .medication: preferences.alwaysBringMedication
+        }
+    }
+
+    func set(_ on: Bool, in preferences: inout TravelerPreferences) {
+        switch self {
+        case .workOut: preferences.usuallyWorkOut = on
+        case .laptop: preferences.usuallyBringLaptop = on
+        case .contacts: preferences.wearContacts = on
+        case .medication: preferences.alwaysBringMedication = on
+        }
+    }
+}
+
+/// The one mapping for prefill, the pre-9.1 backfill, and their tests.
+enum MeDefaultChoices {
+    static let habits = MeHabit.allCases
+
+    static func chips(for preferences: TravelerPreferences) -> Set<ContextChip> {
+        Set(habits.filter { $0.isOn(in: preferences) }.map(\.chip))
+    }
+
+    /// The reason code a habit-caused row carried when the engine still read
+    /// Me directly — identical to the trip-choice code.
+    static func reasonCode(_ chip: ContextChip) -> String { "preference.\(chip.rawValue)" }
 }
 
 enum ItemImportance: String, Codable, CaseIterable, Sendable {
@@ -275,6 +329,13 @@ enum PackingCategory: String, Codable, CaseIterable, Identifiable, Sendable {
         case .travelComfort: "Travel Comfort"
         case .miscellaneous: "Miscellaneous"
         }
+    }
+
+    /// The one category order screens use. Outdoor is derived from the
+    /// trip's whole type set (Task 10): a Beach + Outdoor trip is outdoor,
+    /// which the singular compatibility accessor would deny.
+    static func displayOrder(international: Bool, tripTypes: Set<TripType>) -> [PackingCategory] {
+        displayOrder(international: international, outdoor: tripTypes.contains(.outdoor))
     }
 
     static func displayOrder(international: Bool, outdoor: Bool) -> [PackingCategory] {
@@ -344,6 +405,41 @@ enum HomeCountrySource: String, Codable, Sendable {
     case userConfirmed
 }
 
+/// The country a trip is taken from — the trip's own copy of the home
+/// country that was true when it was created (Task 9.2). `Me.homeCountry`
+/// seeds it for a *new* trip and is never consulted for that trip again, so
+/// editing Me later changes the next fresh trip only. Conceptually it is the
+/// trip's origin, not "home country at creation": a later release can let a
+/// trip start from somewhere else without changing the model.
+///
+/// A device-suggested code is a guess, not a fact (implementation decision
+/// "Home country"), so only a confirmed origin can make a trip international.
+struct TripOrigin: Hashable, Codable, Sendable {
+    var countryCode: String?
+    var source: HomeCountrySource
+
+    init(countryCode: String?, source: HomeCountrySource) {
+        self.countryCode = countryCode?.isEmpty == true ? nil : countryCode
+        self.source = source
+    }
+
+    /// The seed for a new trip: Me's home country as it is right now.
+    init(seededFrom preferences: TravelerPreferences) {
+        self.init(countryCode: preferences.homeCountryCode, source: preferences.homeCountrySource)
+    }
+
+    /// No origin on record. Never international on its own; a trip in this
+    /// state is one the origin backfill has not reached yet.
+    static let unknown = TripOrigin(countryCode: nil, source: .deviceSuggested)
+
+    /// The one international decision (design: "international = destination
+    /// ≠ home"), shared by the engine and every screen that orders by it.
+    func isInternational(destinationCountryCode: String) -> Bool {
+        guard source == .userConfirmed, let countryCode else { return false }
+        return destinationCountryCode.uppercased() != countryCode.uppercased()
+    }
+}
+
 enum Transportation: String, Codable, CaseIterable, Sendable {
     case flight
     case drive
@@ -376,6 +472,11 @@ struct TravelerPreferences: Codable, Hashable, Sendable {
     var preferredBagTypes: Set<BagType> = []
     var usesFahrenheit: Bool
     var usesImperial: Bool
+    /// The four "Usually true for me" habits are defaults, never engine input
+    /// (Tasks 8.2–9.1). Each seeds a *new* trip's About you choice through
+    /// `MeDefaultChoices`; from then on that trip's own saved choice is its
+    /// only authority, so changing Me never changes an existing trip. The
+    /// stored names predate the boundary and stay for store compatibility.
     var usuallyWorkOut: Bool
     var usuallyBringLaptop: Bool
     var wearContacts: Bool
@@ -405,10 +506,14 @@ struct TripContext: Hashable, Sendable {
     var endDate: Date
     var durationDays: Int
     var durationNights: Int
-    var tripType: TripType
+    /// Every selected trip type — the authoritative V2 trip context (never
+    /// empty for a real trip). Serialize only through `TripType.stableOrder`.
+    var tripTypes: Set<TripType>
     var activities: [String]
     var datedActivities: [DatedActivity]
-    var bagType: BagType
+    /// Every selected physical bag. Empty means "Not sure yet": no luggage
+    /// constraint. Serialize only through `BagType.stableOrder`.
+    var bagTypes: Set<BagType>
     var packingStyle: PackingStyle
     var transportation: Transportation
     var laundryAccess: LaundryAccess
@@ -416,18 +521,22 @@ struct TripContext: Hashable, Sendable {
     var userNotes: String
     var contextChips: Set<ContextChip>
     var weather: TripWeatherContext?
+    /// Me at generation time. The engine reads no home-country value from
+    /// here (Task 9.2) and no habit (Tasks 8.2–9.1); what remains in use is
+    /// unit and style context.
     var preferences: TravelerPreferences
     var party: TripParty = .solo()
+    /// The trip's own origin country; see `TripOrigin`. Defaults to unknown
+    /// so a context built without one is never international by accident.
+    var origin: TripOrigin = .unknown
 
     var effectiveParty: TripParty {
         party.travelers.isEmpty ? .solo() : party
     }
 
     var isInternationalConfirmed: Bool {
-        if contextChips.contains(.travelingInternationally) { return true }
-        guard preferences.homeCountrySource == .userConfirmed,
-              let home = preferences.homeCountryCode, !home.isEmpty else { return false }
-        return destination.countryCode.uppercased() != home.uppercased()
+        contextChips.contains(.travelingInternationally)
+            || origin.isInternational(destinationCountryCode: destination.countryCode)
     }
 
     var hasLaundry: Bool {

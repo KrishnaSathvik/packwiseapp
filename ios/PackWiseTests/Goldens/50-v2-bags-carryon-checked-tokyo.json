@@ -1,0 +1,1114 @@
+{
+  "eligibility" : [
+    {
+      "items" : [
+        "electronics.headphones"
+      ],
+      "owner" : "primary",
+      "reason" : "device_signal.bringingHeadphones",
+      "result" : "requiresExplicitSignal"
+    }
+  ],
+  "engineVersion" : "v2",
+  "fixture" : "50-v2-bags-carryon-checked-tokyo",
+  "items" : [
+    {
+      "canonicalItemID" : "clothing.pants",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Pants",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 4,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.bottoms",
+        "quantity" : 4,
+        "requiredUses" : 10,
+        "styleBuffer" : 0,
+        "washIntervalDays" : 10,
+        "wearsPerItem" : 2.5
+      },
+      "quantityReason" : "4 for 10 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.sleepwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Sleepwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 2,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "sleepRotation",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.sleepwear",
+        "quantity" : 2,
+        "requiredUses" : 10,
+        "styleBuffer" : 0,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "2 sleep sets with repeat wear.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.socks",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Socks",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 11,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_socks",
+        "quantity" : 11,
+        "requiredUses" : 10,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "11 for 10 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.tshirt",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "T-shirts",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 9,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_top",
+        "quantity" : 9,
+        "requiredUses" : 10,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1.25
+      },
+      "quantityReason" : "Why 9 t-shirts? You're traveling for 10 days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "clothing.underwear",
+      "carrier" : "primary",
+      "category" : "clothing",
+      "displayName" : "Underwear",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.clothing",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 11,
+      "quantityEvidence" : {
+        "appearanceOffsetUses" : 0,
+        "bagCapApplied" : false,
+        "basis" : "dailyWear",
+        "laundryPlan" : "none",
+        "laundryReduced" : false,
+        "policyID" : "clothing.daily_underwear",
+        "quantity" : 11,
+        "requiredUses" : 10,
+        "styleBuffer" : 1,
+        "washIntervalDays" : 7,
+        "wearsPerItem" : 1
+      },
+      "quantityReason" : "11 for 10 wear days.",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The basics you'll wear every day.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.clothing",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.id",
+      "carrier" : "primary",
+      "category" : "documents",
+      "displayName" : "Photo ID",
+      "importance" : "critical",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.documents",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Easy to forget, hard to replace.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.documents",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.passport",
+      "carrier" : "primary",
+      "category" : "documents",
+      "displayName" : "Passport",
+      "importance" : "critical",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "destination.international",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You're traveling internationally. Check the entry requirements that apply to you.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "destination.international",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "destination"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.travel_insurance",
+      "carrier" : "primary",
+      "category" : "documents",
+      "displayName" : "Travel insurance info",
+      "importance" : "important",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "destination.international",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You're traveling internationally. Check the entry requirements that apply to you.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "destination.international",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "destination"
+      ]
+    },
+    {
+      "canonicalItemID" : "documents.visa",
+      "carrier" : "primary",
+      "category" : "documents",
+      "displayName" : "Visa or entry documents",
+      "importance" : "critical",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "documents.visa_check",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Check the entry requirements that apply to you.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "documents.visa_check",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "destination"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.phone_charger",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Phone charger",
+      "importance" : "important",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.electronics",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Dead batteries cut days short.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.electronics",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "electronics.travel_adapter",
+      "carrier" : "primary",
+      "category" : "electronics",
+      "displayName" : "Travel adapter",
+      "importance" : "important",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "destination.international",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You're traveling internationally. Check the entry requirements that apply to you.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "destination.international",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "destination"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.cash",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Local cash",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "destination.international",
+          "sourceSignals" : [
+            "destination"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You're traveling internationally. Check the entry requirements that apply to you.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "destination.international",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "destination"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.keys",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Keys",
+      "importance" : "critical",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.phone",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Phone",
+      "importance" : "critical",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.reusable_bag",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Reusable tote",
+      "importance" : "optional",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Tokyo"
+          },
+          "reasonCode" : "activity.shopping",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Shopping is on your plans.",
+      "reasonArguments" : {
+        "destination" : "Tokyo"
+      },
+      "reasonCode" : "activity.shopping",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "essentials.wallet",
+      "carrier" : "primary",
+      "category" : "essentials",
+      "displayName" : "Wallet",
+      "importance" : "critical",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.essentials",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "The pocket check before you head out.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.essentials",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "footwear.walking_shoes",
+      "carrier" : "primary",
+      "category" : "footwear",
+      "displayName" : "Walking shoes",
+      "importance" : "important",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Tokyo"
+          },
+          "reasonCode" : "activity.walking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        },
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.footwear",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You'll be on your feet a lot in Tokyo.",
+      "reasonArguments" : {
+        "destination" : "Tokyo"
+      },
+      "reasonCode" : "activity.walking",
+      "satisfiedCapabilities" : [
+        "footwear.everyday_walking"
+      ],
+      "signals" : [
+        "activity",
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.blister_pads",
+      "carrier" : "primary",
+      "category" : "health",
+      "displayName" : "Blister pads",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "destination" : "Tokyo"
+          },
+          "reasonCode" : "activity.walking",
+          "sourceSignals" : [
+            "activity"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "You'll be on your feet a lot in Tokyo.",
+      "reasonArguments" : {
+        "destination" : "Tokyo"
+      },
+      "reasonCode" : "activity.walking",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "activity"
+      ]
+    },
+    {
+      "canonicalItemID" : "health.pain_reliever",
+      "carrier" : "primary",
+      "category" : "health",
+      "displayName" : "Pain reliever",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.health",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Better to have and not need.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.health",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.body_wash",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Body wash",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.deodorant",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Deodorant",
+      "importance" : "important",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.shampoo",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Shampoo",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothbrush",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothbrush",
+      "importance" : "important",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "toiletries.toothpaste",
+      "carrier" : "primary",
+      "category" : "toiletries",
+      "displayName" : "Toothpaste",
+      "importance" : "important",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.toiletries",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Small to pack, annoying to replace mid-trip.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.toiletries",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.book",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Book or magazine",
+      "importance" : "optional",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+            "tripType" : "vacation"
+          },
+          "reasonCode" : "trip_type.generic",
+          "sourceSignals" : [
+            "tripType"
+          ],
+          "tripType" : "vacation"
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Suggested for a vacation trip.",
+      "reasonArguments" : {
+        "tripType" : "vacation"
+      },
+      "reasonCode" : "trip_type.generic",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.compression_packing",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Packing cubes",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.empty_security_bottle",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Empty water bottle",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "flight.empty_bottle",
+          "sourceSignals" : [
+            "tripType"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Useful after airport security.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "flight.empty_bottle",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "tripType"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.laundry_bag",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Laundry bag",
+      "importance" : "normal",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    },
+    {
+      "canonicalItemID" : "travel_comfort.toiletry_bag",
+      "carrier" : "primary",
+      "category" : "travel_comfort",
+      "displayName" : "Toiletry bag",
+      "importance" : "important",
+      "owner" : "primary",
+      "provenance" : [
+        {
+          "reasonArguments" : {
+
+          },
+          "reasonCode" : "base.essential.travel_comfort",
+          "sourceSignals" : [
+            "baseEssential"
+          ]
+        }
+      ],
+      "quantity" : 1,
+      "quantityReason" : "",
+      "quantityReasonArguments" : {
+
+      },
+      "reason" : "Keeps a full bag livable.",
+      "reasonArguments" : {
+
+      },
+      "reasonCode" : "base.essential.travel_comfort",
+      "satisfiedCapabilities" : [
+
+      ],
+      "signals" : [
+        "baseEssential"
+      ]
+    }
+  ],
+  "luggage" : {
+    "appliesCapacityConstraint" : false,
+    "capacity" : "checkedAvailable",
+    "selectedBags" : [
+      "carryOn",
+      "checked"
+    ]
+  }
+}

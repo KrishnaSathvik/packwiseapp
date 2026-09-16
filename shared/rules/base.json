@@ -34,6 +34,26 @@
     "essentials.cash",
     "documents.travel_insurance"
   ],
+  "traveler_device_chips": {
+    "bringingPhone": [
+      "essentials.phone",
+      "electronics.phone_charger"
+    ],
+    "bringingTablet": [
+      "electronics.tablet"
+    ],
+    "bringingHeadphones": [
+      "electronics.headphones"
+    ],
+    "bringingPowerBank": [
+      "electronics.power_bank"
+    ],
+    "bringingCamera": [
+      "electronics.camera",
+      "electronics.camera_charger",
+      "electronics.memory_card"
+    ]
+  },
   "context_chips": {
     "dailyMedication": [
       "health.daily_medication",
@@ -77,6 +97,7 @@
   },
   "free_text_keywords": {
     "hik": "hiking",
+    "camping": "camping",
     "photo": "photography",
     "yoga": "yoga",
     "snorkel": "snorkeling",

@@ -1,6 +1,47 @@
 import SwiftData
 import SwiftUI
 
+/// Which status-bar appearance Trip Detail requests: light glyphs while any
+/// part of the dark hero's top band is under the status bar, which holds for
+/// every hero state — trusted photo and map under the shared top shade, the
+/// brand-blue fallback, and the brand-blue loading surface.
+enum StatusBarOverHero {
+    /// The status region plus the navigation bar, in points.
+    static let chromeHeight: CGFloat = 100
+
+    static func heroIsUnderStatusBar(scrolledBy offset: CGFloat, heroHeight: CGFloat) -> Bool {
+        offset < heroHeight - chromeHeight
+    }
+}
+
+/// One Trip Detail category row: what the overview shows for a category
+/// that has at least one item.
+struct CategorySummary: Equatable {
+    var category: PackingCategory
+    var packed: Int
+    var total: Int
+}
+
+/// The Packing block on Trip Detail (Task 10): every category with at least
+/// one item, in the trip's display order, and nothing for an empty one. No
+/// cap and no "N more categories" row — the screen scrolls instead.
+enum TripDetailCategoryOverview {
+    static func summaries(
+        of items: [(category: PackingCategory, isPacked: Bool)],
+        order: [PackingCategory]
+    ) -> [CategorySummary] {
+        order.compactMap { category in
+            let matching = items.filter { $0.category == category }
+            guard !matching.isEmpty else { return nil }
+            return CategorySummary(
+                category: category,
+                packed: matching.filter(\.isPacked).count,
+                total: matching.count
+            )
+        }
+    }
+}
+
 /// Trip overview.
 ///
 /// Understanding the trip and doing the packing are separate jobs, so this
@@ -22,23 +63,14 @@ struct TripDetailView: View {
     @State private var editing = false
     @State private var openList: PackingListDestination?
     @State private var showingTripOptions = false
+    /// True while the dark destination hero is under the status bar.
+    @State private var heroUnderStatusBar = true
 
     var body: some View {
         GeometryReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    ZStack(alignment: .topLeading) {
-                        hero
-                        HStack {
-                            heroBackButton
-                            Spacer()
-                            heroOptionsMenu
-                        }
-                        .frame(width: proxy.size.width - (PackWiseSpacing.comfortable * 2))
-                        .padding(.horizontal, PackWiseSpacing.comfortable)
-                        .padding(.top, PackWiseSize.heroControlTopInset)
-                        .zIndex(2)
-                    }
+                    hero
                     VStack(alignment: .leading, spacing: PackWiseSpacing.loose) {
                         progress
                         weatherChanged
@@ -47,19 +79,42 @@ struct TripDetailView: View {
                         categories
                     }
                     .padding(.horizontal, PackWiseSpacing.comfortable)
-                    // The progress card overlaps the hero's bottom edge, which is
-                    // what stitches the photo and the content into one screen.
-                    .padding(.top, -PackWiseSpacing.loose)
+                    // Task 9: the progress card no longer overlaps the hero —
+                    // it would cover the imagery's attribution in the
+                    // bottom-left corner.
+                    .padding(.top, PackWiseSpacing.loose)
                 }
                 // Nested horizontal content (weather days and chips) must not
                 // widen the vertical page at accessibility sizes.
                 .frame(width: proxy.size.width, alignment: .leading)
                 .padding(.bottom, PackWiseSpacing.section)
             }
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                StatusBarOverHero.heroIsUnderStatusBar(
+                    scrolledBy: geometry.contentOffset.y + geometry.contentInsets.top,
+                    heroHeight: PackWiseSize.heroHeight
+                )
+            } action: { _, underHero in
+                heroUnderStatusBar = underHero
+            }
+            #if DEBUG
+            // Screen captures cannot scroll the simulator, so a Debug launch
+            // may ask for the page to open at its bottom. Compiled out of
+            // Release with the rest of the capture harness.
+            .defaultScrollAnchor(DebugPreviewScreen.requested?.initialScrollAnchor)
+            #endif
         }
         .ignoresSafeArea(edges: .top)
         .background(PackWiseColor.screen)
-        .toolbar(.hidden, for: .navigationBar)
+        // Task 9.1: status-bar appearance is requested through the navigation
+        // bar. The bar is present but clear, so the hero shows through and
+        // the back and options controls are its items; its color scheme sets
+        // light status-bar glyphs over the dark hero, and dark ones once the
+        // white content scrolls under it. Other screens keep their own bars.
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(Color.clear, for: .navigationBar)
+        .toolbarColorScheme(heroUnderStatusBar ? .dark : .light, for: .navigationBar)
+        .toolbar { heroToolbar }
         // A pushed screen with a full-bleed hero. The root tabs floating over
         // it belong to the root experience, not to one trip.
         .toolbar(.hidden, for: .tabBar)
@@ -102,6 +157,22 @@ struct TripDetailView: View {
 
     // MARK: - Hero
 
+    // As in the setup shell: on iOS 26 a toolbar item is wrapped in Liquid
+    // Glass unless its shared background is hidden, and the hero controls
+    // draw their own disc.
+    @ToolbarContentBuilder
+    private var heroToolbar: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarItem(placement: .topBarLeading) { heroBackButton }
+                .sharedBackgroundVisibility(.hidden)
+            ToolbarItem(placement: .topBarTrailing) { heroOptionsMenu }
+                .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) { heroBackButton }
+            ToolbarItem(placement: .topBarTrailing) { heroOptionsMenu }
+        }
+    }
+
     private var heroBackButton: some View {
         Button {
             dismiss()
@@ -122,60 +193,29 @@ struct TripDetailView: View {
         .accessibilityLabel("Trip options")
     }
 
+    /// The shared destination hero (Task 9). Its visual is a background, so
+    /// the destination text sets the height at large sizes; the top band
+    /// under the controls is reserved for decoration and never holds text.
     private var hero: some View {
-        DestinationVisualView(
+        DestinationHero(
             destination: trip.destination,
-            purpose: .tripHero,
-            overlaysText: true
-        )
-        .frame(
-            height: dynamicTypeSize.isAccessibilitySize
-                ? PackWiseSize.heroAccessibilityHeight
-                : PackWiseSize.heroHeight
-        )
-        .overlay(alignment: .bottomLeading) {
-            VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
-                if isFinished {
-                    PackWiseStatusBadge(
-                        title: "Completed",
-                        symbol: "checkmark.circle.fill",
-                        tint: PackWiseColor.success,
-                        style: .onPhoto
-                    )
-                }
-                Text(trip.destinationDisplayName)
-                    .font(.largeTitle.bold())
-                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.75)
-                Text(dateLine)
-                    .font(.subheadline)
-                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-                    .foregroundStyle(.white.opacity(0.9))
-                if !trip.party.usesSimpleList {
-                    Text(trip.party.summary)
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.9))
-                }
+            style: .hero,
+            title: trip.destinationDisplayName,
+            metadata: [dateLine] + (trip.party.usesSimpleList ? [] : [trip.party.summary]),
+            minHeight: PackWiseSize.heroHeight,
+            reservedTop: PackWiseSize.heroControlTopInset + PackWiseSize.tapTarget,
+            topShade: true
+        ) {
+            if isFinished {
+                PackWiseStatusBadge(
+                    title: "Completed",
+                    symbol: "checkmark.circle.fill",
+                    tint: PackWiseColor.success,
+                    style: .onPhoto
+                )
             }
-            .foregroundStyle(.white)
-            .padding(PackWiseSpacing.comfortable)
-            // Look Around snapshots carry Apple's Maps attribution in the
-            // bottom-left corner. It is a licensing requirement and must not
-            // be covered, so the trip text clears it — and clears the
-            // progress card overlapping the hero's bottom edge.
-            .padding(.bottom, PackWiseSpacing.section + PackWiseSpacing.snug)
         }
-        .overlay(alignment: .top) {
-            // Keeps the back button legible over a bright image.
-            LinearGradient(
-                colors: [.black.opacity(0.35), .clear],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 110)
-            .allowsHitTesting(false)
-        }
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
     }
 
     /// A finished trip is a record, not a task: no weather proposal, and the
@@ -427,7 +467,7 @@ struct TripDetailView: View {
             }
             PackWiseCard {
                 VStack(spacing: 0) {
-                    ForEach(Array(visibleCategorySummaries.enumerated()), id: \.element.category) { index, summary in
+                    ForEach(Array(categorySummaries.enumerated()), id: \.element.category) { index, summary in
                         if index > 0 {
                             PackWiseRowDivider()
                         }
@@ -435,19 +475,6 @@ struct TripDetailView: View {
                             openList = PackingListDestination(category: summary.category)
                         } label: {
                             categoryRow(summary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    if remainingCategoryCount > 0 {
-                        PackWiseRowDivider()
-                        Button {
-                            openList = PackingListDestination(category: nil)
-                        } label: {
-                            Text("\(remainingCategoryCount) more categories")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(PackWiseColor.accent)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.vertical, PackWiseSpacing.regular)
                         }
                         .buttonStyle(.plain)
                     }
@@ -469,69 +496,66 @@ struct TripDetailView: View {
     /// fraction — the bar is what makes the block scannable at a glance,
     /// which a column of "4 / 6" is not.
     private func categoryRow(_ summary: CategorySummary) -> some View {
-        HStack(spacing: PackWiseSpacing.regular) {
+        HStack(alignment: .center, spacing: PackWiseSpacing.regular) {
             PackWiseIconBadge(
                 symbol: summary.category.style.symbol,
                 tint: summary.category.style.tint
             )
-            Text(summary.category.title)
-                .font(.body)
-                .lineLimit(1)
-            Spacer(minLength: PackWiseSpacing.snug)
-            Text("\(summary.packed) / \(summary.total)")
-                .font(.subheadline)
-                .foregroundStyle(PackWiseColor.textSecondary)
-                .monospacedDigit()
-            PackWiseProgressBar(
-                fraction: summary.total == 0 ? 0 : Double(summary.packed) / Double(summary.total),
-                tint: PackWiseColor.success,
-                height: 6
-            )
-            .frame(width: 52)
+            if dynamicTypeSize.isAccessibilitySize {
+                // Eleven rows at accessibility sizes: the title keeps its
+                // line, and the count and bar drop under it instead of
+                // squeezing the title to a single clipped word.
+                VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                    Text(summary.category.title)
+                        .font(.body)
+                    HStack(spacing: PackWiseSpacing.snug) {
+                        categoryProgressText(summary)
+                        categoryProgressBar(summary)
+                    }
+                }
+                Spacer(minLength: PackWiseSpacing.snug)
+            } else {
+                Text(summary.category.title)
+                    .font(.body)
+                    .lineLimit(1)
+                Spacer(minLength: PackWiseSpacing.snug)
+                categoryProgressText(summary)
+                categoryProgressBar(summary)
+            }
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(PackWiseColor.textTertiary)
         }
         .padding(.vertical, PackWiseSpacing.regular)
+        .frame(minHeight: 44)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(summary.category.title), \(summary.packed) of \(summary.total) packed")
         .accessibilityAddTraits(.isButton)
     }
 
-    private struct CategorySummary {
-        var category: PackingCategory
-        var packed: Int
-        var total: Int
+    private func categoryProgressText(_ summary: CategorySummary) -> some View {
+        Text("\(summary.packed) / \(summary.total)")
+            .font(.subheadline)
+            .foregroundStyle(PackWiseColor.textSecondary)
+            .monospacedDigit()
+            .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private func categoryProgressBar(_ summary: CategorySummary) -> some View {
+        PackWiseProgressBar(
+            fraction: summary.total == 0 ? 0 : Double(summary.packed) / Double(summary.total),
+            tint: PackWiseColor.success,
+            height: 6
+        )
+        .frame(width: 52)
     }
 
     private var categorySummaries: [CategorySummary] {
-        let order = PackingCategory.displayOrder(
-            international: trip.contextChips.contains(.travelingInternationally) || isInternational,
-            outdoor: trip.tripType == .outdoor
+        TripDetailCategoryOverview.summaries(
+            of: trip.items.map { ($0.category, $0.isPacked) },
+            order: PackingCategory.displayOrder(international: trip.isInternational, tripTypes: trip.tripTypes)
         )
-        return order.compactMap { category in
-            let items = trip.items.filter { $0.category == category }
-            guard !items.isEmpty else { return nil }
-            return CategorySummary(
-                category: category,
-                packed: items.filter(\.isPacked).count,
-                total: items.count
-            )
-        }
-    }
-
-    private var visibleCategorySummaries: [CategorySummary] {
-        Array(categorySummaries.prefix(5))
-    }
-
-    private var remainingCategoryCount: Int {
-        max(0, categorySummaries.count - visibleCategorySummaries.count)
-    }
-
-    private var isInternational: Bool {
-        let home = preferenceRecords.first?.homeCountryCode ?? Locale.current.region?.identifier ?? "US"
-        return trip.destinationCountryCode.uppercased() != home.uppercased()
     }
 
     // MARK: - Weather plumbing

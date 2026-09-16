@@ -89,6 +89,9 @@ struct BaseRulesFile: Codable, Sendable {
     var baseEssentials: [String]
     var internationalAdds: [String]
     var contextChips: [String: [String]]
+    /// Traveler-scoped device signals (Task 8). Kept apart from
+    /// `context_chips`, which is also the Intelligence API chip vocabulary.
+    var travelerDeviceChips: [String: [String]]? = nil
     var freeTextKeywords: [String: String]
     var shortTripSkips: ShortTripSkips?
 
@@ -96,22 +99,9 @@ struct BaseRulesFile: Codable, Sendable {
         case baseEssentials = "base_essentials"
         case internationalAdds = "international_adds"
         case contextChips = "context_chips"
+        case travelerDeviceChips = "traveler_device_chips"
         case freeTextKeywords = "free_text_keywords"
         case shortTripSkips = "short_trip_skips"
-    }
-}
-
-struct TripTypesRulesFile: Codable, Sendable {
-    var tripTypes: [String: TripTypeRule]
-    enum CodingKeys: String, CodingKey { case tripTypes = "trip_types" }
-}
-
-struct TripTypeRule: Codable, Sendable {
-    var add: [String]
-    var preferActivities: [String]?
-    enum CodingKeys: String, CodingKey {
-        case add
-        case preferActivities = "prefer_activities"
     }
 }
 
@@ -284,48 +274,42 @@ struct ReasonTemplatesFile: Codable, Sendable {
     var templates: [String: String]
 }
 
-struct PartyRulesFile: Codable, Sendable {
+struct PartyRulesFile: Decodable, Sendable {
     var sharedByDefault: [String]
-    /// Skipped for infants, toddlers, and school-age children.
-    var skipForYoungChildren: [String]
-    /// Skipped only below school age: items a school-age child plausibly
-    /// carries (headphones, a book, their own organizers) that a toddler
-    /// does not.
-    var skipForInfantsAndToddlers: [String]
     var ageGroups: [String: AgeGroupRule]
     var activityAdds: [String: [String]]
     var sharingPolicies: [String: SharingPolicyRule]
+    /// Product Experience V2, Task 6: one eligibility family per catalog
+    /// item, read only by `TravelerEligibilityResolver`.
+    var eligibility: EligibilityRules
 
     enum CodingKeys: String, CodingKey {
-        case sharedByDefault, skipForYoungChildren, skipForInfantsAndToddlers, ageGroups, activityAdds, sharingPolicies
+        case sharedByDefault, ageGroups, activityAdds, sharingPolicies, eligibility
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         sharedByDefault = try container.decode([String].self, forKey: .sharedByDefault)
-        skipForYoungChildren = try container.decode([String].self, forKey: .skipForYoungChildren)
-        skipForInfantsAndToddlers = try container.decodeIfPresent([String].self, forKey: .skipForInfantsAndToddlers) ?? []
         ageGroups = try container.decode([String: AgeGroupRule].self, forKey: .ageGroups)
         activityAdds = try container.decode([String: [String]].self, forKey: .activityAdds)
         sharingPolicies = try container.decode([String: SharingPolicyRule].self, forKey: .sharingPolicies)
+        eligibility = try container.decode(EligibilityRules.self, forKey: .eligibility)
     }
 }
 
 struct AgeGroupRule: Codable, Sendable {
     var add: [String]
     var candidates: [String: [String]]
-    var skipAdultClothing: Bool
     var quantityMultipliers: [String: Double]
 
     enum CodingKeys: String, CodingKey {
-        case add, candidates, skipAdultClothing, quantityMultipliers
+        case add, candidates, quantityMultipliers
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         add = try container.decodeIfPresent([String].self, forKey: .add) ?? []
         candidates = try container.decodeIfPresent([String: [String]].self, forKey: .candidates) ?? [:]
-        skipAdultClothing = try container.decodeIfPresent(Bool.self, forKey: .skipAdultClothing) ?? false
         quantityMultipliers = try container.decodeIfPresent([String: Double].self, forKey: .quantityMultipliers) ?? [:]
     }
 }
@@ -335,11 +319,15 @@ struct SharingPolicyRule: Codable, Sendable {
     var per: Int?
     var min: Int?
     var value: Int?
+    /// `scaleByDevices` only (Task 7.2): the canonical devices that count
+    /// toward `SharingBasis.deviceCount` when their rows are on the list —
+    /// resolved device ownership, never an age-based approximation.
+    var devices: [String]? = nil
 }
 
 struct PackingRulesFile: Sendable {
     var base: BaseRulesFile
-    var tripTypes: [String: TripTypeRule]
+    var tripTypeContracts: TripTypeContractTable
     var activities: [String: [String]]
     var weather: WeatherRulesFile
     var quantities: QuantityPolicyFile
@@ -348,15 +336,49 @@ struct PackingRulesFile: Sendable {
     var party: PartyRulesFile
 
     var baseEssentials: [String] { base.baseEssentials }
+
     var internationalAdds: [String] { base.internationalAdds }
-    var contextChips: [String: [String]] { base.contextChips }
+    /// Every chip's item adds: trip/primary context chips plus traveler
+    /// device signals. The engine reads one map.
+    var contextChips: [String: [String]] { base.contextChips.merging(base.travelerDeviceChips ?? [:]) { current, _ in current } }
     var freeTextKeywords: [String: String] { base.freeTextKeywords }
 }
 
-struct RecommendationProvenance: Hashable, Sendable {
+/// One structured causal fact behind a recommendation: which rule source
+/// contributed the item. Part of the single Phase 8 `RecommendationTrace`
+/// (read via `RecommendationTrace.provenance(for:)`); an item may carry
+/// several, and reason copy never erases them.
+struct RecommendationProvenance: Hashable, Codable, Sendable {
     var reasonCode: String
     var reasonArguments: [String: String]
     var sourceSignals: [RecommendationSignal]
+    /// The trip type behind this fact, when a trip type is the source
+    /// (design Section 10: structured facts per contributing trip type).
+    var tripType: TripType? = nil
+
+    /// The one stable order for an item's facts, so identical inputs always
+    /// persist and render identically regardless of collection order:
+    /// signal vocabulary order, then reason code, then trip-type stable order,
+    /// then arguments.
+    static func canonicalOrder(_ facts: [RecommendationProvenance]) -> [RecommendationProvenance] {
+        var unique: [RecommendationProvenance] = []
+        for fact in facts where !unique.contains(fact) { unique.append(fact) }
+        func signalRank(_ fact: RecommendationProvenance) -> Int {
+            fact.sourceSignals.first.flatMap { RecommendationSignal.allCases.firstIndex(of: $0) } ?? Int.max
+        }
+        func tripTypeRank(_ fact: RecommendationProvenance) -> Int {
+            fact.tripType.flatMap { TripType.stableOrder.firstIndex(of: $0) } ?? -1
+        }
+        func argumentsKey(_ fact: RecommendationProvenance) -> String {
+            fact.reasonArguments.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        }
+        return unique.sorted { a, b in
+            if signalRank(a) != signalRank(b) { return signalRank(a) < signalRank(b) }
+            if a.reasonCode != b.reasonCode { return a.reasonCode < b.reasonCode }
+            if tripTypeRank(a) != tripTypeRank(b) { return tripTypeRank(a) < tripTypeRank(b) }
+            return argumentsKey(a) < argumentsKey(b)
+        }
+    }
 }
 
 struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
@@ -372,6 +394,28 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
     var reasonCode: String
     var reasonArguments: [String: String]
     var quantityReason: String
+    /// Engine-only structured facts behind a clothing quantity. Persistence
+    /// and product presentation are deliberately deferred to Phase 8.
+    var quantityEvidence: ClothingQuantityEvidence?
+    /// Structured arguments behind quantityReason for the non-clothing
+    /// quantity families (care, warm-layer rotation, party sharing) — the
+    /// same role reasonArguments already plays for the inclusion reason.
+    /// Closed key vocabulary: quantity, days, rate, name, travelerCount,
+    /// rainDays, and for party sharing sharingPolicy, per, deviceCount, and
+    /// eligibleConsumerCount (Task 7.1). Empty for fixed singletons and for the clothing family,
+    /// which already has quantityEvidence.
+    var quantityReasonArguments: [String: String] = [:]
+    /// itemCapabilities[canonicalItemID] ∩ activeNeeds, computed once inside
+    /// CoverageResolver.resolve's own resolution loop. Empty when this
+    /// item's own capabilities don't intersect any currently-active need
+    /// (most items, and every item outside the closed capability
+    /// vocabulary).
+    var satisfiedCapabilities: [String] = []
+    /// Captured once, in PackingEngine.resolve, at the one
+    /// ConstraintResolver.optionalRuling call that decides whether this
+    /// item survives a space-constrained bag. Nil whenever that ruling
+    /// never left its own no-op guard for this item.
+    var bagStyleConstraintFact: BagStyleConstraintFact? = nil
     var isUserAdded: Bool
     var isUserModified: Bool
     var ownershipType: PackingOwnership
@@ -380,6 +424,16 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
     /// Who is responsible for bringing it. Distinct from the owner.
     var assignedTravelerID: UUID?
     var bagID: UUID?
+    /// Backing store for `provenance`. Optional so a draft encoded before
+    /// Task 4 (inside a pending weather proposal's payload) still decodes.
+    private var provenanceFacts: [RecommendationProvenance]? = nil
+
+    /// Every structured causal fact behind this item, in canonical order.
+    /// Read through `RecommendationTrace.provenance(for:)`.
+    var provenance: [RecommendationProvenance] {
+        get { provenanceFacts ?? [] }
+        set { provenanceFacts = newValue.isEmpty ? nil : newValue }
+    }
 
     var isPacked: Bool { packedQuantity >= max(1, quantity) }
 
@@ -404,12 +458,17 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
         reasonCode: String = "",
         reasonArguments: [String: String] = [:],
         quantityReason: String = "",
+        quantityEvidence: ClothingQuantityEvidence? = nil,
+        quantityReasonArguments: [String: String] = [:],
+        satisfiedCapabilities: [String] = [],
+        bagStyleConstraintFact: BagStyleConstraintFact? = nil,
         isUserAdded: Bool = false,
         isUserModified: Bool = false,
         ownershipType: PackingOwnership = .personal,
         travelerID: UUID? = nil,
         assignedTravelerID: UUID? = nil,
-        bagID: UUID? = nil
+        bagID: UUID? = nil,
+        provenance: [RecommendationProvenance] = []
     ) {
         self.id = id
         self.canonicalItemID = canonicalItemID
@@ -423,18 +482,65 @@ struct PackingItemDraft: Hashable, Identifiable, Codable, Sendable {
         self.reasonCode = reasonCode
         self.reasonArguments = reasonArguments
         self.quantityReason = quantityReason
+        self.quantityEvidence = quantityEvidence
+        self.quantityReasonArguments = quantityReasonArguments
+        self.satisfiedCapabilities = satisfiedCapabilities
+        self.bagStyleConstraintFact = bagStyleConstraintFact
         self.isUserAdded = isUserAdded
         self.isUserModified = isUserModified
         self.ownershipType = ownershipType
         self.travelerID = travelerID
         self.assignedTravelerID = assignedTravelerID
         self.bagID = bagID
+        self.provenance = provenance
     }
 }
 
+extension PackingItemDraft {
+    /// True when any causal fact behind this item differs from a freshly
+    /// regenerated version of it — not just quantity. Phase 8, Task 3:
+    /// `PackingEngine.recommendationDiff`'s per-item comparison and
+    /// `WeatherChangeReconciler.prune`'s re-validation both need the
+    /// identical predicate (two real call sites), so it lives here rather
+    /// than duplicated privately in each, which would let them silently
+    /// drift apart the next time either is edited.
+    func causallyDiffers(from fresh: PackingItemDraft) -> Bool {
+        quantity != fresh.quantity
+            || reasonCode != fresh.reasonCode
+            || reasonArguments != fresh.reasonArguments
+            || sourceSignals != fresh.sourceSignals
+            || quantityReason != fresh.quantityReason
+            || quantityReasonArguments != fresh.quantityReasonArguments
+            || satisfiedCapabilities != fresh.satisfiedCapabilities
+            || bagStyleConstraintFact != fresh.bagStyleConstraintFact
+            // A record from before Task 4 has no stored provenance; that
+            // absence alone is not a change to show the traveler. It is
+            // written the next time a real causal change refreshes the item.
+            || (!provenance.isEmpty && provenance != fresh.provenance)
+    }
+}
+
+struct BagStyleConstraintFact: Hashable, Codable, Sendable {
+    /// True when the item survived only because it carries an
+    /// essentialOptionalTags tag (base/rain/cold/medication) — without that
+    /// protection, this exact bag/style combination would have trimmed it
+    /// (ConstraintResolver.swift's optionalRuling).
+    var survivedByEssentialTagProtection: Bool
+    /// The conflictKey this bag/style combination would use for a
+    /// non-protected optional item. Nil only when this bag/style
+    /// combination doesn't trim optionals at all.
+    var wouldTrimUnderKey: String?
+}
+
+/// A regeneration-time change to an already-existing item, widened (Phase 8,
+/// Task 3) from quantity-only to the full merged draft: `fresh` is the
+/// already-correctly-merged draft `PackingEngine.resolve`/`applyQuantities`
+/// produced (preserving `id`/`packedQuantity`/explicit `assignedTravelerID`),
+/// safe to apply wholesale via `PackingItemRecord.apply(_:)`.
 struct QuantityChangeSuggestion: Hashable, Codable, Sendable {
-    var item: PackingItemDraft
-    var suggestedQuantity: Int
+    var existing: PackingItemDraft
+    var fresh: PackingItemDraft
+    var suggestedQuantity: Int { fresh.quantity }
 }
 
 struct RecommendationDiff: Hashable, Identifiable, Codable, Sendable {
@@ -461,4 +567,7 @@ struct RuleSuggestion: Hashable, Sendable {
     var reasonCode: String
     var reasonArguments: [String: String]
     var reason: String
+    /// Every source that suggested this item. Merges append; the row's single
+    /// reason is chosen by tier, but no contributing fact is ever dropped.
+    var provenance: [RecommendationProvenance] = []
 }

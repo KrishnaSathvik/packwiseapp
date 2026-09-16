@@ -62,13 +62,17 @@ struct PackWiseIconBadge: View {
     var tint: Color
     var size: CGFloat = PackWiseSize.badge
 
+    /// Grows with Dynamic Type so the tile keeps pace with its row's text.
+    @ScaledMetric(relativeTo: .callout) private var scale: CGFloat = 1
+
     var body: some View {
+        let side = size * min(scale, 1.6)
         RoundedRectangle(cornerRadius: PackWiseRadius.badge, style: .continuous)
             .fill(tint.opacity(0.12))
-            .frame(width: size, height: size)
+            .frame(width: side, height: side)
             .overlay {
                 Image(systemName: symbol)
-                    .font(.system(size: size * 0.47, weight: .medium))
+                    .font(.system(size: side * 0.47, weight: .medium))
                     .foregroundStyle(tint)
             }
             .accessibilityHidden(true)
@@ -185,14 +189,16 @@ struct PackWiseHeroControlLabel: View {
 /// Hairline divider between rows in a card, inset to the left edge of the
 /// text — not the card edge.
 struct PackWiseRowDivider: View {
-    /// Defaults to clearing an icon tile.
-    var inset: CGFloat = PackWiseSize.badge + PackWiseSpacing.regular
+    /// Nil clears an icon tile, scaled the same way `PackWiseIconBadge` is.
+    var inset: CGFloat? = nil
+
+    @ScaledMetric(relativeTo: .callout) private var scale: CGFloat = 1
 
     var body: some View {
         Rectangle()
             .fill(PackWiseColor.border)
             .frame(height: 1)
-            .padding(.leading, inset)
+            .padding(.leading, inset ?? PackWiseSize.badge * min(scale, 1.6) + PackWiseSpacing.regular)
     }
 }
 
@@ -337,11 +343,11 @@ struct PackWiseSelectionRow: View {
                 Spacer(minLength: PackWiseSpacing.snug)
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 22))
+                        .font(PackWiseFont.selectionGlyph)
                         .foregroundStyle(PackWiseColor.onAccent, PackWiseColor.accent)
                 } else {
                     Image(systemName: "circle")
-                        .font(.system(size: 22, weight: .light))
+                        .font(PackWiseFont.selectionGlyph.weight(.light))
                         .foregroundStyle(PackWiseColor.textTertiary)
                 }
             }

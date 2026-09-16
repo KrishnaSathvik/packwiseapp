@@ -90,10 +90,10 @@ struct WeatherChangeTests {
             endDate: end,
             durationDays: math.days,
             durationNights: math.nights,
-            tripType: .cityBreak,
+            tripTypes: [.cityBreak],
             activities: ["sightseeing", "walking"],
             datedActivities: ["sightseeing", "walking"].map { DatedActivity(activityID: $0, date: nil) },
-            bagType: .carryOn,
+            bagTypes: [.carryOn],
             packingStyle: .light,
             transportation: .unknown,
             laundryAccess: .planned,
@@ -225,7 +225,7 @@ struct WeatherChangeTests {
             return
         }
         #expect(!proposal.diff.removeCandidates.contains { $0.displayName == "Portable fan" })
-        #expect(!proposal.diff.quantityChanges.contains { $0.item.canonicalItemID == "clothing.pants" })
+        #expect(!proposal.diff.quantityChanges.contains { $0.existing.canonicalItemID == "clothing.pants" })
         #expect(existing.contains { $0.canonicalItemID == "clothing.tshirt" && $0.isPacked })
     }
 
@@ -434,9 +434,9 @@ struct WeatherChangeTests {
             endDate: calendar.date(byAdding: .day, value: 3, to: trip.endDate)!,
             durationDays: trip.durationDays,
             durationNights: trip.durationNights,
-            tripType: trip.tripType,
+            tripTypes: trip.tripTypes,
             activities: trip.activities,
-            bagType: trip.bagType,
+            bagTypes: trip.bagTypes,
             packingStyle: trip.packingStyle,
             laundryAccess: trip.laundryAccess,
             userNotes: trip.userNotes,
@@ -495,6 +495,142 @@ struct WeatherChangeTests {
         #expect(trip.weatherSnapshots.first?.weatherContext?.fetchedAt == wet.fetchedAt)
         #expect(trip.items.isEmpty)
         #expect(trip.overrides.isEmpty)
+    }
+
+    // MARK: - Task 4: weather lifecycle
+
+    /// No weather at all still generates a full, sane list — the engine
+    /// never depends on a forecast being present.
+    @Test func noWeatherStillGenerates() throws {
+        let items = try engine().generate(context: try context(weather: nil))
+        #expect(!items.isEmpty)
+        #expect(!items.contains { $0.canonicalItemID == "clothing.rain_jacket" }, "no forecast means no rain signal to react to")
+    }
+
+    // MARK: - Phase 6: cached/failed weather generation-equivalence
+
+    /// A cached forecast is structurally the same data as a live one, just
+    /// tagged stale (`WeatherDomain.swift:163`) — generation must not depend on
+    /// `source`, only on the daily data and coverage flags it already reads.
+    @Test func cachedForecastGeneratesIdenticallyToTheSameDataFresh() throws {
+        let fresh = forecast(start: date(2026, 10, 5), days: 5, high: 57, low: 48, rain: 0.6)
+        let cached = fresh.markingAsCache()
+        #expect(cached.source == .cache)
+
+        let freshItems = try engine().generate(context: try context(weather: fresh, days: 5))
+        let cachedItems = try engine().generate(context: try context(weather: cached, days: 5))
+        #expect(Set(freshItems.compactMap(\.canonicalItemID)) == Set(cachedItems.compactMap(\.canonicalItemID)))
+    }
+
+    /// A failed fetch with no usable cache falls back to `.unavailable` in
+    /// `TripWeatherResolver`, which the engine already treats as no weather at
+    /// all (`noWeatherStillGenerates`). This test exercises that path through
+    /// the resolver directly rather than re-deriving the assumption.
+    @Test func failedFetchWithNoCacheDegradesToNoWeatherGeneration() async throws {
+        let failing = MockWeatherService(fixtures: [:], forceUnavailable: true)
+        let resolved = await TripWeatherResolver.resolve(
+            using: failing, destination: try destination("Seattle"),
+            start: date(2026, 10, 5), end: date(2026, 10, 9), cached: nil
+        )
+        #expect(resolved.state == .unavailable)
+        #expect(resolved.engineWeather == nil)
+        let items = try engine().generate(context: try context(weather: resolved.engineWeather, days: 5))
+        #expect(!items.contains { $0.canonicalItemID == "clothing.rain_jacket" })
+        #expect(!items.isEmpty)
+    }
+
+    /// A forecast that only covers part of a 30-day trip is flagged as
+    /// partial, not silently treated as whole-trip coverage — the ~10-day
+    /// provider horizon genuinely leaves the back half of a long trip
+    /// uncovered.
+    @Test func partialForecastDoesNotCoverA30DayTrip() throws {
+        let start = date(2026, 9, 12)
+        let end = calendar.date(byAdding: .day, value: 29, to: start)!
+        // Only the first 10 days come back from the provider.
+        let rawDays: [DailyForecast] = (0..<10).map { index in
+            let day = calendar.date(byAdding: .day, value: index, to: start)!
+            return DailyForecast(
+                date: calendar.startOfDay(for: day),
+                symbol: "sun.max",
+                highF: 70,
+                lowF: 55,
+                rainProbability: 0.1,
+                uvIndex: 4,
+                windMph: 8,
+                snowExpected: false,
+                summary: "Sunny"
+            )
+        }
+        let weather = WeatherForecastNormalizer.context(
+            days: rawDays,
+            tripStart: start,
+            tripEnd: end,
+            fetchedAt: start,
+            providerFetchedAt: start,
+            providerExpiresAt: calendar.date(byAdding: .hour, value: 1, to: start),
+            source: .fixture,
+            fixtureID: "partial-30d",
+            calendar: calendar
+        )
+        #expect(weather.forecastAvailableForPartialTrip)
+        #expect(!weather.forecastAvailableForWholeTrip)
+        #expect(weather.dailyForecast.count == 10, "coverage stops at the provider horizon, not the trip length")
+        #expect(weather.coverageEnd != nil && weather.coverageEnd! < end)
+        // Pinned to the fixture's fetch time: the default `now: .now` made this
+        // expire for real once the wall clock passed 2026-09-12 + 1h.
+        #expect(weather.state(now: start) == .forecastPartial)
+        // Once its TTL expires, a partial forecast is refetched exactly
+        // like a whole-trip one would be — `shouldFetch` reads only
+        // `providerExpiresAt` here, not `forecastAvailableForPartialTrip`.
+        // Whether partial coverage should be retried *before* expiry is a
+        // separate question this policy does not currently answer either
+        // way (see the audit report).
+        #expect(
+            WeatherRefreshPolicy.shouldFetch(
+                existing: weather,
+                tripStart: start,
+                tripStatus: .planning,
+                now: calendar.date(byAdding: .hour, value: 2, to: start)!
+            )
+        )
+    }
+
+    /// Coverage the user already has (a rain jacket and umbrella already on
+    /// the list) means a fresh rain signal produces no packing consequence
+    /// to propose — the diff is empty, so no duplicate proposal is created.
+    @Test func existingUserRainCoveragePreventsADuplicateProposal() throws {
+        let start = date(2026, 9, 12)
+        let dry = forecast(start: start, days: 5, high: 75, low: 64, rain: 0.1)
+        let wet = forecast(start: start, days: 5, high: 75, low: 64, rain: 0.7, rainOnDay: 0)
+        var existing = try engine().generate(context: context(weather: dry))
+        #expect(!existing.contains { $0.canonicalItemID == "clothing.rain_jacket" })
+        // The user proactively packed rain gear before the forecast caught up.
+        existing.append(
+            PackingItemDraft(
+                canonicalItemID: "clothing.rain_jacket",
+                displayName: "Rain jacket",
+                category: .clothing,
+                quantity: 1,
+                importance: .important,
+                sourceSignals: [.userPreference],
+                reason: "Added by you",
+                isUserAdded: true
+            )
+        )
+        existing.append(
+            PackingItemDraft(
+                canonicalItemID: "essentials.umbrella_compact",
+                displayName: "Compact umbrella",
+                category: .essentials,
+                quantity: 1,
+                importance: .optional,
+                sourceSignals: [.userPreference],
+                reason: "Added by you",
+                isUserAdded: true
+            )
+        )
+        let outcome = try reconcile(old: dry, new: wet, existing: existing, ctx: context(weather: wet))
+        #expect(outcome == .snapshotOnly, "rain coverage the user already has must not trigger a duplicate add proposal")
     }
 
     @Test func acceptedStatusDecodesAsApplied() throws {

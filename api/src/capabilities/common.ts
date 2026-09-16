@@ -1,3 +1,4 @@
+import { canonicalBagTypes, canonicalTripTypes } from "../canonical.ts";
 import type { ModelTripShape } from "../model/inputs.ts";
 import type { PackingItemDTO, TripContextDTO } from "../types.ts";
 
@@ -20,11 +21,11 @@ export function tripShape(context: TripContextDTO): ModelTripShape {
   return {
     destination: context.destination.displayName,
     countryCode: context.destination.countryCode,
-    tripType: context.tripType,
+    tripTypes: canonicalTripTypes(context.tripTypes),
     durationDays: durationDays(context),
     activities: [...context.activities],
     contextChips: [...(context.contextChips ?? [])],
-    bagType: context.bagType,
+    bagTypes: canonicalBagTypes(context.bagTypes),
     packingStyle: context.packingStyle,
     travelerCount: context.travelerCount ?? 1,
     ...(context.weatherSummary ? { weatherSummary: context.weatherSummary } : {}),

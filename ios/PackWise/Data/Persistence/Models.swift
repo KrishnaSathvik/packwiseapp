@@ -1,3 +1,4 @@
+import CoreData
 import Foundation
 import SwiftData
 
@@ -56,6 +57,11 @@ final class TripRecord {
     var travelModeRaw: String = "solo"
     var transportationRaw: String = "unknown"
     var laundryAccessRaw: String = "none"
+    /// The trip's own origin country (Task 9.2); see `TripOrigin`. An empty
+    /// `originCountrySourceRaw` means the trip predates the column and has
+    /// not been reached by `TripOriginBackfill` yet.
+    var originCountryCode: String = ""
+    var originCountrySourceRaw: String = ""
     var createdAt: Date
     var updatedAt: Date
 
@@ -95,6 +101,7 @@ final class TripRecord {
         travelMode: TravelMode = .solo,
         transportation: Transportation = .unknown,
         laundryAccess: LaundryAccess = .none,
+        origin: TripOrigin? = nil,
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {
@@ -125,6 +132,8 @@ final class TripRecord {
         self.travelModeRaw = travelMode.rawValue
         self.transportationRaw = transportation.rawValue
         self.laundryAccessRaw = laundryAccess.rawValue
+        self.originCountryCode = origin?.countryCode ?? ""
+        self.originCountrySourceRaw = origin?.source.rawValue ?? ""
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.items = []
@@ -217,6 +226,29 @@ final class TripRecord {
         return contextChips.contains(.laundryAvailable) ? .possible : .none
     }
 
+    /// The trip's own origin, or nil until `TripOriginBackfill` has given a
+    /// pre-9.2 trip one. Writing nil is not allowed: a trip never gives an
+    /// origin back.
+    var origin: TripOrigin? {
+        get {
+            guard let source = HomeCountrySource(rawValue: originCountrySourceRaw) else { return nil }
+            return TripOrigin(countryCode: originCountryCode, source: source)
+        }
+        set {
+            guard let newValue else { return }
+            originCountryCode = newValue.countryCode ?? ""
+            originCountrySourceRaw = newValue.source.rawValue
+        }
+    }
+
+    /// The single international decision for this trip, as the engine sees
+    /// it: the "Traveling internationally" chip, or a confirmed origin that
+    /// differs from the destination. Screens order by this; never by Me.
+    var isInternational: Bool {
+        contextChips.contains(.travelingInternationally)
+            || (origin ?? .unknown).isInternational(destinationCountryCode: destinationCountryCode)
+    }
+
     func context(preferences: TravelerPreferences, weather: TripWeatherContext?) -> TripContext {
         let resolvedParty = party
         return TripContext(
@@ -225,10 +257,10 @@ final class TripRecord {
             endDate: endDate,
             durationDays: durationDays,
             durationNights: durationNights,
-            tripType: tripType,
+            tripTypes: tripTypes,
             activities: activities,
             datedActivities: activities.map { DatedActivity(activityID: $0, date: nil) },
-            bagType: bagType,
+            bagTypes: bagTypes,
             packingStyle: packingStyle,
             transportation: Transportation(rawValue: transportationRaw) ?? .unknown,
             laundryAccess: laundryAccess,
@@ -237,7 +269,8 @@ final class TripRecord {
             contextChips: Set(contextChips),
             weather: weather,
             preferences: preferences,
-            party: resolvedParty
+            party: resolvedParty,
+            origin: origin ?? .unknown
         )
     }
 }
@@ -262,6 +295,16 @@ final class PackingItemRecord {
     /// fields until Task 13 lands.
     var recommendationTraceRaw: String?
     var quantityReason: String
+    /// JSON-encoded ClothingQuantityEvidence — the one Phase 8 field whose
+    /// shape (typed numerics, an optional Int, a LaundryAccess enum) doesn't
+    /// fit the pipe/equals flattening the string-keyed fields use below.
+    /// ClothingQuantityEvidence is already Codable; this is that encoding,
+    /// not a new serialization scheme. Closes the gap the Catalog.swift
+    /// quantityEvidence doc comment named as deferred to Phase 8.
+    var quantityEvidenceRaw: String = ""
+    var quantityReasonArgumentsRaw: String = ""
+    var satisfiedCapabilitiesRaw: String = ""
+    var bagStyleConstraintFactRaw: String = ""
     var isUserAdded: Bool
     var isUserModified: Bool
     var ownershipTypeRaw: String = "personal"
@@ -285,12 +328,21 @@ final class PackingItemRecord {
         self.reasonCode = draft.reasonCode
         self.reasonArgumentsRaw = draft.reasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
         self.quantityReason = draft.quantityReason
+        if let evidence = draft.quantityEvidence, let data = try? JSONEncoder().encode(evidence) {
+            self.quantityEvidenceRaw = String(decoding: data, as: UTF8.self)
+        }
+        self.quantityReasonArgumentsRaw = draft.quantityReasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        self.satisfiedCapabilitiesRaw = draft.satisfiedCapabilities.joined(separator: ",")
+        if let fact = draft.bagStyleConstraintFact {
+            self.bagStyleConstraintFactRaw = "survivedByEssentialTagProtection=\(fact.survivedByEssentialTagProtection)|wouldTrimUnderKey=\(fact.wouldTrimUnderKey ?? "")"
+        }
         self.isUserAdded = draft.isUserAdded
         self.isUserModified = draft.isUserModified
         self.ownershipTypeRaw = draft.ownershipType.rawValue
         self.travelerID = draft.travelerID
         self.assignedTravelerID = draft.assignedTravelerID
         self.bagID = draft.bagID
+        self.recommendationTraceRaw = RecommendationTrace.ProvenanceEncoding.encode(draft.provenance)
         self.createdAt = .now
         self.updatedAt = .now
         self.trip = trip
@@ -302,6 +354,32 @@ final class PackingItemRecord {
     var isPacked: Bool { packedQuantity >= max(1, quantity) }
     var sourceSignals: [RecommendationSignal] {
         sourceSignalsRaw.split(separator: ",").compactMap { RecommendationSignal(rawValue: String($0)) }
+    }
+    var quantityEvidence: ClothingQuantityEvidence? {
+        guard !quantityEvidenceRaw.isEmpty else { return nil }
+        return try? JSONDecoder().decode(ClothingQuantityEvidence.self, from: Data(quantityEvidenceRaw.utf8))
+    }
+    var quantityReasonArguments: [String: String] {
+        Dictionary(uniqueKeysWithValues: quantityReasonArgumentsRaw.split(separator: "|").compactMap { pair in
+            let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2 else { return nil }
+            return (parts[0], parts[1])
+        })
+    }
+    var satisfiedCapabilities: [String] {
+        satisfiedCapabilitiesRaw.isEmpty ? [] : satisfiedCapabilitiesRaw.split(separator: ",").map(String.init)
+    }
+    var bagStyleConstraintFact: BagStyleConstraintFact? {
+        guard !bagStyleConstraintFactRaw.isEmpty else { return nil }
+        var protected = false
+        var wouldTrim: String?
+        for pair in bagStyleConstraintFactRaw.split(separator: "|") {
+            let parts = pair.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2 else { continue }
+            if parts[0] == "survivedByEssentialTagProtection" { protected = parts[1] == "true" }
+            if parts[0] == "wouldTrimUnderKey" { wouldTrim = parts[1].isEmpty ? nil : parts[1] }
+        }
+        return BagStyleConstraintFact(survivedByEssentialTagProtection: protected, wouldTrimUnderKey: wouldTrim)
     }
 
     var draft: PackingItemDraft {
@@ -322,25 +400,61 @@ final class PackingItemRecord {
                 return (parts[0], parts[1])
             }),
             quantityReason: quantityReason,
+            quantityEvidence: quantityEvidence,
+            quantityReasonArguments: quantityReasonArguments,
+            satisfiedCapabilities: satisfiedCapabilities,
+            bagStyleConstraintFact: bagStyleConstraintFact,
             isUserAdded: isUserAdded,
             isUserModified: isUserModified,
             ownershipType: ownershipType,
             travelerID: travelerID,
             assignedTravelerID: assignedTravelerID,
-            bagID: bagID
+            bagID: bagID,
+            provenance: RecommendationTrace.ProvenanceEncoding.decode(recommendationTraceRaw)
         )
     }
 
+    /// Refreshes the full causal unit a regeneration produces — reason,
+    /// reasonCode, sourceSignals, quantity, quantityReason, and every Phase
+    /// 8 trace field — from an already-correctly-merged draft (Phase 8,
+    /// Task 3). `TripRepository.applyDiff` is this method's real caller,
+    /// supplying `QuantityChangeSuggestion.fresh`.
+    ///
+    /// Deliberately never touched by this method: `packedQuantity` (explicit
+    /// user state — the merge-aware baseline already preserves the draft's
+    /// own packedQuantity, but this method does not additionally clamp or
+    /// reset it; the downward safety clamp when quantity decreases stays
+    /// `applyDiff`'s own responsibility, applied after this call).
+    /// `isUserAdded` never changes for a re-merged existing item.
+    /// `assignedTravelerID` is copied through as the already-correctly
+    /// preserved-or-defaulted value `resolve()` computed upstream, not
+    /// independently decided here. `bagID` is copied through unchanged; no
+    /// bag-reassignment logic exists in this phase.
     func apply(_ draft: PackingItemDraft) {
         quantity = draft.quantity
-        packedQuantity = draft.packedQuantity
         reason = draft.reason
+        reasonCode = draft.reasonCode
+        reasonArgumentsRaw = draft.reasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        sourceSignalsRaw = draft.sourceSignals.map(\.rawValue).joined(separator: ",")
         quantityReason = draft.quantityReason
+        if let evidence = draft.quantityEvidence, let data = try? JSONEncoder().encode(evidence) {
+            quantityEvidenceRaw = String(decoding: data, as: UTF8.self)
+        } else {
+            quantityEvidenceRaw = ""
+        }
+        quantityReasonArgumentsRaw = draft.quantityReasonArguments.map { "\($0.key)=\($0.value)" }.joined(separator: "|")
+        satisfiedCapabilitiesRaw = draft.satisfiedCapabilities.joined(separator: ",")
+        if let fact = draft.bagStyleConstraintFact {
+            bagStyleConstraintFactRaw = "survivedByEssentialTagProtection=\(fact.survivedByEssentialTagProtection)|wouldTrimUnderKey=\(fact.wouldTrimUnderKey ?? "")"
+        } else {
+            bagStyleConstraintFactRaw = ""
+        }
         isUserModified = draft.isUserModified
         ownershipTypeRaw = draft.ownershipType.rawValue
         travelerID = draft.travelerID
         assignedTravelerID = draft.assignedTravelerID
         bagID = draft.bagID
+        recommendationTraceRaw = RecommendationTrace.ProvenanceEncoding.encode(draft.provenance)
         updatedAt = .now
     }
 }
@@ -588,6 +702,17 @@ final class PackingPreferenceRecord {
         )
     }
 
+    /// Me's default-bags multi-select writer (Task 8). The V4 set is the
+    /// authority; the legacy scalar keeps a compat value only — the one bag
+    /// when exactly one is chosen, otherwise `notSure`, never a guessed
+    /// primary bag.
+    func setPreferredBagTypes(_ bags: Set<BagType>) {
+        let physical = bags.filter(BagType.stableOrder.contains)
+        preferredBagTypesRaw = PackWiseStableEncoding.bagTypesJSON(physical)
+        preferredBagRaw = (physical.count == 1 ? physical.first! : .notSure).rawValue
+        preferredBagTypesMigrated = true
+    }
+
     func apply(_ preferences: TravelerPreferences) {
         homeCountryCode = preferences.homeCountryCode ?? ""
         homeCountrySourceRaw = preferences.homeCountrySource.rawValue
@@ -705,23 +830,20 @@ final class PostTripFeedbackRecord {
     }
 }
 
-// Known limitation, pre-existing before Product Experience V2: unlike
-// `PackWiseSchemaV1` (`SchemaV1.swift`, a genuinely frozen snapshot type),
-// `PackWiseSchemaV2` and `PackWiseSchemaV3` below alias the same always-live
-// types this file currently declares, rather than freezing their own
-// historical shape. That has been safe so far because every V2→V3 change
-// was purely additive (new defaulted/optional columns, one new entity) and
-// `MigrationStage.lightweight` tolerates that. It does mean there is no
-// independent, testable model of "an actual V2/V3-shaped store" to migrate
-// against — only ever today's live types. A `.custom` stage (which needs
-// its two schema versions to be genuinely distinct models, not just
-// differently labeled) was tried for V3 → V4 and does not work under this
-// aliasing scheme; see `PackWiseSchemaV4`'s doc comment for what was used
-// instead. A real fix — frozen per-version snapshot types for V2/V3, the
-// same pattern `SchemaV1.swift` already uses — is a separate task; flagging
-// it here rather than re-attempting it under this one.
-enum PackWiseSchemaV2: VersionedSchema {
-    static var versionIdentifier: Schema.Version { Schema.Version(2, 0, 0) }
+/// The current store shape (6.0.0): the live `@Model` types declared in this
+/// file. It is the only version allowed to reference them — every earlier
+/// version is a frozen snapshot in `SchemaHistory.swift`, because versions
+/// that alias the same live types share a checksum and make CoreData abort
+/// any migration between them. 6.0.0 is 5.0.0 plus Task 9.2's trip-owned
+/// origin country on `TripRecord` (`originCountryCode`,
+/// `originCountrySourceRaw`), both defaulted to empty.
+///
+/// Adding, removing, or retyping any stored property on these types changes
+/// this checksum. Such a change must first freeze the current shape as a new
+/// snapshot in `SchemaHistory.swift`, then add a new newest version and a
+/// migration stage — never edit a released shape in place.
+enum PackWiseSchemaV6: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(6, 0, 0) }
     static var models: [any PersistentModel.Type] {
         [
             TripRecord.self,
@@ -733,31 +855,9 @@ enum PackWiseSchemaV2: VersionedSchema {
             PostTripFeedbackRecord.self,
             TravelerRecord.self,
             BagRecord.self,
-            WeatherChangeProposalRecord.self
+            WeatherChangeProposalRecord.self,
+            PackingMemoryEventRecord.self
         ]
-    }
-}
-
-enum PackWiseSchemaV3: VersionedSchema {
-    static var versionIdentifier: Schema.Version { Schema.Version(3, 0, 0) }
-    static var models: [any PersistentModel.Type] {
-        PackWiseSchemaV2.models + [PackingMemoryEventRecord.self]
-    }
-}
-
-/// V4 adds no new `@Model` entity and no structural attribute SwiftData
-/// itself needs to migrate: every new V4 column (`tripTypesRaw`,
-/// `recommendationTraceRaw`, `preferredBagTypesRaw`, the memory-event stable
-/// arrays) is declared directly on the live types in this file with a
-/// default value, exactly like every additive column V2 → V3 already added
-/// this way. What genuinely needs "migrating" is the *data* — populating
-/// those columns from the legacy scalars — not the schema shape, so V4
-/// reuses `PackWiseSchemaV3.models` (see `PackWiseSchemaV4Migration` below
-/// for the data step, run from `PackWisePersistence.container`).
-enum PackWiseSchemaV4: VersionedSchema {
-    static var versionIdentifier: Schema.Version { Schema.Version(4, 0, 0) }
-    static var models: [any PersistentModel.Type] {
-        PackWiseSchemaV3.models
     }
 }
 
@@ -922,11 +1022,11 @@ enum PackWiseSchemaV4Migration {
 
 enum PackWiseMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
-        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self, PackWiseSchemaV4.self]
+        [PackWiseSchemaV1.self, PackWiseSchemaV2.self, PackWiseSchemaV3.self, PackWiseSchemaV4.self, PackWiseSchemaV4_1.self, PackWiseSchemaV5.self, PackWiseSchemaV6.self]
     }
 
     static var stages: [MigrationStage] {
-        [migrateV1toV2, migrateV2toV3, migrateV3toV4]
+        [migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV4_1, migrateV4_1toV5, migrateV5toV6]
     }
 
     static let migrateV1toV2 = MigrationStage.lightweight(
@@ -934,26 +1034,163 @@ enum PackWiseMigrationPlan: SchemaMigrationPlan {
         toVersion: PackWiseSchemaV2.self
     )
 
+    /// Adds the packing-memory event entity.
     static let migrateV2toV3 = MigrationStage.lightweight(
         fromVersion: PackWiseSchemaV2.self,
         toVersion: PackWiseSchemaV3.self
     )
 
-    /// Lightweight, not custom: `PackWiseSchemaV4.models` is exactly
-    /// `PackWiseSchemaV3.models` — the same live types, unchanged as a
-    /// schema graph — so there is no structural difference for a
-    /// `MigrationStage.custom` stage to act on. (A `.custom` stage requires
-    /// its `fromVersion`/`toVersion` model graphs to be genuinely distinct;
-    /// with identical graphs, SwiftData/CoreData raises "the current model
-    /// reference and the next model reference cannot be equal.") The actual
-    /// V4 *data* migration — populating the new stable-array columns from
-    /// their legacy scalars — is not a schema-shape change at all, so it
-    /// runs as an ordinary, idempotent post-open step from
-    /// `PackWisePersistence.container` instead. See `PackWiseSchemaV4Migration`.
+    /// Adds the V4 stable-array columns with their defaults. The *data*
+    /// backfill from the legacy scalars is not a shape change, so it runs as
+    /// an idempotent post-open step from `PackWisePersistence` — see
+    /// `PackWiseSchemaV4Migration`.
     static let migrateV3toV4 = MigrationStage.lightweight(
         fromVersion: PackWiseSchemaV3.self,
         toVersion: PackWiseSchemaV4.self
     )
+
+    /// Adds `PackingPreferenceRecord.preferredBagTypesMigrated` (default
+    /// `false`, so the post-open backfill still derives the preference set
+    /// once for every row that predates it).
+    static let migrateV4toV4_1 = MigrationStage.lightweight(
+        fromVersion: PackWiseSchemaV4.self,
+        toVersion: PackWiseSchemaV4_1.self
+    )
+
+    /// Adds Phase 8's four persisted trace-fact columns, each defaulted to
+    /// empty; existing items gain them on their next accepted regeneration.
+    static let migrateV4_1toV5 = MigrationStage.lightweight(
+        fromVersion: PackWiseSchemaV4_1.self,
+        toVersion: PackWiseSchemaV5.self
+    )
+
+    /// Adds Task 9.2's trip-owned origin columns, defaulted to empty. An
+    /// empty `originCountrySourceRaw` is never a real value, so it doubles
+    /// as the "not yet owned" marker for `TripOriginBackfill`.
+    static let migrateV5toV6 = MigrationStage.lightweight(
+        fromVersion: PackWiseSchemaV5.self,
+        toVersion: PackWiseSchemaV6.self
+    )
+}
+
+/// The schema the app opens. Always the last entry of `PackWiseMigrationPlan.schemas`.
+typealias PackWiseCurrentSchema = PackWiseSchemaV6
+
+/// The data step for Tasks 8.2–9.1: Me's habits (work out, laptop, contacts,
+/// medication) stopped being engine input and became new-trip prefills. A
+/// trip saved before that boundary may owe rows to a habit alone, with no
+/// About you choice of its own — regenerating it would silently drop them,
+/// or later re-add them because Me changed.
+///
+/// The trip's own saved list is the evidence of what it was: a generated row
+/// for You whose recorded cause is a habit's reason code, with no matching
+/// choice anywhere on the trip, becomes You's saved choice. Nothing is
+/// inferred from the current preference values. Idempotent: once the choice
+/// exists the trip is skipped, so it runs on every open. No schema change —
+/// it writes only existing chip columns.
+enum MeHabitChoiceBackfill {
+    @discardableResult
+    static func run(in context: ModelContext) throws -> Int {
+        var materialized = 0
+        for trip in try context.fetch(FetchDescriptor<TripRecord>()) {
+            materialized += materialize(trip).count
+        }
+        if materialized > 0 { try context.save() }
+        return materialized
+    }
+
+    /// The choices the trip gained.
+    @discardableResult
+    static func materialize(_ trip: TripRecord) -> Set<ContextChip> {
+        let primary = trip.party.primary
+        let existing = Set(trip.contextChips).union(primary.chips)
+        let generatedForYou = trip.items.filter { !$0.isUserAdded && ($0.travelerID == nil || $0.travelerID == primary.id) }
+        var gained: Set<ContextChip> = []
+        for chip in MeDefaultChoices.habits.map(\.chip) where !existing.contains(chip) {
+            let code = MeDefaultChoices.reasonCode(chip)
+            let owed = generatedForYou.contains { item in
+                item.reasonCode == code
+                    || item.draft.provenance.contains { $0.reasonCode == code }
+                    || (item.recommendationTraceRaw?.contains("\"\(code)\"") ?? false)
+            }
+            if owed { gained.insert(chip) }
+        }
+        guard !gained.isEmpty else { return [] }
+        trip.contextChipsRaw = (trip.contextChips + ContextChip.allCases.filter(gained.contains)).map(\.rawValue).joined(separator: ",")
+        if let record = trip.travelers.first(where: { $0.id == primary.id }) {
+            var traveler = record.domain
+            traveler.chips.formUnion(gained)
+            record.apply(traveler)
+        }
+        return gained
+    }
+}
+
+/// The data step for Task 9.2: a trip saved before it owned an origin gains
+/// one exactly once, on the next store open, and Me is never consulted for
+/// that trip again.
+///
+/// Precedence, per trip with an empty `originCountrySourceRaw`:
+///
+/// 1. The trip's own evidence decides its classification. A "Traveling
+///    internationally" chip already keeps it international whatever the
+///    origin. A generated row caused by `destination.international` means it
+///    was international when generated: if today's Me explains that, Me is
+///    the origin; if Me contradicts it (Me now equals the destination), the
+///    chip is added so the trip says so itself. A generated list with no
+///    such row was built without a confirmed origin, so the trip keeps Me's
+///    code as an *unconfirmed* origin and stays domestic.
+/// 2. A trip with nothing to say (no generated rows) is seeded from Me.
+///
+/// Idempotent: an owned origin is skipped by the fetch predicate, so this
+/// runs on every open. Never touches rows, quantities, packed state,
+/// overrides, travelers, trip types, activities, or bags.
+enum TripOriginBackfill {
+    static let internationalReasonCode = "destination.international"
+
+    /// The number of trips that gained an origin.
+    @discardableResult
+    static func run(in context: ModelContext) throws -> Int {
+        let unowned = try context.fetch(FetchDescriptor<TripRecord>(
+            predicate: #Predicate { $0.originCountrySourceRaw == "" }
+        ))
+        guard !unowned.isEmpty else { return 0 }
+        let me = try context.fetch(FetchDescriptor<PackingPreferenceRecord>()).first?.preferences ?? .deviceDefaults()
+        for trip in unowned { materialize(trip, me: me) }
+        try context.save()
+        return unowned.count
+    }
+
+    static func materialize(_ trip: TripRecord, me: TravelerPreferences) {
+        let seeded = TripOrigin(seededFrom: me)
+        let generated = trip.items.filter { !$0.isUserAdded }
+        let listSaysInternational = generated.contains { item in
+            item.reasonCode == internationalReasonCode
+                || item.draft.provenance.contains { $0.reasonCode == internationalReasonCode }
+                || (item.recommendationTraceRaw?.contains("\"\(internationalReasonCode)\"") ?? false)
+        }
+        let seededSaysInternational = seeded.isInternational(destinationCountryCode: trip.destinationCountryCode)
+
+        if trip.contextChips.contains(.travelingInternationally) || generated.isEmpty {
+            trip.origin = seeded
+        } else if listSaysInternational {
+            trip.origin = seeded
+            if !seededSaysInternational {
+                trip.contextChipsRaw = (trip.contextChips + [.travelingInternationally]).map(\.rawValue).joined(separator: ",")
+            }
+        } else if seededSaysInternational {
+            trip.origin = TripOrigin(countryCode: seeded.countryCode, source: .deviceSuggested)
+        } else {
+            trip.origin = seeded
+        }
+    }
+}
+
+enum PackWisePersistenceError: Error, Equatable {
+    /// The on-disk store's entity hashes match no schema in the migration
+    /// plan. Opening it anyway makes CoreData abort the process, so it is
+    /// refused untouched instead.
+    case unrecognizedStoreModel(storeVersionIdentifiers: [String])
 }
 
 enum PackWisePersistence {
@@ -962,22 +1199,50 @@ enum PackWisePersistence {
     /// 6.3): PackWise must never delete `packwise.store`, its WAL, or SHM
     /// merely because migration failed.
     static func container(inMemory: Bool = false) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: PackWiseSchemaV4.self)
-        let config: ModelConfiguration
         if inMemory {
-            config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        } else {
-            let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-                ?? URL(fileURLWithPath: NSTemporaryDirectory())
-            try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
-            config = ModelConfiguration(
-                "packwise",
-                schema: schema,
-                url: support.appendingPathComponent("packwise.store"),
-                cloudKitDatabase: .none
-            )
+            let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
+            let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            return try open(schema: schema, configuration: config)
         }
-        let container = try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [config])
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSTemporaryDirectory())
+        try? FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
+        return try container(storeURL: support.appendingPathComponent("packwise.store"))
+    }
+
+    /// Opens (and, if needed, migrates) the store at `storeURL`.
+    ///
+    /// An existing store whose shape no plan schema describes is refused
+    /// with `PackWisePersistenceError.unrecognizedStoreModel` before SwiftData
+    /// sees it: CoreData answers such a store with an uncatchable abort, not
+    /// a thrown error. The refused store is left byte-for-byte untouched.
+    static func container(storeURL: URL) throws -> ModelContainer {
+        try assertPlanDescribesStore(at: storeURL)
+        let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
+        let config = ModelConfiguration("packwise", schema: schema, url: storeURL, cloudKitDatabase: .none)
+        return try open(schema: schema, configuration: config)
+    }
+
+    private static func assertPlanDescribesStore(at storeURL: URL) throws {
+        guard FileManager.default.fileExists(atPath: storeURL.path),
+              let metadata = try? NSPersistentStoreCoordinator.metadataForPersistentStore(type: .sqlite, at: storeURL),
+              let storeHashes = metadata[NSStoreModelVersionHashesKey] as? [String: Data] else {
+            // No store yet, or not a readable CoreData store: SwiftData creates
+            // or rejects it through its own (throwing) path.
+            return
+        }
+        for schema in PackWiseMigrationPlan.schemas {
+            if NSManagedObjectModel.makeManagedObjectModel(for: schema.models)?.entityVersionHashesByName == storeHashes {
+                return
+            }
+        }
+        throw PackWisePersistenceError.unrecognizedStoreModel(
+            storeVersionIdentifiers: metadata[NSStoreModelVersionIdentifiersKey] as? [String] ?? []
+        )
+    }
+
+    private static func open(schema: Schema, configuration: ModelConfiguration) throws -> ModelContainer {
+        let container = try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [configuration])
         // The V3 → V4 *data* backfill (design Section 6.2) runs here rather
         // than as a migration-stage callback — see `migrateV3toV4` above.
         // It is safe to call on every open: each record is only ever
@@ -986,6 +1251,8 @@ enum PackWisePersistence {
         // converges a store to the V4 shape once and then does
         // near-zero-cost work on every subsequent launch.
         let diagnostics = try PackWiseSchemaV4Migration.migrateV3Records(in: ModelContext(container))
+        try MeHabitChoiceBackfill.run(in: ModelContext(container))
+        try TripOriginBackfill.run(in: ModelContext(container))
         #if DEBUG
         if !diagnostics.isEmpty {
             print("[PackWise] V4 migration normalized \(diagnostics.count) legacy value(s): \(diagnostics)")

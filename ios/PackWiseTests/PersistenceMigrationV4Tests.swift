@@ -22,8 +22,13 @@ struct PersistenceMigrationV4Tests {
         return dir
     }
 
+    /// A current-shape store the tests then seed with V3-era *values*: legacy
+    /// scalars set and every V4 derived column reset to its untouched default.
+    /// This exercises the V4 data backfill. Genuine older store *shapes*
+    /// (frozen snapshots and real captured stores) are covered by
+    /// `StoreHistoryTests`.
     private func makeV3Container(url: URL) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: PackWiseSchemaV3.self)
+        let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
         let config = ModelConfiguration("packwise", schema: schema, url: url, cloudKitDatabase: .none)
         return try ModelContainer(for: schema, configurations: [config])
     }
@@ -34,7 +39,7 @@ struct PersistenceMigrationV4Tests {
     /// why the backfill is a separate, idempotent post-open step rather
     /// than a migration-stage callback.
     private func openV4Container(url: URL) throws -> ModelContainer {
-        let schema = Schema(versionedSchema: PackWiseSchemaV4.self)
+        let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
         let config = ModelConfiguration("packwise", schema: schema, url: url, cloudKitDatabase: .none)
         let container = try ModelContainer(for: schema, migrationPlan: PackWiseMigrationPlan.self, configurations: [config])
         try PackWiseSchemaV4Migration.migrateV3Records(in: ModelContext(container))
@@ -88,7 +93,7 @@ struct PersistenceMigrationV4Tests {
             let party = TripPartyBuilder.make(mode: .family)
             primaryID = party.primary.id
             otherAdultID = try #require(party.travelers.first { $0.role == .otherAdult }).id
-            repo.replaceParty(party, bagType: .carryOn, on: trip)
+            repo.replaceParty(party, bagTypes: [.carryOn], on: trip)
             existingBagID = try #require(trip.bags.first).id
             // `TripRecord.init` (the live type V3 also aliases) already
             // populates `tripTypesRaw` as a side effect — that's Task 2's
@@ -210,7 +215,7 @@ struct PersistenceMigrationV4Tests {
             )
             context.insert(trip)
             tripID = trip.id
-            repo.replaceParty(.solo(), bagType: .checked, on: trip)
+            repo.replaceParty(.solo(), bagTypes: [.checked], on: trip)
             trip.tripTypesRaw = "[]" // simulate a genuine pre-V4 row; see the family-trip test's comment
             try context.save()
         }
@@ -262,7 +267,17 @@ struct PersistenceMigrationV4Tests {
                     tripType: tripType, activities: [], bagType: bagType, packingStyle: .balanced
                 )
                 context.insert(trip)
-                repo.replaceParty(.solo(), bagType: bagType, on: trip)
+                repo.replaceParty(.solo(), bagTypes: [], on: trip)
+                // A V3 row stored whatever bag the old single picker held,
+                // including the retired `notSure`/`roadTripLuggage` values the
+                // V4 set API refuses — so seed the legacy record directly.
+                let legacyBag = BagRecord(
+                    from: TripBag(name: bagType.title, bagType: bagType, ownerTravelerID: trip.travelers.first?.id, ownershipType: .personal),
+                    trip: trip
+                )
+                context.insert(legacyBag)
+                trip.bags = [legacyBag]
+                trip.bagTypeRaw = bagType.rawValue
                 trip.tripTypesRaw = "[]"
                 return trip
             }
@@ -400,7 +415,7 @@ struct PersistenceMigrationV4Tests {
         try walBytes.write(to: walURL)
         try shmBytes.write(to: shmURL)
 
-        let schema = Schema(versionedSchema: PackWiseSchemaV4.self)
+        let schema = Schema(versionedSchema: PackWiseCurrentSchema.self)
         let config = ModelConfiguration("packwise", schema: schema, url: storeURL, cloudKitDatabase: .none)
 
         #expect(throws: (any Error).self, "an incompatible/corrupt store must surface its open error, not be silently repaired") {
@@ -469,7 +484,7 @@ struct PersistenceMigrationV4Tests {
         #expect(trip.tripTypes == [.beach, .cityBreak, .vacation], "a rejected write must not partially apply")
     }
 
-    @Test @MainActor func applyBagTypesRejectsMultiValueSelectionAndPreservesExistingBagIdentity() throws {
+    @Test @MainActor func applyBagTypesAcceptsMultiValueSelectionAndPreservesExistingBagIdentity() throws {
         let container = try PackWisePersistence.container(inMemory: true)
         let context = ModelContext(container)
         let repo = TripRepository(context: context)
@@ -480,17 +495,19 @@ struct PersistenceMigrationV4Tests {
             packingStyle: .balanced
         )
         context.insert(trip)
-        repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
+        repo.replaceParty(.solo(), bagTypes: [.carryOn], on: trip)
         let existingBagID = try #require(trip.bags.first).id
 
         try repo.applyBagTypes([.carryOn], on: trip)
         #expect(trip.bags.count == 1)
         #expect(trip.bags.first?.id == existingBagID, "re-applying the same bag must preserve its identity, not recreate it")
 
-        #expect(throws: TripRepository.BagAssignmentError.multipleBagsNotYetSupported) {
-            try repo.applyBagTypes([.carryOn, .checked], on: trip)
-        }
-        #expect(trip.bags.map(\.id) == [existingBagID], "a rejected multi-bag write must not partially apply")
+        // Task 8: every physical bag is independently selectable.
+        try repo.applyBagTypes([.carryOn, .checked], on: trip)
+        #expect(trip.bagTypes == [.carryOn, .checked])
+        #expect(trip.bags.count == 2)
+        #expect(trip.bags.contains { $0.id == existingBagID }, "the carry-on already present keeps its identity")
+        #expect(trip.bagTypeRaw == BagType.notSure.rawValue, "several bags never pick a primary compat scalar")
 
         try repo.applyBagTypes([], on: trip)
         #expect(trip.bags.isEmpty)
@@ -516,13 +533,13 @@ struct PersistenceMigrationV4Tests {
             packingStyle: .balanced
         )
         context.insert(trip)
-        repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
+        repo.replaceParty(.solo(), bagTypes: [.carryOn], on: trip)
         let originalBagID = try #require(trip.bags.first).id
         #expect(trip.bagTypes == [.carryOn])
 
         // The edit: same call `TripRepository.apply` makes, with a
         // genuinely different bag type than the trip already has.
-        repo.replaceParty(.solo(), bagType: .checked, on: trip)
+        repo.replaceParty(.solo(), bagTypes: [.checked], on: trip)
 
         #expect(
             trip.bagTypes == [.checked],
@@ -534,7 +551,7 @@ struct PersistenceMigrationV4Tests {
         // Re-applying the same (now current) bag type must be a no-op that
         // preserves identity, not a needless recreate.
         let checkedBagID = try #require(trip.bags.first).id
-        repo.replaceParty(.solo(), bagType: .checked, on: trip)
+        repo.replaceParty(.solo(), bagTypes: [.checked], on: trip)
         #expect(trip.bags.first?.id == checkedBagID, "re-applying the same bag type must preserve the existing record's identity")
     }
 
@@ -566,7 +583,7 @@ struct PersistenceMigrationV4Tests {
         trip.bags = [matchingBag, strayBag]
         let matchingBagID = matchingBag.id
 
-        repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
+        repo.replaceParty(.solo(), bagTypes: [.carryOn], on: trip)
 
         #expect(trip.bags.count == 1, "the stray Checked record must be removed even though a matching Carry-on record was already present")
         #expect(trip.bags.first?.id == matchingBagID, "the already-matching record's identity must be preserved, not recreated")
@@ -606,7 +623,7 @@ struct PersistenceMigrationV4Tests {
             )
             context.insert(trip)
             tripID = trip.id
-            repo.replaceParty(.solo(), bagType: .carryOn, on: trip)
+            repo.replaceParty(.solo(), bagTypes: [.carryOn], on: trip)
 
             try repo.applyTripTypes([.beach, .cityBreak, .vacation], on: trip)
             try repo.applyBagTypes([], on: trip) // user explicitly removes every bag
@@ -655,5 +672,77 @@ struct PersistenceMigrationV4Tests {
             record.preferredBagTypes == [.checked, .carryOn],
             "a multi-value preferred-bag write must survive relaunch, not collapse to the compat scalar's single value"
         )
+    }
+
+    // MARK: - Task 15.1: Me's single-select bag keeps V4 in sync
+
+    /// Me's picker stays single-select until Task 8, but every edit must
+    /// leave the V4 set correct, or Task 8's switch to `preferredBagTypes`
+    /// would resurrect whatever migration last wrote.
+    @Test @MainActor func migratedPreferenceThenMeEditUpdatesV4AndSurvivesRelaunch() throws {
+        let storeURL = try makeStoreDirectory().appendingPathComponent("packwise.store")
+
+        do {
+            let container = try openV4Container(url: storeURL)
+            let context = ModelContext(container)
+            let record = PackingPreferenceRecord(from: .deviceDefaults())
+            record.preferredBagRaw = BagType.carryOn.rawValue
+            record.preferredBagTypesRaw = "[]"
+            record.preferredBagTypesMigrated = false
+            context.insert(record)
+            try context.save()
+        }
+
+        do {
+            let container = try openV4Container(url: storeURL)
+            let context = ModelContext(container)
+            let record = try #require(try context.fetch(FetchDescriptor<PackingPreferenceRecord>()).first)
+            #expect(record.preferredBagTypes == [.carryOn], "precondition: migration backfilled the legacy scalar")
+
+            record.setPreferredBagTypes([.checked])
+            try context.save()
+        }
+
+        for _ in 0..<2 {
+            let container = try openV4Container(url: storeURL)
+            let context = ModelContext(container)
+            let record = try #require(try context.fetch(FetchDescriptor<PackingPreferenceRecord>()).first)
+            #expect(record.preferredBagRaw == BagType.checked.rawValue)
+            #expect(record.preferredBagTypes == [.checked], "the Me edit, not the migrated value, must survive relaunch")
+        }
+    }
+
+    @Test @MainActor func meDefaultBagsMultiSelectKeepsV4AuthoritativeAndCompatScalarHonest() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        let record = PackingPreferenceRecord(from: .deviceDefaults())
+        context.insert(record)
+
+        let cases: [(Set<BagType>, BagType, String)] = [
+            ([], .notSure, "[]"),
+            ([.carryOn], .carryOn, #"["carryOn"]"#),
+            ([.checked, .personalItem], .notSure, #"["personalItem","checked"]"#),
+            ([.backpack, .carryOn, .checked, .personalItem], .notSure, #"["personalItem","carryOn","checked","backpack"]"#),
+            ([.roadTripLuggage, .notSure, .checked], .checked, #"["checked"]"#),
+        ]
+        for (selection, scalar, json) in cases {
+            record.apply({ var p = record.preferences; p.preferredBagTypes = [.backpack]; return p }())
+            record.setPreferredBagTypes(selection)
+            #expect(record.preferredBagTypesRaw == json, "\(selection) stable V4 JSON")
+            #expect(record.preferredBagRaw == scalar.rawValue, "\(selection) compat scalar")
+            #expect(record.preferredBagTypesMigrated)
+        }
+    }
+
+    @Test @MainActor func freshSetupSeedsEveryDefaultBag() throws {
+        let container = try PackWisePersistence.container(inMemory: true)
+        let context = ModelContext(container)
+        let record = PackingPreferenceRecord(from: .deviceDefaults())
+        context.insert(record)
+
+        for bags: Set<BagType> in [[], [.carryOn], [.personalItem, .checked, .backpack]] {
+            record.setPreferredBagTypes(bags)
+            #expect(TripDraft.fresh(preferences: record.preferences).bagTypes == bags)
+        }
     }
 }

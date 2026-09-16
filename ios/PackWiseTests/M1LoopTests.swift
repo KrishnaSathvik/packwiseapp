@@ -17,33 +17,6 @@ struct M1LoopTests {
         #expect(TripPackingPresentationState.resolve(packed: 9, total: 12, isFinished: true) == .completed)
     }
 
-    @Test func surfacedReasonsDescribeTheItemsConsequence() {
-        #expect(PackingReasonPresentation.inclusionReason(
-            canonicalItemID: "health.blister_pads",
-            reasonCode: "activity.sightseeing",
-            tripType: nil,
-            original: "You'll have sightseeing days in Anchorage."
-        ) == "Helpful for long walking and sightseeing days.")
-        #expect(PackingReasonPresentation.inclusionReason(
-            canonicalItemID: "activities.daypack",
-            reasonCode: "activity.sightseeing",
-            tripType: nil,
-            original: "You'll have sightseeing days in Anchorage."
-        ) == "Useful for carrying daily essentials while sightseeing.")
-        #expect(PackingReasonPresentation.inclusionReason(
-            canonicalItemID: "electronics.power_bank",
-            reasonCode: "activity.sightseeing",
-            tripType: nil,
-            original: "You'll have sightseeing days in Anchorage."
-        ) == "Sightseeing can keep you away from outlets for long periods.")
-        #expect(PackingReasonPresentation.inclusionReason(
-            canonicalItemID: "activities.camping_item",
-            reasonCode: "trip_type.generic",
-            tripType: .roadTrip,
-            original: "Suggested for a road trip trip."
-        ) == "Useful for your road trip.")
-    }
-
     @Test func destinationTimezoneNeverFallsBackToDevice() {
         let tokyo = DestinationNormalizer.destination(
             city: "Tokyo",
@@ -193,6 +166,121 @@ struct M1LoopTests {
         #expect(trip.items.contains { $0.canonicalItemID == "footwear.hiking_shoes" })
         #expect(trip.items.contains { $0.canonicalItemID == "clothing.tshirt" && $0.packedQuantity == 4 })
     }
+
+    #if DEBUG
+    /// Checkpoint V (run with Task 8.1): every reference state the whole-product
+    /// contact sheet needs is a capturable Debug preview screen, so no major
+    /// surface silently drops out of the review.
+    @Test func checkpointVReferenceStatesAreAllCapturable() {
+        let required = [
+            "onboarding", "onboardingTrip", "onboardingPersonal", "tripsHome",
+            "setupDestination", "setupDates", "setupTravelers", "setupTravelersFamilyDetails", "setupTravelersGroup",
+            "setupTripTypes", "setupActivities", "setupBags", "setupStyleLaundry", "setupPreferences", "setupReview",
+            "tripDetail", "packingList", "packingListFamily", "addItem", "addItemCategory", "itemDetailSheet",
+        ]
+        for id in required {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing reference state \(id)")
+        }
+    }
+    #endif
+
+    #if DEBUG
+    /// Task 9: every destination and onboarding state the contact sheet
+    /// reviews is capturable.
+    @Test func task9ReferenceStatesAreAllCapturable() {
+        let required = [
+            "onboarding", "onboardingTrip", "onboardingPersonal",
+            "setupDestinationEmpty", "setupDestinationRecents", "setupDestinationSearching", "setupDestinationResults",
+            "setupDestinationChicago", "setupDestinationKhammam", "setupDestinationLong", "setupDestinationOffline",
+            "setupReview", "setupReviewMap", "setupReviewOffline", "tripsHome", "tripDetail", "tripDetailOffline",
+            "setupDestinationNoMatch", "setupDestinationUnavailable", "setupDestinationUnavailableKept",
+        ]
+        for id in required {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing Task 9 state \(id)")
+        }
+    }
+    #endif
+
+    // MARK: - Task 10: every non-empty category on Trip Detail
+
+    private static func entries(_ categories: [PackingCategory], packedEvery: Int = 0) -> [(category: PackingCategory, isPacked: Bool)] {
+        var result: [(category: PackingCategory, isPacked: Bool)] = []
+        for category in categories {
+            for index in 0..<3 {
+                result.append((category, packedEvery > 0 && index % packedEvery == 0))
+            }
+        }
+        return result
+    }
+
+    @Test func tripDetailShowsEveryNonEmptyCategoryInDisplayOrder() {
+        let order = PackingCategory.displayOrder(international: false, outdoor: false)
+        #expect(order.count == 11)
+        let summaries = TripDetailCategoryOverview.summaries(
+            of: Self.entries(order.reversed(), packedEvery: 3),
+            order: order
+        )
+        #expect(summaries.map(\.category) == order, "all eleven, in the canonical order, not insertion order")
+        #expect(summaries.allSatisfy { $0.total == 3 && $0.packed == 1 })
+    }
+
+    @Test func tripDetailHidesEmptyCategoriesWithoutPlaceholders() {
+        let order = PackingCategory.displayOrder(international: true, outdoor: false)
+        let summaries = TripDetailCategoryOverview.summaries(
+            of: Self.entries([.clothing, .documents, .miscellaneous]),
+            order: order
+        )
+        #expect(summaries.map(\.category) == [.documents, .clothing, .miscellaneous])
+        #expect(TripDetailCategoryOverview.summaries(of: [], order: order).isEmpty)
+    }
+
+    @Test func categoryOrderDerivesOutdoorFromTheTripTypeSet() {
+        #expect(PackingCategory.displayOrder(international: false, tripTypes: [.beach, .outdoor])
+            == PackingCategory.displayOrder(international: false, outdoor: true),
+            "a multi-type trip that includes Outdoor orders as outdoor")
+        #expect(PackingCategory.displayOrder(international: true, tripTypes: [.beach])
+            == PackingCategory.displayOrder(international: true, outdoor: false))
+        #expect(PackingCategory.displayOrder(international: false, tripTypes: [])
+            == PackingCategory.allCases)
+    }
+
+    #if DEBUG
+    /// Task 10: the all-categories Trip Detail is capturable, top and scrolled.
+    @Test func task10ReferenceStatesAreAllCapturable() {
+        for id in ["tripDetailAllCategories", "tripDetailAllCategoriesMiddle", "tripDetailAllCategoriesScrolled", "packingListScrolled"] {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing Task 10 state \(id)")
+        }
+        #expect(DebugPreviewScreen.tripDetailAllCategoriesScrolled.initialScrollAnchor == .bottom)
+        #expect(DebugPreviewScreen.tripDetailAllCategoriesMiddle.initialScrollAnchor == .center)
+        #expect(DebugPreviewScreen.tripDetailAllCategories.initialScrollAnchor == nil)
+    }
+    #endif
+
+    #if DEBUG
+    /// Task 11: every Packing List state the contact sheet reviews is capturable.
+    @Test func task11ReferenceStatesAreAllCapturable() {
+        let required = [
+            "packingList", "packingListCouple", "packingListFamily",
+            "packingListFamilyYou", "packingListFamilyAdult1", "packingListFamilyChild1", "packingListFamilyShared",
+            "packingListFamilyMiddle", "packingListFamilyBottom",
+            "packingListFamilyToPack", "packingListFamilyPacked", "packingListFamilyImportant", "packingListFamilyHidePacked",
+            "packingListFamilySearchItem", "packingListFamilySearchTraveler", "packingListFamilySearchNone",
+            "packingListFamilyGroupTshirts", "packingListFamilyGroupToothbrush",
+        ]
+        for id in required {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing Task 11 state \(id)")
+        }
+    }
+    #endif
+
+    #if DEBUG
+    /// Task 12: every category-selector state the contact sheet reviews is capturable.
+    @Test func task12ReferenceStatesAreAllCapturable() {
+        for id in ["addItem", "addItemCategory", "addItemCategoryChosen", "addItemChosen", "itemDetailSheet", "itemDetailCategory", "itemDetailMoved", "packingListFamilyMoved"] {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing Task 12 state \(id)")
+        }
+    }
+    #endif
 
     @Test func mergedActivityIDsNormalizeOnRead() throws {
         // A trip saved before fineDining was merged still holds the old value.

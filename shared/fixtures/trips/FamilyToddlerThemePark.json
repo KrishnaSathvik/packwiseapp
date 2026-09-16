@@ -2,12 +2,16 @@
   "id": "FamilyToddlerThemePark",
   "destinationFixture": "Los Angeles",
   "days": 4,
-  "tripType": "vacation",
+  "tripTypes": [
+    "vacation"
+  ],
   "activities": [
     "sightseeing",
     "walking"
   ],
-  "bag": "checked",
+  "bagTypes": [
+    "checked"
+  ],
   "style": "prepared",
   "homeCountryCode": "US",
   "homeCountrySource": "userConfirmed",

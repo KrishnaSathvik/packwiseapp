@@ -8,33 +8,36 @@
     "essentials.snacks",
     "electronics.camera",
     "electronics.camera_charger",
-    "activities.beach_towel",
     "toiletries.insect_repellent",
     "kids.stroller",
     "kids.carrier",
-    "kids.wipes"
-  ],
-  "skipForYoungChildren": [
-    "clothing.dress_shirt",
-    "clothing.blazer",
-    "clothing.formal_outfit",
-    "clothing.tie",
-    "footwear.dress_shoes",
-    "electronics.laptop",
-    "electronics.laptop_charger",
-    "electronics.mouse",
-    "health.daily_medication",
-    "toiletries.deodorant",
+    "kids.wipes",
     "health.pain_reliever",
     "health.blister_pads",
-    "documents.id"
-  ],
-  "skipForInfantsAndToddlers": [
-    "electronics.headphones",
-    "travel_comfort.book",
-    "travel_comfort.compression_packing",
+    "health.motion_sickness",
+    "toiletries.laundry_sheets",
+    "documents.travel_insurance",
+    "documents.hotel_confirmation",
+    "documents.itinerary",
+    "documents.copies",
+    "documents.emergency_contacts",
+    "electronics.memory_card",
+    "electronics.power_strip",
+    "electronics.outlet_splitter",
+    "electronics.extension_cord",
+    "essentials.reusable_bag",
+    "activities.binoculars",
+    "miscellaneous.car_charger",
+    "miscellaneous.car_snacks",
+    "miscellaneous.gift",
+    "miscellaneous.wedding_card",
+    "kids.sunscreen",
+    "toiletries.toothpaste",
+    "toiletries.shampoo",
+    "toiletries.conditioner",
+    "toiletries.body_wash",
     "travel_comfort.laundry_bag",
-    "travel_comfort.toiletry_bag"
+    "activities.dry_bag"
   ],
   "ageGroups": {
     "infant": {
@@ -44,15 +47,31 @@
         "kids.sleep_sack"
       ],
       "candidates": {
-        "diapers": ["kids.diapers", "kids.wipes", "kids.changing_pad"],
-        "formula": ["kids.bottles", "kids.formula"],
-        "pacifier": ["kids.pacifiers"],
-        "stroller": ["kids.stroller"],
-        "carrier": ["kids.carrier"],
-        "carSeat": ["kids.car_seat"],
-        "medication": ["kids.baby_medication"]
+        "diapers": [
+          "kids.diapers",
+          "kids.wipes",
+          "kids.changing_pad"
+        ],
+        "formula": [
+          "kids.bottles",
+          "kids.formula"
+        ],
+        "pacifier": [
+          "kids.pacifiers"
+        ],
+        "stroller": [
+          "kids.stroller"
+        ],
+        "carrier": [
+          "kids.carrier"
+        ],
+        "carSeat": [
+          "kids.car_seat"
+        ],
+        "medication": [
+          "kids.baby_medication"
+        ]
       },
-      "skipAdultClothing": true,
       "quantityMultipliers": {
         "daily_top": 1.8,
         "daily_underwear": 1.5,
@@ -68,13 +87,23 @@
         "kids.activities"
       ],
       "candidates": {
-        "diapers": ["kids.diapers", "kids.wipes"],
-        "stroller": ["kids.stroller"],
-        "carSeat": ["kids.car_seat"],
-        "medication": ["kids.baby_medication"],
-        "comfortItem": ["kids.comfort_item"]
+        "diapers": [
+          "kids.diapers",
+          "kids.wipes"
+        ],
+        "stroller": [
+          "kids.stroller"
+        ],
+        "carSeat": [
+          "kids.car_seat"
+        ],
+        "medication": [
+          "kids.baby_medication"
+        ],
+        "comfortItem": [
+          "kids.comfort_item"
+        ]
       },
-      "skipAdultClothing": false,
       "quantityMultipliers": {
         "daily_top": 1.75,
         "daily_underwear": 1.4,
@@ -86,44 +115,389 @@
     "child": {
       "add": [
         "kids.snacks",
-        "kids.activities",
-        "electronics.earbuds_case"
+        "kids.activities"
       ],
       "candidates": {
-        "comfortItem": ["kids.comfort_item"],
-        "medication": ["kids.baby_medication"],
-        "carSeat": ["kids.car_seat"]
+        "comfortItem": [
+          "kids.comfort_item"
+        ],
+        "medication": [
+          "kids.baby_medication"
+        ],
+        "carSeat": [
+          "kids.car_seat"
+        ]
       },
-      "skipAdultClothing": false,
       "quantityMultipliers": {
         "daily_top": 1.15,
         "daily_underwear": 1.1
       }
     },
     "teen": {
-      "add": ["electronics.earbuds_case", "electronics.phone_charger"],
+      "add": [],
       "candidates": {},
-      "skipAdultClothing": false,
       "quantityMultipliers": {}
     },
     "adult": {
       "add": [],
       "candidates": {},
-      "skipAdultClothing": false,
       "quantityMultipliers": {}
     }
   },
   "activityAdds": {
-    "swimming": ["kids.swim_diapers"],
-    "beachDays": ["kids.swim_diapers", "kids.sunscreen"]
+    "swimming": [
+      "kids.swim_diapers"
+    ],
+    "beachDays": [
+      "kids.swim_diapers",
+      "kids.sunscreen"
+    ]
   },
   "sharingPolicies": {
-    "toiletries.sunscreen": { "policy": "scaleByParty", "per": 3, "min": 1 },
-    "health.first_aid": { "policy": "singlePerParty" },
-    "electronics.travel_adapter": { "policy": "scaleByDevices", "per": 2, "min": 1 },
-    "essentials.umbrella_compact": { "policy": "scaleByParty", "per": 2, "min": 1 },
-    "essentials.snacks": { "policy": "scaleByDurationAndParty", "per": 4, "min": 1 },
-    "kids.stroller": { "policy": "singlePerParty" },
-    "kids.carrier": { "policy": "singlePerParty" }
+    "toiletries.sunscreen": {
+      "policy": "scaleByParty",
+      "per": 3,
+      "min": 1
+    },
+    "health.first_aid": {
+      "policy": "singlePerParty"
+    },
+    "electronics.travel_adapter": {
+      "policy": "scaleByDevices",
+      "per": 2,
+      "min": 1,
+      "devices": [
+        "essentials.phone",
+        "electronics.laptop",
+        "electronics.tablet",
+        "electronics.kindle",
+        "electronics.camera"
+      ]
+    },
+    "essentials.umbrella_compact": {
+      "policy": "scaleByParty",
+      "per": 2,
+      "min": 1
+    },
+    "essentials.snacks": {
+      "policy": "scaleByDurationAndParty",
+      "per": 4,
+      "min": 1
+    },
+    "kids.stroller": {
+      "policy": "singlePerParty"
+    },
+    "kids.carrier": {
+      "policy": "singlePerParty"
+    },
+    "health.pain_reliever": {
+      "policy": "singlePerParty"
+    },
+    "health.blister_pads": {
+      "policy": "singlePerParty"
+    },
+    "health.motion_sickness": {
+      "policy": "singlePerParty"
+    },
+    "toiletries.laundry_sheets": {
+      "policy": "singlePerParty"
+    },
+    "documents.travel_insurance": {
+      "policy": "singlePerParty"
+    },
+    "documents.hotel_confirmation": {
+      "policy": "singlePerParty"
+    },
+    "documents.itinerary": {
+      "policy": "singlePerParty"
+    },
+    "documents.copies": {
+      "policy": "singlePerParty"
+    },
+    "documents.emergency_contacts": {
+      "policy": "singlePerParty"
+    },
+    "electronics.memory_card": {
+      "policy": "singlePerParty"
+    },
+    "electronics.power_strip": {
+      "policy": "singlePerParty"
+    },
+    "electronics.outlet_splitter": {
+      "policy": "singlePerParty"
+    },
+    "electronics.extension_cord": {
+      "policy": "singlePerParty"
+    },
+    "essentials.reusable_bag": {
+      "policy": "singlePerParty"
+    },
+    "activities.binoculars": {
+      "policy": "singlePerParty"
+    },
+    "miscellaneous.car_charger": {
+      "policy": "singlePerParty"
+    },
+    "miscellaneous.car_snacks": {
+      "policy": "singlePerParty"
+    },
+    "miscellaneous.gift": {
+      "policy": "singlePerParty"
+    },
+    "miscellaneous.wedding_card": {
+      "policy": "singlePerParty"
+    },
+    "kids.sunscreen": {
+      "policy": "singlePerParty"
+    },
+    "toiletries.toothpaste": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "toiletries.shampoo": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "toiletries.conditioner": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "toiletries.body_wash": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "travel_comfort.laundry_bag": {
+      "policy": "scaleByParty",
+      "per": 3,
+      "min": 1
+    },
+    "activities.dry_bag": {
+      "policy": "scaleByParty",
+      "per": 4,
+      "min": 1
+    },
+    "health.bandages": {
+      "policy": "singlePerParty"
+    },
+    "electronics.camera": {
+      "policy": "singlePerParty"
+    },
+    "electronics.camera_charger": {
+      "policy": "singlePerParty"
+    },
+    "toiletries.insect_repellent": {
+      "policy": "singlePerParty"
+    },
+    "kids.wipes": {
+      "policy": "singlePerParty"
+    }
+  },
+  "eligibility": {
+    "activities.daypack": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "activities.hiking_poles": {"family": "adultOrTeen"},
+    "activities.rain_cover": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "activities.snorkel": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "activities.goggles": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "activities.beach_towel": {"family": "universal"},
+    "activities.dry_bag": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "activities.yoga_mat_travel": {"family": "adultOrTeen"},
+    "activities.running_belt": {"family": "adultOrTeen"},
+    "activities.binoculars": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "activities.guidebook": {"family": "adultOrTeen"},
+    "activities.museum_tickets": {"family": "universal"},
+    "activities.workout_band": {"family": "adultOrTeen"},
+    "activities.tennis_shoes_note": {"family": "adultOrTeen"},
+    "activities.ski_goggles": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "activities.ski_gloves": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "activities.base_layers_ski": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "activities.festival_earplugs": {"family": "universal"},
+    "activities.portable_fan": {"family": "universal"},
+    "clothing.tshirt": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.casual_shirt": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.dress_shirt": {"family": "adultOrTeen"},
+    "clothing.blouse": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.underwear": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.socks": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.sleepwear": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.pants": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.jeans": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.shorts": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.skirt": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.dress": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.formal_outfit": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.blazer": {"family": "adultOrTeen"},
+    "clothing.tie": {"family": "adultOrTeen"},
+    "clothing.light_sweater": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.hoodie": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.light_jacket": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.rain_jacket": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.windbreaker": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.winter_coat": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.thermal_top": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.thermal_bottom": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.gloves": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.beanie": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.scarf": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.swimsuit": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.coverup": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.workout_top": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.workout_bottom": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.sports_bra": {"family": "adultOrTeen"},
+    "clothing.nice_outfit": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.belt": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "clothing.pajamas_backup": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "clothing.compression_socks": {"family": "adultOrTeen"},
+    "clothing.hat_sun": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler", "infant"]},
+    "documents.passport": {"family": "travelerDocument", "travelers": "all"},
+    "documents.id": {"family": "travelerDocument", "travelers": "adultOrTeen"},
+    "documents.boarding_pass": {"family": "travelerDocument", "travelers": "all"},
+    "documents.travel_insurance": {"family": "universal"},
+    "documents.hotel_confirmation": {"family": "adultOrTeen"},
+    "documents.visa": {"family": "travelerDocument", "travelers": "all"},
+    "documents.health_card": {"family": "travelerDocument", "travelers": "all"},
+    "documents.copies": {"family": "adultOrTeen"},
+    "documents.itinerary": {"family": "adultOrTeen"},
+    "documents.emergency_contacts": {"family": "adultOrTeen"},
+    "electronics.phone_charger": {"family": "phoneOwnership"},
+    "electronics.power_bank": {"family": "deviceSignalRequired", "signal": "bringingPowerBank"},
+    "electronics.laptop": {"family": "deviceSignalRequired", "signal": "bringingLaptop"},
+    "electronics.laptop_charger": {"family": "deviceSignalRequired", "signal": "bringingLaptop"},
+    "electronics.tablet": {"family": "deviceSignalRequired", "signal": "bringingTablet"},
+    "electronics.headphones": {"family": "deviceSignalRequired", "signal": "bringingHeadphones"},
+    "electronics.earbuds_case": {"family": "deviceSignalRequired"},
+    "electronics.travel_adapter": {"family": "universal"},
+    "electronics.outlet_splitter": {"family": "adultOrTeen"},
+    "electronics.camera": {"family": "deviceSignalRequired", "signal": "bringingCamera"},
+    "electronics.camera_charger": {"family": "deviceSignalRequired", "signal": "bringingCamera"},
+    "electronics.memory_card": {"family": "deviceSignalRequired", "signal": "bringingCamera"},
+    "electronics.kindle": {"family": "deviceSignalRequired"},
+    "electronics.watch_charger": {"family": "deviceSignalRequired"},
+    "electronics.extension_cord": {"family": "adultOrTeen"},
+    "electronics.hdmi": {"family": "deviceSignalRequired", "signal": "bringingLaptop"},
+    "electronics.mouse": {"family": "deviceSignalRequired", "signal": "bringingLaptop"},
+    "electronics.power_strip": {"family": "adultOrTeen"},
+    "electronics.sim_ejector": {"family": "adultOrTeen"},
+    "essentials.wallet": {"family": "adultOrTeen"},
+    "essentials.phone": {"family": "phoneOwnership"},
+    "essentials.keys": {"family": "adultOrTeen"},
+    "essentials.home_keys": {"family": "adultOrTeen"},
+    "essentials.sunglasses": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "essentials.watch": {"family": "adultOrTeen"},
+    "essentials.cash": {"family": "adultOrTeen"},
+    "essentials.reusable_bag": {"family": "adultOrTeen"},
+    "essentials.pen": {"family": "adultOrTeen"},
+    "essentials.notebook": {"family": "adultOrTeen"},
+    "essentials.lip_balm": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "essentials.hand_sanitizer": {"family": "universal"},
+    "essentials.snacks": {"family": "universal"},
+    "hydration.water_bottle": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "essentials.umbrella_compact": {"family": "universal"},
+    "footwear.walking_shoes": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "footwear.running_shoes": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "footwear.hiking_shoes": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "footwear.dress_shoes": {"family": "adultOrTeen"},
+    "footwear.sandals": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "footwear.flip_flops": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "footwear.boots": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "footwear.water_shoes": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "footwear.house_slippers": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "footwear.shoe_bags": {"family": "adultOrTeen"},
+    "health.daily_medication": {"family": "travelerSignalRequired", "signal": "dailyMedication"},
+    "health.prescription_copy": {"family": "travelerSignalRequired", "signal": "dailyMedication"},
+    "health.pain_reliever": {"family": "adultOrTeen"},
+    "health.allergy": {"family": "adultOrTeen"},
+    "health.bandages": {"family": "universal"},
+    "health.first_aid": {"family": "universal"},
+    "health.motion_sickness": {"family": "adultOrTeen"},
+    "health.electrolytes": {"family": "adultOrTeen"},
+    "health.vitamins": {"family": "adultOrTeen"},
+    "health.thermometer": {"family": "universal"},
+    "health.blister_pads": {"family": "adultOrTeen"},
+    "health.eye_drops": {"family": "travelerSignalRequired", "signal": "wearContacts"},
+    "health.inhaler": {"family": "travelerSignalRequired", "signal": "dailyMedication"},
+    "health.insect_bite": {"family": "universal"},
+    "health.hand_warmers": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "kids.diapers": {"family": "explicitChildNeed", "need": "diapers"},
+    "kids.wipes": {"family": "explicitChildNeed", "need": "diapers"},
+    "kids.changing_pad": {"family": "explicitChildNeed", "need": "diapers"},
+    "kids.bottles": {"family": "explicitChildNeed", "need": "formula"},
+    "kids.formula": {"family": "explicitChildNeed", "need": "formula"},
+    "kids.pacifiers": {"family": "explicitChildNeed", "need": "pacifier"},
+    "kids.burp_cloths": {"family": "ageSpecific", "ageGroups": ["infant"]},
+    "kids.extra_outfits": {"family": "ageSpecific", "ageGroups": ["infant", "toddler"]},
+    "kids.sleep_sack": {"family": "ageSpecific", "ageGroups": ["infant"]},
+    "kids.carrier": {"family": "explicitChildNeed", "need": "carrier"},
+    "kids.stroller": {"family": "explicitChildNeed", "need": "stroller"},
+    "kids.baby_medication": {"family": "explicitChildNeed", "need": "medication"},
+    "kids.comfort_item": {"family": "explicitChildNeed", "need": "comfortItem"},
+    "kids.sippy": {"family": "ageSpecific", "ageGroups": ["toddler"]},
+    "kids.snacks": {"family": "ageSpecific", "ageGroups": ["toddler", "child"]},
+    "kids.sunscreen": {"family": "ageSpecific", "ageGroups": ["toddler", "child"]},
+    "kids.activities": {"family": "ageSpecific", "ageGroups": ["toddler", "child"]},
+    "kids.swim_diapers": {"family": "explicitChildNeed", "need": "diapers"},
+    "kids.night_light": {"family": "ageSpecific", "ageGroups": ["toddler", "child"]},
+    "kids.car_seat": {"family": "explicitChildNeed", "need": "carSeat"},
+    "miscellaneous.gift": {"family": "adultOrTeen"},
+    "miscellaneous.reusable_utensils": {"family": "adultOrTeen"},
+    "miscellaneous.collapsible_bowl": {"family": "adultOrTeen"},
+    "miscellaneous.ziplocks": {"family": "adultOrTeen"},
+    "miscellaneous.tape": {"family": "adultOrTeen"},
+    "miscellaneous.multi_tool": {"family": "adultOrTeen"},
+    "miscellaneous.flashlight": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "miscellaneous.car_charger": {"family": "phoneOwnership"},
+    "miscellaneous.car_snacks": {"family": "universal"},
+    "miscellaneous.wedding_card": {"family": "adultOrTeen"},
+    "miscellaneous.baby_wipes": {"family": "universal"},
+    "miscellaneous.stain_cloth": {"family": "adultOrTeen"},
+    "toiletries.toothbrush": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "toiletries.toothpaste": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "toiletries.floss": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "toiletries.deodorant": {"family": "adultOrTeen"},
+    "toiletries.shampoo": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "toiletries.conditioner": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "toiletries.body_wash": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "toiletries.face_wash": {"family": "adultOrTeen"},
+    "toiletries.moisturizer": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "toiletries.sunscreen": {"family": "universal"},
+    "toiletries.aftershave": {"family": "adultOrTeen"},
+    "toiletries.razor": {"family": "adultOrTeen"},
+    "toiletries.shaving_cream": {"family": "adultOrTeen"},
+    "toiletries.hairbrush": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "toiletries.hair_ties": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "toiletries.makeup": {"family": "adultOrTeen"},
+    "toiletries.makeup_remover": {"family": "adultOrTeen"},
+    "toiletries.nail_clippers": {"family": "universal"},
+    "toiletries.tweezers": {"family": "adultOrTeen"},
+    "toiletries.cotton_swabs": {"family": "universal"},
+    "toiletries.contacts_solution": {"family": "travelerSignalRequired", "signal": "wearContacts"},
+    "toiletries.contact_case": {"family": "travelerSignalRequired", "signal": "wearContacts"},
+    "toiletries.glasses_case": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child", "toddler"]},
+    "toiletries.retainer_case": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "toiletries.perfume": {"family": "adultOrTeen"},
+    "toiletries.insect_repellent": {"family": "universal"},
+    "toiletries.aloe": {"family": "universal"},
+    "toiletries.laundry_sheets": {"family": "adultOrTeen"},
+    "toiletries.stain_remover": {"family": "adultOrTeen"},
+    "toiletries.tissues": {"family": "universal"},
+    "toiletries.wipes": {"family": "universal"},
+    "travel_comfort.neck_pillow": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.eye_mask": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.earplugs": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.blanket": {"family": "universal"},
+    "travel_comfort.compression_packing": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.laundry_bag": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.toiletry_bag": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.reusable_bottle": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.snacks_flight": {"family": "universal"},
+    "travel_comfort.book": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.cards": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.gum": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.empty_security_bottle": {"family": "ageSpecific", "ageGroups": ["adult", "teen", "child"]},
+    "travel_comfort.lock": {"family": "adultOrTeen"},
+    "travel_comfort.luggage_tag": {"family": "universal"}
   }
 }

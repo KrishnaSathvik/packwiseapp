@@ -21,10 +21,14 @@ enum SharedLibrary {
 
     static func rules(bundle: Bundle = .main) throws -> PackingRulesFile {
         let decoder = JSONDecoder()
+        let activities = try decoder.decode(ActivityRulesFile.self, from: try data(named: "activity-rules", in: bundle)).activities
         return PackingRulesFile(
             base: try decoder.decode(BaseRulesFile.self, from: try data(named: "base", in: bundle)),
-            tripTypes: try decoder.decode(TripTypesRulesFile.self, from: try data(named: "trip-types", in: bundle)).tripTypes,
-            activities: try decoder.decode(ActivityRulesFile.self, from: try data(named: "activity-rules", in: bundle)).activities,
+            tripTypeContracts: try TripTypeContractTable(
+                data: try data(named: "trip-types", in: bundle),
+                activityIDs: Set(activities.keys)
+            ),
+            activities: activities,
             weather: try decoder.decode(WeatherRulesFile.self, from: try data(named: "weather", in: bundle)),
             quantities: try decoder.decode(QuantityPolicyFile.self, from: try data(named: "quantities", in: bundle)),
             substitutions: try decoder.decode(SubstitutionRulesFile.self, from: try data(named: "substitutions", in: bundle)),
@@ -68,9 +72,11 @@ struct TripEvalFixture: Codable, Sendable {
     var destinationFixture: String
     var weatherFixture: String?
     var days: Int
-    var tripType: String
+    /// Stable-ordered trip-type raw values; one or more.
+    var tripTypes: [String]
     var activities: [String]
-    var bag: String
+    /// Stable-ordered physical bag raw values; empty means not sure yet.
+    var bagTypes: [String]
     var style: String
     var chips: [String]?
     var homeCountryCode: String
@@ -117,4 +123,10 @@ struct ExistingEval: Codable, Sendable {
     var category: String
     var quantity: Int
     var isUserModified: Bool
+    /// Marks a genuinely user-added item — one no rule would ever suggest —
+    /// so the fixture can exercise `PackingEngine.resolve()`'s isUserAdded
+    /// pass-through path, distinct from `isUserModified` preserving an edit
+    /// to an otherwise rule-suggested item. Optional and defaults to false
+    /// so every fixture predating this field is unaffected.
+    var isUserAdded: Bool?
 }

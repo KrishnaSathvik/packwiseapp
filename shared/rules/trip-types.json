@@ -1,113 +1,321 @@
 {
-  "trip_types": {
-    "vacation": {
-      "add": [
+  "comment": "Product Experience V2 trip-type contracts (design 8.1; audit docs/engine-audits/2026-09-14-trip-type-contract-matrix.md). Trip types own closed need IDs, never item lists. needs[].candidates is the one central need-to-candidate map. suggestedActivities are unselected and non-causal: they may order setup suggestions but never enter a trip's activities. excludedNeeds/excludedActivities are the machine-checkable part of nonImplications. Arrays are in stable order; scripts/validate_shared.py enforces the vocabularies against Swift.",
+  "needs": [
+    {
+      "id": "leisureGeneralTravel",
+      "meaning": "Quiet leisure and down-time candidates only; base essentials and clothing remain elsewhere.",
+      "candidates": [
         "electronics.headphones",
         "travel_comfort.book"
-      ],
-      "prefer_activities": [
-        "sightseeing"
       ]
     },
-    "cityBreak": {
-      "add": [
-        "essentials.sunglasses",
+    {
+      "id": "urbanWalking",
+      "meaning": "City mobility coverage, not an itinerary.",
+      "candidates": [
         "activities.daypack"
-      ],
-      "prefer_activities": [
-        "sightseeing",
-        "walking"
       ]
     },
-    "beach": {
-      "add": [
+    {
+      "id": "cityDayUse",
+      "meaning": "City day-use coverage, not an itinerary.",
+      "candidates": [
+        "essentials.sunglasses"
+      ]
+    },
+    {
+      "id": "beachSwim",
+      "meaning": "Swim and beach capability.",
+      "candidates": [
         "clothing.swimsuit",
         "clothing.coverup",
         "footwear.sandals",
-        "toiletries.sunscreen",
         "activities.beach_towel",
-        "clothing.hat_sun",
         "clothing.shorts"
-      ],
-      "prefer_activities": [
-        "swimming",
-        "beachDays"
       ]
     },
-    "business": {
-      "add": [
-        "clothing.dress_shirt",
-        "clothing.blazer",
-        "footwear.dress_shoes",
+    {
+      "id": "sunExposure",
+      "meaning": "Sun protection.",
+      "candidates": [
+        "toiletries.sunscreen",
+        "clothing.hat_sun"
+      ]
+    },
+    {
+      "id": "workContext",
+      "meaning": "Approved work-device candidates, subject to traveler eligibility.",
+      "candidates": [
         "electronics.laptop",
         "electronics.laptop_charger"
-      ],
-      "prefer_activities": [
-        "work"
       ]
     },
-    "outdoor": {
-      "add": [
+    {
+      "id": "formalPresentation",
+      "meaning": "Approved formal-presentation candidates, subject to traveler eligibility.",
+      "candidates": [
+        "clothing.dress_shirt",
+        "clothing.blazer",
+        "footwear.dress_shoes"
+      ]
+    },
+    {
+      "id": "outdoorDayUse",
+      "meaning": "Non-technical day-outdoor hydration, first-aid, insect, and walking/hiking candidates.",
+      "candidates": [
         "activities.daypack",
         "hydration.water_bottle",
         "toiletries.insect_repellent",
         "health.blister_pads",
         "health.first_aid"
-      ],
-      "prefer_activities": [
-        "hiking"
       ]
     },
-    "roadTrip": {
-      "add": [
+    {
+      "id": "roadTravelComfort",
+      "meaning": "Car-power and road-snack/comfort candidates; never luggage capacity.",
+      "candidates": [
         "miscellaneous.car_charger",
         "miscellaneous.car_snacks",
         "essentials.snacks"
-      ],
-      "prefer_activities": [
-        "sightseeing"
       ]
     },
-    "weddingEvent": {
-      "add": [
+    {
+      "id": "formalEvent",
+      "meaning": "Event clothing/footwear and approved event accessory candidates, not work.",
+      "candidates": [
         "clothing.formal_outfit",
         "footwear.dress_shoes",
         "miscellaneous.wedding_card"
-      ],
-      "prefer_activities": [
-        "niceDinner"
       ]
     },
-    "skiSnow": {
-      "add": [
+    {
+      "id": "snowSport",
+      "meaning": "Approved snow-sport equipment without replaying Outdoor.",
+      "candidates": [
+        "activities.ski_goggles",
+        "activities.ski_gloves"
+      ]
+    },
+    {
+      "id": "coldActivityExposure",
+      "meaning": "Cold-layer capabilities for snow activity without replaying Outdoor.",
+      "candidates": [
         "clothing.winter_coat",
         "clothing.gloves",
         "clothing.beanie",
         "clothing.thermal_top",
-        "footwear.boots",
-        "activities.ski_goggles",
-        "activities.ski_gloves"
-      ],
-      "prefer_activities": []
+        "footwear.boots"
+      ]
     },
-    "festival": {
-      "add": [
+    {
+      "id": "festivalAttendance",
+      "meaning": "Hearing protection, power, sun, and hygiene candidates; no inferred nightlife or camping.",
+      "candidates": [
         "activities.festival_earplugs",
         "electronics.power_bank",
         "toiletries.sunscreen",
         "essentials.hand_sanitizer"
-      ],
-      "prefer_activities": []
+      ]
     },
-    "visitingFamily": {
-      "add": [
+    {
+      "id": "hostVisit",
+      "meaning": "The approved host-gift candidate; no party inference.",
+      "candidates": [
         "miscellaneous.gift"
-      ],
-      "prefer_activities": []
-    },
-    "other": {
-      "add": [],
-      "prefer_activities": []
+      ]
     }
-  }
+  ],
+  "tripTypes": [
+    {
+      "id": "vacation",
+      "needs": [
+        "leisureGeneralTravel"
+      ],
+      "suggestedActivities": [
+        "sightseeing",
+        "walking",
+        "niceDinner",
+        "shopping"
+      ],
+      "excludedNeeds": [
+        "beachSwim",
+        "sunExposure",
+        "workContext",
+        "formalPresentation",
+        "formalEvent"
+      ],
+      "excludedActivities": [
+        "swimming",
+        "beachDays",
+        "work",
+        "nightlife"
+      ],
+      "nonImplications": "Beach/swim, formal/work, nightlife, or a second baseline"
+    },
+    {
+      "id": "cityBreak",
+      "needs": [
+        "urbanWalking",
+        "cityDayUse"
+      ],
+      "suggestedActivities": [
+        "sightseeing",
+        "walking",
+        "museums",
+        "niceDinner",
+        "shopping",
+        "nightlife"
+      ],
+      "excludedNeeds": [
+        "workContext",
+        "formalPresentation"
+      ],
+      "excludedActivities": [
+        "work"
+      ],
+      "nonImplications": "Business/work, checked capacity, or automatic activity selection"
+    },
+    {
+      "id": "beach",
+      "needs": [
+        "beachSwim",
+        "sunExposure"
+      ],
+      "suggestedActivities": [
+        "swimming",
+        "beachDays",
+        "snorkeling",
+        "boatTrip"
+      ],
+      "excludedNeeds": [
+        "leisureGeneralTravel"
+      ],
+      "excludedActivities": [
+        "nightlife"
+      ],
+      "nonImplications": "Vacation baseline, nightlife, or duplicated everyday clothing"
+    },
+    {
+      "id": "business",
+      "needs": [
+        "workContext",
+        "formalPresentation"
+      ],
+      "suggestedActivities": [
+        "work",
+        "niceDinner",
+        "walking"
+      ],
+      "excludedNeeds": [
+        "leisureGeneralTravel"
+      ],
+      "excludedActivities": [
+        "nightlife"
+      ],
+      "nonImplications": "Leisure, nightlife, or larger luggage capacity"
+    },
+    {
+      "id": "outdoor",
+      "needs": [
+        "outdoorDayUse"
+      ],
+      "suggestedActivities": [
+        "hiking",
+        "wildlife",
+        "walking",
+        "running"
+      ],
+      "excludedNeeds": [],
+      "excludedActivities": [
+        "camping"
+      ],
+      "nonImplications": "Camping, overnight/technical gear, or backpack ownership"
+    },
+    {
+      "id": "roadTrip",
+      "needs": [
+        "roadTravelComfort"
+      ],
+      "suggestedActivities": [
+        "sightseeing",
+        "walking"
+      ],
+      "excludedNeeds": [
+        "outdoorDayUse"
+      ],
+      "excludedActivities": [
+        "camping"
+      ],
+      "nonImplications": "Larger luggage capacity, a physical bag, camping, or outdoor activity"
+    },
+    {
+      "id": "weddingEvent",
+      "needs": [
+        "formalEvent"
+      ],
+      "suggestedActivities": [
+        "niceDinner"
+      ],
+      "excludedNeeds": [
+        "workContext",
+        "leisureGeneralTravel"
+      ],
+      "excludedActivities": [
+        "work",
+        "nightlife"
+      ],
+      "nonImplications": "Business/work devices, nightlife, or a vacation baseline"
+    },
+    {
+      "id": "skiSnow",
+      "needs": [
+        "snowSport",
+        "coldActivityExposure"
+      ],
+      "suggestedActivities": [],
+      "excludedNeeds": [
+        "outdoorDayUse"
+      ],
+      "excludedActivities": [
+        "camping"
+      ],
+      "nonImplications": "A duplicate generic Outdoor contract, camping, or technical gear beyond the approved snow candidates"
+    },
+    {
+      "id": "festival",
+      "needs": [
+        "festivalAttendance"
+      ],
+      "suggestedActivities": [],
+      "excludedNeeds": [],
+      "excludedActivities": [
+        "nightlife",
+        "camping"
+      ],
+      "nonImplications": "Nightlife, camping, substance use, or larger luggage capacity"
+    },
+    {
+      "id": "visitingFamily",
+      "needs": [
+        "hostVisit"
+      ],
+      "suggestedActivities": [
+        "sightseeing",
+        "walking"
+      ],
+      "excludedNeeds": [
+        "leisureGeneralTravel"
+      ],
+      "excludedActivities": [],
+      "nonImplications": "Family party structure, children, caregiving items, or duplicated Vacation context"
+    },
+    {
+      "id": "other",
+      "needs": [],
+      "suggestedActivities": [],
+      "excludedNeeds": [],
+      "excludedActivities": [],
+      "nonImplications": "Any deterministic packing inference from the label or arbitrary text"
+    }
+  ]
 }

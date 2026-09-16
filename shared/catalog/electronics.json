@@ -168,7 +168,7 @@
     {
       "id": "electronics.outlet_splitter",
       "localizationKey": "packing.electronics.outlet_splitter",
-      "display_name": "USB hub / splitter",
+      "display_name": "USB hub",
       "category": "electronics",
       "importance": "optional",
       "symbol": "powerplug",
