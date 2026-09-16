@@ -134,7 +134,7 @@ struct RecommendationDiffScreen: View {
                     symbol: "plus",
                     tint: PackWiseColor.success,
                     title: item.displayName,
-                    subtitle: RecommendationReasonRenderer.reason(for: item)?.text,
+                    subtitle: RecommendationReasonRenderer.reason(for: item, context: .owner(item.travelerID, in: trip.party))?.text,
                     isOn: binding(item.id, in: $addIDs)
                 )
             }
@@ -179,7 +179,7 @@ struct RecommendationDiffScreen: View {
                             symbol: "minus",
                             tint: PackWiseColor.danger,
                             title: item.displayName,
-                            subtitle: RecommendationReasonRenderer.reason(for: item)?.text ?? "No longer suggested for this trip",
+                            subtitle: RecommendationReasonRenderer.reason(for: item, context: .owner(item.travelerID, in: trip.party))?.text ?? "No longer suggested for this trip",
                             isOn: binding(item.id, in: $removeIDs)
                         )
                     }

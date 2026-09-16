@@ -1174,8 +1174,7 @@ struct ItemDetailView: View {
 /// Presentation identity only. No trip metadata, live weather or device lookup.
 extension PackingItemRecord {
     var reasonPresentationContext: RecommendationReasonRenderer.PresentationContext {
-        let owner = trip?.party.travelers.first { $0.id == travelerID }
-        return .init(ownerName: owner?.displayName,
-                     isPrimaryTraveler: owner?.id == trip?.party.primary.id)
+        guard let trip else { return .init(isPrimaryTraveler: false) }
+        return .owner(travelerID, in: trip.party)
     }
 }

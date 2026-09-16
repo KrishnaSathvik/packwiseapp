@@ -12,6 +12,13 @@ enum RecommendationReasonRenderer {
     struct PresentationContext: Sendable {
         var ownerName: String? = nil
         var isPrimaryTraveler = true
+
+        static func owner(_ id: UUID?, in party: TripParty) -> Self {
+            guard let owner = party.travelers.first(where: { $0.id == id }) else {
+                return .init(isPrimaryTraveler: false)
+            }
+            return .init(ownerName: owner.displayName, isPrimaryTraveler: owner.id == party.primary.id)
+        }
     }
 
     static func reason(for item: PackingItemDraft, context: PresentationContext = .init()) -> CustomerReason? {

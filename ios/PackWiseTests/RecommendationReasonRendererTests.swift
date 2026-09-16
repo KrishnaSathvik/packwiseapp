@@ -37,6 +37,11 @@ struct RecommendationReasonRendererTests {
 
     @Test func ownedDevicesAndChildNeedsStayOnTheirRecord() {
         #expect(text(item(["preference.bringingLaptop"], types: [.vacation], id: "electronics.laptop_charger")) == "For the laptop you're bringing.")
+        let party = TripPartyBuilder.make(mode: .couple, selfChips: [.bringingLaptop],
+            otherAdults: [AdultDraft(name: "Adult 1", chips: [.bringingTablet])], children: [])
+        #expect(RecommendationReasonRenderer.PresentationContext.owner(party.primary.id, in: party).isPrimaryTraveler)
+        #expect(!RecommendationReasonRenderer.PresentationContext.owner(party.travelers[1].id, in: party).isPrimaryTraveler)
+        #expect(!RecommendationReasonRenderer.PresentationContext.owner(nil, in: party).isPrimaryTraveler)
         let tablet = item(["preference.bringingTablet"], id: "electronics.tablet")
         #expect(RecommendationReasonRenderer.reason(for: tablet, context: .init(ownerName: "Adult 1", isPrimaryTraveler: false))?.text == "For the tablet they're bringing.")
         var child = item(id: "kids.diapers")
