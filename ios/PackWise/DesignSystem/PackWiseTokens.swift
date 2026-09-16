@@ -30,6 +30,8 @@ enum PackWiseSize {
     static let buttonHeight: CGFloat = 52
     /// Apple's minimum comfortable target. Never shrink below this.
     static let tapTarget: CGFloat = 44
+    /// The floating add control on the Packing List.
+    static let floatingControl: CGFloat = 52
     /// Compact destination thumbnail on a trip card.
     static let tripThumbnail: CGFloat = 56
     /// The confirmed destination's map thumbnail in trip setup.

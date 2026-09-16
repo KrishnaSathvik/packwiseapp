@@ -283,6 +283,23 @@ struct M1LoopTests {
     }
     #endif
 
+    #if DEBUG
+    /// Task 11: every Packing List state the contact sheet reviews is capturable.
+    @Test func task11ReferenceStatesAreAllCapturable() {
+        let required = [
+            "packingList", "packingListCouple", "packingListFamily",
+            "packingListFamilyYou", "packingListFamilyAdult1", "packingListFamilyChild1", "packingListFamilyShared",
+            "packingListFamilyMiddle", "packingListFamilyBottom",
+            "packingListFamilyToPack", "packingListFamilyPacked", "packingListFamilyImportant", "packingListFamilyHidePacked",
+            "packingListFamilySearchItem", "packingListFamilySearchTraveler", "packingListFamilySearchNone",
+            "packingListFamilyGroupTshirts", "packingListFamilyGroupToothbrush",
+        ]
+        for id in required {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing Task 11 state \(id)")
+        }
+    }
+    #endif
+
     @Test func mergedActivityIDsNormalizeOnRead() throws {
         // A trip saved before fineDining was merged still holds the old value.
         // Left alone it would lose its packing rule and be rejected by the

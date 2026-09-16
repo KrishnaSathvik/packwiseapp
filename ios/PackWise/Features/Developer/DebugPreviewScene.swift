@@ -21,8 +21,26 @@ enum DebugPreviewScreen: String {
     case tripDetailSeasonal
     case packingList
     case packingListScrolled
-    /// The family trip's generated list in its current (pre-Task 11) state.
+    /// The family trip's generated list, aggregated in the All scope (Task 11).
     case packingListFamily
+    /// Task 11 list states: couple All; family per-person and Shared scopes;
+    /// the family list scrolled; each Status; searches; and opened groups.
+    case packingListCouple
+    case packingListFamilyYou
+    case packingListFamilyAdult1
+    case packingListFamilyChild1
+    case packingListFamilyShared
+    case packingListFamilyMiddle
+    case packingListFamilyBottom
+    case packingListFamilyToPack
+    case packingListFamilyPacked
+    case packingListFamilyImportant
+    case packingListFamilyHidePacked
+    case packingListFamilySearchItem
+    case packingListFamilySearchTraveler
+    case packingListFamilySearchNone
+    case packingListFamilyGroupTshirts
+    case packingListFamilyGroupToothbrush
     /// Legacy full-screen item detail plus real-sheet states for comparison.
     case itemDetail
     case itemDetailSheet
@@ -117,6 +135,10 @@ struct DebugPreviewScene: View {
             .modelContainer(screen == .tripsHomeEmpty ? DebugTripSeed.emptyContainer : seed.container)
     }
 
+    private func familyList(_ state: PackingListDebugState) -> some View {
+        NavigationStack { PackingListView(trip: seed.familyTrip, debugPresentation: .list(state)) }
+    }
+
     /// The later steps need a populated draft, so they open on the seeded trip.
     private func setup(_ step: SetupStep) -> some View {
         TripSetupView(existingTrip: seed.trip, initialStep: step)
@@ -138,6 +160,38 @@ struct DebugPreviewScene: View {
                 NavigationStack { PackingListView(trip: seed.trip, focusedCategory: .toiletries) }
             case .packingListFamily:
                 NavigationStack { PackingListView(trip: seed.familyTrip) }
+            case .packingListCouple:
+                NavigationStack { PackingListView(trip: seed.coupleTrip) }
+            case .packingListFamilyYou:
+                familyList(PackingListDebugState(scope: .traveler(0)))
+            case .packingListFamilyAdult1:
+                familyList(PackingListDebugState(scope: .traveler(1)))
+            case .packingListFamilyChild1:
+                familyList(PackingListDebugState(scope: .traveler(2)))
+            case .packingListFamilyShared:
+                familyList(PackingListDebugState(scope: .shared))
+            case .packingListFamilyMiddle:
+                familyList(PackingListDebugState(scrollTo: .toiletries))
+            case .packingListFamilyBottom:
+                familyList(PackingListDebugState(scrollTo: .travelComfort))
+            case .packingListFamilyToPack:
+                familyList(PackingListDebugState(status: .toPack))
+            case .packingListFamilyPacked:
+                familyList(PackingListDebugState(status: .packed))
+            case .packingListFamilyImportant:
+                familyList(PackingListDebugState(status: .important))
+            case .packingListFamilyHidePacked:
+                familyList(PackingListDebugState(hidePacked: true, scrollTo: .toiletries))
+            case .packingListFamilySearchItem:
+                familyList(PackingListDebugState(search: "tooth"))
+            case .packingListFamilySearchTraveler:
+                familyList(PackingListDebugState(search: "Maya"))
+            case .packingListFamilySearchNone:
+                familyList(PackingListDebugState(search: "snorkel mask"))
+            case .packingListFamilyGroupTshirts:
+                familyList(PackingListDebugState(openGroup: "clothing.tshirt"))
+            case .packingListFamilyGroupToothbrush:
+                familyList(PackingListDebugState(openGroup: "toiletries.toothbrush"))
             case .tripsHome, .tripsHomeEmpty:
                 TripsHomeView()
             case .setupDestination:
@@ -416,6 +470,8 @@ final class DebugTripSeed {
     /// The Chicago trip with an item in every category, so Trip Detail's
     /// Packing block can be checked with all eleven rows (Task 10).
     let allCategoriesTrip: TripRecord
+    /// You and Alex, with a generated list, for the couple list states (Task 11).
+    let coupleTrip: TripRecord
 
     /// Visuals with no trusted imagery and a failing map: the offline state.
     static let offlineVisuals = MapKitDestinationVisualService(
@@ -639,6 +695,43 @@ final class DebugTripSeed {
         if let catalog = try? SharedLibrary.catalog(), let rules = try? SharedLibrary.rules() {
             let familyContext = familyTrip.context(preferences: .deviceDefaults(), weather: nil)
             repository.replaceItems(on: familyTrip, with: PackingEngine(catalog: catalog, rules: rules).generate(context: familyContext))
+        }
+        // Part way packed, unevenly, so the All scope shows partial groups:
+        // You have done your toiletries and footwear, Maya her toothbrush.
+        let familyYou = familyTrip.party.primary.id
+        let maya = familyTrip.party.travelers.first { $0.name == "Maya" }?.id
+        for record in familyTrip.items {
+            let mine = record.travelerID == familyYou && (record.category == .toiletries || record.category == .footwear)
+            let hers = record.travelerID == maya && record.canonicalItemID == "toiletries.toothbrush"
+            if mine || hers { record.packedQuantity = record.quantity }
+        }
+
+        coupleTrip = TripRecord(
+            destination: destination,
+            startDate: calendar.date(byAdding: .day, value: 40, to: start)!,
+            endDate: calendar.date(byAdding: .day, value: 44, to: start)!,
+            durationDays: 5,
+            durationNights: 4,
+            tripType: .cityBreak,
+            activities: ["sightseeing"],
+            bagType: .carryOn,
+            packingStyle: .balanced,
+            status: .packing,
+            travelerCount: 2,
+            travelMode: .couple
+        )
+        context.insert(coupleTrip)
+        repository.attach(
+            party: TripPartyBuilder.make(mode: .couple, selfChips: [], otherAdults: [AdultDraft(name: "Alex")], children: []),
+            bagTypes: [.carryOn],
+            on: coupleTrip
+        )
+        if let catalog = try? SharedLibrary.catalog(), let rules = try? SharedLibrary.rules() {
+            let coupleContext = coupleTrip.context(preferences: .deviceDefaults(), weather: nil)
+            repository.replaceItems(on: coupleTrip, with: PackingEngine(catalog: catalog, rules: rules).generate(context: coupleContext))
+        }
+        for record in coupleTrip.items where record.travelerID == coupleTrip.party.primary.id && record.category == .toiletries {
+            record.packedQuantity = record.quantity
         }
 
         groupTrip = TripRecord(

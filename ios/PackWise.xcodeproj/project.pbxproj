@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		636058792F9208701BBFBD86 /* PackingListAggregation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 164E56F3553095CCA6F48D97 /* PackingListAggregation.swift */; };
+		BBFFA760B0D39493D488C713 /* PackingListAggregationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575FE07CC138895630BB60C8 /* PackingListAggregationTests.swift */; };
 		8FA121808E8DADF8719FAD73 /* AppearanceGuardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB0C474FC70C047C88E29D4 /* AppearanceGuardTests.swift */; };
 		5F1A8BBBAE3F3D5D17EB627A /* TripOriginTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D7EEFFE3125B3228705005 /* TripOriginTests.swift */; };
 		929457BA236EB8816F7BCAA1 /* DestinationVisualTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E83C6FD5ADCFCCD0ABD63E9 /* DestinationVisualTests.swift */; };
@@ -180,6 +182,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		164E56F3553095CCA6F48D97 /* PackingListAggregation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingListAggregation.swift; sourceTree = "<group>"; };
+		575FE07CC138895630BB60C8 /* PackingListAggregationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackingListAggregationTests.swift; sourceTree = "<group>"; };
 		6DB0C474FC70C047C88E29D4 /* AppearanceGuardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceGuardTests.swift; sourceTree = "<group>"; };
 		C7D7EEFFE3125B3228705005 /* TripOriginTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripOriginTests.swift; sourceTree = "<group>"; };
 		3E83C6FD5ADCFCCD0ABD63E9 /* DestinationVisualTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationVisualTests.swift; sourceTree = "<group>"; };
@@ -408,6 +412,7 @@
 		29EBA7843E51DD3BC21CD145 /* TripDetail */ = {
 			isa = PBXGroup;
 			children = (
+				164E56F3553095CCA6F48D97 /* PackingListAggregation.swift */,
 				C1F4183BAE5580F3EF60B831 /* PackingListView.swift */,
 				1E21852207D4E351FC95A60A /* RecommendationDiffSheet.swift */,
 				5F7EBEEDD753F11A4987873D /* TripDetailView.swift */,
@@ -574,6 +579,7 @@
 		8A47DFD989F74EC5A9A4B4E3 /* PackWiseTests */ = {
 			isa = PBXGroup;
 			children = (
+				575FE07CC138895630BB60C8 /* PackingListAggregationTests.swift */,
 				6DB0C474FC70C047C88E29D4 /* AppearanceGuardTests.swift */,
 				C7D7EEFFE3125B3228705005 /* TripOriginTests.swift */,
 				3E83C6FD5ADCFCCD0ABD63E9 /* DestinationVisualTests.swift */,
@@ -965,6 +971,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				636058792F9208701BBFBD86 /* PackingListAggregation.swift in Sources */,
 				1CAFDB1A65F75DFF7EC0C890 /* DestinationStep.swift in Sources */,
 				968083A4E8DDB2858F466246 /* TripSetupSelectionGrid.swift in Sources */,
 				A7401F7774EDACD479912C69 /* TripSetupShell.swift in Sources */,
@@ -1041,6 +1048,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBFFA760B0D39493D488C713 /* PackingListAggregationTests.swift in Sources */,
 				8FA121808E8DADF8719FAD73 /* AppearanceGuardTests.swift in Sources */,
 				5F1A8BBBAE3F3D5D17EB627A /* TripOriginTests.swift in Sources */,
 				929457BA236EB8816F7BCAA1 /* DestinationVisualTests.swift in Sources */,

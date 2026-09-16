@@ -388,16 +388,14 @@ Camera charger
 
 ## Filtering
 
-Simple chips only:
+Two named dimensions, chips only (Product Experience V2, Task 11):
 
 ```text
-All
-Left to pack
-Packed
-Important
+People   All | You | Maya | Child 1 | Shared     (party lists only)
+Status   To pack 63 | Packed 4 | Important · Hide packed
 ```
 
-Optional: **Hide packed items**
+Status is a toggle: nothing selected shows everything, so there is no second "All". Counts are underlying records in the current People scope and search. Every filter and the search apply to the records *before* aggregation, so a group appears when any of its records matches and shows only the records that do; Hide packed removes packed records, never a group whose other travelers are still unpacked.
 
 Do not create a large filter system.
 

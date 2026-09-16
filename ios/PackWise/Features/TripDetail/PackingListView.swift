@@ -1,15 +1,6 @@
 import SwiftData
 import SwiftUI
 
-enum PackingFilter: String, CaseIterable, Identifiable {
-    case all = "All"
-    case left = "Left to pack"
-    case packed = "Packed"
-    case important = "Important"
-
-    var id: String { rawValue }
-}
-
 /// Presentation-only wording for recommendations that share one engine
 /// signal but have different practical consequences. Structured provenance
 /// remains unchanged.
@@ -59,6 +50,20 @@ enum PackingListDebugPresentation {
     case itemDetailLarge
     case addItem
     case addItemCategory
+    /// Task 11 capture states: a preset People/Status/search state, an
+    /// opened group, or a scroll target.
+    case list(PackingListDebugState)
+}
+
+struct PackingListDebugState {
+    enum Scope { case all, traveler(Int), shared }
+    var scope: Scope = .all
+    var status: PackingStatusFilter? = nil
+    var hidePacked = false
+    var search = ""
+    /// Canonical ID of a personal group to open.
+    var openGroup: String? = nil
+    var scrollTo: PackingCategory? = nil
 }
 #endif
 
@@ -82,13 +87,15 @@ struct PackingListView: View {
 
     @Environment(AppDependencies.self) private var dependencies
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    @State private var filter: PackingFilter = .all
     @State private var partyFilter: PartyListFilter = .all
+    @State private var status: PackingStatusFilter?
     @State private var search = ""
     @State private var adding = false
     @State private var hidePacked = false
     @State private var selectedItem: PackingItemRecord?
+    @State private var selectedGroup: PersonalItemGroup?
     @State private var newItemName = ""
     @State private var newItemQuantity = 1
     @State private var newItemCategory: PackingCategory = .clothing
@@ -98,7 +105,12 @@ struct PackingListView: View {
     @State private var itemDetailDetent: PresentationDetent = .medium
 #if DEBUG
     @State private var appliedDebugPresentation = false
+    @State private var debugScrollTarget: PackingCategory?
 #endif
+
+    /// The floating add control's footprint plus breathing room, so the last
+    /// row can always scroll clear of it (Task 11).
+    private static let addButtonClearance: CGFloat = PackWiseSize.floatingControl + PackWiseSpacing.loose * 2 + PackWiseSpacing.regular
 
     var body: some View {
         VStack(spacing: 0) {
@@ -115,21 +127,24 @@ struct PackingListView: View {
         .searchable(
             text: $search,
             placement: .navigationBarDrawer(displayMode: .always),
-            prompt: "Search items"
+            prompt: "Search items or people"
         )
         .overlay(alignment: .bottomTrailing) { addButton }
         .sheet(item: $selectedItem) { item in
             NavigationStack {
-                ItemDetailView(
-                    item: item,
-                    travelers: trip.party.travelers,
-                    showsAssignment: !trip.party.usesSimpleList && item.ownershipType == .shared,
-                    onNotNeeded: !item.isUserAdded && item.canonicalItemID != nil
-                        ? { notNeeded(item) } : nil,
-                    onDelete: item.isUserAdded ? { delete(item) } : nil
-                )
+                itemDetail(item)
             }
             .presentationDetents([.medium, .large], selection: $itemDetailDetent)
+            .presentationDragIndicator(.visible)
+        }
+        .sheet(item: $selectedGroup) { group in
+            PackingGroupDetailView(
+                group: group,
+                trip: trip,
+                onNotNeeded: { notNeeded($0) },
+                onDelete: { delete($0) }
+            )
+            .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $adding) { addSheet }
@@ -143,45 +158,18 @@ struct PackingListView: View {
     private var list: some View {
         ScrollViewReader { proxy in
             List {
-                ForEach(visibleCategories, id: \.self) { category in
-                    let items = filteredItems.filter { $0.category == category }
-                    if !items.isEmpty {
-                        Section {
-                            ForEach(items, id: \.id) { item in
-                                row(item)
-                            }
-                        } header: {
-                            HStack(spacing: PackWiseSpacing.snug) {
-                                if items.allSatisfy(\.isPacked) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.subheadline)
-                                        .foregroundStyle(PackWiseColor.success)
-                                        .accessibilityLabel("All packed")
-                                }
-                                PackWiseSectionHeader(
-                                    title: category.title,
-                                    style: .micro,
-                                    trailing: "\(items.filter(\.isPacked).count) / \(items.count)"
-                                )
-                            }
-                            .padding(.horizontal, PackWiseSpacing.comfortable)
-                            .padding(.top, PackWiseSpacing.snug)
-                            .padding(.bottom, PackWiseSpacing.tight)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            // A plain list pins its section headers. The header
-                            // was drawn without a fill, so rows scrolled
-                            // straight through it and the two rendered on top
-                            // of each other — "TOILETRIES" and the row above it
-                            // sharing the same pixels. The insets move to the
-                            // padding above so the fill spans the full width.
-                            .background(PackWiseColor.screen)
-                            .listRowInsets(EdgeInsets())
+                ForEach(sections) { section in
+                    Section {
+                        ForEach(section.rows) { row in
+                            presentationRow(row)
                         }
-                        .id(category)
+                    } header: {
+                        sectionHeader(section)
                     }
+                    .id(section.category)
                 }
 
-                if filteredItems.isEmpty {
+                if sections.isEmpty {
                     emptyState
                         .listRowSeparator(.hidden)
                 }
@@ -189,19 +177,85 @@ struct PackingListView: View {
             .listStyle(.plain)
             // So the last rows can scroll clear of the floating add button
             // rather than sitting underneath it.
-            .contentMargins(.bottom, 76, for: .scrollContent)
+            .contentMargins(.bottom, Self.addButtonClearance, for: .scrollContent)
             .onAppear {
-                guard let focusedCategory else { return }
-                proxy.scrollTo(focusedCategory, anchor: .top)
+                guard let target = scrollTarget else { return }
+                proxy.scrollTo(target, anchor: .top)
             }
+#if DEBUG
+            // The capture state is applied by the outer view's onAppear,
+            // which runs after this list's own, so scroll once it lands.
+            .onChange(of: debugScrollTarget) { _, target in
+                guard let target else { return }
+                proxy.scrollTo(target, anchor: .top)
+            }
+#endif
         }
     }
 
-    private func row(_ item: PackingItemRecord) -> some View {
+    private var scrollTarget: PackingCategory? {
+#if DEBUG
+        focusedCategory ?? debugScrollTarget
+#else
+        focusedCategory
+#endif
+    }
+
+    private func sectionHeader(_ section: PackingListSection) -> some View {
+        HStack(spacing: PackWiseSpacing.snug) {
+            if section.isComplete {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(PackWiseColor.success)
+                    .accessibilityLabel("All packed")
+            }
+            PackWiseSectionHeader(
+                title: section.category.title,
+                style: .micro,
+                trailing: "\(section.completedCount) / \(section.totalCount)"
+            )
+        }
+        .padding(.horizontal, PackWiseSpacing.comfortable)
+        .padding(.top, PackWiseSpacing.snug)
+        .padding(.bottom, PackWiseSpacing.tight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // A plain list pins its section headers. The header was drawn
+        // without a fill, so rows scrolled straight through it and the two
+        // rendered on top of each other. The insets move to the padding
+        // above so the fill spans the full width.
+        .background(PackWiseColor.screen)
+        .listRowInsets(EdgeInsets())
+    }
+
+    @ViewBuilder
+    private func presentationRow(_ row: PackingListPresentationRow) -> some View {
+        switch row {
+        case .individual(let entry):
+            if let record = recordsByID[entry.id] {
+                recordRow(record, caption: showsOwners ? entry.travelerLabel : nil)
+            }
+        case .shared(let entry):
+            if let record = recordsByID[entry.id] {
+                recordRow(record, caption: entry.secondaryText)
+            }
+        case .personalGroup(let group):
+            PackingGroupRow(group: group)
+                .contentShape(Rectangle())
+                .onTapGesture { selectedGroup = group }
+        }
+    }
+
+    /// Owner captions belong to the All scope of a party list. A traveler's
+    /// own scope is their checklist, so the name would only repeat.
+    private var showsOwners: Bool {
+        !trip.party.usesSimpleList && partyFilter == .all
+    }
+
+    private func recordRow(_ item: PackingItemRecord, caption: String?) -> some View {
         PackingRow(
             item: item,
-            travelerName: travelerName(for: item),
-            showsOwner: !trip.party.usesSimpleList
+            travelerName: caption,
+            showsOwner: caption != nil
         )
         .contentShape(Rectangle())
         .onTapGesture { selectedItem = item }
@@ -233,16 +287,27 @@ struct PackingListView: View {
         }
     }
 
+    private func itemDetail(_ item: PackingItemRecord) -> some View {
+        ItemDetailView(
+            item: item,
+            travelers: trip.party.travelers,
+            showsAssignment: !trip.party.usesSimpleList && item.ownershipType == .shared,
+            onNotNeeded: !item.isUserAdded && item.canonicalItemID != nil
+                ? { notNeeded(item) } : nil,
+            onDelete: item.isUserAdded ? { delete(item) } : nil
+        )
+    }
+
     @ViewBuilder
     private var emptyState: some View {
         if !search.isEmpty {
             ContentUnavailableView.search(text: search)
         } else {
             ContentUnavailableView(
-                filter == .packed ? "Nothing packed yet" : "Nothing here",
+                status == .packed ? "Nothing packed yet" : "Nothing here",
                 systemImage: "suitcase",
                 description: Text(
-                    filter == .packed
+                    status == .packed
                         ? "Items you pack will show up here."
                         : "No items match this filter."
                 )
@@ -252,32 +317,41 @@ struct PackingListView: View {
 
     // MARK: - Filters
 
+    /// Two dimensions, each named: who the rows belong to, and where they
+    /// stand. A solo list has one person and shows no People row at all.
     private var filters: some View {
         VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            if !trip.party.usesSimpleList {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: PackWiseSpacing.snug) {
-                        ForEach(partyFilterOptions, id: \.id) { option in
-                            SelectableChip(title: partyFilterTitle(option), selected: partyFilter == option) {
-                                partyFilter = option
-                            }
+            let people = PackingListAggregator.scopeLabels(for: trip.party)
+            if !people.isEmpty {
+                scopeRow("People") {
+                    ForEach(people, id: \.scope) { option in
+                        PackWiseChip(
+                            title: option.title,
+                            symbol: partyFilter == option.scope ? "checkmark" : nil,
+                            isSelected: partyFilter == option.scope
+                        ) {
+                            partyFilter = option.scope
                         }
                     }
-                    .padding(.horizontal, PackWiseSpacing.comfortable)
                 }
             }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: PackWiseSpacing.snug) {
-                    ForEach(PackingFilter.allCases) { option in
-                        SelectableChip(title: filterTitle(option), selected: filter == option) {
-                            filter = option
-                        }
-                    }
-                    SelectableChip(title: "Hide packed", selected: hidePacked) {
-                        hidePacked.toggle()
+            scopeRow("Status") {
+                ForEach(PackingStatusFilter.allCases) { option in
+                    PackWiseChip(
+                        title: statusTitle(option),
+                        symbol: status == option ? "checkmark" : nil,
+                        isSelected: status == option
+                    ) {
+                        status = status == option ? nil : option
                     }
                 }
-                .padding(.horizontal, PackWiseSpacing.comfortable)
+                PackWiseChip(
+                    title: "Hide packed",
+                    symbol: hidePacked ? "checkmark" : "eye.slash",
+                    isSelected: hidePacked
+                ) {
+                    hidePacked.toggle()
+                }
             }
         }
         .padding(.vertical, PackWiseSpacing.snug)
@@ -286,10 +360,46 @@ struct PackingListView: View {
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
     }
 
-    /// Counts sit on the filter itself so the split is legible before tapping.
-    private func filterTitle(_ option: PackingFilter) -> String {
-        let count = scopedItems.filter { matches($0, filter: option) }.count
-        return option == .important ? option.rawValue : "\(option.rawValue) \(count)"
+    /// A named row of chips. At accessibility sizes the name sits above the
+    /// chips instead of beside them, so it never wraps mid-word.
+    private func scopeRow<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        let label = Text(title)
+            .font(.caption.weight(.semibold))
+            .kerning(0.5)
+            .textCase(.uppercase)
+            .foregroundStyle(PackWiseColor.textSecondary)
+            .accessibilityHidden(true)
+        let chips = ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: PackWiseSpacing.snug) {
+                content()
+            }
+            .padding(.trailing, PackWiseSpacing.comfortable)
+        }
+        return Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                    label.padding(.leading, PackWiseSpacing.comfortable)
+                    chips.padding(.leading, PackWiseSpacing.comfortable)
+                }
+            } else {
+                HStack(alignment: .center, spacing: PackWiseSpacing.snug) {
+                    label
+                        .frame(width: 58, alignment: .leading)
+                        .padding(.leading, PackWiseSpacing.comfortable)
+                    chips
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(title)
+    }
+
+    /// Counts sit on the chip so the split is legible before tapping; they
+    /// count underlying records in the current People scope and search.
+    private func statusTitle(_ option: PackingStatusFilter) -> String {
+        guard option != .important else { return option.rawValue }
+        let count = statusCounts[option] ?? 0
+        return "\(option.rawValue) \(count)"
     }
 
     private var addButton: some View {
@@ -299,7 +409,7 @@ struct PackingListView: View {
             Image(systemName: "plus")
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(.white)
-                .frame(width: 52, height: 52)
+                .frame(width: PackWiseSize.floatingControl, height: PackWiseSize.floatingControl)
                 .background(PackWiseColor.accent, in: Circle())
                 .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
         }
@@ -350,7 +460,7 @@ struct PackingListView: View {
                                     Picker("For", selection: $newItemOwner) {
                                         Text("Shared").tag(PartyListFilter.shared)
                                         ForEach(trip.party.travelers) { traveler in
-                                            Text(traveler.displayName).tag(PartyListFilter.traveler(traveler.id))
+                                            Text(trip.party.label(for: traveler)).tag(PartyListFilter.traveler(traveler.id))
                                         }
                                     }
                                     .labelsHidden()
@@ -415,60 +525,26 @@ struct PackingListView: View {
         PackingCategory.displayOrder(international: trip.isInternational, tripTypes: trip.tripTypes)
     }
 
-    private var partyFilterOptions: [PartyListFilter] {
-        trip.party.listFilters()
+    private var query: PackingListQuery {
+        PackingListQuery(scope: partyFilter, status: status, search: search, hidePacked: hidePacked)
     }
 
-    private func partyFilterTitle(_ filter: PartyListFilter) -> String {
-        switch filter {
-        case .all: "All"
-        case .shared: "Shared"
-        case .kids: "Kids"
-        case .traveler(let id):
-            trip.party.travelers.first { $0.id == id }?.displayName ?? "Traveler"
-        }
+    private var listItems: [PackingListItem] {
+        trip.items.map(PackingListItem.init(record:))
     }
 
-    private func travelerName(for item: PackingItemRecord) -> String? {
-        if item.ownershipType == .shared { return "Shared" }
-        return trip.party.travelers.first { $0.id == item.travelerID }?.displayName
+    /// The rows on screen: filtered underlying records, aggregated within
+    /// each category. Presentation only; see `PackingListAggregator`.
+    private var sections: [PackingListSection] {
+        PackingListAggregator.sections(items: listItems, party: trip.party, order: visibleCategories, query: query)
     }
 
-    private func matches(_ item: PackingItemRecord, filter: PackingFilter) -> Bool {
-        switch filter {
-        case .all: true
-        case .left: !item.isPacked
-        case .packed: item.isPacked
-        case .important: item.importance == .critical || item.importance == .important
-        }
+    private var statusCounts: [PackingStatusFilter: Int] {
+        PackingListAggregator.statusCounts(items: listItems, party: trip.party, query: query)
     }
 
-    /// Everything the party filter and search allow, before the packed/left
-    /// split — so the filter chips can count what each option would show.
-    private var scopedItems: [PackingItemRecord] {
-        trip.items
-            .filter { item in
-                switch partyFilter {
-                case .all: true
-                case .shared: item.ownershipType == .shared
-                case .kids:
-                    item.ownershipType == .personal && trip.party.children.contains { $0.id == item.travelerID }
-                case .traveler(let id):
-                    item.ownershipType == .personal && item.travelerID == id
-                }
-            }
-            .filter { item in
-                search.isEmpty
-                    || item.displayName.localizedCaseInsensitiveContains(search)
-                    || (item.canonicalItemID?.localizedCaseInsensitiveContains(search) ?? false)
-            }
-    }
-
-    private var filteredItems: [PackingItemRecord] {
-        scopedItems
-            .filter { matches($0, filter: filter) }
-            .filter { !(hidePacked && $0.isPacked) }
-            .sorted { $0.displayName < $1.displayName }
+    private var recordsByID: [UUID: PackingItemRecord] {
+        Dictionary(trip.items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
 #if DEBUG
@@ -488,6 +564,23 @@ struct PackingListView: View {
             newItemCategory = .clothing
             addPath = [.category]
             adding = true
+        case .list(let state):
+            switch state.scope {
+            case .all: partyFilter = .all
+            case .shared: partyFilter = .shared
+            case .traveler(let index):
+                let travelers = trip.party.travelers
+                if travelers.indices.contains(index) { partyFilter = .traveler(travelers[index].id) }
+            }
+            status = state.status
+            hidePacked = state.hidePacked
+            search = state.search
+            debugScrollTarget = state.scrollTo
+            if let canonical = state.openGroup {
+                selectedGroup = sections.flatMap(\.rows).compactMap { row -> PersonalItemGroup? in
+                    if case .personalGroup(let group) = row, group.canonicalItemID == canonical { group } else { nil }
+                }.first
+            }
         }
     }
 #endif
@@ -548,12 +641,186 @@ struct PackingListView: View {
     }
 }
 
+
+/// One personal item across several travelers, presented once (Task 11).
+/// The leading glyph reports the group's state and is not a control: a
+/// group has no single record to pack. Tapping opens the real records.
+struct PackingGroupRow: View {
+    let group: PersonalItemGroup
+
+    var body: some View {
+        HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
+            Image(systemName: stateSymbol)
+                .font(.title3)
+                .foregroundStyle(stateTint)
+                .frame(width: 26, height: 26)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.snug) {
+                    Text(group.displayName)
+                        .strikethrough(group.isComplete)
+                        .foregroundStyle(group.isComplete ? PackWiseColor.textSecondary : PackWiseColor.textPrimary)
+                    Spacer(minLength: PackWiseSpacing.tight)
+                    Text(group.progressText)
+                        .font(.subheadline)
+                        .foregroundStyle(PackWiseColor.textSecondary)
+                        .monospacedDigit()
+                    if let importanceTint {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(importanceTint)
+                    }
+                }
+                HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.tight) {
+                    Text(group.travelerSummary)
+                        .font(.footnote)
+                        .foregroundStyle(PackWiseColor.textSecondary)
+                    Spacer(minLength: PackWiseSpacing.tight)
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(PackWiseColor.textTertiary)
+                }
+            }
+        }
+        .padding(.vertical, PackWiseSpacing.snug)
+        .frame(minHeight: PackWiseSize.tapTarget)
+        .listRowInsets(EdgeInsets(
+            top: 0,
+            leading: PackWiseSpacing.comfortable,
+            bottom: 0,
+            trailing: PackWiseSpacing.comfortable
+        ))
+        .alignmentGuide(.listRowSeparatorLeading) { _ in
+            26 + PackWiseSpacing.regular
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(group.accessibilityLabel)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Shows each traveler's item")
+    }
+
+    private var stateSymbol: String {
+        if group.isComplete { return "checkmark.circle.fill" }
+        return group.completedTravelerCount > 0 ? "circle.lefthalf.filled" : "circle"
+    }
+
+    private var stateTint: Color {
+        group.completedTravelerCount > 0 ? PackWiseColor.success : PackWiseColor.textTertiary
+    }
+
+    private var importanceTint: Color? {
+        switch group.importance {
+        case .critical: PackWiseColor.important
+        case .important: PackWiseColor.accent
+        default: nil
+        }
+    }
+}
+
+/// The real records behind a group row, each with its own pack control and
+/// its own detail. Nothing here edits the group: there is no such record.
+struct PackingGroupDetailView: View {
+    let group: PersonalItemGroup
+    @Bindable var trip: TripRecord
+    var onNotNeeded: (PackingItemRecord) -> Void
+    var onDelete: (PackingItemRecord) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(members, id: \.id) { record in
+                        NavigationLink(value: record.id) {
+                            PackingRow(item: record, title: label(for: record) ?? record.displayName)
+                        }
+                        .swipeActions(edge: .leading) {
+                            Button("Pack") { pack(record) }
+                                .tint(PackWiseColor.accent)
+                        }
+                        .swipeActions(edge: .trailing) {
+                            if record.isUserAdded {
+                                Button("Delete", role: .destructive) { onDelete(record) }
+                            } else if record.canonicalItemID != nil {
+                                Button("Not Needed") { onNotNeeded(record) }
+                                    .tint(PackWiseColor.important)
+                            }
+                        }
+                    }
+                } header: {
+                    summary
+                }
+            }
+            .listStyle(.plain)
+            .background(PackWiseColor.screen)
+            .navigationTitle(group.displayName)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
+            .navigationDestination(for: UUID.self) { id in
+                if let record = members.first(where: { $0.id == id }) {
+                    ItemDetailView(
+                        item: record,
+                        travelers: trip.party.travelers,
+                        onNotNeeded: !record.isUserAdded && record.canonicalItemID != nil ? { onNotNeeded(record) } : nil,
+                        onDelete: record.isUserAdded ? { onDelete(record) } : nil
+                    )
+                }
+            }
+        }
+    }
+
+    /// Live records, in the group's traveler order. A record that was
+    /// marked Not Needed drops out on its own.
+    private var members: [PackingItemRecord] {
+        group.recordIDs.compactMap { id in trip.items.first { $0.id == id } }
+    }
+
+    private var summary: some View {
+        let packed = members.filter(\.isPacked).count
+        return HStack(spacing: PackWiseSpacing.snug) {
+            PackWiseIconBadge(symbol: group.category.style.symbol, tint: group.category.style.tint)
+            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                Text("\(members.count) travelers · \(packed) of \(members.count) packed")
+                    .font(.subheadline)
+                    .foregroundStyle(PackWiseColor.textSecondary)
+                Text(group.category.title)
+                    .font(.caption)
+                    .foregroundStyle(PackWiseColor.textTertiary)
+            }
+        }
+        .textCase(nil)
+        .padding(.horizontal, PackWiseSpacing.comfortable)
+        .padding(.vertical, PackWiseSpacing.snug)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PackWiseColor.screen)
+        .listRowInsets(EdgeInsets())
+    }
+
+    private func label(for record: PackingItemRecord) -> String? {
+        trip.party.travelers.first { $0.id == record.travelerID }.map(trip.party.label(for:))
+    }
+
+    private func pack(_ record: PackingItemRecord) {
+        record.packedQuantity = record.quantity
+        record.updatedAt = .now
+        trip.updatedAt = .now
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+}
+
 /// One checklist row, in the shape Reminders uses: a tap target, the item, and
 /// only the secondary text that earns its place.
 struct PackingRow: View {
     @Bindable var item: PackingItemRecord
     var travelerName: String? = nil
     var showsOwner: Bool = false
+    /// Replaces the item name as the row title — inside a group sheet every
+    /// row is the same item, so the traveler is the title (Task 11).
+    var title: String? = nil
 
     var body: some View {
         HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
@@ -569,7 +836,7 @@ struct PackingRow: View {
 
             VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
                 HStack(alignment: .firstTextBaseline, spacing: PackWiseSpacing.snug) {
-                    Text(item.displayName)
+                    Text(title ?? item.displayName)
                         .strikethrough(item.isPacked)
                         .foregroundStyle(item.isPacked ? PackWiseColor.textSecondary : PackWiseColor.textPrimary)
                     Spacer(minLength: PackWiseSpacing.tight)
