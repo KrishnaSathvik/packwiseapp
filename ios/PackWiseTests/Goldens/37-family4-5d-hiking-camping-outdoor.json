@@ -532,7 +532,7 @@
       "canonicalItemID" : "kids.activities",
       "carrier" : "primary",
       "category" : "kids",
-      "displayName" : "Small activities",
+      "displayName" : "Coloring supplies",
       "importance" : "optional",
       "owner" : "child",
       "provenance" : [
@@ -569,7 +569,7 @@
       "canonicalItemID" : "kids.snacks",
       "carrier" : "primary",
       "category" : "kids",
-      "displayName" : "Kid snacks",
+      "displayName" : "Children’s snacks",
       "importance" : "normal",
       "owner" : "child",
       "provenance" : [
@@ -1072,7 +1072,7 @@
       "canonicalItemID" : "kids.activities",
       "carrier" : "primary",
       "category" : "kids",
-      "displayName" : "Small activities",
+      "displayName" : "Coloring supplies",
       "importance" : "optional",
       "owner" : "child-2",
       "provenance" : [
@@ -1184,7 +1184,7 @@
       "canonicalItemID" : "kids.snacks",
       "carrier" : "primary",
       "category" : "kids",
-      "displayName" : "Kid snacks",
+      "displayName" : "Children’s snacks",
       "importance" : "normal",
       "owner" : "child-2",
       "provenance" : [

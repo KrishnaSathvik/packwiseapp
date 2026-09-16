@@ -554,7 +554,7 @@
       "canonicalItemID" : "documents.visa",
       "carrier" : "primary",
       "category" : "documents",
-      "displayName" : "Visa / entry docs",
+      "displayName" : "Visa or entry documents",
       "importance" : "critical",
       "owner" : "primary",
       "provenance" : [

@@ -396,7 +396,7 @@
       "canonicalItemID" : "documents.visa",
       "carrier" : "primary",
       "category" : "documents",
-      "displayName" : "Visa / entry docs",
+      "displayName" : "Visa or entry documents",
       "importance" : "critical",
       "owner" : "primary",
       "provenance" : [
@@ -747,7 +747,7 @@
       "canonicalItemID" : "miscellaneous.wedding_card",
       "carrier" : "primary",
       "category" : "miscellaneous",
-      "displayName" : "Card for event",
+      "displayName" : "Greeting card",
       "importance" : "optional",
       "owner" : "primary",
       "provenance" : [

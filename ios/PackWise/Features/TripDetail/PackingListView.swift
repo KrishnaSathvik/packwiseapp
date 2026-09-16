@@ -1,35 +1,6 @@
 import SwiftData
 import SwiftUI
 
-/// Presentation-only wording for recommendations that share one engine
-/// signal but have different practical consequences. Structured provenance
-/// remains unchanged.
-enum PackingReasonPresentation {
-    static func inclusionReason(
-        canonicalItemID: String?,
-        reasonCode: String,
-        tripType: TripType?,
-        original: String
-    ) -> String {
-        if reasonCode == "activity.sightseeing" {
-            switch canonicalItemID {
-            case "health.blister_pads":
-                return "Helpful for long walking and sightseeing days."
-            case "activities.daypack":
-                return "Useful for carrying daily essentials while sightseeing."
-            case "electronics.power_bank":
-                return "Sightseeing can keep you away from outlets for long periods."
-            default:
-                break
-            }
-        }
-        if reasonCode == "trip_type.generic", let tripType {
-            return "Useful for your \(tripType.title.lowercased())."
-        }
-        return original
-    }
-}
-
 /// Phase 8, Task 6: presentation over `RecommendationTrace.Authority` —
 /// reads persisted trace only, never calls `PackingEngine`,
 /// `CoverageResolver`, `ConstraintResolver`, or `WeatherSignalExtractor`.
@@ -794,7 +765,7 @@ struct PackingGroupDetailView: View {
                 Section {
                     ForEach(members, id: \.id) { record in
                         NavigationLink(value: record.id) {
-                            PackingRow(item: record, title: label(for: record) ?? record.displayName)
+                            PackingRow(item: record, title: label(for: record) ?? record.displayName, showsReasonDisclosure: false)
                         }
                         .swipeActions(edge: .leading) {
                             Button("Pack") { pack(record) }
@@ -893,6 +864,7 @@ struct PackingRow: View {
     /// Replaces the item name as the row title — inside a group sheet every
     /// row is the same item, so the traveler is the title (Task 11).
     var title: String? = nil
+    var showsReasonDisclosure = true
 
     var body: some View {
         HStack(alignment: .top, spacing: PackWiseSpacing.regular) {
@@ -920,6 +892,7 @@ struct PackingRow: View {
                     if item.quantity > 1 {
                         // A styled badge, not plain gray text.
                         Text("×\(item.quantity)")
+                            .accessibilityLabel("Quantity \(item.quantity)")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(PackWiseColor.textSecondary)
                             .monospacedDigit()
@@ -946,9 +919,12 @@ struct PackingRow: View {
                         Text(presentedReason)
                             .font(.footnote)
                             .foregroundStyle(PackWiseColor.textSecondary)
-                        Image(systemName: "chevron.right")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(PackWiseColor.textTertiary)
+                        if showsReasonDisclosure {
+                            Image(systemName: "chevron.right")
+                                .accessibilityHidden(true)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(PackWiseColor.textTertiary)
+                        }
                     }
                 }
             }
@@ -998,23 +974,12 @@ struct PackingRow: View {
         }
     }
 
-    /// A reason earns a line only when it says something about *this* trip.
-    ///
-    /// Baseline essentials all carry copy of the form "a core item for almost
-    /// every trip". Correct provenance, but repeated under fifteen rows it is
-    /// noise, and the user already knows what a toothbrush is.
     private var showsReason: Bool {
-        guard !item.reason.isEmpty else { return false }
-        return item.sourceSignals.contains { $0 != .baseEssential }
+        RecommendationReasonRenderer.reason(for: item.draft, context: item.reasonPresentationContext)?.showsInList == true
     }
 
     private var presentedReason: String {
-        PackingReasonPresentation.inclusionReason(
-            canonicalItemID: item.canonicalItemID,
-            reasonCode: item.reasonCode,
-            tripType: item.trip?.tripType,
-            original: item.reason
-        )
+        RecommendationReasonRenderer.reason(for: item.draft, context: item.reasonPresentationContext)?.text ?? ""
     }
 }
 
@@ -1104,52 +1069,38 @@ struct ItemDetailView: View {
         }
     }
 
+    @ViewBuilder
     private var reasons: some View {
-        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-            PackWiseSectionHeader(title: "Why it's on your list")
-            PackWiseCard {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                    if let authorityLine = PackingTracePresentation.authorityLine(
-                        RecommendationTrace.authority(for: item.draft)
-                    ) {
-                        Text(authorityLine)
-                            .font(.caption)
-                            .foregroundStyle(PackWiseColor.textSecondary)
-                    }
-                    Text(item.reason.isEmpty ? "Added for this trip." : presentedReason)
-                    if !item.quantityReason.isEmpty {
-                        PackWiseRowDivider(inset: 0)
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
-                            Text("Why this quantity")
-                                .font(.subheadline.weight(.semibold))
-                            Text(item.quantityReason)
+        if RecommendationReasonRenderer.reason(for: item.draft, context: item.reasonPresentationContext) != nil
+            || RecommendationReasonRenderer.quantityExplanation(for: item.draft) != nil
+            || PackingTracePresentation.authorityLine(RecommendationTrace.authority(for: item.draft)) != nil {
+            VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
+                PackWiseSectionHeader(title: "Why it's on your list")
+                PackWiseCard {
+                    VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                        if let authorityLine = PackingTracePresentation.authorityLine(
+                            RecommendationTrace.authority(for: item.draft)
+                        ) {
+                            Text(authorityLine)
+                                .font(.caption)
                                 .foregroundStyle(PackWiseColor.textSecondary)
                         }
-                    }
-                    if !item.sourceSignals.isEmpty {
-                        PackWiseRowDivider(inset: 0)
-                        PackWiseFlowLayout {
-                            ForEach(item.sourceSignals, id: \.self) { signal in
-                                Text(signal.customerLabel)
-                                    .font(.caption.weight(.medium))
-                                    .padding(.horizontal, PackWiseSpacing.snug)
-                                    .padding(.vertical, PackWiseSpacing.tight)
-                                    .background(PackWiseColor.surfaceAlt, in: Capsule())
+                        if let reason = RecommendationReasonRenderer.reason(for: item.draft, context: item.reasonPresentationContext) {
+                            Text(reason.text)
+                        }
+                        if let quantityReason = RecommendationReasonRenderer.quantityExplanation(for: item.draft) {
+                            PackWiseRowDivider(inset: 0)
+                            VStack(alignment: .leading, spacing: PackWiseSpacing.hairline) {
+                                Text("Why this quantity")
+                                    .font(.subheadline.weight(.semibold))
+                                Text(quantityReason)
+                                    .foregroundStyle(PackWiseColor.textSecondary)
                             }
                         }
                     }
                 }
             }
         }
-    }
-
-    private var presentedReason: String {
-        PackingReasonPresentation.inclusionReason(
-            canonicalItemID: item.canonicalItemID,
-            reasonCode: item.reasonCode,
-            tripType: item.trip?.tripType,
-            original: item.reason
-        )
     }
 
     private var assignment: some View {
@@ -1217,5 +1168,14 @@ struct ItemDetailView: View {
                 .buttonStyle(SecondaryButtonStyle())
             }
         }
+    }
+}
+
+/// Presentation identity only. No trip metadata, live weather or device lookup.
+extension PackingItemRecord {
+    var reasonPresentationContext: RecommendationReasonRenderer.PresentationContext {
+        let owner = trip?.party.travelers.first { $0.id == travelerID }
+        return .init(ownerName: owner?.displayName,
+                     isPrimaryTraveler: owner?.id == trip?.party.primary.id)
     }
 }

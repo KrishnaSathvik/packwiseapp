@@ -171,6 +171,8 @@
 		F70240D380A399786325B5C3 /* substitutions.json in Resources */ = {isa = PBXBuildFile; fileRef = 80EEC6508BE45DA115516182 /* substitutions.json */; };
 		F7F89C50F44AE543A1C8A4B1 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40FC0820E9532861F4745CDB /* CoreLocation.framework */; };
 		FB9E892DB5F234700B754B96 /* travel-comfort.json in Resources */ = {isa = PBXBuildFile; fileRef = 026895DA8AD94D9E26C65186 /* travel-comfort.json */; };
+		B28F5944A607ADE2AFDEC5A0 /* RecommendationReasonRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE8342D4D5CDD1A43451921C /* RecommendationReasonRenderer.swift */; };
+		E3D19C4172BD638B6910E7E7 /* RecommendationReasonRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D35F30B08BD34E9419B0A84 /* RecommendationReasonRendererTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -353,6 +355,8 @@
 		FD6E2F696EEE47E598A5C70A /* TripContextCollectionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripContextCollectionsTests.swift; sourceTree = "<group>"; };
 		FD7167A22C009DDA79027D79 /* documents.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = documents.json; sourceTree = "<group>"; };
 		F4D22B5490D8C51DAA3AE49C /* PersistenceMigrationV4Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceMigrationV4Tests.swift; sourceTree = "<group>"; };
+		AE8342D4D5CDD1A43451921C /* RecommendationReasonRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationReasonRenderer.swift; sourceTree = "<group>"; };
+		6D35F30B08BD34E9419B0A84 /* RecommendationReasonRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationReasonRendererTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -542,6 +546,7 @@
 				F68424E3377CFB0517015578 /* LuggageContext.swift */,
 				174A9ADD35A69392BDE10E2C /* TripTypeContracts.swift */,
 				A243E601A204510B1E8D7217 /* RecommendationTrace.swift */,
+				AE8342D4D5CDD1A43451921C /* RecommendationReasonRenderer.swift */,
 				D27D7BB95B41E56D32D40385 /* ActivityContracts.swift */,
 				11EDFD2E14659115F91752CB /* CareQuantity.swift */,
 				B55EC35C902E7A792FD006B6 /* Catalog.swift */,
@@ -601,6 +606,7 @@
 				95E3886B07D48DB06DA4738B /* TripContextSnapshotTests.swift */,
 				D9C98258D3D5577E1A5DA655 /* RegenerationProvenanceTests.swift */,
 				1E4E978248CDAE5896927EC9 /* RecommendationTraceTests.swift */,
+				6D35F30B08BD34E9419B0A84 /* RecommendationReasonRendererTests.swift */,
 				1DF7D07DA3D2A44F48A5D5E3 /* PersistenceTests.swift */,
 				C18860B2351467E0C93D5163 /* ActivityContractTests.swift */,
 				4D3CDD73A39DAFCD7DF2BD22 /* StoreHistoryTests.swift */,
@@ -988,6 +994,7 @@
 				388A50B374A78BA2D3234C35 /* TripTypeContracts.swift in Sources */,
 				93030584B0F2EE4145F48254 /* TripContextSnapshot.swift in Sources */,
 				2A71AA6413F62B3A759E6351 /* RecommendationTrace.swift in Sources */,
+				B28F5944A607ADE2AFDEC5A0 /* RecommendationReasonRenderer.swift in Sources */,
 				DE7FACF43F2668884A6C6208 /* ActivityContracts.swift in Sources */,
 				A6B7E7E75631C3D251190B47 /* SchemaHistory.swift in Sources */,
 				9A99E0FD6BB9530E6A13B2A9 /* AppDependencies.swift in Sources */,
@@ -1072,6 +1079,7 @@
 				B13FF3D5CAAFEE365402E00B /* TripContextSnapshotTests.swift in Sources */,
 				034EB0C8C0E13CEB747F8E14 /* RegenerationProvenanceTests.swift in Sources */,
 				9BDDC8459B496B3ADB74F9AA /* RecommendationTraceTests.swift in Sources */,
+				E3D19C4172BD638B6910E7E7 /* RecommendationReasonRendererTests.swift in Sources */,
 				BC8D1634B5B87F51F93177A5 /* PersistenceTests.swift in Sources */,
 				00684D89864EB7E35D3C4139 /* ActivityContractTests.swift in Sources */,
 				BF05CB44B0C686E17E53BAA6 /* StoreHistoryTests.swift in Sources */,

@@ -17,33 +17,6 @@ struct M1LoopTests {
         #expect(TripPackingPresentationState.resolve(packed: 9, total: 12, isFinished: true) == .completed)
     }
 
-    @Test func surfacedReasonsDescribeTheItemsConsequence() {
-        #expect(PackingReasonPresentation.inclusionReason(
-            canonicalItemID: "health.blister_pads",
-            reasonCode: "activity.sightseeing",
-            tripType: nil,
-            original: "You'll have sightseeing days in Anchorage."
-        ) == "Helpful for long walking and sightseeing days.")
-        #expect(PackingReasonPresentation.inclusionReason(
-            canonicalItemID: "activities.daypack",
-            reasonCode: "activity.sightseeing",
-            tripType: nil,
-            original: "You'll have sightseeing days in Anchorage."
-        ) == "Useful for carrying daily essentials while sightseeing.")
-        #expect(PackingReasonPresentation.inclusionReason(
-            canonicalItemID: "electronics.power_bank",
-            reasonCode: "activity.sightseeing",
-            tripType: nil,
-            original: "You'll have sightseeing days in Anchorage."
-        ) == "Sightseeing can keep you away from outlets for long periods.")
-        #expect(PackingReasonPresentation.inclusionReason(
-            canonicalItemID: "activities.camping_item",
-            reasonCode: "trip_type.generic",
-            tripType: .roadTrip,
-            original: "Suggested for a road trip trip."
-        ) == "Useful for your road trip.")
-    }
-
     @Test func destinationTimezoneNeverFallsBackToDevice() {
         let tokyo = DestinationNormalizer.destination(
             city: "Tokyo",

@@ -57,7 +57,7 @@
     {
       "id": "miscellaneous.ziplocks",
       "localizationKey": "packing.miscellaneous.ziplocks",
-      "display_name": "Ziplock bags",
+      "display_name": "Resealable bags",
       "category": "miscellaneous",
       "importance": "optional",
       "symbol": "bag",
@@ -170,7 +170,7 @@
     {
       "id": "miscellaneous.wedding_card",
       "localizationKey": "packing.miscellaneous.wedding_card",
-      "display_name": "Card for event",
+      "display_name": "Greeting card",
       "category": "miscellaneous",
       "importance": "optional",
       "symbol": "envelope",

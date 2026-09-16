@@ -201,7 +201,7 @@
     {
       "id": "kids.snacks",
       "localizationKey": "packing.kids.snacks",
-      "display_name": "Kid snacks",
+      "display_name": "Children’s snacks",
       "category": "kids",
       "importance": "normal",
       "symbol": "fork.knife",
@@ -215,7 +215,7 @@
     {
       "id": "kids.sunscreen",
       "localizationKey": "packing.kids.sunscreen",
-      "display_name": "Kid sunscreen",
+      "display_name": "Children’s sunscreen",
       "category": "kids",
       "importance": "important",
       "symbol": "sun.max",
@@ -229,7 +229,7 @@
     {
       "id": "kids.activities",
       "localizationKey": "packing.kids.activities",
-      "display_name": "Small activities",
+      "display_name": "Coloring supplies",
       "category": "kids",
       "importance": "optional",
       "symbol": "puzzlepiece",

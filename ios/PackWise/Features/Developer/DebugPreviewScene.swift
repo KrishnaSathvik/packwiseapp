@@ -17,6 +17,9 @@ import SwiftUI
 ///
 ///     xcrun simctl launch booted com.packwiseapp.app -PackWiseScreen tripDetail
 enum DebugPreviewScreen: String {
+    case languageSolo, languageMulti, languageSingle, languageCombined
+    case languageWeather, languageActivity, languageDevice, languageChild
+    case languageShared, languageQuantity, languageGroup
     case tripDetail
     case tripDetailSeasonal
     case packingList
@@ -142,6 +145,15 @@ struct DebugPreviewScene: View {
     var body: some View {
         content
             .modelContainer(screen == .tripsHomeEmpty ? DebugTripSeed.emptyContainer : seed.container)
+    }
+
+    @ViewBuilder
+    private func languageDetail(_ trip: TripRecord, _ canonicalID: String) -> some View {
+        if let item = trip.items.first(where: { $0.canonicalItemID == canonicalID }) {
+            NavigationStack {
+                ItemDetailView(item: item, travelers: trip.party.travelers)
+            }
+        }
     }
 
     private func familyList(_ state: PackingListDebugState) -> some View {
@@ -348,6 +360,26 @@ struct DebugPreviewScene: View {
                     .navigationTitle("Chicago")
                     .navigationBarTitleDisplayMode(.inline)
                 }
+            case .languageSolo:
+                NavigationStack { PackingListView(trip: seed.languageSoloTrip, debugPresentation: .list(.init(scrollTo: .footwear))) }
+            case .languageMulti:
+                NavigationStack { PackingListView(trip: seed.languageTrip, debugPresentation: .list(.init(scrollTo: .toiletries))) }
+            case .languageSingle, .languageWeather:
+                languageDetail(seed.languageSoloTrip, "clothing.rain_jacket")
+            case .languageCombined:
+                languageDetail(seed.languageTrip, "toiletries.sunscreen")
+            case .languageActivity:
+                languageDetail(seed.languageSoloTrip, "activities.daypack")
+            case .languageDevice:
+                languageDetail(seed.languageSoloTrip, "electronics.laptop_charger")
+            case .languageChild:
+                languageDetail(seed.familyTrip, "kids.diapers")
+            case .languageShared:
+                languageDetail(seed.familyTrip, "toiletries.sunscreen")
+            case .languageQuantity:
+                languageDetail(seed.languageSoloTrip, "clothing.tshirt")
+            case .languageGroup:
+                familyList(PackingListDebugState(openGroup: "clothing.hat_sun"))
             case .itemDetail:
                 if let item = seed.trip.items.first(where: { $0.displayName == "Rain jacket" }) {
                     NavigationStack {
@@ -491,6 +523,8 @@ final class DebugTripSeed {
     let allCategoriesTrip: TripRecord
     /// You and Alex, with a generated list, for the couple list states (Task 11).
     let coupleTrip: TripRecord
+    let languageTrip: TripRecord
+    let languageSoloTrip: TripRecord
 
     /// Visuals with no trusted imagery and a failing map: the offline state.
     static let offlineVisuals = MapKitDestinationVisualService(
@@ -807,6 +841,27 @@ final class DebugTripSeed {
         for record in completedTrip.items {
             record.packedQuantity = record.quantity
         }
+
+        // Task 13 uses actual engine output, not hand-authored display reasons.
+        func languageSeed(types: Set<TripType>, weather: TripWeatherContext?) -> TripRecord {
+            let record = TripRecord(destination: destination, startDate: start,
+                endDate: calendar.date(byAdding: .day, value: 6, to: start)!,
+                durationDays: 7, durationNights: 6, tripType: .other,
+                activities: weather == nil ? [] : ["sightseeing"], bagType: .personalItem,
+                packingStyle: .balanced, status: .packing)
+            context.insert(record)
+            repository.attach(party: TripPartyBuilder.make(mode: .solo,
+                selfChips: [.bringingLaptop, .bringingPhone], otherAdults: [], children: []),
+                bagTypes: [.personalItem], on: record)
+            try? repository.applyTripTypes(types, on: record)
+            if let catalog = try? SharedLibrary.catalog(), let rules = try? SharedLibrary.rules() {
+                repository.replaceItems(on: record, with: PackingEngine(catalog: catalog, rules: rules)
+                    .generate(context: record.context(preferences: .deviceDefaults(), weather: weather)))
+            }
+            return record
+        }
+        languageTrip = languageSeed(types: [.beach, .festival], weather: nil)
+        languageSoloTrip = languageSeed(types: [.cityBreak], weather: Self.forecast(start: start, calendar: calendar))
 
         try? context.save()
     }

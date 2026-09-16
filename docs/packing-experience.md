@@ -216,22 +216,19 @@ Tap an item. Bottom sheet.
 
 Product Experience V2 keeps one structured `RecommendationTrace` as the explanation source of truth: provenance, quantity evidence, satisfied capabilities, suppressions, constraints, and authority. Persisted trace JSON backs that model; legacy source/reason fields are migration inputs only and do not independently render customer copy.
 
+Task 13 implements one pure `RecommendationReasonRenderer` for list rows, Item Detail, each underlying grouped-family record, and recommendation-change rows. It reads only the record's trace, plus owner display identity. Current trip types, weather and suggested activities cannot invent reasons. Generic reasons stay out of list rows; detail uses one concise sentence. Broad source badges are omitted, and richer trace visualization is deferred.
+
+Display priority is explicit traveler needs/devices, specific selected activities, specific accepted weather, specific contributing trip contexts, then a generic fallback. Only curated compatible sources combine. Quantity/sharing evidence appears separately under “Why this quantity”; no internal IDs or policy names are displayed. Manual/custom items show user authority without a manufactured recommendation. Older records lacking structured inclusion facts omit the reason.
+
 Example:
 
-**Rain Jacket**
-
-**1**
+**Rain jacket** · **1**
 
 ### Why it's on your list
 
-> Rain is expected Saturday and your sightseeing plans include significant outdoor time.
+> Rain is expected during your trip.
 
-### Recommended by
-
-```text
-Forecast
-Activities
-```
+Full naming inventory and decisions: [Task 13 language audit](plans/2026-09-16-product-v2-task-13-language-audit.md).
 
 Never show:
 

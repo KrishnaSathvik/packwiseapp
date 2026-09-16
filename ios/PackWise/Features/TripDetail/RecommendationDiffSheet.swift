@@ -134,7 +134,7 @@ struct RecommendationDiffScreen: View {
                     symbol: "plus",
                     tint: PackWiseColor.success,
                     title: item.displayName,
-                    subtitle: item.reason.isEmpty ? nil : item.reason,
+                    subtitle: RecommendationReasonRenderer.reason(for: item)?.text,
                     isOn: binding(item.id, in: $addIDs)
                 )
             }
@@ -161,7 +161,7 @@ struct RecommendationDiffScreen: View {
         // The fresh draft's reason, not the existing (possibly stale) one —
         // this row can now also represent a causal-only change (Phase 8,
         // Task 3), so the reason shown must describe the new cause.
-        let reason = change.fresh.quantityReason
+        let reason = RecommendationReasonRenderer.quantityExplanation(for: change.fresh) ?? ""
         return reason.isEmpty ? movement : "\(movement) · \(reason)"
     }
 
@@ -179,7 +179,7 @@ struct RecommendationDiffScreen: View {
                             symbol: "minus",
                             tint: PackWiseColor.danger,
                             title: item.displayName,
-                            subtitle: item.reason.isEmpty ? "No longer suggested for this trip" : item.reason,
+                            subtitle: RecommendationReasonRenderer.reason(for: item)?.text ?? "No longer suggested for this trip",
                             isOn: binding(item.id, in: $removeIDs)
                         )
                     }

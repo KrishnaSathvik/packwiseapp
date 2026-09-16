@@ -606,7 +606,7 @@
       "canonicalItemID" : "documents.visa",
       "carrier" : "primary",
       "category" : "documents",
-      "displayName" : "Visa / entry docs",
+      "displayName" : "Visa or entry documents",
       "importance" : "critical",
       "owner" : "primary",
       "provenance" : [
@@ -1323,7 +1323,7 @@
       "canonicalItemID" : "travel_comfort.empty_security_bottle",
       "carrier" : "primary",
       "category" : "travel_comfort",
-      "displayName" : "Empty security bottle",
+      "displayName" : "Empty water bottle",
       "importance" : "normal",
       "owner" : "primary",
       "provenance" : [
