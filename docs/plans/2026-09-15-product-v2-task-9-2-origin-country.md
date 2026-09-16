@@ -75,4 +75,5 @@ Test helpers that expressed "international" through Me (`PackingEngineTests`, `G
 ## Findings (not fixed)
 
 - **F9.2-1.** A trip created while Me's home country was only device-suggested owns an *unconfirmed* origin. Confirming the country in Me later does not make that existing trip international; only its next fresh trip. This is the isolation rule applied consistently, but it means a user who confirms Me after creating their first trip must add "Traveling internationally" on that trip themselves. A per-trip origin control would close it.
+  - **Decision (Krishna, 2026-09-15):** keep this behavior. Me confirmation must never mutate an existing trip; that would undo the ownership model. The follow-up is user control, not engine correctness: a small trip-level "Starting from" control under About you / Review, tracked as a Product V2 follow-up. Not a Task 11 dependency.
 - **F9.2-2.** `PackingPreferenceRecord.hasConfirmedHomeCountry` is a dead column (initialized false, never read or written); `homeCountrySourceRaw` is the authority. Left alone — removing it is a schema change with no user-facing gain.

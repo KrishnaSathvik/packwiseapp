@@ -134,3 +134,14 @@ Very natural PackWise extension. Not in MVP.
 ## Natural-language trip creation — V1 after launch
 
 See [trip-creation.md](trip-creation.md). Label: **Tell PackWise about your trip.** Never **Chat with AI**.
+
+## Per-trip origin ("Starting from") — Product V2 follow-up
+
+Since Task 9.2 a trip owns its `originCountry`, seeded once from Me's home country. There is no control to change it on a trip, so a trip created before Me's country was confirmed keeps an unconfirmed origin (finding F9.2-1). Add a small trip-level control, probably under About you or Review:
+
+```text
+Starting from
+India
+```
+
+It writes `TripRecord.origin` only. Me stays a new-trip default; confirming Me later never mutates an existing trip.
