@@ -41,6 +41,15 @@ enum DebugPreviewScreen: String {
     case packingListFamilySearchNone
     case packingListFamilyGroupTshirts
     case packingListFamilyGroupToothbrush
+    /// Task 12: Add Item after choosing Toiletries; the chooser with
+    /// Toiletries checked; Item Detail with the chooser pushed; Item Detail
+    /// after a move to Miscellaneous; the family list after Maya's T-shirts
+    /// moved to Miscellaneous.
+    case addItemChosen
+    case addItemCategoryChosen
+    case itemDetailCategory
+    case itemDetailMoved
+    case packingListFamilyMoved
     /// Legacy full-screen item detail plus real-sheet states for comparison.
     case itemDetail
     case itemDetailSheet
@@ -192,6 +201,16 @@ struct DebugPreviewScene: View {
                 familyList(PackingListDebugState(openGroup: "clothing.tshirt"))
             case .packingListFamilyGroupToothbrush:
                 familyList(PackingListDebugState(openGroup: "toiletries.toothbrush"))
+            case .addItemChosen:
+                NavigationStack { PackingListView(trip: seed.trip, debugPresentation: .addItemChosen(.toiletries)) }
+            case .addItemCategoryChosen:
+                NavigationStack { PackingListView(trip: seed.trip, debugPresentation: .addItemCategoryChosen(.toiletries)) }
+            case .itemDetailCategory:
+                NavigationStack { PackingListView(trip: seed.trip, debugPresentation: .itemDetailCategory) }
+            case .itemDetailMoved:
+                NavigationStack { PackingListView(trip: seed.trip, debugPresentation: .itemDetailMoved(.miscellaneous)) }
+            case .packingListFamilyMoved:
+                familyList(PackingListDebugState(search: "T-shirt", move: PackingListDebugMove(canonicalItemID: "clothing.tshirt", travelerIndex: 1, category: .miscellaneous)))
             case .tripsHome, .tripsHomeEmpty:
                 TripsHomeView()
             case .setupDestination:

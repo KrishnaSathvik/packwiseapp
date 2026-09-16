@@ -50,6 +50,13 @@ enum PackingListDebugPresentation {
     case itemDetailLarge
     case addItem
     case addItemCategory
+    /// Task 12: Add Item with a chosen category; the chooser with that
+    /// category checked; Item Detail with the chooser pushed; Item Detail
+    /// after a category move.
+    case addItemChosen(PackingCategory)
+    case addItemCategoryChosen(PackingCategory)
+    case itemDetailCategory
+    case itemDetailMoved(PackingCategory)
     /// Task 11 capture states: a preset People/Status/search state, an
     /// opened group, or a scroll target.
     case list(PackingListDebugState)
@@ -64,11 +71,25 @@ struct PackingListDebugState {
     /// Canonical ID of a personal group to open.
     var openGroup: String? = nil
     var scrollTo: PackingCategory? = nil
+    /// Task 12: move one traveler's record to another category first.
+    var move: PackingListDebugMove? = nil
+}
+
+struct PackingListDebugMove {
+    var canonicalItemID: String
+    var travelerIndex: Int
+    var category: PackingCategory
 }
 #endif
 
-private enum AddItemRoute: Hashable {
+enum AddItemRoute: Hashable {
     case category
+}
+
+/// What Item Detail can push in whichever stack hosts it (Task 12).
+enum ItemDetailRoute: Hashable {
+    /// Choose Category for the record with this ID.
+    case category(UUID)
 }
 
 /// The checklist.
@@ -96,13 +117,10 @@ struct PackingListView: View {
     @State private var hidePacked = false
     @State private var selectedItem: PackingItemRecord?
     @State private var selectedGroup: PersonalItemGroup?
-    @State private var newItemName = ""
-    @State private var newItemQuantity = 1
-    @State private var newItemCategory: PackingCategory = .clothing
-    @State private var newItemOwner: PartyListFilter = .all
-    @State private var newItemImportant = false
+    @State private var newItem = AddItemDraft()
     @State private var addPath: [AddItemRoute] = []
     @State private var itemDetailDetent: PresentationDetent = .medium
+    @State private var itemDetailPath: [ItemDetailRoute] = []
 #if DEBUG
     @State private var appliedDebugPresentation = false
     @State private var debugScrollTarget: PackingCategory?
@@ -131,8 +149,11 @@ struct PackingListView: View {
         )
         .overlay(alignment: .bottomTrailing) { addButton }
         .sheet(item: $selectedItem) { item in
-            NavigationStack {
+            NavigationStack(path: $itemDetailPath) {
                 itemDetail(item)
+                    .navigationDestination(for: ItemDetailRoute.self) { route in
+                        itemDetailDestination(route)
+                    }
             }
             .presentationDetents([.medium, .large], selection: $itemDetailDetent)
             .presentationDragIndicator(.visible)
@@ -294,8 +315,23 @@ struct PackingListView: View {
             showsAssignment: !trip.party.usesSimpleList && item.ownershipType == .shared,
             onNotNeeded: !item.isUserAdded && item.canonicalItemID != nil
                 ? { notNeeded(item) } : nil,
-            onDelete: item.isUserAdded ? { delete(item) } : nil
+            onDelete: item.isUserAdded ? { delete(item) } : nil,
+            onChooseCategory: { itemDetailPath.append(.category(item.id)) }
         )
+    }
+
+    /// The same Choose Category screen Add Item pushes, bound to one record.
+    @ViewBuilder
+    private func itemDetailDestination(_ route: ItemDetailRoute) -> some View {
+        switch route {
+        case .category(let id):
+            if let record = recordsByID[id] {
+                CategorySelectorView(selection: Binding(
+                    get: { record.category },
+                    set: { ItemCategoryEdit.apply($0, to: record) }
+                ))
+            }
+        }
     }
 
     @ViewBuilder
@@ -418,105 +454,16 @@ struct PackingListView: View {
     }
 
     /// A full sheet with a proper primary action — not a grayed nav-bar
-    /// "Add".
+    /// "Add". Its own view, driven by a binding, so it always renders the
+    /// current draft rather than the state at presentation time.
     private var addSheet: some View {
-        NavigationStack(path: $addPath) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
-                    PackWiseCard {
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
-                            TextField("Item name", text: $newItemName)
-                                .font(.title3)
-                            PackWiseRowDivider(inset: 0)
-                            NavigationLink(value: AddItemRoute.category) {
-                                HStack {
-                                    Text("Category")
-                                        .foregroundStyle(PackWiseColor.textPrimary)
-                                    Spacer()
-                                    Text(newItemCategory.title)
-                                        .foregroundStyle(PackWiseColor.textSecondary)
-                                }
-                            }
-                            PackWiseRowDivider(inset: 0)
-                            Stepper("Quantity  \(newItemQuantity)", value: $newItemQuantity, in: 1...20)
-                            PackWiseRowDivider(inset: 0)
-                            VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
-                                Toggle(isOn: $newItemImportant) {
-                                    HStack(spacing: PackWiseSpacing.snug) {
-                                        Image(systemName: "exclamationmark.circle.fill")
-                                            .foregroundStyle(PackWiseColor.accent)
-                                        Text("Important")
-                                    }
-                                }
-                                Text("Important items are flagged and stay visible in the Important filter.")
-                                    .font(.footnote)
-                                    .foregroundStyle(PackWiseColor.textSecondary)
-                            }
-                            if !trip.party.usesSimpleList {
-                                PackWiseRowDivider(inset: 0)
-                                HStack {
-                                    Text("For")
-                                    Spacer()
-                                    Picker("For", selection: $newItemOwner) {
-                                        Text("Shared").tag(PartyListFilter.shared)
-                                        ForEach(trip.party.travelers) { traveler in
-                                            Text(trip.party.label(for: traveler)).tag(PartyListFilter.traveler(traveler.id))
-                                        }
-                                    }
-                                    .labelsHidden()
-                                    .pickerStyle(.menu)
-                                }
-                            }
-                        }
-                    }
-
-                    Button("Save item") { addCustomItem() }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .disabled(newItemName.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-                .padding(PackWiseSpacing.comfortable)
-            }
-            .background(PackWiseColor.screen)
-            .navigationTitle("Add Item")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { adding = false } }
-            }
-            .navigationDestination(for: AddItemRoute.self) { route in
-                switch route {
-                case .category: categorySelection
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-    }
-
-    private var categorySelection: some View {
-        List(PackingCategory.allCases) { category in
-            Button {
-                newItemCategory = category
-            } label: {
-                HStack(spacing: PackWiseSpacing.regular) {
-                    PackWiseIconBadge(symbol: category.style.symbol, tint: category.style.tint)
-                    Text(category.title)
-                        .foregroundStyle(PackWiseColor.textPrimary)
-                    Spacer()
-                    if newItemCategory == category {
-                        Image(systemName: "checkmark")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(PackWiseColor.accent)
-                            .accessibilityLabel("Selected")
-                    }
-                }
-                .frame(minHeight: PackWiseSize.tapTarget)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityAddTraits(newItemCategory == category ? .isSelected : [])
-        }
-        .listStyle(.plain)
-        .navigationTitle("Choose Category")
-        .navigationBarTitleDisplayMode(.inline)
+        AddItemSheet(
+            draft: $newItem,
+            path: $addPath,
+            party: trip.party,
+            onSave: addCustomItem,
+            onCancel: { adding = false }
+        )
     }
 
     // MARK: - Data
@@ -561,10 +508,35 @@ struct PackingListView: View {
         case .addItem:
             adding = true
         case .addItemCategory:
-            newItemCategory = .clothing
+            newItem.category = .clothing
             addPath = [.category]
             adding = true
+        case .addItemChosen(let category):
+            newItem.name = "Sun hat"
+            newItem.category = category
+            adding = true
+        case .addItemCategoryChosen(let category):
+            newItem.category = category
+            addPath = [.category]
+            adding = true
+        case .itemDetailCategory:
+            itemDetailDetent = .large
+            let record = trip.items.first { $0.canonicalItemID == "clothing.tshirts" } ?? trip.items.first
+            itemDetailPath = record.map { [.category($0.id)] } ?? []
+            selectedItem = record
+        case .itemDetailMoved(let category):
+            itemDetailDetent = .large
+            if let record = trip.items.first(where: { $0.canonicalItemID == "clothing.tshirts" }) ?? trip.items.first {
+                ItemCategoryEdit.apply(category, to: record)
+                selectedItem = record
+            }
         case .list(let state):
+            if let move = state.move, trip.party.travelers.indices.contains(move.travelerIndex) {
+                let traveler = trip.party.travelers[move.travelerIndex]
+                if let record = trip.items.first(where: { $0.canonicalItemID == move.canonicalItemID && $0.travelerID == traveler.id }) {
+                    ItemCategoryEdit.apply(move.category, to: record)
+                }
+            }
             switch state.scope {
             case .all: partyFilter = .all
             case .shared: partyFilter = .shared
@@ -606,14 +578,14 @@ struct PackingListView: View {
     }
 
     private func addCustomItem() {
-        let name = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = newItem.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let match = dependencies.catalog.search(name).first
         let ownership: PackingOwnership
         let travelerID: UUID?
         if trip.party.usesSimpleList {
             ownership = .personal
             travelerID = trip.party.primary.id
-        } else if case .traveler(let id) = newItemOwner {
+        } else if case .traveler(let id) = newItem.owner {
             ownership = .personal
             travelerID = id
         } else {
@@ -623,9 +595,11 @@ struct PackingListView: View {
         let draft = PackingItemDraft(
             canonicalItemID: match?.id,
             displayName: match?.displayName ?? name,
-            category: match?.category ?? newItemCategory,
-            quantity: newItemQuantity,
-            importance: newItemImportant ? .important : (match?.importance ?? .normal),
+            // The chosen category is the user's; a catalog match supplies
+            // only what the user did not decide.
+            category: newItem.category,
+            quantity: newItem.quantity,
+            importance: newItem.important ? .important : (match?.importance ?? .normal),
             sourceSignals: [.userPreference],
             reason: "Added by you",
             isUserAdded: true,
@@ -634,13 +608,98 @@ struct PackingListView: View {
         )
         TripRepository(context: modelContext).addItem(draft, to: trip)
         try? modelContext.save()
-        newItemName = ""
-        newItemQuantity = 1
-        newItemImportant = false
+        newItem = AddItemDraft()
         adding = false
     }
 }
 
+
+/// Add Item: name, category (pushed chooser), quantity, Important, and who
+/// it is for. Holds nothing itself — the draft is the caller's — and creates
+/// the item only through Save.
+struct AddItemSheet: View {
+    @Binding var draft: AddItemDraft
+    @Binding var path: [AddItemRoute]
+    let party: TripParty
+    var onSave: () -> Void
+    var onCancel: () -> Void
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: PackWiseSpacing.comfortable) {
+                    PackWiseCard {
+                        VStack(alignment: .leading, spacing: PackWiseSpacing.regular) {
+                            TextField("Item name", text: $draft.name)
+                                .font(.title3)
+                            PackWiseRowDivider(inset: 0)
+                            // Pushed inside this sheet's own stack (Task 12):
+                            // a dedicated Choose Category screen, not a menu.
+                            Button {
+                                dismissKeyboard()
+                                path = [.category]
+                            } label: {
+                                CategoryRowLabel(category: draft.category)
+                            }
+                            .buttonStyle(.plain)
+                            PackWiseRowDivider(inset: 0)
+                            Stepper("Quantity  \(draft.quantity)", value: $draft.quantity, in: 1...20)
+                            PackWiseRowDivider(inset: 0)
+                            VStack(alignment: .leading, spacing: PackWiseSpacing.tight) {
+                                Toggle(isOn: $draft.important) {
+                                    HStack(spacing: PackWiseSpacing.snug) {
+                                        Image(systemName: "exclamationmark.circle.fill")
+                                            .foregroundStyle(PackWiseColor.accent)
+                                        Text("Important")
+                                    }
+                                }
+                                Text("Important items are flagged and stay visible in the Important filter.")
+                                    .font(.footnote)
+                                    .foregroundStyle(PackWiseColor.textSecondary)
+                            }
+                            if !party.usesSimpleList {
+                                PackWiseRowDivider(inset: 0)
+                                HStack {
+                                    Text("For")
+                                    Spacer()
+                                    Picker("For", selection: $draft.owner) {
+                                        Text("Shared").tag(PartyListFilter.shared)
+                                        ForEach(party.travelers) { traveler in
+                                            Text(party.label(for: traveler)).tag(PartyListFilter.traveler(traveler.id))
+                                        }
+                                    }
+                                    .labelsHidden()
+                                    .pickerStyle(.menu)
+                                }
+                            }
+                        }
+                    }
+
+                    Button("Save item", action: onSave)
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(draft.name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                .padding(PackWiseSpacing.comfortable)
+            }
+            .background(PackWiseColor.screen)
+            .navigationTitle("Add Item")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: onCancel) }
+            }
+            .navigationDestination(for: AddItemRoute.self) { route in
+                switch route {
+                case .category: CategorySelectorView(selection: $draft.category)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
 
 /// One personal item across several travelers, presented once (Task 11).
 /// The leading glyph reports the group's state and is not a control: a
@@ -727,9 +786,10 @@ struct PackingGroupDetailView: View {
     var onDelete: (PackingItemRecord) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var path = NavigationPath()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 Section {
                     ForEach(members, id: \.id) { record in
@@ -766,8 +826,20 @@ struct PackingGroupDetailView: View {
                         item: record,
                         travelers: trip.party.travelers,
                         onNotNeeded: !record.isUserAdded && record.canonicalItemID != nil ? { onNotNeeded(record) } : nil,
-                        onDelete: record.isUserAdded ? { onDelete(record) } : nil
+                        onDelete: record.isUserAdded ? { onDelete(record) } : nil,
+                        onChooseCategory: { path.append(ItemDetailRoute.category(record.id)) }
                     )
+                }
+            }
+            .navigationDestination(for: ItemDetailRoute.self) { route in
+                switch route {
+                case .category(let id):
+                    if let record = members.first(where: { $0.id == id }) {
+                        CategorySelectorView(selection: Binding(
+                            get: { record.category },
+                            set: { ItemCategoryEdit.apply($0, to: record) }
+                        ))
+                    }
                 }
             }
         }
@@ -955,6 +1027,10 @@ struct ItemDetailView: View {
     /// Present only for user-added items; deleting records no override.
     var onDelete: (() -> Void)?
 
+    /// Asks the hosting stack to push Choose Category (Task 12); the host
+    /// owns navigation, this sheet owns the record.
+    var onChooseCategory: () -> Void = {}
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -986,22 +1062,10 @@ struct ItemDetailView: View {
                         item.updatedAt = .now
                     }
                 PackWiseRowDivider(inset: 0)
-                // Outside a Form a Picker renders its selection only, so the
-                // label is supplied explicitly.
-                Group {
-                    if dynamicTypeSize.isAccessibilitySize {
-                        VStack(alignment: .leading, spacing: PackWiseSpacing.snug) {
-                            Text("Category")
-                            categoryPicker
-                        }
-                    } else {
-                        HStack {
-                            Text("Category")
-                            Spacer()
-                            categoryPicker
-                        }
-                    }
+                Button(action: onChooseCategory) {
+                    CategoryRowLabel(category: item.category)
                 }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -1038,16 +1102,6 @@ struct ItemDetailView: View {
                 }
             }
         }
-    }
-
-    private var categoryPicker: some View {
-        Picker("Category", selection: $item.categoryRaw) {
-            ForEach(PackingCategory.allCases) { category in
-                Text(category.title).tag(category.rawValue)
-            }
-        }
-        .labelsHidden()
-        .pickerStyle(.menu)
     }
 
     private var reasons: some View {

@@ -300,6 +300,15 @@ struct M1LoopTests {
     }
     #endif
 
+    #if DEBUG
+    /// Task 12: every category-selector state the contact sheet reviews is capturable.
+    @Test func task12ReferenceStatesAreAllCapturable() {
+        for id in ["addItem", "addItemCategory", "addItemCategoryChosen", "addItemChosen", "itemDetailSheet", "itemDetailCategory", "itemDetailMoved", "packingListFamilyMoved"] {
+            #expect(DebugPreviewScreen(rawValue: id) != nil, "missing Task 12 state \(id)")
+        }
+    }
+    #endif
+
     @Test func mergedActivityIDsNormalizeOnRead() throws {
         // A trip saved before fineDining was merged still holds the old value.
         // Left alone it would lose its packing rule and be rejected by the
